@@ -1,7 +1,7 @@
 <template>
   <header class="fixed top-0 left-0 right-0 z-50">
     <div
-      class="ui-transition backdrop-blur-md"
+      class="ui-transition"
       :style="headerStyle"
     >
       <div class="mx-auto max-w-6xl px-3 xs:px-3 sm:px-4 3xl:px-6 7xl:px-8">
@@ -33,7 +33,8 @@ import ThemeSwitcher from "./ThemeSwitcher.vue";
 
 const headerStyle = computed(() => ({
   background: "color-mix(in srgb, var(--bg) 86%, transparent)",
-  borderBottom: "1px solid color-mix(in srgb, var(--text) 10%, transparent)"
+  borderBottom: "1px solid color-mix(in srgb, var(--text) 10%, transparent)",
+  backdropFilter: "blur(var(--header-blur))"
 }));
 
 const btnStyle = computed(() => ({

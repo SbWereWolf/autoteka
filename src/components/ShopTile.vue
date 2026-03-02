@@ -25,33 +25,41 @@ const props = defineProps<{ name: string; seed: number }>();
 defineEmits<{ open: [] }>();
 
 function seeded(n: number) {
-  // simple deterministic pseudo-random
+  // deterministic pseudo-random in [0..1)
   const x = Math.sin(n) * 10000;
   return x - Math.floor(x);
 }
 
-const hue = computed(() => Math.floor(seeded(props.seed) * 360));
-const hue2 = computed(() => (hue.value + 40 + Math.floor(seeded(props.seed + 7) * 80)) % 360);
+const r1 = computed(() => seeded(props.seed + 11));
+const r2 = computed(() => seeded(props.seed + 97));
 
 const tileStyle = computed(() => ({
   background: "var(--surface)",
   boxShadow: "var(--shadow)",
-  border: "1px solid color-mix(in srgb, var(--text) 10%, transparent)"
+  border: "var(--tile-border)"
 }));
 
 const bgLayer = computed(() => ({
-  background: `linear-gradient(135deg, hsla(${hue.value}, 80%, 55%, 0.55), hsla(${hue2.value}, 80%, 55%, 0.25))`
+  // More monotone tiles: subtle tint derived from theme accent.
+  // Percentage values are chosen to keep the grid calm but not flat.
+  background: `linear-gradient(135deg,
+    color-mix(in srgb, var(--accent) ${Math.round(10 + r1.value * 14)}%, var(--bg)),
+    color-mix(in srgb, var(--accent) ${Math.round(6 + r2.value * 10)}%, var(--bg))
+  )`
 }));
 
 const patternLayer = computed(() => ({
-  backgroundImage: "radial-gradient(circle at 12px 12px, rgba(255,255,255,0.18) 2px, transparent 3px)",
-  backgroundSize: "36px 36px",
-  opacity: "0.35"
+  backgroundImage: "var(--tile-pattern)",
+  backgroundSize: "var(--tile-pattern-size)",
+  opacity: "var(--tile-pattern-opacity)"
 }));
 
 const titleStyle = computed(() => ({
   fontFamily: "var(--font-display)",
   color: "var(--text)",
-  fontSize: "clamp(14px, 3.6vw, 18px)"
+  fontSize: "clamp(14px, 3.6vw, 18px)",
+  letterSpacing: "var(--tile-letter-spacing)",
+  textTransform: "var(--tile-text-transform)",
+  fontWeight: "var(--tile-font-weight)"
 }));
 </script>
