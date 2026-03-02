@@ -70,9 +70,8 @@ function slideStyle(i: number) {
 }
 
 const navBtnStyle = computed(() => ({
-  background: "color-mix(in oklch, var(--bg) 65%, transparent)",
+  background: "var(--surface-strong)",
   color: "var(--text)",
-  border: "1px solid color-mix(in oklch, var(--text) 12%, transparent)",
-  backdropFilter: "blur(var(--blur))"
+  border: "1px solid color-mix(in oklch, var(--text) 12%, transparent)"
 }));
 </script>

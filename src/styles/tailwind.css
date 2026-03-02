@@ -8,6 +8,21 @@
     0 2px 8px oklch(0.0% 0.0 0.0 / 0.20);
 }
 
+/* Panel behind text blocks to keep content readable on busy backgrounds */
+.text-panel {
+  background: var(--surface);
+  border: 1px solid color-mix(in oklch, var(--text) 12%, transparent);
+  box-shadow: var(--shadow);
+  border-radius: var(--radius);
+}
+
+.text-panel-strong {
+  background: var(--surface-strong);
+  border: 1px solid color-mix(in oklch, var(--text) 14%, transparent);
+  box-shadow: var(--shadow);
+  border-radius: var(--radius);
+}
+
 /* Smooth transitions (durations tuned by class) */
 .ui-transition {
   transition-property: color, background-color, border-color, opacity, transform, box-shadow, filter;

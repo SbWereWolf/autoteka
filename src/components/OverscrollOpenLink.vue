@@ -106,17 +106,16 @@ onBeforeUnmount(() => {
 const progress = computed(() => Math.max(0, Math.min(1, pull.value / threshold.value)));
 
 const pillStyle = computed(() => ({
-  background: "color-mix(in oklch, var(--bg) 72%, transparent)",
+  background: "var(--surface-strong)",
   border: "1px solid color-mix(in oklch, var(--text) 12%, transparent)",
   boxShadow: "var(--shadow)",
-  backdropFilter: "blur(var(--blur))",
   transitionDuration: "200ms",
   opacity: atBottom() ? 1 : 0,
   transform: atBottom() ? "translateY(0)" : "translateY(12px)"
 }));
 
 const barStyle = computed(() => ({
-  background: "color-mix(in oklch, var(--text) 18%, transparent)"
+  background: "color-mix(in oklch, var(--text) 18%, var(--surface))"
 }));
 
 const fillStyle = computed(() => ({

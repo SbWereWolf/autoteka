@@ -57,8 +57,8 @@ const overlayStyle = computed(() => ({
 }));
 
 const panelStyle = computed(() => ({
-  background: "color-mix(in oklch, var(--bg) 88%, transparent)",
-  backdropFilter: "blur(var(--blur))",
+  /* Opaque panel so the busy background never shows through */
+  background: "var(--surface-strong)",
   boxShadow: "var(--shadow)"
 }));
 

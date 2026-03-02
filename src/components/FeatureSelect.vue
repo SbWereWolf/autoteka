@@ -61,7 +61,7 @@ const btnStyle = computed(() => ({
 }));
 
 const panelStyle = computed(() => ({
-  background: "color-mix(in oklch, var(--bg) 92%, transparent)",
+  background: "var(--surface-strong)",
   border: "1px solid color-mix(in oklch, var(--text) 12%, transparent)",
   boxShadow: "var(--shadow)"
 }));
@@ -69,7 +69,7 @@ const panelStyle = computed(() => ({
 function rowStyle(f: string) {
   const active = f === state.selectedFeature;
   return {
-    background: active ? "color-mix(in oklch, var(--accent) 18%, transparent)" : "transparent",
+    background: active ? "color-mix(in oklch, var(--accent) 18%, var(--surface-strong))" : "transparent",
     color: "var(--text)",
     borderBottom: "1px solid color-mix(in oklch, var(--text) 8%, transparent)"
   };

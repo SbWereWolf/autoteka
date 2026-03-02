@@ -1,13 +1,16 @@
 <template>
   <div class="mx-auto max-w-6xl px-3 xs:px-3 sm:px-4 3xl:px-6 7xl:px-8 pb-10">
     <div class="pt-4">
-      <div class="flex items-end justify-between gap-3">
-        <div>
-          <div class="text-xs uppercase tracking-wide" :style="{ color: 'var(--muted)' }">Каталог магазинов</div>
-          <div class="text-lg font-semibold" :style="{ color: 'var(--text)' }">{{ cityName }}</div>
-        </div>
-        <div class="text-xs" :style="{ color: 'var(--muted)' }">
-          {{ sorted.length }} шт.
+      <!-- Header block with its own background for readability -->
+      <div class="text-panel p-3 ui-transition">
+        <div class="flex items-end justify-between gap-3">
+          <div>
+            <div class="text-xs uppercase tracking-wide" :style="{ color: 'var(--muted)' }">Каталог магазинов</div>
+            <div class="text-lg font-semibold" :style="{ color: 'var(--text)' }">{{ cityName }}</div>
+          </div>
+          <div class="text-xs" :style="{ color: 'var(--muted)' }">
+            {{ sorted.length }} шт.
+          </div>
         </div>
       </div>
 

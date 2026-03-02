@@ -32,9 +32,9 @@ import { state } from "../state";
 import ThemeSwitcher from "./ThemeSwitcher.vue";
 
 const headerStyle = computed(() => ({
-  background: "color-mix(in oklch, var(--bg) 86%, transparent)",
+  /* Opaque header (no see-through) */
+  background: "var(--surface-strong)",
   borderBottom: "1px solid color-mix(in oklch, var(--text) 10%, transparent)",
-  backdropFilter: "blur(var(--header-blur))"
 }));
 
 const btnStyle = computed(() => ({

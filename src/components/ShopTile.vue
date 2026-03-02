@@ -4,7 +4,8 @@
     :style="tileStyle"
     @click="$emit('open')"
   >
-    <div class="absolute inset-0 opacity-70" :style="bgLayer"></div>
+    <!-- Opaque tile background (no see-through of the page pattern) -->
+    <div class="absolute inset-0" :style="bgLayer"></div>
     <div class="absolute inset-0" :style="patternLayer"></div>
 
     <div class="relative z-10 h-full flex items-end">

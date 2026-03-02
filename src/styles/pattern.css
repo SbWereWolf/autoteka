@@ -1,19 +1,20 @@
 /*
-  App background: tiled image (WhatsApp chat vibe) + OKLCH overlay for readability.
-  The overlay adapts to the active theme via --bg and stays strictly in OKLCH.
+  App background: per-style tiled images (WhatsApp chat vibe).
+  Requirements:
+  - Each STYLE (A/B/C) uses its own background image.
+  - Keep the image as-is (no dark overlay).
+  - Background must stay fixed while scrolling.
+
+  Implementation:
+  - Theme classes set --app-bg-image and --app-bg-size.
 */
 .app-pattern {
-  background-color: var(--bg);
+  background-color: transparent;
+  background-image: var(--app-bg-image);
+  background-repeat: repeat;
+  background-position: 0 0;
+  background-size: var(--app-bg-size, auto);
 
-  /*
-    Layer order: overlay (top) -> image (bottom).
-    Overlay strength is controlled by --bg-overlay (derived from --bg).
-  */
-  background-image:
-    linear-gradient(var(--bg-overlay), var(--bg-overlay)),
-    url("../assets/bg-tile-city.png");
-
-  background-repeat: repeat, repeat;
-  background-position: 0 0, 0 0;
-  background-size: auto, var(--app-bg-size);
+  /* Keep the tiled background in place while scrolling */
+  background-attachment: fixed;
 }
