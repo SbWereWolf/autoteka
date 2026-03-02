@@ -12,7 +12,7 @@
         :style="panelStyle"
       >
         <div class="h-14 flex items-center justify-between px-4 border-b"
-             :style="{ borderColor: 'color-mix(in srgb, var(--text) 10%, transparent)' }">
+             :style="{ borderColor: 'color-mix(in oklch, var(--text) 10%, transparent)' }">
           <div class="text-sm font-semibold" :style="{ color: 'var(--text)' }">Меню</div>
           <button
             class="ui-transition rounded-xl px-3 py-2"
@@ -53,11 +53,11 @@ import CategoryChips from "./CategoryChips.vue";
 import FeatureSelect from "./FeatureSelect.vue";
 
 const overlayStyle = computed(() => ({
-  background: "rgba(0,0,0,0.35)"
+  background: "oklch(0.0% 0.0 0.0 / 0.35)"
 }));
 
 const panelStyle = computed(() => ({
-  background: "color-mix(in srgb, var(--bg) 88%, transparent)",
+  background: "color-mix(in oklch, var(--bg) 88%, transparent)",
   backdropFilter: "blur(var(--blur))",
   boxShadow: "var(--shadow)"
 }));

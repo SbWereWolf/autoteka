@@ -57,21 +57,21 @@ onBeforeUnmount(() => document.removeEventListener("mousedown", onDocDown));
 const btnStyle = computed(() => ({
   background: "var(--surface)",
   color: "var(--text)",
-  border: "1px solid color-mix(in srgb, var(--text) 12%, transparent)"
+  border: "1px solid color-mix(in oklch, var(--text) 12%, transparent)"
 }));
 
 const panelStyle = computed(() => ({
-  background: "color-mix(in srgb, var(--bg) 92%, transparent)",
-  border: "1px solid color-mix(in srgb, var(--text) 12%, transparent)",
+  background: "color-mix(in oklch, var(--bg) 92%, transparent)",
+  border: "1px solid color-mix(in oklch, var(--text) 12%, transparent)",
   boxShadow: "var(--shadow)"
 }));
 
 function rowStyle(f: string) {
   const active = f === state.selectedFeature;
   return {
-    background: active ? "color-mix(in srgb, var(--accent) 18%, transparent)" : "transparent",
+    background: active ? "color-mix(in oklch, var(--accent) 18%, transparent)" : "transparent",
     color: "var(--text)",
-    borderBottom: "1px solid color-mix(in srgb, var(--text) 8%, transparent)"
+    borderBottom: "1px solid color-mix(in oklch, var(--text) 8%, transparent)"
   };
 }
 </script>

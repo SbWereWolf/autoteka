@@ -22,11 +22,11 @@ const categories = dicts.categories;
 function chipStyle(c: string) {
   const active = state.selectedCategories.includes(c);
   return {
-    background: active ? "color-mix(in srgb, var(--accent) 22%, var(--surface))" : "var(--surface)",
+    background: active ? "color-mix(in oklch, var(--accent) 22%, var(--surface))" : "var(--surface)",
     color: "var(--text)",
     border: active
-      ? "1px solid color-mix(in srgb, var(--accent) 55%, transparent)"
-      : "1px solid color-mix(in srgb, var(--text) 12%, transparent)",
+      ? "1px solid color-mix(in oklch, var(--accent) 55%, transparent)"
+      : "1px solid color-mix(in oklch, var(--text) 12%, transparent)",
     boxShadow: active ? "var(--shadow)" : "none"
   };
 }

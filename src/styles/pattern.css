@@ -1,8 +1,42 @@
 /* Background pattern (Telegram/WhatsApp vibe) */
 .app-pattern {
   background-color: var(--bg);
+
+  /* WhatsApp-like doodle ornament built only from OKLCH-driven CSS gradients. */
   background-image:
-    radial-gradient(circle at 18px 18px, var(--pattern-dot) 2px, transparent 3px),
-    radial-gradient(circle at 54px 54px, var(--pattern-dot2) 2px, transparent 3px);
-  background-size: 72px 72px;
+    /* tiny dots */
+    radial-gradient(circle at 14px 16px, var(--pattern-ink) 1.4px, transparent 1.5px),
+    radial-gradient(circle at 46px 52px, var(--pattern-ink2) 1.2px, transparent 1.3px),
+
+    /* rings */
+    radial-gradient(circle at 78px 28px,
+      transparent 0 7px,
+      var(--pattern-ink2) 7px 8px,
+      transparent 8.2px
+    ),
+    radial-gradient(circle at 96px 78px,
+      transparent 0 9px,
+      var(--pattern-ink) 9px 10px,
+      transparent 10.2px
+    ),
+
+    /* short strokes (repeat thanks to background-size) */
+    linear-gradient(135deg, transparent 0 46%, var(--pattern-ink2) 46% 48%, transparent 48% 100%),
+    linear-gradient(45deg, transparent 0 46%, var(--pattern-ink2) 46% 48%, transparent 48% 100%);
+
+  background-size:
+    140px 140px,
+    180px 180px,
+    220px 220px,
+    200px 200px,
+    160px 160px,
+    160px 160px;
+
+  background-position:
+    0 0,
+    40px 20px,
+    20px 60px,
+    80px 10px,
+    0 0,
+    60px 40px;
 }

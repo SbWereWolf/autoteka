@@ -42,9 +42,10 @@ const tileStyle = computed(() => ({
 const bgLayer = computed(() => ({
   // More monotone tiles: subtle tint derived from theme accent.
   // Percentage values are chosen to keep the grid calm but not flat.
+  // Requested: make tiles more saturated overall.
   background: `linear-gradient(135deg,
-    color-mix(in srgb, var(--accent) ${Math.round(10 + r1.value * 14)}%, var(--bg)),
-    color-mix(in srgb, var(--accent) ${Math.round(6 + r2.value * 10)}%, var(--bg))
+    color-mix(in oklch, var(--accent) ${Math.round(18 + r1.value * 24)}%, var(--bg)),
+    color-mix(in oklch, var(--accent) ${Math.round(12 + r2.value * 18)}%, var(--bg))
   )`
 }));
 

@@ -28,7 +28,7 @@
 
     <div class="absolute bottom-2 left-0 right-0 flex justify-center gap-1">
       <div v-for="(g,i) in items" :key="'dot'+i" class="h-1.5 w-1.5 rounded-full"
-           :style="{ background: i===idx ? 'var(--accent)' : 'color-mix(in srgb, var(--text) 25%, transparent)' }"></div>
+           :style="{ background: i===idx ? 'var(--accent)' : 'color-mix(in oklch, var(--text) 25%, transparent)' }"></div>
     </div>
   </div>
 </template>
@@ -48,7 +48,7 @@ function next(){ idx.value++; clamp(); }
 
 const wrapStyle = computed(() => ({
   background: "var(--surface)",
-  border: "1px solid color-mix(in srgb, var(--text) 10%, transparent)",
+  border: "1px solid color-mix(in oklch, var(--text) 10%, transparent)",
   boxShadow: "var(--shadow)"
 }));
 
@@ -58,17 +58,21 @@ const trackStyle = computed(() => ({
 }));
 
 function slideStyle(i: number) {
-  const h = (i * 42) % 360;
   return {
-    background: `linear-gradient(135deg, hsla(${h}, 80%, 55%, 0.35), hsla(${(h+70)%360}, 80%, 55%, 0.20))`,
+    // IMPORTANT: palette must use only OKLCH.
+    // Gallery is mocked, keep it calm/monotone with a subtle accent tint.
+    background: `linear-gradient(135deg,
+      color-mix(in oklch, var(--accent) ${12 + (i % 5) * 4}%, var(--bg)),
+      color-mix(in oklch, var(--accent) ${8 + (i % 5) * 3}%, var(--bg))
+    )`,
     color: "var(--text)"
   };
 }
 
 const navBtnStyle = computed(() => ({
-  background: "color-mix(in srgb, var(--bg) 65%, transparent)",
+  background: "color-mix(in oklch, var(--bg) 65%, transparent)",
   color: "var(--text)",
-  border: "1px solid color-mix(in srgb, var(--text) 12%, transparent)",
+  border: "1px solid color-mix(in oklch, var(--text) 12%, transparent)",
   backdropFilter: "blur(var(--blur))"
 }));
 </script>

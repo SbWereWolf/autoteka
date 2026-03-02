@@ -82,34 +82,34 @@ const shop = computed(() => (shops as any[]).find(s => s.id === shopId.value));
 const backStyle = computed(() => ({
   background: "var(--surface)",
   color: "var(--text)",
-  border: "1px solid color-mix(in srgb, var(--text) 12%, transparent)"
+  border: "1px solid color-mix(in oklch, var(--text) 12%, transparent)"
 }));
 
 const cardStyle = computed(() => ({
   background: "var(--surface)",
   color: "var(--text)",
-  border: "1px solid color-mix(in srgb, var(--text) 10%, transparent)",
+  border: "1px solid color-mix(in oklch, var(--text) 10%, transparent)",
   boxShadow: "var(--shadow)"
 }));
 
 const hoursStyle = computed(() => ({
-  background: "color-mix(in srgb, var(--bg) 72%, transparent)",
+  background: "color-mix(in oklch, var(--bg) 72%, transparent)",
   color: "var(--text)",
-  border: "1px solid color-mix(in srgb, var(--text) 12%, transparent)",
+  border: "1px solid color-mix(in oklch, var(--text) 12%, transparent)",
   backdropFilter: "blur(var(--blur))",
   boxShadow: "var(--shadow)"
 }));
 
 const primaryStyle = computed(() => ({
   background: "var(--accent)",
-  color: "color-mix(in srgb, white 92%, transparent)",
+  color: "color-mix(in oklch, oklch(100% 0 0) 92%, transparent)",
   boxShadow: "var(--shadow)"
 }));
 
 const hintStyle = computed(() => ({
   background: "var(--surface)",
   color: "var(--muted)",
-  border: "1px solid color-mix(in srgb, var(--text) 10%, transparent)"
+  border: "1px solid color-mix(in oklch, var(--text) 10%, transparent)"
 }));
 
 function hrefFor(c: { type: string; value: string }) {

@@ -106,8 +106,8 @@ onBeforeUnmount(() => {
 const progress = computed(() => Math.max(0, Math.min(1, pull.value / threshold.value)));
 
 const pillStyle = computed(() => ({
-  background: "color-mix(in srgb, var(--bg) 72%, transparent)",
-  border: "1px solid color-mix(in srgb, var(--text) 12%, transparent)",
+  background: "color-mix(in oklch, var(--bg) 72%, transparent)",
+  border: "1px solid color-mix(in oklch, var(--text) 12%, transparent)",
   boxShadow: "var(--shadow)",
   backdropFilter: "blur(var(--blur))",
   transitionDuration: "200ms",
@@ -116,12 +116,12 @@ const pillStyle = computed(() => ({
 }));
 
 const barStyle = computed(() => ({
-  background: "color-mix(in srgb, var(--text) 18%, transparent)"
+  background: "color-mix(in oklch, var(--text) 18%, transparent)"
 }));
 
 const fillStyle = computed(() => ({
   width: `${progress.value * 100}%`,
-  background: progress.value < 1 ? "var(--accent)" : "color-mix(in srgb, var(--accent) 80%, white)",
+  background: progress.value < 1 ? "var(--accent)" : "color-mix(in oklch, var(--accent) 80%, oklch(100% 0 0))",
   transitionDuration: "120ms"
 }));
 </script>

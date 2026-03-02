@@ -22,6 +22,6 @@ const cities = dicts.cities;
 const selectStyle = computed(() => ({
   background: "var(--surface)",
   color: "var(--text)",
-  border: "1px solid color-mix(in srgb, var(--text) 12%, transparent)"
+  border: "1px solid color-mix(in oklch, var(--text) 12%, transparent)"
 }));
 </script>
