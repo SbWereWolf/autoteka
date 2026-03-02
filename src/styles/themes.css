@@ -1,0 +1,133 @@
+/* 
+  Theme system: 6 themes = 3 styles × 2 palettes.
+  Applied by adding class "theme-a-neutral" etc to the root .app element.
+  Colors are placeholders — can be tuned later without touching components.
+*/
+
+:root{
+  /* defaults */
+  --bg: #0b1220;
+  --surface: rgba(255,255,255,0.06);
+  --surface-strong: rgba(255,255,255,0.10);
+  --text: rgba(255,255,255,0.92);
+  --muted: rgba(255,255,255,0.65);
+  --accent: #7dd3fc;
+
+  --radius: 18px;
+  --shadow: 0 10px 30px rgba(0,0,0,0.20);
+  --blur: 14px;
+
+  --font-display: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans";
+  --tile-stroke: rgba(0,0,0,0.85);
+  --tile-shadow: rgba(0,0,0,0.45);
+
+  --pattern-opacity: 0.08;
+}
+
+/* STYLE A — clean + chips */
+.theme-a-neutral{
+  --bg: #f7f7fb;
+  --surface: rgba(0,0,0,0.03);
+  --surface-strong: rgba(0,0,0,0.05);
+  --text: rgba(12, 18, 32, 0.92);
+  --muted: rgba(12, 18, 32, 0.62);
+  --accent: #2563eb;
+
+  --radius: 20px;
+  --shadow: 0 12px 28px rgba(0,0,0,0.08);
+  --blur: 0px;
+
+  --font-display: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans";
+  --tile-stroke: rgba(255,255,255,0.80);
+  --tile-shadow: rgba(0,0,0,0.28);
+  --pattern-opacity: 0.06;
+}
+.theme-a-accent{
+  --bg: #fff7ed;
+  --surface: rgba(0,0,0,0.03);
+  --surface-strong: rgba(0,0,0,0.05);
+  --text: rgba(12, 18, 32, 0.92);
+  --muted: rgba(12, 18, 32, 0.62);
+  --accent: #ea580c;
+
+  --radius: 20px;
+  --shadow: 0 12px 28px rgba(0,0,0,0.08);
+  --blur: 0px;
+
+  --font-display: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans";
+  --tile-stroke: rgba(255,255,255,0.85);
+  --tile-shadow: rgba(0,0,0,0.30);
+  --pattern-opacity: 0.07;
+}
+
+/* STYLE B — dark + glass */
+.theme-b-neutral{
+  --bg: #0b1220;
+  --surface: rgba(255,255,255,0.06);
+  --surface-strong: rgba(255,255,255,0.10);
+  --text: rgba(255,255,255,0.92);
+  --muted: rgba(255,255,255,0.65);
+  --accent: #22c55e;
+
+  --radius: 18px;
+  --shadow: 0 18px 40px rgba(0,0,0,0.28);
+  --blur: 14px;
+
+  --font-display: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans";
+  --tile-stroke: rgba(0,0,0,0.85);
+  --tile-shadow: rgba(0,0,0,0.45);
+  --pattern-opacity: 0.10;
+}
+.theme-b-accent{
+  --bg: #0a0f1a;
+  --surface: rgba(255,255,255,0.06);
+  --surface-strong: rgba(255,255,255,0.10);
+  --text: rgba(255,255,255,0.92);
+  --muted: rgba(255,255,255,0.65);
+  --accent: #7c3aed;
+
+  --radius: 18px;
+  --shadow: 0 18px 40px rgba(0,0,0,0.30);
+  --blur: 14px;
+
+  --font-display: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans";
+  --tile-stroke: rgba(0,0,0,0.85);
+  --tile-shadow: rgba(0,0,0,0.45);
+  --pattern-opacity: 0.10;
+}
+
+/* STYLE C — two-panel vibe (visual only), slightly more “editorial” */
+.theme-c-neutral{
+  --bg: #f3f4f6;
+  --surface: rgba(17,24,39,0.05);
+  --surface-strong: rgba(17,24,39,0.07);
+  --text: rgba(17,24,39,0.92);
+  --muted: rgba(17,24,39,0.62);
+  --accent: #0ea5e9;
+
+  --radius: 14px;
+  --shadow: 0 10px 24px rgba(0,0,0,0.10);
+  --blur: 0px;
+
+  --font-display: ui-serif, Georgia, "Times New Roman", Times, serif;
+  --tile-stroke: rgba(255,255,255,0.80);
+  --tile-shadow: rgba(0,0,0,0.25);
+  --pattern-opacity: 0.06;
+}
+.theme-c-accent{
+  --bg: #eef2ff;
+  --surface: rgba(17,24,39,0.05);
+  --surface-strong: rgba(17,24,39,0.07);
+  --text: rgba(17,24,39,0.92);
+  --muted: rgba(17,24,39,0.62);
+  --accent: #4f46e5;
+
+  --radius: 14px;
+  --shadow: 0 10px 24px rgba(0,0,0,0.10);
+  --blur: 0px;
+
+  --font-display: ui-serif, Georgia, "Times New Roman", Times, serif;
+  --tile-stroke: rgba(255,255,255,0.80);
+  --tile-shadow: rgba(0,0,0,0.25);
+  --pattern-opacity: 0.07;
+}

@@ -1,0 +1,17 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Text stroke helper */
+.stroke-title {
+  -webkit-text-stroke: 1px var(--tile-stroke, rgba(0,0,0,0.8));
+  text-shadow:
+    0 1px 0 var(--tile-shadow, rgba(0,0,0,0.35)),
+    0 2px 8px rgba(0,0,0,0.20);
+}
+
+/* Smooth transitions (durations tuned by class) */
+.ui-transition {
+  transition-property: color, background-color, border-color, opacity, transform, box-shadow, filter;
+  transition-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
+}

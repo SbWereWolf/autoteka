@@ -1,0 +1,8 @@
+/* Background pattern (Telegram/WhatsApp vibe) */
+.app-pattern {
+  background-color: var(--bg);
+  background-image:
+    radial-gradient(circle at 18px 18px, rgba(255,255,255,var(--pattern-opacity)) 2px, transparent 3px),
+    radial-gradient(circle at 54px 54px, rgba(255,255,255,var(--pattern-opacity)) 2px, transparent 3px);
+  background-size: 72px 72px;
+}
