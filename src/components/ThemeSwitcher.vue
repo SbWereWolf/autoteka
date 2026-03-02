@@ -3,9 +3,11 @@
     <button
       v-for="t in themes"
       :key="t.id"
-      class="ui-transition ui-interactive ui-surface h-9 w-9 rounded-xl grid place-items-center"
-      :class="{ 'ui-theme-active': state.theme === t.id }"
+      class="ui-transition ui-interactive ui-bounce h-9 w-9 rounded-xl grid place-items-center"
+      :class="state.theme === t.id ? 'theme-btn-active' : ''"
+      :style="themeBtnStyle(t.id)"
       @click="setTheme(t.id)"
+      :aria-pressed="state.theme === t.id"
       :aria-label="`Тема ${t.label}`"
       :title="t.label"
     >
@@ -24,6 +26,15 @@ import { state, setTheme } from "../state";
 
 const themes = dicts.themes;
 
+function themeBtnStyle(id: string) {
+  const active = state.theme === id;
+  return {
+    background: active ? "var(--surface-strong)" : "var(--surface)",
+    color: "var(--text)",
+    border: "1px solid color-mix(in oklch, var(--text) 12%, transparent)",
+    boxShadow: active ? "var(--shadow)" : "none"
+  };
+}
 
 function dotColor(id: string) {
   // palette hint: neutral = muted dot, accent = accent dot

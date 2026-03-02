@@ -13,14 +13,14 @@
       </div>
     </div>
 
-    <button class="absolute left-2 top-1/2 -translate-y-1/2 rounded-xl px-2 py-1 ui-transition ui-interactive"
+    <button class="absolute left-2 top-1/2 -translate-y-1/2 rounded-xl px-2 py-1 ui-transition ui-interactive ui-bounce"
             :style="navBtnStyle"
             @click="prev"
             aria-label="Предыдущий"
     >
       ‹
     </button>
-    <button class="absolute right-2 top-1/2 -translate-y-1/2 rounded-xl px-2 py-1 ui-transition ui-interactive"
+    <button class="absolute right-2 top-1/2 -translate-y-1/2 rounded-xl px-2 py-1 ui-transition ui-interactive ui-bounce"
             :style="navBtnStyle"
             @click="next"
             aria-label="Следующий"

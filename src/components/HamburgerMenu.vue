@@ -16,7 +16,8 @@
              :style="{ borderColor: 'color-mix(in oklch, var(--text) 10%, transparent)' }">
           <div class="text-sm font-semibold" :style="{ color: 'var(--text)' }">Меню</div>
           <button
-            class="ui-transition ui-interactive ui-surface rounded-xl px-3 py-2"
+            class="ui-transition ui-interactive ui-bounce rounded-xl px-3 py-2"
+            :style="btnStyle"
             @click="state.menuOpen = false"
             aria-label="Закрыть"
           >
@@ -60,7 +61,12 @@ const overlayStyle = computed(() => ({
 const panelStyle = computed(() => ({
   background: "var(--surface-strong)",
   boxShadow: "var(--shadow)",
-  borderRight: "1px solid var(--border)"
+  borderRight: "1px solid color-mix(in oklch, var(--text) 10%, transparent)"
 }));
 
+const btnStyle = computed(() => ({
+  background: "var(--surface)",
+  color: "var(--text)",
+  border: "1px solid color-mix(in oklch, var(--text) 10%, transparent)"
+}));
 </script>

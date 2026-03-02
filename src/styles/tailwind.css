@@ -23,26 +23,38 @@
 .ui-interactive{
   cursor: pointer;
   will-change: transform, filter;
+  transform: translateZ(0);
 }
 
 .ui-interactive:hover{
   filter: brightness(var(--hover-brightness, 1));
-  outline: 2px solid var(--hover-ring, color-mix(in oklch, var(--accent) 48%, transparent));
-  outline-offset: 2px;
 }
 
 .ui-interactive:active{
   filter: brightness(var(--active-brightness, 1));
-  outline: 2px solid var(--active-ring, color-mix(in oklch, var(--accent) 62%, transparent));
-  outline-offset: 2px;
-  transform: scale(0.99);
 }
 
 .ui-interactive:focus-visible{
-  outline: 2px solid color-mix(in oklch, var(--accent) 62%, transparent);
+  outline: 2px solid color-mix(in oklch, var(--accent) 60%, transparent);
   outline-offset: 2px;
 }
 
-/* Tile-specific interaction: slightly lift on hover */
-.ui-tile:hover{ transform: scale(1.01); }
-.ui-tile:active{ transform: scale(0.99); }
+/* Bounce interaction (used for tiles and buttons) */
+.ui-bounce:hover{
+  transform: translateY(calc(-1 * var(--bounce-lift, 2px))) scale(var(--bounce-scale, 1.03));
+}
+
+.ui-bounce:active{
+  transform: translateY(0px) scale(var(--bounce-press-scale, 0.99));
+}
+
+/* Back-compat for tiles */
+.ui-tile:hover{ transform: translateY(calc(-1 * var(--bounce-lift, 2px))) scale(var(--bounce-scale, 1.03)); }
+.ui-tile:active{ transform: translateY(0px) scale(var(--bounce-press-scale, 0.99)); }
+
+/* Active theme styling helper */
+.theme-btn-active{
+  box-shadow: var(--shadow);
+  border: 1px solid color-mix(in oklch, var(--accent) 58%, transparent);
+  filter: saturate(1.06);
+}

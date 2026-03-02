@@ -3,7 +3,7 @@
        Keep mobile unchanged, increase gutters for tablet/desktop. -->
   <div class="mx-auto max-w-6xl px-3 xs:px-3 sm:px-4 3xl:px-10 7xl:px-12 pb-16">
     <div class="pt-4">
-      <button class="ui-transition ui-interactive rounded-xl px-3 py-2 text-sm"
+      <button class="ui-transition ui-interactive ui-bounce rounded-xl px-3 py-2 text-sm"
               :style="backStyle"
               @click="router.back()">
         ← Назад
@@ -35,7 +35,7 @@
           <div class="text-xs uppercase tracking-wide" :style="{ color: 'var(--muted)' }">Контакты</div>
           <ul class="mt-2 space-y-2">
             <li v-for="(c, i) in shop.contacts" :key="i">
-              <a v-if="hrefFor(c)" class="ui-transition ui-interactive text-sm underline"
+              <a v-if="hrefFor(c)" class="ui-transition ui-interactive ui-bounce text-sm underline"
                  :style="{ color: 'var(--text)' }"
                  :href="hrefFor(c)!"
                  target="_blank"
@@ -48,7 +48,7 @@
         </section>
 
         <section class="flex gap-3">
-          <a class="ui-transition ui-interactive inline-flex items-center justify-center rounded-2xl px-4 py-3 text-sm font-semibold"
+          <a class="ui-transition ui-interactive ui-bounce inline-flex items-center justify-center rounded-2xl px-4 py-3 text-sm font-semibold"
              :style="primaryStyle"
              :href="shop.siteUrl"
              target="_self">

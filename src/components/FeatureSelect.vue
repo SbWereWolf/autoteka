@@ -1,7 +1,8 @@
 <template>
   <div class="relative">
     <select
-      class="ui-transition ui-interactive ui-surface w-full rounded-2xl px-3 py-3 text-sm outline-none"
+      class="ui-transition ui-interactive ui-bounce w-full rounded-2xl px-3 py-3 text-sm outline-none"
+      :style="selectStyle"
       v-model="state.selectedFeature"
       @change="onChange"
     >
@@ -13,6 +14,7 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from "vue";
 import dicts from "../mocks/dicts.json";
 import { state, setFeature } from "../state";
 
@@ -23,4 +25,9 @@ function onChange(e: Event) {
   setFeature(v);
 }
 
+const selectStyle = computed(() => ({
+  background: "var(--surface)",
+  color: "var(--text)",
+  border: "1px solid color-mix(in oklch, var(--text) 12%, transparent)"
+}));
 </script>

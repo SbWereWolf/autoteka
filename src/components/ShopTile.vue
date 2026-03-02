@@ -1,6 +1,6 @@
 <template>
   <button
-    class="ui-transition ui-interactive ui-tile w-full aspect-square rounded-[var(--radius)] p-3 text-left relative overflow-hidden"
+    class="ui-transition ui-interactive ui-bounce ui-tile w-full aspect-square rounded-[var(--radius)] p-3 text-left relative overflow-hidden"
     :style="tileStyle"
     @click="$emit('open')"
   >

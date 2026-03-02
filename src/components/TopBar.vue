@@ -5,7 +5,7 @@
       <div class="mx-auto max-w-6xl px-3 xs:px-3 sm:px-4 3xl:px-10 7xl:px-12">
         <div class="h-14 flex items-center justify-between gap-3">
           <button
-            class="ui-transition ui-interactive inline-flex items-center justify-center rounded-xl px-3 py-2"
+            class="ui-transition ui-interactive ui-bounce inline-flex items-center justify-center rounded-xl px-3 py-2"
             :style="btnStyle"
             @click="state.menuOpen = true"
             aria-label="Открыть меню"
