@@ -29,10 +29,33 @@ const threshold = computed(() => props.thresholdPx ?? 90);
 const pull = ref(0);
 const armed = ref(false);
 const vibed = ref(false);
+const isAtBottom = ref(false);
+
+// Tolerance for rounding/zoom differences across browsers.
+const BOTTOM_EPS = 48; // px
+
+function scrollingEl() {
+  return (document.scrollingElement as HTMLElement) || document.documentElement;
+}
 
 function atBottom() {
-  const doc = document.documentElement;
-  return doc.scrollTop + window.innerHeight >= doc.scrollHeight - 2;
+  const el = scrollingEl();
+  const top = el.scrollTop;
+  const h = el.clientHeight || window.innerHeight;
+  const sh = el.scrollHeight;
+
+  // Some browsers report window scroll instead of element scroll in certain modes.
+  const winTop = window.scrollY || 0;
+  const winH = window.innerHeight || h;
+  const docSh = document.documentElement.scrollHeight || sh;
+
+  const a = top + h >= sh - BOTTOM_EPS;
+  const b = winTop + winH >= docSh - BOTTOM_EPS;
+  return a || b;
+}
+
+function syncBottom() {
+  isAtBottom.value = atBottom();
 }
 
 function reset() {
@@ -47,7 +70,6 @@ function openUrl() {
 
 function maybeVibe() {
   if (vibed.value) return;
-  // haptic: web vibration API (if supported)
   if (navigator.vibrate) navigator.vibrate(15);
   vibed.value = true;
 }
@@ -55,38 +77,57 @@ function maybeVibe() {
 let startY = 0;
 
 function onTouchStart(e: TouchEvent) {
-  if (!atBottom()) return;
   startY = e.touches[0]?.clientY ?? 0;
+  syncBottom();
 }
+
 function onTouchMove(e: TouchEvent) {
-  if (!atBottom()) return;
+  // allow the pull to continue once it has started, even if bottom toggles due to momentum
+  if (!isAtBottom.value && pull.value === 0) return;
   const y = e.touches[0]?.clientY ?? 0;
-  const delta = startY - y; // upward finger move => positive delta
+  const delta = startY - y; // finger moves up => positive delta (trying to scroll further down)
+
   if (delta <= 0) {
-    pull.value = 0;
-    armed.value = false;
-    vibed.value = false;
+    reset();
     return;
   }
+
   pull.value = Math.min(delta, threshold.value * 1.25);
   armed.value = pull.value >= threshold.value;
   if (armed.value) maybeVibe();
 }
+
 function onTouchEnd() {
   if (armed.value) openUrl();
   reset();
+  syncBottom();
 }
 
+let wheelReleaseT: number | null = null;
 function onWheel(e: WheelEvent) {
-  if (!atBottom()) return;
-  if (e.deltaY <= 0) return;
+  syncBottom();
+
+  // allow building pull once the user is at the bottom (or already pulling)
+  if (!isAtBottom.value && pull.value === 0) return;
+
+  if (e.deltaY <= 0) {
+    if (pull.value > 0) reset();
+    return;
+  }
+
   pull.value = Math.min(pull.value + e.deltaY * 0.15, threshold.value * 1.25);
   armed.value = pull.value >= threshold.value;
   if (armed.value) maybeVibe();
-  window.clearTimeout((onWheel as any)._t);
-  (onWheel as any)._t = window.setTimeout(() => {
-    if (!armed.value) reset();
-  }, 160);
+
+  // "release" for wheel/trackpad: if the user stops scrolling briefly and we are armed -> open
+  if (wheelReleaseT) window.clearTimeout(wheelReleaseT);
+  wheelReleaseT = window.setTimeout(() => {
+    if (armed.value) {
+      openUrl();
+      return;
+    }
+    reset();
+  }, 180);
 }
 
 onMounted(() => {
@@ -94,6 +135,9 @@ onMounted(() => {
   window.addEventListener("touchmove", onTouchMove, { passive: true });
   window.addEventListener("touchend", onTouchEnd, { passive: true });
   window.addEventListener("wheel", onWheel, { passive: true });
+  window.addEventListener("scroll", syncBottom, { passive: true });
+  window.addEventListener("resize", syncBottom);
+  syncBottom();
 });
 
 onBeforeUnmount(() => {
@@ -101,6 +145,9 @@ onBeforeUnmount(() => {
   window.removeEventListener("touchmove", onTouchMove);
   window.removeEventListener("touchend", onTouchEnd);
   window.removeEventListener("wheel", onWheel);
+  window.removeEventListener("scroll", syncBottom);
+  window.removeEventListener("resize", syncBottom);
+  if (wheelReleaseT) window.clearTimeout(wheelReleaseT);
 });
 
 const progress = computed(() => Math.max(0, Math.min(1, pull.value / threshold.value)));
@@ -109,13 +156,14 @@ const pillStyle = computed(() => ({
   background: "var(--surface-strong)",
   border: "1px solid color-mix(in oklch, var(--text) 12%, transparent)",
   boxShadow: "var(--shadow)",
+  backdropFilter: "none",
   transitionDuration: "200ms",
-  opacity: atBottom() ? 1 : 0,
-  transform: atBottom() ? "translateY(0)" : "translateY(12px)"
+  opacity: isAtBottom.value ? 1 : 0,
+  transform: isAtBottom.value ? "translateY(0)" : "translateY(12px)"
 }));
 
 const barStyle = computed(() => ({
-  background: "color-mix(in oklch, var(--text) 18%, var(--surface))"
+  background: "color-mix(in oklch, var(--text) 18%, transparent)"
 }));
 
 const fillStyle = computed(() => ({

@@ -9,6 +9,19 @@
     0 2px 8px oklch(0.0% 0.0 0.0 / 0.20);
 }
 
+/* Opaque surfaces so patterned backgrounds never bleed through */
+.ui-surface{
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+
+.ui-surface-strong{
+  background: var(--surface-strong);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+
 /* Smooth transitions (durations tuned by class) */
 .ui-transition {
   transition-property: color, background-color, border-color, opacity, transform, box-shadow, filter;
@@ -16,45 +29,77 @@
 }
 
 /*
-  Global hover/focus behavior for interactive elements.
-  Requirement: make hover effects visible everywhere (darken on light themes, lighten on dark themes).
-  We do that via theme-controlled brightness variables (no srgb palette values).
+  Global interactive behavior.
+  - No hover "frame": hover uses theme-controlled brightness/saturate.
+  - Buttons use same bounce as tiles.
+  - Must react to mouse even in responsive emulation (some browsers disable CSS :hover there).
+    We support this via a JS-added .is-hover class.
 */
 .ui-interactive{
   cursor: pointer;
   will-change: transform, filter;
   transform: translateZ(0);
+  -webkit-tap-highlight-color: transparent;
 }
 
-.ui-interactive:hover{
-  filter: brightness(var(--hover-brightness, 1));
+/* Hover: light themes -> darken; dark themes -> lighten (via theme vars) */
+.ui-interactive:hover,
+.ui-interactive.is-hover{
+  filter: brightness(var(--hover-brightness, 1)) saturate(var(--hover-saturate, 1));
 }
 
-.ui-interactive:active{
-  filter: brightness(var(--active-brightness, 1));
+/* Active: slightly stronger */
+.ui-interactive:active,
+.ui-interactive.is-active{
+  filter: brightness(var(--active-brightness, 1)) saturate(var(--active-saturate, 1));
 }
 
+/* Useful for form controls (select) where hover may be inconsistent */
+.ui-interactive:focus{
+  filter: brightness(var(--hover-brightness, 1)) saturate(var(--hover-saturate, 1));
+}
+
+/* Focus-visible: subtle a11y outline (not used as main hover affordance) */
 .ui-interactive:focus-visible{
-  outline: 2px solid color-mix(in oklch, var(--accent) 60%, transparent);
+  outline: 2px solid color-mix(in oklch, var(--accent) 55%, transparent);
   outline-offset: 2px;
 }
 
-/* Bounce interaction (used for tiles and buttons) */
-.ui-bounce:hover{
-  transform: translateY(calc(-1 * var(--bounce-lift, 2px))) scale(var(--bounce-scale, 1.03));
+/* Bounce (same feel as tiles) — strengthened ~2x */
+.ui-bounce:hover,
+.ui-bounce.is-hover{
+  transform: translateY(calc(-1 * var(--bounce-lift, 4px))) scale(var(--bounce-scale, 1.06));
 }
 
-.ui-bounce:active{
-  transform: translateY(0px) scale(var(--bounce-press-scale, 0.99));
+.ui-bounce:active,
+.ui-bounce.is-active{
+  transform: translateY(calc(-1 * var(--bounce-lift-active, 2px))) scale(var(--bounce-press-scale, 1.02));
 }
 
-/* Back-compat for tiles */
-.ui-tile:hover{ transform: translateY(calc(-1 * var(--bounce-lift, 2px))) scale(var(--bounce-scale, 1.03)); }
-.ui-tile:active{ transform: translateY(0px) scale(var(--bounce-press-scale, 0.99)); }
+/* Back-compat: tiles may still use ui-tile */
+.ui-tile:hover,
+.ui-tile.is-hover{ transform: translateY(calc(-1 * var(--bounce-lift, 4px))) scale(var(--bounce-scale, 1.06)); }
+.ui-tile:active,
+.ui-tile.is-active{ transform: translateY(calc(-1 * var(--bounce-lift-active, 2px))) scale(var(--bounce-press-scale, 1.02)); }
 
-/* Active theme styling helper */
-.theme-btn-active{
+/* Touch devices: no hover, so show the same effect on tap */
+@media (hover: none){
+  .ui-interactive:active{ filter: brightness(var(--hover-brightness, 1)) saturate(var(--hover-saturate, 1)); }
+  .ui-bounce:active{ transform: translateY(calc(-1 * var(--bounce-lift, 4px))) scale(var(--bounce-scale, 1.06)); }
+}
+
+/* Category chip "active" state */
+.ui-chip-active{
+  background: color-mix(in oklch, var(--accent) 22%, var(--surface));
+  border-color: color-mix(in oklch, var(--accent) 55%, var(--border));
   box-shadow: var(--shadow);
-  border: 1px solid color-mix(in oklch, var(--accent) 58%, transparent);
+}
+
+/* Theme switcher active state (explicitly visible) */
+.ui-theme-active,
+.theme-btn-active{
+  background: var(--surface-strong);
+  border: 1px solid color-mix(in oklch, var(--accent) 55%, var(--border));
+  box-shadow: var(--shadow);
   filter: saturate(1.06);
 }

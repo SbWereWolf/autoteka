@@ -47,16 +47,13 @@
   --app-bg-image: url("../assets/bg-style-b.jpg");
   --app-bg-size: clamp(240px, 72vw, 440px);
 
-  /* Hover/active behavior for UI elements (used by .ui-interactive)
-     Dark themes => brighten on hover; light themes override to darken.
-  */
-  --hover-brightness: 1.10;
-  --active-brightness: 1.16;
+  /* Hover/active behavior for UI elements (used by .ui-interactive) */
+  --hover-brightness: 1.10; /* dark themes => lighten on hover */
+  --active-brightness: 1.04;
 
-  /* Bounce defaults (used by .ui-bounce / .ui-tile) */
-  --bounce-scale: 1.03;
-  --bounce-press-scale: 0.99;
-  --bounce-lift: 2px;
+  /* Hover ring colors (used by .ui-interactive) */
+  --hover-ring: color-mix(in oklch, var(--accent) 48%, transparent);
+  --active-ring: color-mix(in oklch, var(--accent) 62%, transparent);
 }
 
 /* STYLE A — clean + chips */
@@ -87,8 +84,8 @@
   --tile-letter-spacing: -0.02em;
 
   /* light theme => darken on hover */
-  --hover-brightness: 0.93;
-  --active-brightness: 0.88;
+  --hover-brightness: 0.96;
+  --active-brightness: 0.93;
   --app-bg-image: url("../assets/bg-style-a.jpg");
   --app-bg-size: clamp(240px, 72vw, 440px);
 }
@@ -120,8 +117,8 @@
   --tile-tint-max: 26;
   --tile-letter-spacing: -0.02em;
 
-  --hover-brightness: 0.93;
-  --active-brightness: 0.88;
+  --hover-brightness: 0.96;
+  --active-brightness: 0.93;
   --app-bg-image: url("../assets/bg-style-a.jpg");
   --app-bg-size: clamp(240px, 72vw, 440px);
 }
@@ -154,8 +151,8 @@
   --tile-tint-max: 20;
 
   /* dark theme => lighten on hover */
-  --hover-brightness: 1.10;
-  --active-brightness: 1.16;
+  --hover-brightness: 1.12;
+  --active-brightness: 1.05;
   --app-bg-image: url("../assets/bg-style-b.jpg");
   --app-bg-size: clamp(240px, 72vw, 440px);
 }
@@ -186,8 +183,8 @@
   --tile-tint-min: 10;
   --tile-tint-max: 26;
 
-  --hover-brightness: 1.10;
-  --active-brightness: 1.16;
+  --hover-brightness: 1.12;
+  --active-brightness: 1.05;
   --app-bg-image: url("../assets/bg-style-b.jpg");
   --app-bg-size: clamp(240px, 72vw, 440px);
 }
@@ -226,8 +223,8 @@
   --tile-tint-min: 6;
   --tile-tint-max: 16;
 
-  --hover-brightness: 0.93;
-  --active-brightness: 0.88;
+  --hover-brightness: 0.96;
+  --active-brightness: 0.93;
   --app-bg-image: url("../assets/bg-style-c.png");
   --app-bg-size: clamp(240px, 72vw, 440px);
 }
@@ -265,8 +262,8 @@
   --tile-tint-min: 10;
   --tile-tint-max: 26;
 
-  --hover-brightness: 0.93;
-  --active-brightness: 0.88;
+  --hover-brightness: 0.96;
+  --active-brightness: 0.93;
   --app-bg-image: url("../assets/bg-style-c.png");
   --app-bg-size: clamp(240px, 72vw, 440px);
 }

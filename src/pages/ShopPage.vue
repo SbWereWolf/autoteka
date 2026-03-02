@@ -1,7 +1,5 @@
 <template>
-  <!-- Shared content width/gutters must align with TopBar across breakpoints.
-       Keep mobile unchanged, increase gutters for tablet/desktop. -->
-  <div class="mx-auto max-w-6xl px-3 xs:px-3 sm:px-4 3xl:px-10 7xl:px-12 pb-16">
+  <div class="mx-auto max-w-4xl 3xl:max-w-5xl 7xl:max-w-6xl px-3 xs:px-3 sm:px-4 3xl:px-6 7xl:px-8 pb-16 3xl:pb-24 7xl:pb-28">
     <div class="pt-4">
       <button class="ui-transition ui-interactive ui-bounce rounded-xl px-3 py-2 text-sm"
               :style="backStyle"
@@ -9,8 +7,7 @@
         ← Назад
       </button>
 
-      <!-- Title must be readable on patterned background: always render on an opaque surface -->
-      <div class="mt-3 rounded-[var(--radius)] p-4 ui-transition" :style="titleStyle">
+      <div class="mt-3 rounded-[var(--radius)] p-4 ui-transition" :style="titleCardStyle">
         <div class="text-xs uppercase tracking-wide" :style="{ color: 'var(--muted)' }">Магазин</div>
         <div class="mt-1 text-2xl font-bold" :style="{ color: 'var(--text)', fontFamily: 'var(--font-display)' }">
           {{ shop?.name ?? "Магазин" }}
@@ -19,7 +16,7 @@
 
       <div v-if="shop" class="mt-4 space-y-4">
         <div class="relative">
-          <GalleryCarousel :items="shop.gallery" />
+          <GalleryCarousel :items="galleryItems" />
           <div class="absolute left-3 top-3 rounded-2xl px-3 py-2 text-xs ui-transition"
                :style="hoursStyle">
             <div class="whitespace-pre-line">{{ shop.workHours }}</div>
@@ -35,7 +32,7 @@
           <div class="text-xs uppercase tracking-wide" :style="{ color: 'var(--muted)' }">Контакты</div>
           <ul class="mt-2 space-y-2">
             <li v-for="(c, i) in shop.contacts" :key="i">
-              <a v-if="hrefFor(c)" class="ui-transition ui-interactive ui-bounce text-sm underline"
+              <a v-if="hrefFor(c)" class="ui-transition ui-interactive text-sm underline"
                  :style="{ color: 'var(--text)' }"
                  :href="hrefFor(c)!"
                  target="_blank"
@@ -48,7 +45,7 @@
         </section>
 
         <section class="flex gap-3">
-          <a class="ui-transition ui-interactive ui-bounce inline-flex items-center justify-center rounded-2xl px-4 py-3 text-sm font-semibold"
+          <a class="ui-transition ui-interactive inline-flex items-center justify-center rounded-2xl px-4 py-3 text-sm font-semibold"
              :style="primaryStyle"
              :href="shop.siteUrl"
              target="_self">
@@ -60,7 +57,7 @@
           </div>
         </section>
 
-        <!-- Ensure there's always enough scroll room on tablet/desktop so overscroll works -->
+        <!-- Ensure there is enough scroll room for overscroll-to-open on large screens -->
         <div class="h-24 3xl:h-56 7xl:h-64"></div>
       </div>
 
@@ -86,6 +83,17 @@ const router = useRouter();
 const shopId = computed(() => String(route.params.id ?? ""));
 const shop = computed(() => (shops as any[]).find(s => s.id === shopId.value));
 
+const galleryItems = computed(() => {
+  if (!shop.value) return [];
+  const imgs = (shop.value as any).galleryImages as string[] | undefined;
+  if (Array.isArray(imgs) && imgs.length) {
+    const nm = (shop.value as any).name ?? "Магазин";
+    return imgs.map((src, i) => ({ src, alt: `${nm} — ${i + 1}` }));
+  }
+  const placeholders = ((shop.value as any).gallery ?? []) as any[];
+  return placeholders.map((g, i) => ({ label: g?.label ?? `Слайд ${i + 1}` }));
+});
+
 const backStyle = computed(() => ({
   background: "var(--surface)",
   color: "var(--text)",
@@ -99,7 +107,7 @@ const cardStyle = computed(() => ({
   boxShadow: "var(--shadow)"
 }));
 
-const titleStyle = computed(() => ({
+const titleCardStyle = computed(() => ({
   background: "var(--surface-strong)",
   color: "var(--text)",
   border: "1px solid color-mix(in oklch, var(--text) 12%, transparent)",

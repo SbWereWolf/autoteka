@@ -31,7 +31,9 @@ function themeBtnStyle(id: string) {
   return {
     background: active ? "var(--surface-strong)" : "var(--surface)",
     color: "var(--text)",
-    border: "1px solid color-mix(in oklch, var(--text) 12%, transparent)",
+    border: active
+      ? "1px solid color-mix(in oklch, var(--accent) 55%, var(--border))"
+      : "1px solid var(--border)",
     boxShadow: active ? "var(--shadow)" : "none"
   };
 }
