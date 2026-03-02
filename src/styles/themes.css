@@ -42,6 +42,11 @@
   --tile-letter-spacing: -0.01em;
   --tile-text-transform: none;
   --tile-font-weight: 800;
+
+  /* Background tiling (image + OKLCH overlay for readability) */
+  --bg-overlay-strength: 82%;
+  --bg-overlay: color-mix(in oklch, var(--bg) var(--bg-overlay-strength), oklch(0 0 0 / 0));
+  --app-bg-size: clamp(240px, 72vw, 440px);
 }
 
 /* STYLE A — clean + chips */

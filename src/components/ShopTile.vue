@@ -44,8 +44,8 @@ const bgLayer = computed(() => ({
   // Percentage values are chosen to keep the grid calm but not flat.
   // Requested: make tiles more saturated overall.
   background: `linear-gradient(135deg,
-    color-mix(in oklch, var(--accent) ${Math.round(18 + r1.value * 24)}%, var(--bg)),
-    color-mix(in oklch, var(--accent) ${Math.round(12 + r2.value * 18)}%, var(--bg))
+    color-mix(in oklch, var(--accent) ${Math.round(26 + r1.value * 28)}%, var(--bg)),
+    color-mix(in oklch, var(--accent) ${Math.round(18 + r2.value * 22)}%, var(--bg))
   )`
 }));
 

@@ -1,42 +1,19 @@
-/* Background pattern (Telegram/WhatsApp vibe) */
+/*
+  App background: tiled image (WhatsApp chat vibe) + OKLCH overlay for readability.
+  The overlay adapts to the active theme via --bg and stays strictly in OKLCH.
+*/
 .app-pattern {
   background-color: var(--bg);
 
-  /* WhatsApp-like doodle ornament built only from OKLCH-driven CSS gradients. */
+  /*
+    Layer order: overlay (top) -> image (bottom).
+    Overlay strength is controlled by --bg-overlay (derived from --bg).
+  */
   background-image:
-    /* tiny dots */
-    radial-gradient(circle at 14px 16px, var(--pattern-ink) 1.4px, transparent 1.5px),
-    radial-gradient(circle at 46px 52px, var(--pattern-ink2) 1.2px, transparent 1.3px),
+    linear-gradient(var(--bg-overlay), var(--bg-overlay)),
+    url("../assets/bg-tile-city.png");
 
-    /* rings */
-    radial-gradient(circle at 78px 28px,
-      transparent 0 7px,
-      var(--pattern-ink2) 7px 8px,
-      transparent 8.2px
-    ),
-    radial-gradient(circle at 96px 78px,
-      transparent 0 9px,
-      var(--pattern-ink) 9px 10px,
-      transparent 10.2px
-    ),
-
-    /* short strokes (repeat thanks to background-size) */
-    linear-gradient(135deg, transparent 0 46%, var(--pattern-ink2) 46% 48%, transparent 48% 100%),
-    linear-gradient(45deg, transparent 0 46%, var(--pattern-ink2) 46% 48%, transparent 48% 100%);
-
-  background-size:
-    140px 140px,
-    180px 180px,
-    220px 220px,
-    200px 200px,
-    160px 160px,
-    160px 160px;
-
-  background-position:
-    0 0,
-    40px 20px,
-    20px 60px,
-    80px 10px,
-    0 0,
-    60px 40px;
+  background-repeat: repeat, repeat;
+  background-position: 0 0, 0 0;
+  background-size: auto, var(--app-bg-size);
 }
