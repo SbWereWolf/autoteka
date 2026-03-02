@@ -15,9 +15,23 @@
   "devDependencies": {
     "@vitejs/plugin-vue": "^5.1.0",
     "autoprefixer": "^10.4.20",
+    "eslint": "^10.0.2",
+    "htmlhint": "^1.9.1",
+    "markdownlint-cli": "^0.47.0",
     "postcss": "^8.4.49",
+    "prettier": "^3.8.1",
+    "stylelint": "^17.4.0",
+    "svgo": "^4.0.0",
     "tailwindcss": "^3.4.14",
     "typescript": "^5.6.3",
     "vite": "^5.4.8"
-  }
+  },
+  "description": "Это скелет проекта под согласованное ТЗ: каталог плиток, меню (город/категории/фишка), сортировка по алгоритму a/b/c/d, 6 тем (3 стиля × 2 палитры), страница магазина, переход на сайт через кнопку и через \"доскролл вниз\".",
+  "main": "postcss.config.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
 }
