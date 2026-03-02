@@ -3,20 +3,20 @@
     <div
       v-if="state.menuOpen"
       class="fixed inset-0 z-50"
-      @click.self="state.menuOpen = false"
+      @click="state.menuOpen = false"
     >
       <div class="absolute inset-0" :style="overlayStyle"></div>
 
       <aside
         class="absolute top-0 left-0 h-full w-[86%] max-w-sm ui-transition"
         :style="panelStyle"
+        @click.stop
       >
         <div class="h-14 flex items-center justify-between px-4 border-b"
              :style="{ borderColor: 'color-mix(in oklch, var(--text) 10%, transparent)' }">
           <div class="text-sm font-semibold" :style="{ color: 'var(--text)' }">Меню</div>
           <button
-            class="ui-transition rounded-xl px-3 py-2"
-            :style="btnStyle"
+            class="ui-transition ui-interactive ui-surface rounded-xl px-3 py-2"
             @click="state.menuOpen = false"
             aria-label="Закрыть"
           >
@@ -56,14 +56,11 @@ const overlayStyle = computed(() => ({
   background: "oklch(0.0% 0.0 0.0 / 0.35)"
 }));
 
+// Requirement: background should NOT show through UI blocks.
 const panelStyle = computed(() => ({
-  /* Opaque panel so the busy background never shows through */
   background: "var(--surface-strong)",
-  boxShadow: "var(--shadow)"
+  boxShadow: "var(--shadow)",
+  borderRight: "1px solid var(--border)"
 }));
 
-const btnStyle = computed(() => ({
-  background: "var(--surface)",
-  color: "var(--text)"
-}));
 </script>

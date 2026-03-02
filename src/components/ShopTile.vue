@@ -1,10 +1,9 @@
 <template>
   <button
-    class="ui-transition w-full aspect-square rounded-[var(--radius)] p-3 text-left relative overflow-hidden"
+    class="ui-transition ui-interactive ui-tile w-full aspect-square rounded-[var(--radius)] p-3 text-left relative overflow-hidden"
     :style="tileStyle"
     @click="$emit('open')"
   >
-    <!-- Opaque tile background (no see-through of the page pattern) -->
     <div class="absolute inset-0" :style="bgLayer"></div>
     <div class="absolute inset-0" :style="patternLayer"></div>
 

@@ -6,9 +6,8 @@
 :root{
   /* defaults (Style B-ish) */
   --bg: oklch(18.31% 0.0309 263.4);
-  /* IMPORTANT: surfaces must be opaque so the busy page background never shows through tiles/paragraphs */
-  --surface: oklch(24.0% 0.0200 263.4);
-  --surface-strong: oklch(20.0% 0.0200 263.4);
+  --surface: color-mix(in oklch, var(--bg) 72%, oklch(100% 0 0) 28%);
+  --surface-strong: color-mix(in oklch, var(--bg) 62%, oklch(100% 0 0) 38%);
   --text: oklch(100.0% 0.0 0.0 / 0.92);
   --muted: oklch(100.0% 0.0 0.0 / 0.65);
   --accent: oklch(82.76% 0.1013 230.3);
@@ -45,19 +44,27 @@
   --tile-font-weight: 800;
 
   /* Background tiling (image + OKLCH overlay for readability) */
-  --bg-overlay-strength: 82%;
-  --bg-overlay: color-mix(in oklch, var(--bg) var(--bg-overlay-strength), oklch(0 0 0 / 0));
+  --app-bg-image: url("../assets/bg-style-b.jpg");
   --app-bg-size: clamp(240px, 72vw, 440px);
+
+  /* Hover/active behavior for UI elements (used by .ui-interactive) */
+  --hover-brightness: 1.10; /* dark themes => lighten on hover */
+  --active-brightness: 1.04;
+
+  /* Hover ring colors (used by .ui-interactive) */
+  --hover-ring: color-mix(in oklch, var(--accent) 80%, oklch(100% 0 0) 20%);
+  --active-ring: color-mix(in oklch, var(--accent) 86%, oklch(100% 0 0) 14%);
+  --border: color-mix(in oklch, var(--text) 12%, transparent);
+  --hover-bg: color-mix(in oklch, var(--surface) 84%, var(--accent) 16%);
+  --active-bg: color-mix(in oklch, var(--surface) 76%, var(--accent) 24%);
 }
 
 /* STYLE A — clean + chips */
 .theme-a-neutral{
-  --app-bg-image: url("../assets/bg-style-a.jpg");
-  --app-bg-size: 360px 360px;
   /* redesigned: minty clean (stronger contrast vs Accent palette) */
   --bg: oklch(97.18% 0.0059 170.4);
-  --surface: oklch(99.10% 0.0040 170.4);
-  --surface-strong: oklch(98.10% 0.0060 170.4);
+  --surface: color-mix(in oklch, var(--bg) 92%, oklch(0% 0 0) 8%);
+  --surface-strong: color-mix(in oklch, var(--bg) 86%, oklch(0% 0 0) 14%);
   --text: oklch(12.88% 0.0406 264.7 / 0.92);
   --muted: oklch(12.88% 0.0406 264.7 / 0.62);
   --accent: oklch(51.09% 0.0861 186.4);
@@ -78,15 +85,25 @@
   --tile-tint-min: 8;
   --tile-tint-max: 18;
   --tile-letter-spacing: -0.02em;
+
+  /* light theme => darken on hover */
+  --hover-brightness: 0.96;
+  --active-brightness: 0.93;
+  --app-bg-image: url("../assets/bg-style-a.jpg");
+  --app-bg-size: clamp(240px, 72vw, 440px);
+  --border: color-mix(in oklch, var(--text) 14%, transparent);
+  --hover-bg: color-mix(in oklch, var(--surface) 86%, var(--accent) 14%);
+  --active-bg: color-mix(in oklch, var(--surface) 78%, var(--accent) 22%);
+  --hover-ring: color-mix(in oklch, var(--accent) 84%, oklch(0% 0 0) 16%);
+  --active-ring: color-mix(in oklch, var(--accent) 90%, oklch(0% 0 0) 10%);
 }
 
+
 .theme-a-accent{
-  --app-bg-image: url("../assets/bg-style-a.jpg");
-  --app-bg-size: 360px 360px;
   /* keep as-is (pleasant) */
   --bg: oklch(97.96% 0.0158 73.7);
-  --surface: oklch(99.20% 0.0060 73.7);
-  --surface-strong: oklch(98.20% 0.0100 73.7);
+  --surface: color-mix(in oklch, var(--bg) 92%, oklch(0% 0 0) 8%);
+  --surface-strong: color-mix(in oklch, var(--bg) 86%, oklch(0% 0 0) 14%);
   --text: oklch(18.4% 0.0304 265.8 / 0.92);
   --muted: oklch(18.4% 0.0304 265.8 / 0.62);
   --accent: oklch(64.61% 0.1943 41.1);
@@ -107,16 +124,25 @@
   --tile-tint-min: 10;
   --tile-tint-max: 26;
   --tile-letter-spacing: -0.02em;
+
+  --hover-brightness: 0.96;
+  --active-brightness: 0.93;
+  --app-bg-image: url("../assets/bg-style-a.jpg");
+  --app-bg-size: clamp(240px, 72vw, 440px);
+  --border: color-mix(in oklch, var(--text) 14%, transparent);
+  --hover-bg: color-mix(in oklch, var(--surface) 86%, var(--accent) 14%);
+  --active-bg: color-mix(in oklch, var(--surface) 78%, var(--accent) 22%);
+  --hover-ring: color-mix(in oklch, var(--accent) 84%, oklch(0% 0 0) 16%);
+  --active-ring: color-mix(in oklch, var(--accent) 90%, oklch(0% 0 0) 10%);
 }
+
 
 /* STYLE B — dark + glass */
 .theme-b-neutral{
-  --app-bg-image: url("../assets/bg-style-b.jpg");
-  --app-bg-size: 520px 520px;
   /* redesigned: deep neutral + cyan (stronger contrast vs Accent palette) */
   --bg: oklch(12.96% 0.0274 261.7);
-  --surface: oklch(23.00% 0.0200 261.7);
-  --surface-strong: oklch(18.80% 0.0220 261.7);
+  --surface: color-mix(in oklch, var(--bg) 70%, oklch(100% 0 0) 30%);
+  --surface-strong: color-mix(in oklch, var(--bg) 58%, oklch(100% 0 0) 42%);
   --text: oklch(100.0% 0.0 0.0 / 0.92);
   --muted: oklch(100.0% 0.0 0.0 / 0.66);
   --accent: oklch(71.48% 0.1257 215.2);
@@ -136,15 +162,25 @@
 
   --tile-tint-min: 8;
   --tile-tint-max: 20;
+
+  /* dark theme => lighten on hover */
+  --hover-brightness: 1.12;
+  --active-brightness: 1.05;
+  --app-bg-image: url("../assets/bg-style-b.jpg");
+  --app-bg-size: clamp(240px, 72vw, 440px);
+  --border: color-mix(in oklch, var(--text) 16%, transparent);
+  --hover-bg: color-mix(in oklch, var(--surface) 80%, var(--accent) 20%);
+  --active-bg: color-mix(in oklch, var(--surface) 72%, var(--accent) 28%);
+  --hover-ring: color-mix(in oklch, var(--accent) 78%, oklch(100% 0 0) 22%);
+  --active-ring: color-mix(in oklch, var(--accent) 84%, oklch(100% 0 0) 16%);
 }
 
+
 .theme-b-accent{
-  --app-bg-image: url("../assets/bg-style-b.jpg");
-  --app-bg-size: 520px 520px;
   /* keep as-is (pleasant) */
   --bg: oklch(16.93% 0.0245 265.2);
-  --surface: oklch(24.00% 0.0200 265.2);
-  --surface-strong: oklch(19.50% 0.0220 265.2);
+  --surface: color-mix(in oklch, var(--bg) 70%, oklch(100% 0 0) 30%);
+  --surface-strong: color-mix(in oklch, var(--bg) 58%, oklch(100% 0 0) 42%);
   --text: oklch(100.0% 0.0 0.0 / 0.92);
   --muted: oklch(100.0% 0.0 0.0 / 0.65);
   --accent: oklch(54.13% 0.2466 293.0);
@@ -164,16 +200,25 @@
 
   --tile-tint-min: 10;
   --tile-tint-max: 26;
+
+  --hover-brightness: 1.12;
+  --active-brightness: 1.05;
+  --app-bg-image: url("../assets/bg-style-b.jpg");
+  --app-bg-size: clamp(240px, 72vw, 440px);
+  --border: color-mix(in oklch, var(--text) 16%, transparent);
+  --hover-bg: color-mix(in oklch, var(--surface) 80%, var(--accent) 20%);
+  --active-bg: color-mix(in oklch, var(--surface) 72%, var(--accent) 28%);
+  --hover-ring: color-mix(in oklch, var(--accent) 78%, oklch(100% 0 0) 22%);
+  --active-ring: color-mix(in oklch, var(--accent) 84%, oklch(100% 0 0) 16%);
 }
+
 
 /* STYLE C — two-panel vibe (visual only), editorial */
 .theme-c-neutral{
-  --app-bg-image: url("../assets/bg-style-c.png");
-  --app-bg-size: 420px 420px;
   /* redesigned: paper + amber */
   --bg: oklch(97.18% 0.0159 82.8);
-  --surface: oklch(99.10% 0.0080 82.8);
-  --surface-strong: oklch(97.60% 0.0120 82.8);
+  --surface: color-mix(in oklch, var(--bg) 92%, oklch(0% 0 0) 8%);
+  --surface-strong: color-mix(in oklch, var(--bg) 86%, oklch(0% 0 0) 14%);
   --text: oklch(26.85% 0.0063 34.3 / 0.92);
   --muted: oklch(26.85% 0.0063 34.3 / 0.62);
   --accent: oklch(55.38% 0.1207 66.4);
@@ -200,15 +245,24 @@
   --tile-font-weight: 700;
   --tile-tint-min: 6;
   --tile-tint-max: 16;
+
+  --hover-brightness: 0.96;
+  --active-brightness: 0.93;
+  --app-bg-image: url("../assets/bg-style-c.png");
+  --app-bg-size: clamp(240px, 72vw, 440px);
+  --border: color-mix(in oklch, var(--text) 14%, transparent);
+  --hover-bg: color-mix(in oklch, var(--surface) 86%, var(--accent) 14%);
+  --active-bg: color-mix(in oklch, var(--surface) 78%, var(--accent) 22%);
+  --hover-ring: color-mix(in oklch, var(--accent) 84%, oklch(0% 0 0) 16%);
+  --active-ring: color-mix(in oklch, var(--accent) 90%, oklch(0% 0 0) 10%);
 }
 
+
 .theme-c-accent{
-  --app-bg-image: url("../assets/bg-style-c.png");
-  --app-bg-size: 420px 420px;
   /* keep palette, but keep editorial style so C reads as a separate style */
   --bg: oklch(96.19% 0.0179 272.3);
-  --surface: oklch(99.05% 0.0060 272.3);
-  --surface-strong: oklch(97.50% 0.0100 272.3);
+  --surface: color-mix(in oklch, var(--bg) 92%, oklch(0% 0 0) 8%);
+  --surface-strong: color-mix(in oklch, var(--bg) 86%, oklch(0% 0 0) 14%);
   --text: oklch(21.01% 0.0318 264.7 / 0.92);
   --muted: oklch(21.01% 0.0318 264.7 / 0.62);
   --accent: oklch(51.06% 0.2301 277.0);
@@ -235,4 +289,15 @@
   --tile-font-weight: 700;
   --tile-tint-min: 10;
   --tile-tint-max: 26;
+
+  --hover-brightness: 0.96;
+  --active-brightness: 0.93;
+  --app-bg-image: url("../assets/bg-style-c.png");
+  --app-bg-size: clamp(240px, 72vw, 440px);
+  --border: color-mix(in oklch, var(--text) 14%, transparent);
+  --hover-bg: color-mix(in oklch, var(--surface) 86%, var(--accent) 14%);
+  --active-bg: color-mix(in oklch, var(--surface) 78%, var(--accent) 22%);
+  --hover-ring: color-mix(in oklch, var(--accent) 84%, oklch(0% 0 0) 16%);
+  --active-ring: color-mix(in oklch, var(--accent) 90%, oklch(0% 0 0) 10%);
 }
+

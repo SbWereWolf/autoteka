@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@config "../../tailwind.config.js";
 
 /* Text stroke helper */
 .stroke-title {
@@ -8,23 +9,40 @@
     0 2px 8px oklch(0.0% 0.0 0.0 / 0.20);
 }
 
-/* Panel behind text blocks to keep content readable on busy backgrounds */
-.text-panel {
-  background: var(--surface);
-  border: 1px solid color-mix(in oklch, var(--text) 12%, transparent);
-  box-shadow: var(--shadow);
-  border-radius: var(--radius);
-}
-
-.text-panel-strong {
-  background: var(--surface-strong);
-  border: 1px solid color-mix(in oklch, var(--text) 14%, transparent);
-  box-shadow: var(--shadow);
-  border-radius: var(--radius);
-}
-
 /* Smooth transitions (durations tuned by class) */
 .ui-transition {
   transition-property: color, background-color, border-color, opacity, transform, box-shadow, filter;
   transition-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
 }
+
+/*
+  Global hover/focus behavior for interactive elements.
+  Requirement: make hover effects visible everywhere (darken on light themes, lighten on dark themes).
+  We do that via theme-controlled brightness variables (no srgb palette values).
+*/
+.ui-interactive{
+  cursor: pointer;
+  will-change: transform, filter;
+}
+
+.ui-interactive:hover{
+  filter: brightness(var(--hover-brightness, 1));
+  outline: 2px solid var(--hover-ring, color-mix(in oklch, var(--accent) 48%, transparent));
+  outline-offset: 2px;
+}
+
+.ui-interactive:active{
+  filter: brightness(var(--active-brightness, 1));
+  outline: 2px solid var(--active-ring, color-mix(in oklch, var(--accent) 62%, transparent));
+  outline-offset: 2px;
+  transform: scale(0.99);
+}
+
+.ui-interactive:focus-visible{
+  outline: 2px solid color-mix(in oklch, var(--accent) 62%, transparent);
+  outline-offset: 2px;
+}
+
+/* Tile-specific interaction: slightly lift on hover */
+.ui-tile:hover{ transform: scale(1.01); }
+.ui-tile:active{ transform: scale(0.99); }

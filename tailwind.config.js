@@ -2,13 +2,14 @@
 export default {
   content: ["./index.html", "./src/**/*.{vue,ts}"],
   theme: {
-    extend: {},
+    // Custom screens must match the spec (rem values shown in comments)
     screens: {
-      xs: "320px",   // 20rem
-      sm: "384px",   // 24rem
-      "3xl": "768px",// 48rem
-      "7xl": "1280px"// 80rem
-    }
+      xs: "20rem",   // 320px
+      sm: "24rem",   // 384px
+      "3xl": "48rem",// 768px
+      "7xl": "80rem" // 1280px
+    },
+    extend: {}
   },
   plugins: []
 };

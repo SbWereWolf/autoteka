@@ -1,20 +1,14 @@
 /*
-  App background: per-style tiled images (WhatsApp chat vibe).
-  Requirements:
-  - Each STYLE (A/B/C) uses its own background image.
-  - Keep the image as-is (no dark overlay).
-  - Background must stay fixed while scrolling.
-
-  Implementation:
-  - Theme classes set --app-bg-image and --app-bg-size.
+  App background: per-style tiled images (WhatsApp chat vibe), fixed during scroll.
+  Requirement: show the image "as is" (no dark overlay) and keep it stationary while content scrolls.
 */
+
 .app-pattern {
-  background-color: transparent;
+  background-color: var(--bg);
+  /* Background must always exist; theme sets --app-bg-image for every style/palette. */
   background-image: var(--app-bg-image);
   background-repeat: repeat;
   background-position: 0 0;
-  background-size: var(--app-bg-size, auto);
-
-  /* Keep the tiled background in place while scrolling */
+  background-size: var(--app-bg-size);
   background-attachment: fixed;
 }

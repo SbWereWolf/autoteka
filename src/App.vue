@@ -1,5 +1,5 @@
 <template>
-  <div class="app app-pattern min-h-screen" :class="themeClass">
+  <div class="app app-pattern min-h-screen" :class="themeClass" :style="{ color: 'var(--text)' }">
     <TopBar />
     <HamburgerMenu />
 
