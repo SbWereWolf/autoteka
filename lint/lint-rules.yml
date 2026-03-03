@@ -1,0 +1,88 @@
+version: 1
+
+rules:
+
+  ".php":
+    format: "vendor/bin/php-cs-fixer fix"
+    lint:
+      - "vendor/bin/phpstan analyse"
+      - "vendor/bin/phpcs"
+
+  ".js":
+    format: "${NPX_PATH} ${PRETTIER_PATH} --write"
+    lint:
+      - "${NPX_PATH} ${ESLINT_PATH}"
+
+  ".css":
+    format: "${NPX_PATH} ${PRETTIER_PATH} --write"
+    lint:
+      - "${NPX_PATH} ${STYLELINT_PATH}"
+
+  ".json":
+    format: "${NPX_PATH} ${PRETTIER_PATH} --write"
+    lint:
+      - "${NPX_PATH} ${ESLINT_PATH}"
+
+  ".md":
+    format:
+      - "${NPX_PATH} ${PRETTIER_PATH} --write"
+      - "${NPX_PATH} markdownlint-cli --fix"
+    lint:
+      - "${NPX_PATH} markdownlint-cli"
+
+  ".yaml":
+    lint:
+      - "${YAMLLINT_PATH}"
+
+  ".yml":
+    lint:
+      - "${YAMLLINT_PATH}"
+
+  ".xml":
+    lint:
+      - "xmllint --noout"
+
+  ".sh":
+    lint:
+      - "shellcheck"
+
+  ".bash":
+    lint:
+      - "shellcheck"
+
+  ".ps1":
+    lint:
+      - "pwsh -Command Invoke-ScriptAnalyzer -Path"
+
+  ".puml":
+    lint:
+      - "java -jar ${PLANTUML} -checkonly"
+
+  ".Dockerfile":
+    lint:
+      - "${HADOLINT_PATH}"
+
+  "Makefile":
+    lint:
+      - "checkmake"
+      - "make -n"
+
+  ".sql":
+    lint:
+      - "${SQLFLUFF_PATH} lint"
+
+  ".env":
+    lint:
+      - "${DOTENV_LINTER_PATH}"
+
+  ".html":
+    lint:
+      - "${NPX_PATH} htmlhint"
+
+  ".htm":
+    lint:
+      - "${NPX_PATH} htmlhint"
+
+  ".svg":
+    lint:
+      - "${NPX_PATH} svgo --dry-run"
