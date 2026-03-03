@@ -12,13 +12,15 @@
 
       <!-- optional thumbnail: full-tile artwork (no distortion; letterbox allowed) -->
       <div v-if="shop.thumbUrl" class="absolute inset-0" :style="thumbBgStyle"></div>
-      <img
+      <UiImage
         v-if="shop.thumbUrl"
+        class="absolute inset-0"
         :src="shop.thumbUrl"
         :alt="`${shop.name} — изображение`"
-        class="absolute inset-0 w-full h-full object-contain"
         loading="lazy"
         decoding="async"
+        spinner
+        img-class="w-full h-full object-contain"
       />
     </div>
 
@@ -34,6 +36,7 @@
 
 <script setup lang="ts">
 import { computed } from "vue";
+import UiImage from "./UiImage.vue";
 
 const props = defineProps<{ shop: { name: string; thumbUrl?: string }; seed: number }>();
 defineEmits<{ open: [] }>();

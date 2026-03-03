@@ -1,8 +1,8 @@
 <template>
-    <div
-      class="relative overflow-hidden rounded-[var(--radius)] ui-transition ui-surface-strong"
-      :style="{ boxShadow: 'var(--shadow)' }"
-    >
+  <div
+    class="relative overflow-hidden rounded-[var(--radius)] ui-transition ui-surface-strong"
+    :style="{ boxShadow: 'var(--shadow)' }"
+  >
     <div
       class="aspect-[3/2] 3xl:aspect-[9/4] 7xl:aspect-[9/4]"
       @pointerdown="onDown"
@@ -10,31 +10,45 @@
       @pointerup="onUp"
       @pointercancel="onCancel"
     >
-      <div class="h-full flex ui-transition" :style="trackStyle">
-        <div
-          v-for="(g, i) in items"
-          :key="i"
-          class="min-w-full h-full"
-        >
+      <!-- Empty state (no images yet) -->
+      <div
+        v-if="items.length === 0"
+        class="h-full w-full grid place-items-center"
+        :style="{ backgroundColor: 'var(--surface-strong)' }"
+      >
+        <div class="px-6 text-center">
+          <div class="text-xs" :style="{ color: 'var(--muted)' }">
+            {{ emptyText }}
+          </div>
+        </div>
+      </div>
+
+      <!-- Slides -->
+      <div v-else class="h-full flex ui-transition" :style="trackStyle">
+        <div v-for="(g, i) in items" :key="i" class="min-w-full h-full">
           <!-- string URL support (mocks may provide galleryImages as string[]) -->
-          <img
+          <UiImage
             v-if="typeof g === 'string'"
-            class="w-full h-full object-contain"
+            class="w-full h-full"
             :src="g"
             alt=""
             :loading="i === 0 ? 'eager' : 'lazy'"
             decoding="async"
+            spinner
+            img-class="w-full h-full object-contain"
           />
 
-          <img
+          <UiImage
             v-else-if="g.kind === 'image'"
-            class="w-full h-full object-contain"
+            class="w-full h-full"
             :src="g.src"
             :alt="g.alt"
             :width="g.width"
             :height="g.height"
             :loading="i === 0 ? 'eager' : 'lazy'"
             decoding="async"
+            spinner
+            img-class="w-full h-full object-contain"
           />
 
           <div
@@ -50,7 +64,7 @@
 
     <button
       v-if="items.length > 1"
-      class="absolute left-2 top-1/2 -translate-y-1/2 rounded-xl px-2 py-1 ui-transition ui-interactive ui-bounce"
+      class="absolute left-2 top-1/2 -translate-y-1/2 rounded-xl h-12 w-12 grid place-items-center ui-transition ui-interactive ui-bounce"
       @click="prev"
       aria-label="Предыдущий"
     >
@@ -58,7 +72,7 @@
     </button>
     <button
       v-if="items.length > 1"
-      class="absolute right-2 top-1/2 -translate-y-1/2 rounded-xl px-2 py-1 ui-transition ui-interactive ui-bounce"
+      class="absolute right-2 top-1/2 -translate-y-1/2 rounded-xl h-12 w-12 grid place-items-center ui-transition ui-interactive ui-bounce"
       @click="next"
       aria-label="Следующий"
     >
@@ -78,12 +92,23 @@
 
 <script setup lang="ts">
 import { computed, ref } from "vue";
+import UiImage from "./UiImage.vue";
 
 type GalleryItem =
   | { kind: "image"; src: string; alt: string; width: number; height: number }
   | { kind: "placeholder"; label: string };
 
-const props = defineProps<{ items: Array<GalleryItem | string> }>();
+const props = withDefaults(
+  defineProps<{
+    items: Array<GalleryItem | string>;
+    emptyTitle?: string;
+    emptyText?: string;
+  }>(),
+  {
+    emptyTitle: "",
+    emptyText: ""
+  }
+);
 
 const idx = ref(0);
 
@@ -111,6 +136,7 @@ let startY = 0;
 let dragging = false;
 
 function onDown(e: PointerEvent) {
+  if (props.items.length <= 1) return;
   if ((e.target as HTMLElement).closest("button")) return;
   dragging = true;
   startX = e.clientX;

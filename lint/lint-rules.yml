@@ -85,4 +85,4 @@ rules:
 
   ".svg":
     lint:
-      - "${NPX_PATH} svgo --dry-run"
+      - "${NPX_PATH} svgo"
