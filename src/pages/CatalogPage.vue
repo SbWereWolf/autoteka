@@ -32,7 +32,7 @@
 import CitySelect from "../components/CitySelect.vue";
 import { computed } from "vue";
 import { useRouter } from "vue-router";
-import shops from "../mocks/shops.json";
+import shops from "../mocks/shops";
 import dicts from "../mocks/dicts.json";
 import { state } from "../state";
 import { sortShopsByRules } from "../utils/sortShops";

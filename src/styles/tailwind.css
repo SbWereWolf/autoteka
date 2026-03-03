@@ -38,6 +38,32 @@
     transition-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
   }
 
+  /* Skeleton placeholder (for images and async-ish blocks) */
+  .ui-skeleton {
+    background: linear-gradient(
+      90deg,
+      color-mix(in oklch, var(--text) 6%, var(--surface-strong)),
+      color-mix(in oklch, var(--text) 12%, var(--surface-strong)),
+      color-mix(in oklch, var(--text) 6%, var(--surface-strong))
+    );
+    background-size: 200% 100%;
+    animation: ui-shimmer 1.15s linear infinite;
+  }
+
+  @keyframes ui-shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+
+  /* Small spinner used inside skeletons */
+  .ui-spin {
+    animation: ui-spin 0.9s linear infinite;
+  }
+
+  @keyframes ui-spin {
+    to { transform: rotate(360deg); }
+  }
+
   /* Use for any clickable control (button/a/select) */
   .ui-interactive {
     background: var(--surface);
@@ -151,6 +177,13 @@
   @media (prefers-reduced-motion: reduce) {
     .ui-transition {
       transition-duration: 0.01ms !important;
+    }
+    .ui-skeleton {
+      animation: none !important;
+      background-position: 0 0 !important;
+    }
+    .ui-spin {
+      animation: none !important;
     }
     .ui-bounce,
     .ui-bounce:hover,

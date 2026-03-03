@@ -2,7 +2,7 @@
   <div class="relative">
     <slot />
 
-    <!-- Indicator -->
+    <!-- Indicator: появляется только в момент «доскролла» (когда пользователь тянет/скроллит в конце) -->
     <div class="pointer-events-none fixed left-0 right-0 bottom-4 z-40 flex justify-center">
       <div
         class="ui-transition rounded-2xl px-4 py-3 text-sm flex items-center gap-3"
@@ -12,7 +12,7 @@
           <div class="h-full ui-transition" :style="fillStyle"></div>
         </div>
         <div class="whitespace-nowrap">
-          <span v-if="progress < 1" :style="{ color: 'var(--text)' }">Потяните, чтобы перейти</span>
+          <span v-if="!armed" :style="{ color: 'var(--text)' }">Потяните, чтобы перейти</span>
           <span v-else :style="{ color: 'var(--text)' }"><b>Отпустите для перехода</b></span>
         </div>
       </div>
@@ -23,13 +23,26 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 
-const props = defineProps<{ url: string; thresholdPx?: number }>();
+const props = withDefaults(
+  defineProps<{ url: string; thresholdPx?: number; holdMs?: number; cooldownMs?: number }>(),
+  {
+    thresholdPx: 90,
+    holdMs: 220,
+    cooldownMs: 1200
+  }
+);
 
-const threshold = computed(() => props.thresholdPx ?? 90);
+const threshold = computed(() => props.thresholdPx);
+const holdMs = computed(() => props.holdMs);
+const cooldownMs = computed(() => props.cooldownMs);
+
 const pull = ref(0);
 const armed = ref(false);
 const vibed = ref(false);
 const triggered = ref(false);
+const cooldownUntil = ref(0);
+
+const isCoolingDown = computed(() => performance.now() < cooldownUntil.value);
 
 function atBottom() {
   const el = (document.scrollingElement || document.documentElement) as HTMLElement;
@@ -40,11 +53,18 @@ function reset() {
   pull.value = 0;
   armed.value = false;
   vibed.value = false;
+  holdStartedAt = 0;
+}
+
+function startCooldown() {
+  cooldownUntil.value = performance.now() + cooldownMs.value;
 }
 
 function openUrl() {
   if (triggered.value) return;
+  if (isCoolingDown.value) return;
   triggered.value = true;
+  startCooldown();
   window.location.href = props.url;
 }
 
@@ -56,46 +76,69 @@ function maybeVibe() {
 }
 
 let startY = 0;
+let holdStartedAt = 0;
 
-function onTouchStart(e: TouchEvent) {
-  if (!atBottom()) return;
-  startY = e.touches[0]?.clientY ?? 0;
-}
-function onTouchMove(e: TouchEvent) {
-  if (!atBottom()) return;
-  if (triggered.value) return;
-  const y = e.touches[0]?.clientY ?? 0;
-  const delta = startY - y; // upward finger move => positive delta
-  if (delta <= 0) {
-    pull.value = 0;
+function updateArmedState(now: number) {
+  if (pull.value < threshold.value) {
+    holdStartedAt = 0;
     armed.value = false;
     vibed.value = false;
     return;
   }
-  pull.value = Math.min(delta, threshold.value * 1.25);
-  armed.value = pull.value >= threshold.value;
-  if (armed.value) maybeVibe();
+
+  if (holdStartedAt === 0) holdStartedAt = now;
+  const heldFor = now - holdStartedAt;
+  const ok = heldFor >= holdMs.value;
+  if (ok && !armed.value) {
+    armed.value = true;
+    maybeVibe();
+  }
 }
+
+function onTouchStart(e: TouchEvent) {
+  if (triggered.value || isCoolingDown.value) return;
+  if (!atBottom()) return;
+  startY = e.touches[0]?.clientY ?? 0;
+}
+
+function onTouchMove(e: TouchEvent) {
+  if (triggered.value || isCoolingDown.value) return;
+  if (!atBottom()) return;
+
+  const y = e.touches[0]?.clientY ?? 0;
+  const delta = startY - y; // upward finger move => positive delta (page scroll down)
+
+  if (delta <= 0) {
+    reset();
+    return;
+  }
+
+  pull.value = Math.min(delta, threshold.value * 1.25);
+  updateArmedState(performance.now());
+}
+
 function onTouchEnd() {
   if (armed.value) openUrl();
   reset();
 }
 
-let wheelTimer: number | null = null;
+let wheelReleaseTimer: number | null = null;
 
 function onWheel(e: WheelEvent) {
+  if (triggered.value || isCoolingDown.value) return;
   if (!atBottom()) return;
-  if (triggered.value) return;
   if (e.deltaY <= 0) return;
+
   pull.value = Math.min(pull.value + e.deltaY * 0.15, threshold.value * 1.25);
-  armed.value = pull.value >= threshold.value;
-  if (armed.value) maybeVibe();
-  if (wheelTimer) window.clearTimeout(wheelTimer);
-  // "release" for wheel/trackpad = short pause after reaching threshold
-  wheelTimer = window.setTimeout(() => {
+  updateArmedState(performance.now());
+
+  if (wheelReleaseTimer) window.clearTimeout(wheelReleaseTimer);
+
+  // "release" for wheel/trackpad = short pause after overscroll
+  wheelReleaseTimer = window.setTimeout(() => {
     if (armed.value) openUrl();
-    else reset();
-  }, 160);
+    reset();
+  }, 180);
 }
 
 onMounted(() => {
@@ -110,19 +153,22 @@ onBeforeUnmount(() => {
   window.removeEventListener("touchmove", onTouchMove);
   window.removeEventListener("touchend", onTouchEnd);
   window.removeEventListener("wheel", onWheel);
-  if (wheelTimer) window.clearTimeout(wheelTimer);
+  if (wheelReleaseTimer) window.clearTimeout(wheelReleaseTimer);
 });
 
 const progress = computed(() => Math.max(0, Math.min(1, pull.value / threshold.value)));
 
-const pillStyle = computed(() => ({
-  background: "var(--surface-strong)",
-  border: "1px solid var(--border)",
-  boxShadow: "var(--shadow)",
-  transitionDuration: "200ms",
-  opacity: atBottom() ? 1 : 0,
-  transform: atBottom() ? "translateY(0)" : "translateY(12px)"
-}));
+const pillStyle = computed(() => {
+  const visible = pull.value > 0 && !triggered.value;
+  return {
+    background: "var(--surface-strong)",
+    border: "1px solid var(--border)",
+    boxShadow: "var(--shadow)",
+    transitionDuration: "200ms",
+    opacity: visible ? 1 : 0,
+    transform: visible ? "translateY(0)" : "translateY(12px)"
+  };
+});
 
 const barStyle = computed(() => ({
   background: "color-mix(in oklch, var(--text) 18%, transparent)"
@@ -130,7 +176,9 @@ const barStyle = computed(() => ({
 
 const fillStyle = computed(() => ({
   width: `${progress.value * 100}%`,
-  background: progress.value < 1 ? "var(--accent)" : "color-mix(in oklch, var(--accent) 80%, oklch(0.98 0 0))",
+  background: armed.value
+    ? "color-mix(in oklch, var(--accent) 80%, oklch(0.98 0 0))"
+    : "var(--accent)",
   transitionDuration: "120ms"
 }));
 </script>
