@@ -4,3 +4,5 @@ dist
 .vscode
 /.idea/
 /src/mocks/
+/lint/win.env
+/lint/nix.env
