@@ -1,28 +1,30 @@
 <template>
   <button
-    class="ui-transition ui-bounce ui-tile w-full aspect-square rounded-[var(--radius)] p-3 text-left relative overflow-hidden"
+    class="ui-transition ui-bounce ui-tile w-full aspect-square rounded-[var(--radius)] p-3 text-left relative"
     :style="tileStyle"
     @click="$emit('open')"
   >
-    <!-- monotone tinted background (opaque) -->
-    <div class="absolute inset-0" :style="bgLayer"></div>
-    <div class="absolute inset-0" :style="patternLayer"></div>
+    <!-- background/artwork frame (keeps overflow hidden without clipping text) -->
+    <div class="absolute inset-0 overflow-hidden rounded-[var(--radius)]">
+      <!-- monotone tinted background (opaque) -->
+      <div v-if="!shop.thumbUrl" class="absolute inset-0" :style="bgLayer"></div>
+      <div v-if="!shop.thumbUrl" class="absolute inset-0" :style="patternLayer"></div>
 
-    <!-- optional thumbnail (reserved space to avoid CLS) -->
-    <div v-if="shop.thumbUrl" class="absolute right-3 top-3 w-14 h-14 rounded-2xl overflow-hidden"
-         :style="thumbWrapStyle">
+      <!-- optional thumbnail: full-tile artwork (no distortion; letterbox allowed) -->
+      <div v-if="shop.thumbUrl" class="absolute inset-0" :style="thumbBgStyle"></div>
       <img
+        v-if="shop.thumbUrl"
         :src="shop.thumbUrl"
-        :alt="`${shop.name} — миниатюра`"
-        class="w-full h-full object-cover"
+        :alt="`${shop.name} — изображение`"
+        class="absolute inset-0 w-full h-full object-contain"
         loading="lazy"
         decoding="async"
       />
     </div>
 
     <div class="relative z-10 h-full flex items-end">
-      <div class="rounded-2xl px-3 py-2" :style="titlePlateStyle">
-        <div class="stroke-title leading-tight" :style="titleStyle">
+      <div class="rounded-2xl px-3 py-2 max-w-full" :style="titlePlateStyle">
+        <div class="stroke-title leading-tight tile-title" :style="titleStyle">
           {{ shop.name }}
         </div>
       </div>
@@ -82,9 +84,8 @@ const titleStyle = computed(() => ({
   fontWeight: 800
 }));
 
-const thumbWrapStyle = computed(() => ({
-  border: "1px solid var(--border)",
-  background: "var(--surface-strong)",
-  boxShadow: "0 10px 18px oklch(0 0 0 / 0.10)"
+const thumbBgStyle = computed(() => ({
+  // letterboxing color for contain-mode thumbnails
+  background: "var(--surface)"
 }));
 </script>

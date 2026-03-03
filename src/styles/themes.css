@@ -30,6 +30,9 @@
   --active-amt: 12%;
   --hover-saturate: 1.04;
   --active-saturate: 1.08;
+  /* Used by ui-interactive hover feedback (light themes darken, dark themes brighten) */
+  --hover-brightness: 1.08;
+  --active-brightness: 1.14;
 
   --tile-hover-brightness: 1.08;
   --tile-active-brightness: 1.12;
@@ -78,6 +81,8 @@
   --accent: oklch(0.60 0.14 185);
 
   --hover-ink: oklch(0 0 0);
+  --hover-brightness: 0.92;
+  --active-brightness: 0.86;
   --hover-amt: 9%;
   --active-amt: 14%;
 
@@ -101,6 +106,8 @@
   --accent: oklch(0.70 0.17 55);
 
   --hover-ink: oklch(0 0 0);
+  --hover-brightness: 0.92;
+  --active-brightness: 0.86;
   --hover-amt: 10%;
   --active-amt: 16%;
 
@@ -131,6 +138,8 @@
   --accent: oklch(0.76 0.14 200);
 
   --hover-ink: oklch(1 0 0);
+  --hover-brightness: 1.10;
+  --active-brightness: 1.16;
   --hover-amt: 8%;
   --active-amt: 12%;
 
@@ -154,6 +163,8 @@
   --accent: oklch(0.70 0.18 295);
 
   --hover-ink: oklch(1 0 0);
+  --hover-brightness: 1.10;
+  --active-brightness: 1.16;
   --hover-amt: 8%;
   --active-amt: 12%;
 
@@ -184,6 +195,8 @@
   --accent: oklch(0.66 0.12 80);
 
   --hover-ink: oklch(0 0 0);
+  --hover-brightness: 0.92;
+  --active-brightness: 0.86;
   --hover-amt: 10%;
   --active-amt: 16%;
 
@@ -211,6 +224,8 @@
   --accent: oklch(0.62 0.18 275);
 
   --hover-ink: oklch(0 0 0);
+  --hover-brightness: 0.92;
+  --active-brightness: 0.86;
   --hover-amt: 10%;
   --active-amt: 16%;
 

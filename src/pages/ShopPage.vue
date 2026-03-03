@@ -13,13 +13,19 @@
       </div>
 
       <div v-if="shop" class="mt-4 space-y-4 3xl:space-y-6">
-        <div class="relative">
+        <!-- If a shop has no slides, do NOT show the gallery -->
+        <div v-if="hasSlides" class="relative">
           <GalleryCarousel :items="galleryItems" />
           <div class="absolute left-3 top-3 rounded-2xl px-3 py-2 text-xs ui-transition"
                :style="hoursStyle">
             <div class="whitespace-pre-line">{{ shop.workHours }}</div>
           </div>
         </div>
+
+        <section v-else class="text-panel">
+          <div class="text-xs uppercase tracking-wide" :style="{ color: 'var(--muted)' }">Режим работы</div>
+          <div class="mt-2 text-sm whitespace-pre-line" :style="{ color: 'var(--text)' }">{{ shop.workHours }}</div>
+        </section>
 
         <section class="text-panel">
           <div class="text-xs uppercase tracking-wide" :style="{ color: 'var(--muted)' }">Описание</div>
@@ -80,12 +86,17 @@ const router = useRouter();
 const shopId = computed(() => String(route.params.id ?? ""));
 const shop = computed(() => (shops as any[]).find(s => s.id === shopId.value));
 
-const galleryItems = computed(() => {
+const slides = computed<string[]>(() => {
   const s: any = shop.value;
   if (!s) return [];
-  if (Array.isArray(s.galleryImages) && s.galleryImages.length) return s.galleryImages;
-  if (Array.isArray(s.gallery) && s.gallery.length) return s.gallery;
-  return [{ kind: "placeholder", label: "Галерея" }];
+  return Array.isArray(s.galleryImages) ? s.galleryImages.filter(Boolean) : [];
+});
+
+const hasSlides = computed(() => slides.value.length > 0);
+
+const galleryItems = computed(() => {
+  // GalleryCarousel supports string[] directly
+  return slides.value;
 });
 
 const hoursStyle = computed(() => ({

@@ -5,7 +5,9 @@
         <div class="flex items-end justify-between gap-3">
           <div>
             <div class="text-xs uppercase tracking-wide" :style="{ color: 'var(--muted)' }">Каталог магазинов</div>
-            <div class="text-lg font-semibold" :style="{ color: 'var(--text)' }">{{ cityName }}</div>
+            <div class="mt-2">
+              <CitySelect class="max-w-[14rem]" />
+            </div>
           </div>
           <div class="text-xs" :style="{ color: 'var(--muted)' }">
             {{ sorted.length }} шт.
@@ -27,6 +29,7 @@
 </template>
 
 <script setup lang="ts">
+import CitySelect from "../components/CitySelect.vue";
 import { computed } from "vue";
 import { useRouter } from "vue-router";
 import shops from "../mocks/shops.json";
