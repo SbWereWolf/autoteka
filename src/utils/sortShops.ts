@@ -8,7 +8,9 @@ export type Shop = {
   description: string;
   contacts: { type: string; value: string }[];
   siteUrl: string;
-  gallery: { kind: string; label: string }[];
+  thumbUrl?: string;
+  galleryImages?: { kind: "image"; src: string; alt: string; width: number; height: number }[];
+  gallery?: { kind: "placeholder"; label: string }[];
 };
 
 export function sortShopsByRules(params: {

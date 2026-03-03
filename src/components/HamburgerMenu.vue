@@ -3,22 +3,32 @@
     <div
       v-if="state.menuOpen"
       class="fixed inset-0 z-50"
-      @click="state.menuOpen = false"
+      @keydown.esc.prevent.stop="closeMenu"
     >
-      <div class="absolute inset-0" :style="overlayStyle"></div>
+      <!-- overlay closes the menu on click/tap -->
+      <button
+        class="absolute inset-0 w-full h-full"
+        :style="overlayStyle"
+        aria-label="Закрыть меню"
+        type="button"
+        @click="closeMenu"
+      />
 
       <aside
-        class="absolute top-0 left-0 h-full w-[86%] max-w-sm ui-transition"
-        :style="panelStyle"
+        ref="panelEl"
+        class="absolute top-0 left-0 h-full w-[86%] max-w-sm ui-transition ui-surface-strong"
+        :style="{ boxShadow: 'var(--shadow)' }"
+        role="dialog"
+        aria-modal="true"
         @click.stop
       >
         <div class="h-14 flex items-center justify-between px-4 border-b"
-             :style="{ borderColor: 'color-mix(in oklch, var(--text) 10%, transparent)' }">
+             :style="{ borderColor: 'var(--border)' }">
           <div class="text-sm font-semibold" :style="{ color: 'var(--text)' }">Меню</div>
           <button
-            class="ui-transition ui-interactive ui-bounce rounded-xl px-3 py-2"
-            :style="btnStyle"
-            @click="state.menuOpen = false"
+            ref="closeBtnEl"
+            class="ui-transition ui-interactive ui-bounce rounded-xl h-12 w-12 inline-flex items-center justify-center"
+            @click="closeMenu"
             aria-label="Закрыть"
           >
             ✕
@@ -47,26 +57,55 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import { state } from "../state";
 import CitySelect from "./CitySelect.vue";
 import CategoryChips from "./CategoryChips.vue";
 import FeatureSelect from "./FeatureSelect.vue";
 
+const closeBtnEl = ref<HTMLButtonElement | null>(null);
+const panelEl = ref<HTMLElement | null>(null);
+let prevFocused: HTMLElement | null = null;
+
 const overlayStyle = computed(() => ({
-  background: "oklch(0.0% 0.0 0.0 / 0.35)"
+  background: "oklch(0 0 0 / 0.35)",
+  border: "none"
 }));
 
-// Requirement: background should NOT show through UI blocks.
-const panelStyle = computed(() => ({
-  background: "var(--surface-strong)",
-  boxShadow: "var(--shadow)",
-  borderRight: "1px solid color-mix(in oklch, var(--text) 10%, transparent)"
-}));
+function closeMenu() {
+  state.menuOpen = false;
+}
 
-const btnStyle = computed(() => ({
-  background: "var(--surface)",
-  color: "var(--text)",
-  border: "1px solid color-mix(in oklch, var(--text) 10%, transparent)"
-}));
+function focusMenuButton() {
+  const btn = document.querySelector<HTMLElement>("[data-menu-button]");
+  btn?.focus();
+}
+
+watch(
+  () => state.menuOpen,
+  async (open) => {
+    if (open) {
+      prevFocused = document.activeElement as HTMLElement | null;
+      document.body.style.overflow = "hidden";
+      await nextTick();
+      closeBtnEl.value?.focus();
+    } else {
+      document.body.style.overflow = "";
+      // Restore focus to the menu button (or previous focused element if available)
+      if (prevFocused && prevFocused.isConnected) prevFocused.focus();
+      else focusMenuButton();
+    }
+  }
+);
+
+function onKeydown(e: KeyboardEvent) {
+  if (!state.menuOpen) return;
+  if (e.key === "Escape") {
+    e.preventDefault();
+    closeMenu();
+  }
+}
+
+onMounted(() => document.addEventListener("keydown", onKeydown));
+onBeforeUnmount(() => document.removeEventListener("keydown", onKeydown));
 </script>

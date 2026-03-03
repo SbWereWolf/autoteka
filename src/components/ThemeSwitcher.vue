@@ -1,13 +1,12 @@
 <template>
-  <div class="flex items-center gap-1">
+  <div class="flex items-center gap-2 overflow-x-auto max-w-[60vw] sm:max-w-none">
     <button
       v-for="t in themes"
       :key="t.id"
-      class="ui-transition ui-interactive ui-bounce h-9 w-9 rounded-xl grid place-items-center"
-      :class="state.theme === t.id ? 'theme-btn-active' : ''"
-      :style="themeBtnStyle(t.id)"
-      @click="setTheme(t.id)"
+      class="ui-transition ui-interactive ui-bounce h-12 w-12 rounded-xl grid place-items-center shrink-0"
       :aria-pressed="state.theme === t.id"
+      :style="activeOutline(t.id)"
+      @click="setTheme(t.id)"
       :aria-label="`Тема ${t.label}`"
       :title="t.label"
     >
@@ -26,20 +25,20 @@ import { state, setTheme } from "../state";
 
 const themes = dicts.themes;
 
-function themeBtnStyle(id: string) {
+function activeOutline(id: string) {
   const active = state.theme === id;
   return {
+    outline: active ? `2px solid var(--focus)` : "2px solid transparent",
+    outlineOffset: "2px",
     background: active ? "var(--surface-strong)" : "var(--surface)",
-    color: "var(--text)",
-    border: active
-      ? "1px solid color-mix(in oklch, var(--accent) 55%, var(--border))"
-      : "1px solid var(--border)",
-    boxShadow: active ? "var(--shadow)" : "none"
+    borderColor: active ? "var(--border)" : "var(--border)"
   };
 }
 
 function dotColor(id: string) {
   // palette hint: neutral = muted dot, accent = accent dot
-  return id.includes("accent") ? "var(--accent)" : "color-mix(in oklch, var(--text) 55%, transparent)";
+  return id.includes("accent")
+    ? "var(--accent)"
+    : "color-mix(in oklch, var(--text) 55%, transparent)";
 }
 </script>

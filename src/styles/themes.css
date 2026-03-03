@@ -1,270 +1,230 @@
-/* 
-  Theme system: 6 themes = 3 styles × 2 palettes.
-  Applied by adding class "theme-a-neutral" etc to the root .app element.
+/*
+  Theme system (OKLCH only): 6 themes = 3 styles × 2 palettes.
+  Apply by adding class "theme-a-neutral" etc to the root .app element.
+
+  IMPORTANT:
+  - All surfaces are opaque (background never shows through content).
+  - Hover/tap color changes are defined via --surface-hover/--surface-active.
 */
 
-:root{
-  /* defaults (Style B-ish) */
-  --bg: oklch(18.31% 0.0309 263.4);
-  --surface: color-mix(in oklch, var(--bg) 72%, oklch(100% 0 0) 28%);
-  --surface-strong: color-mix(in oklch, var(--bg) 62%, oklch(100% 0 0) 38%);
-  --text: oklch(100.0% 0.0 0.0 / 0.92);
-  --muted: oklch(100.0% 0.0 0.0 / 0.65);
-  --accent: oklch(82.76% 0.1013 230.3);
+:root {
+  /* sensible defaults in case theme class isn't mounted yet */
+  --bg: oklch(0.17 0.02 260);
+  --surface: oklch(0.23 0.02 260);
+  --surface-strong: oklch(0.27 0.02 260);
+  --text: oklch(0.96 0.01 260);
+  --muted: oklch(0.80 0.01 260);
+  --accent: oklch(0.74 0.14 200);
 
   --radius: 18px;
-  --shadow: 0 10px 30px oklch(0.0% 0.0 0.0 / 0.20);
-  --blur: 14px;
-  --header-blur: 14px;
+  --shadow: 0 12px 28px oklch(0 0 0 / 0.18);
 
   --font-display: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans";
 
-  /* text stroke for tile titles */
-  --tile-stroke: oklch(0.0% 0.0 0.0 / 0.85);
-  --tile-shadow: oklch(0.0% 0.0 0.0 / 0.45);
+  --tile-stroke: oklch(0 0 0 / 0.85);
+  --tile-shadow: oklch(0 0 0 / 0.35);
 
-  /* background pattern */
-  --pattern-opacity: 0.08;
-  --pattern-dot: oklch(100.0% 0.0 0.0 / 0.08);
-  --pattern-dot2: oklch(100.0% 0.0 0.0 / 0.06);
+  /* interactive tuning */
+  --hover-ink: oklch(1 0 0);
+  --hover-amt: 8%;
+  --active-amt: 12%;
+  --hover-saturate: 1.04;
+  --active-saturate: 1.08;
 
-  /* whatsapp-like doodle pattern inks (derived from per-theme dots) */
-  --pattern-ink: var(--pattern-dot);
-  --pattern-ink2: var(--pattern-dot2);
+  --tile-hover-brightness: 1.08;
+  --tile-active-brightness: 1.12;
 
-  /* tile styling knobs */
-  --tile-pattern: radial-gradient(circle at 12px 12px, oklch(100.0% 0.0 0.0 / 0.18) 2px, transparent 3px);
+  --bounce-scale: 1.06;
+  --bounce-scale-active: 0.985;
+  --bounce-lift: 4px;
+  --bounce-lift-active: 1px;
+
+  /* background wallpaper (mandatory) */
+  --app-bg-image: url("/bg/style-b.jpg");
+  --app-bg-size: 420px;
+}
+
+/* Derived vars (do not override per theme unless needed) */
+.app {
+  color: var(--text);
+  --border: color-mix(in oklch, var(--text) 12%, var(--surface));
+  --focus: color-mix(in oklch, var(--accent) 70%, oklch(1 0 0));
+
+  --surface-hover: color-mix(in oklch, var(--hover-ink) var(--hover-amt), var(--surface));
+  --surface-active: color-mix(in oklch, var(--hover-ink) var(--active-amt), var(--surface));
+
+  --accent-hover: color-mix(in oklch, var(--hover-ink) 10%, var(--accent));
+  --accent-active: color-mix(in oklch, var(--hover-ink) 16%, var(--accent));
+
+  /* Tile ornament */
+  --tile-pattern: radial-gradient(circle at 12px 12px, color-mix(in oklch, var(--text) 12%, transparent) 2px, transparent 3px);
   --tile-pattern-size: 36px 36px;
-  --tile-pattern-opacity: 0.28;
-  --tile-tint-min: 10; /* % accent mixed into bg */
-  --tile-tint-max: 22;
-  --tile-border: 1px solid color-mix(in oklch, var(--text) 10%, transparent);
-  --tile-letter-spacing: -0.01em;
-  --tile-text-transform: none;
-  --tile-font-weight: 800;
-
-  /* Background tiling (image + OKLCH overlay for readability) */
-  --app-bg-image: url("../assets/bg-style-b.jpg");
-  --app-bg-size: clamp(240px, 72vw, 440px);
-
-  /* Hover/active behavior for UI elements (used by .ui-interactive) */
-  --hover-brightness: 1.10; /* dark themes => lighten on hover */
-  --active-brightness: 1.04;
-
-  /* Hover ring colors (used by .ui-interactive) */
-  --hover-ring: color-mix(in oklch, var(--accent) 48%, transparent);
-  --active-ring: color-mix(in oklch, var(--accent) 62%, transparent);
+  --tile-pattern-opacity: 0.22;
 }
 
-/* STYLE A — clean + chips */
-.theme-a-neutral{
-  /* redesigned: minty clean (stronger contrast vs Accent palette) */
-  --bg: oklch(97.18% 0.0059 170.4);
-  --surface: color-mix(in oklch, var(--bg) 92%, oklch(0% 0 0) 8%);
-  --surface-strong: color-mix(in oklch, var(--bg) 86%, oklch(0% 0 0) 14%);
-  --text: oklch(12.88% 0.0406 264.7 / 0.92);
-  --muted: oklch(12.88% 0.0406 264.7 / 0.62);
-  --accent: oklch(51.09% 0.0861 186.4);
+/* ===== STYLE A: clean + chips ===== */
+.theme-a-neutral,
+.theme-a-accent {
+  --app-bg-image: url("/bg/style-a.jpg");
+  --app-bg-size: 360px;
+}
+
+.theme-a-neutral {
+  --bg: oklch(0.985 0.012 170);
+  --surface: oklch(0.965 0.012 170);
+  --surface-strong: oklch(0.94 0.014 170);
+  --text: oklch(0.22 0.02 250);
+  --muted: oklch(0.48 0.02 250);
+  --accent: oklch(0.60 0.14 185);
+
+  --hover-ink: oklch(0 0 0);
+  --hover-amt: 9%;
+  --active-amt: 14%;
 
   --radius: 20px;
-  --shadow: 0 12px 28px oklch(0.0% 0.0 0.0 / 0.08);
-  --blur: 0px;
-  --header-blur: 0px;
+  --shadow: 0 10px 24px oklch(0 0 0 / 0.10);
 
   --font-display: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans";
-  --tile-stroke: oklch(100.0% 0.0 0.0 / 0.80);
-  --tile-shadow: oklch(0.0% 0.0 0.0 / 0.28);
+  --tile-stroke: oklch(0.98 0.01 170 / 0.85);
+  --tile-shadow: oklch(0 0 0 / 0.28);
 
-  --pattern-opacity: 0.07;
-  --pattern-dot: oklch(12.88% 0.0406 264.7 / 0.055);
-  --pattern-dot2: oklch(12.88% 0.0406 264.7 / 0.040);
-
-  --tile-tint-min: 8;
-  --tile-tint-max: 18;
-  --tile-letter-spacing: -0.02em;
-
-  /* light theme => darken on hover */
-  --hover-brightness: 0.96;
-  --active-brightness: 0.93;
-  --app-bg-image: url("../assets/bg-style-a.jpg");
-  --app-bg-size: clamp(240px, 72vw, 440px);
+  --tile-hover-brightness: 0.96;
+  --tile-active-brightness: 0.92;
 }
 
+.theme-a-accent {
+  --bg: oklch(0.985 0.02 75);
+  --surface: oklch(0.965 0.02 75);
+  --surface-strong: oklch(0.94 0.022 75);
+  --text: oklch(0.22 0.02 40);
+  --muted: oklch(0.48 0.02 40);
+  --accent: oklch(0.70 0.17 55);
 
-.theme-a-accent{
-  /* keep as-is (pleasant) */
-  --bg: oklch(97.96% 0.0158 73.7);
-  --surface: color-mix(in oklch, var(--bg) 92%, oklch(0% 0 0) 8%);
-  --surface-strong: color-mix(in oklch, var(--bg) 86%, oklch(0% 0 0) 14%);
-  --text: oklch(18.4% 0.0304 265.8 / 0.92);
-  --muted: oklch(18.4% 0.0304 265.8 / 0.62);
-  --accent: oklch(64.61% 0.1943 41.1);
+  --hover-ink: oklch(0 0 0);
+  --hover-amt: 10%;
+  --active-amt: 16%;
 
   --radius: 20px;
-  --shadow: 0 12px 28px oklch(0.0% 0.0 0.0 / 0.08);
-  --blur: 0px;
-  --header-blur: 0px;
+  --shadow: 0 10px 24px oklch(0 0 0 / 0.10);
 
   --font-display: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans";
-  --tile-stroke: oklch(100.0% 0.0 0.0 / 0.85);
-  --tile-shadow: oklch(0.0% 0.0 0.0 / 0.30);
+  --tile-stroke: oklch(0.98 0.02 75 / 0.85);
+  --tile-shadow: oklch(0 0 0 / 0.28);
 
-  --pattern-opacity: 0.07;
-  --pattern-dot: oklch(18.4% 0.0304 265.8 / 0.050);
-  --pattern-dot2: oklch(18.4% 0.0304 265.8 / 0.035);
-
-  --tile-tint-min: 10;
-  --tile-tint-max: 26;
-  --tile-letter-spacing: -0.02em;
-
-  --hover-brightness: 0.96;
-  --active-brightness: 0.93;
-  --app-bg-image: url("../assets/bg-style-a.jpg");
-  --app-bg-size: clamp(240px, 72vw, 440px);
+  --tile-hover-brightness: 0.96;
+  --tile-active-brightness: 0.92;
 }
 
+/* ===== STYLE B: dark + "glass" (still opaque) ===== */
+.theme-b-neutral,
+.theme-b-accent {
+  --app-bg-image: url("/bg/style-b.jpg");
+  --app-bg-size: 420px;
+}
 
-/* STYLE B — dark + glass */
-.theme-b-neutral{
-  /* redesigned: deep neutral + cyan (stronger contrast vs Accent palette) */
-  --bg: oklch(12.96% 0.0274 261.7);
-  --surface: color-mix(in oklch, var(--bg) 70%, oklch(100% 0 0) 30%);
-  --surface-strong: color-mix(in oklch, var(--bg) 58%, oklch(100% 0 0) 42%);
-  --text: oklch(100.0% 0.0 0.0 / 0.92);
-  --muted: oklch(100.0% 0.0 0.0 / 0.66);
-  --accent: oklch(71.48% 0.1257 215.2);
+.theme-b-neutral {
+  --bg: oklch(0.17 0.02 260);
+  --surface: oklch(0.23 0.02 260);
+  --surface-strong: oklch(0.27 0.02 260);
+  --text: oklch(0.96 0.01 260);
+  --muted: oklch(0.80 0.01 260);
+  --accent: oklch(0.76 0.14 200);
+
+  --hover-ink: oklch(1 0 0);
+  --hover-amt: 8%;
+  --active-amt: 12%;
 
   --radius: 18px;
-  --shadow: 0 18px 40px oklch(0.0% 0.0 0.0 / 0.28);
-  --blur: 14px;
-  --header-blur: 14px;
+  --shadow: 0 14px 34px oklch(0 0 0 / 0.28);
 
   --font-display: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans";
-  --tile-stroke: oklch(0.0% 0.0 0.0 / 0.85);
-  --tile-shadow: oklch(0.0% 0.0 0.0 / 0.45);
+  --tile-stroke: oklch(0.05 0 0 / 0.88);
+  --tile-shadow: oklch(0 0 0 / 0.40);
 
-  --pattern-opacity: 0.10;
-  --pattern-dot: oklch(100.0% 0.0 0.0 / 0.090);
-  --pattern-dot2: oklch(100.0% 0.0 0.0 / 0.060);
-
-  --tile-tint-min: 8;
-  --tile-tint-max: 20;
-
-  /* dark theme => lighten on hover */
-  --hover-brightness: 1.12;
-  --active-brightness: 1.05;
-  --app-bg-image: url("../assets/bg-style-b.jpg");
-  --app-bg-size: clamp(240px, 72vw, 440px);
+  --tile-hover-brightness: 1.08;
+  --tile-active-brightness: 1.12;
 }
 
+.theme-b-accent {
+  --bg: oklch(0.165 0.03 290);
+  --surface: oklch(0.225 0.03 290);
+  --surface-strong: oklch(0.265 0.03 290);
+  --text: oklch(0.96 0.01 290);
+  --muted: oklch(0.80 0.01 290);
+  --accent: oklch(0.70 0.18 295);
 
-.theme-b-accent{
-  /* keep as-is (pleasant) */
-  --bg: oklch(16.93% 0.0245 265.2);
-  --surface: color-mix(in oklch, var(--bg) 70%, oklch(100% 0 0) 30%);
-  --surface-strong: color-mix(in oklch, var(--bg) 58%, oklch(100% 0 0) 42%);
-  --text: oklch(100.0% 0.0 0.0 / 0.92);
-  --muted: oklch(100.0% 0.0 0.0 / 0.65);
-  --accent: oklch(54.13% 0.2466 293.0);
+  --hover-ink: oklch(1 0 0);
+  --hover-amt: 8%;
+  --active-amt: 12%;
 
   --radius: 18px;
-  --shadow: 0 18px 40px oklch(0.0% 0.0 0.0 / 0.30);
-  --blur: 14px;
-  --header-blur: 14px;
+  --shadow: 0 14px 34px oklch(0 0 0 / 0.30);
 
   --font-display: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans";
-  --tile-stroke: oklch(0.0% 0.0 0.0 / 0.85);
-  --tile-shadow: oklch(0.0% 0.0 0.0 / 0.45);
+  --tile-stroke: oklch(0.05 0 0 / 0.88);
+  --tile-shadow: oklch(0 0 0 / 0.40);
 
-  --pattern-opacity: 0.10;
-  --pattern-dot: oklch(100.0% 0.0 0.0 / 0.085);
-  --pattern-dot2: oklch(100.0% 0.0 0.0 / 0.055);
-
-  --tile-tint-min: 10;
-  --tile-tint-max: 26;
-
-  --hover-brightness: 1.12;
-  --active-brightness: 1.05;
-  --app-bg-image: url("../assets/bg-style-b.jpg");
-  --app-bg-size: clamp(240px, 72vw, 440px);
+  --tile-hover-brightness: 1.08;
+  --tile-active-brightness: 1.12;
 }
 
+/* ===== STYLE C: editorial ===== */
+.theme-c-neutral,
+.theme-c-accent {
+  --app-bg-image: url("/bg/style-c.png");
+  --app-bg-size: 360px;
+}
 
-/* STYLE C — two-panel vibe (visual only), editorial */
-.theme-c-neutral{
-  /* redesigned: paper + amber */
-  --bg: oklch(97.18% 0.0159 82.8);
-  --surface: color-mix(in oklch, var(--bg) 92%, oklch(0% 0 0) 8%);
-  --surface-strong: color-mix(in oklch, var(--bg) 86%, oklch(0% 0 0) 14%);
-  --text: oklch(26.85% 0.0063 34.3 / 0.92);
-  --muted: oklch(26.85% 0.0063 34.3 / 0.62);
-  --accent: oklch(55.38% 0.1207 66.4);
+.theme-c-neutral {
+  --bg: oklch(0.975 0.02 90);
+  --surface: oklch(0.945 0.02 90);
+  --surface-strong: oklch(0.905 0.02 90);
+  --text: oklch(0.24 0.02 40);
+  --muted: oklch(0.48 0.02 40);
+  --accent: oklch(0.66 0.12 80);
+
+  --hover-ink: oklch(0 0 0);
+  --hover-amt: 10%;
+  --active-amt: 16%;
 
   --radius: 10px;
-  --shadow: 0 8px 18px oklch(0.0% 0.0 0.0 / 0.06);
-  --blur: 0px;
-  --header-blur: 0px;
+  --shadow: 0 8px 18px oklch(0 0 0 / 0.10);
 
   --font-display: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-  --tile-stroke: oklch(100.0% 0.0 0.0 / 0.75);
-  --tile-shadow: oklch(0.0% 0.0 0.0 / 0.22);
+  --tile-stroke: oklch(0.98 0.02 90 / 0.80);
+  --tile-shadow: oklch(0 0 0 / 0.22);
 
-  --pattern-opacity: 0.06;
-  --pattern-dot: oklch(26.85% 0.0063 34.3 / 0.050);
-  --pattern-dot2: oklch(26.85% 0.0063 34.3 / 0.035);
-
-  --tile-pattern: linear-gradient(135deg, oklch(26.85% 0.0063 34.3 / 0.10) 1px, transparent 1px);
+  --tile-pattern: linear-gradient(135deg, color-mix(in oklch, var(--text) 12%, transparent) 1px, transparent 1px);
   --tile-pattern-size: 18px 18px;
-  --tile-pattern-opacity: 0.22;
-  --tile-border: 1px solid color-mix(in oklch, var(--text) 18%, transparent);
-  --tile-letter-spacing: 0.06em;
-  --tile-text-transform: uppercase;
-  --tile-font-weight: 700;
-  --tile-tint-min: 6;
-  --tile-tint-max: 16;
+  --tile-pattern-opacity: 0.20;
 
-  --hover-brightness: 0.96;
-  --active-brightness: 0.93;
-  --app-bg-image: url("../assets/bg-style-c.png");
-  --app-bg-size: clamp(240px, 72vw, 440px);
+  --tile-hover-brightness: 0.96;
+  --tile-active-brightness: 0.92;
 }
 
+.theme-c-accent {
+  --bg: oklch(0.965 0.015 270);
+  --surface: oklch(0.94 0.015 270);
+  --surface-strong: oklch(0.90 0.015 270);
+  --text: oklch(0.23 0.02 270);
+  --muted: oklch(0.48 0.02 270);
+  --accent: oklch(0.62 0.18 275);
 
-.theme-c-accent{
-  /* keep palette, but keep editorial style so C reads as a separate style */
-  --bg: oklch(96.19% 0.0179 272.3);
-  --surface: color-mix(in oklch, var(--bg) 92%, oklch(0% 0 0) 8%);
-  --surface-strong: color-mix(in oklch, var(--bg) 86%, oklch(0% 0 0) 14%);
-  --text: oklch(21.01% 0.0318 264.7 / 0.92);
-  --muted: oklch(21.01% 0.0318 264.7 / 0.62);
-  --accent: oklch(51.06% 0.2301 277.0);
+  --hover-ink: oklch(0 0 0);
+  --hover-amt: 10%;
+  --active-amt: 16%;
 
   --radius: 10px;
-  --shadow: 0 8px 18px oklch(0.0% 0.0 0.0 / 0.06);
-  --blur: 0px;
-  --header-blur: 0px;
+  --shadow: 0 8px 18px oklch(0 0 0 / 0.10);
 
   --font-display: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-  --tile-stroke: oklch(100.0% 0.0 0.0 / 0.80);
-  --tile-shadow: oklch(0.0% 0.0 0.0 / 0.22);
+  --tile-stroke: oklch(0.98 0.015 270 / 0.82);
+  --tile-shadow: oklch(0 0 0 / 0.22);
 
-  --pattern-opacity: 0.07;
-  --pattern-dot: oklch(21.01% 0.0318 264.7 / 0.055);
-  --pattern-dot2: oklch(21.01% 0.0318 264.7 / 0.040);
-
-  --tile-pattern: linear-gradient(135deg, oklch(21.01% 0.0318 264.7 / 0.10) 1px, transparent 1px);
+  --tile-pattern: linear-gradient(135deg, color-mix(in oklch, var(--text) 12%, transparent) 1px, transparent 1px);
   --tile-pattern-size: 18px 18px;
-  --tile-pattern-opacity: 0.22;
-  --tile-border: 1px solid color-mix(in oklch, var(--text) 18%, transparent);
-  --tile-letter-spacing: 0.06em;
-  --tile-text-transform: uppercase;
-  --tile-font-weight: 700;
-  --tile-tint-min: 10;
-  --tile-tint-max: 26;
+  --tile-pattern-opacity: 0.20;
 
-  --hover-brightness: 0.96;
-  --active-brightness: 0.93;
-  --app-bg-image: url("../assets/bg-style-c.png");
-  --app-bg-size: clamp(240px, 72vw, 440px);
+  --tile-hover-brightness: 0.96;
+  --tile-active-brightness: 0.92;
 }
-

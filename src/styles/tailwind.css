@@ -1,105 +1,178 @@
 @import "tailwindcss";
 @config "../../tailwind.config.js";
 
-/* Text stroke helper */
-.stroke-title {
-  -webkit-text-stroke: 1px var(--tile-stroke, oklch(0.0% 0.0 0.0 / 0.8));
-  text-shadow:
-    0 1px 0 var(--tile-shadow, oklch(0.0% 0.0 0.0 / 0.35)),
-    0 2px 8px oklch(0.0% 0.0 0.0 / 0.20);
-}
-
-/* Opaque surfaces so patterned backgrounds never bleed through */
-.ui-surface{
-  background: var(--surface);
-  color: var(--text);
-  border: 1px solid var(--border);
-}
-
-.ui-surface-strong{
-  background: var(--surface-strong);
-  color: var(--text);
-  border: 1px solid var(--border);
-}
-
-/* Smooth transitions (durations tuned by class) */
-.ui-transition {
-  transition-property: color, background-color, border-color, opacity, transform, box-shadow, filter;
-  transition-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
-}
-
 /*
-  Global interactive behavior.
-  - No hover "frame": hover uses theme-controlled brightness/saturate.
-  - Buttons use same bounce as tiles.
-  - Must react to mouse even in responsive emulation (some browsers disable CSS :hover there).
-    We support this via a JS-added .is-hover class.
+  Tailwind v4 entrypoint + project UI primitives.
+  All theme colors are CSS variables defined in themes.css (OKLCH only).
 */
-.ui-interactive{
-  cursor: pointer;
-  will-change: transform, filter;
-  transform: translateZ(0);
-  -webkit-tap-highlight-color: transparent;
+
+@layer base {
+  :root {
+    color-scheme: light dark;
+  }
+
+  html, body {
+    height: 100%;
+  }
+
+  body {
+    margin: 0;
+    font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans";
+  }
+
+  /* Visible focus ring for keyboard users */
+  :focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 2px;
+  }
 }
 
-/* Hover: light themes -> darken; dark themes -> lighten (via theme vars) */
-.ui-interactive:hover,
-.ui-interactive.is-hover{
-  filter: brightness(var(--hover-brightness, 1)) saturate(var(--hover-saturate, 1));
-}
+@layer components {
+  /* Container used by TopBar and pages so left edges line up across breakpoints */
+  .app-container {
+    @apply mx-auto max-w-6xl px-3 xs:px-3 sm:px-4 3xl:px-10 7xl:px-14;
+  }
 
-/* Active: slightly stronger */
-.ui-interactive:active,
-.ui-interactive.is-active{
-  filter: brightness(var(--active-brightness, 1)) saturate(var(--active-saturate, 1));
-}
+  .ui-transition {
+    transition-property: color, background-color, border-color, opacity, transform, box-shadow, filter;
+    transition-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
 
-/* Useful for form controls (select) where hover may be inconsistent */
-.ui-interactive:focus{
-  filter: brightness(var(--hover-brightness, 1)) saturate(var(--hover-saturate, 1));
-}
+  /* Use for any clickable control (button/a/select) */
+  .ui-interactive {
+    background: var(--surface);
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
 
-/* Focus-visible: subtle a11y outline (not used as main hover affordance) */
-.ui-interactive:focus-visible{
-  outline: 2px solid color-mix(in oklch, var(--accent) 55%, transparent);
-  outline-offset: 2px;
-}
+  .ui-surface-strong {
+    background: var(--surface-strong);
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
 
-/* Bounce (same feel as tiles) — strengthened ~2x */
-.ui-bounce:hover,
-.ui-bounce.is-hover{
-  transform: translateY(calc(-1 * var(--bounce-lift, 4px))) scale(var(--bounce-scale, 1.06));
-}
+  /* Hover is based on input capabilities, not screen width */
+  @media (hover: hover) and (pointer: fine) {
+    .ui-interactive:hover,
+    .ui-surface-strong:hover {
+      background: var(--surface-hover);
+      filter: saturate(var(--hover-saturate));
+    }
+  }
 
-.ui-bounce:active,
-.ui-bounce.is-active{
-  transform: translateY(calc(-1 * var(--bounce-lift-active, 2px))) scale(var(--bounce-press-scale, 1.02));
-}
+  /* Some device emulations disable CSS :hover; JS polyfill adds .is-hover */
+  .has-mouse .ui-interactive.is-hover,
+  .has-mouse .ui-surface-strong.is-hover {
+    background: var(--surface-hover);
+    filter: saturate(var(--hover-saturate));
+  }
 
-/* Back-compat: tiles may still use ui-tile */
-.ui-tile:hover,
-.ui-tile.is-hover{ transform: translateY(calc(-1 * var(--bounce-lift, 4px))) scale(var(--bounce-scale, 1.06)); }
-.ui-tile:active,
-.ui-tile.is-active{ transform: translateY(calc(-1 * var(--bounce-lift-active, 2px))) scale(var(--bounce-press-scale, 1.02)); }
+  .ui-interactive:active,
+  .ui-surface-strong:active {
+    background: var(--surface-active);
+    filter: saturate(var(--active-saturate));
+  }
 
-/* Touch devices: no hover, so show the same effect on tap */
-@media (hover: none){
-  .ui-interactive:active{ filter: brightness(var(--hover-brightness, 1)) saturate(var(--hover-saturate, 1)); }
-  .ui-bounce:active{ transform: translateY(calc(-1 * var(--bounce-lift, 4px))) scale(var(--bounce-scale, 1.06)); }
-}
+  /* Bounce shared by tiles and buttons */
+  .ui-bounce {
+    transform: translateY(0) scale(1);
+  }
 
-/* Category chip "active" state */
-.ui-chip-active{
-  background: color-mix(in oklch, var(--accent) 22%, var(--surface));
-  border-color: color-mix(in oklch, var(--accent) 55%, var(--border));
-  box-shadow: var(--shadow);
-}
+  .ui-tile {
+    filter: none;
+  }
 
-/* Theme switcher active state (explicitly visible) */
-.ui-theme-active,
-.theme-btn-active{
-  background: var(--surface-strong);
-  border: 1px solid color-mix(in oklch, var(--accent) 55%, var(--border));
-  box-shadow: var(--shadow);
-  filter: saturate(1.06);
+  @media (hover: hover) and (pointer: fine) {
+    .ui-tile:hover {
+      filter: brightness(var(--tile-hover-brightness)) saturate(var(--hover-saturate));
+    }
+  }
+
+  .has-mouse .ui-tile.is-hover {
+    filter: brightness(var(--tile-hover-brightness)) saturate(var(--hover-saturate));
+  }
+
+  .ui-tile:active {
+    filter: brightness(var(--tile-active-brightness)) saturate(var(--active-saturate));
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .ui-bounce:hover {
+      transform: translateY(calc(var(--bounce-lift) * -1)) scale(var(--bounce-scale));
+    }
+  }
+
+  .has-mouse .ui-bounce.is-hover {
+    transform: translateY(calc(var(--bounce-lift) * -1)) scale(var(--bounce-scale));
+  }
+
+  .ui-bounce:active {
+    transform: translateY(var(--bounce-lift-active)) scale(var(--bounce-scale-active));
+  }
+
+  /* Text stroke helper for tile titles */
+  .stroke-title {
+    -webkit-text-stroke: 1px var(--tile-stroke);
+    text-shadow:
+      0 1px 0 var(--tile-shadow),
+      0 2px 10px color-mix(in oklch, var(--tile-shadow) 30%, transparent);
+  }
+
+  /* Opaque panel for any text block on busy background */
+  .text-panel {
+    @apply rounded-[var(--radius)] p-4;
+    background: var(--surface-strong);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+  }
+
+  .ui-link {
+    text-underline-offset: 2px;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .ui-link:hover {
+      color: color-mix(in oklch, var(--accent) 55%, var(--text));
+    }
+  }
+
+  .has-mouse .ui-link.is-hover {
+    color: color-mix(in oklch, var(--accent) 55%, var(--text));
+  }
+
+  .ui-link:active {
+    color: var(--accent);
+  }
+
+  .ui-primary {
+    background: var(--accent);
+    color: oklch(0.98 0 0);
+    border: 1px solid color-mix(in oklch, var(--accent) 70%, var(--border));
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .ui-primary:hover {
+      background: var(--accent-hover);
+    }
+  }
+
+  .has-mouse .ui-primary.is-hover {
+    background: var(--accent-hover);
+  }
+
+  .ui-primary:active {
+    background: var(--accent-active);
+  }
+
+  /* Reduce motion */
+  @media (prefers-reduced-motion: reduce) {
+    .ui-transition {
+      transition-duration: 0.01ms !important;
+    }
+    .ui-bounce,
+    .ui-bounce:hover,
+    .ui-bounce:active {
+      transform: none !important;
+    }
+  }
 }

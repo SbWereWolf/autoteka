@@ -1,9 +1,7 @@
 <template>
-  <!-- Shared content width/gutters must align with TopBar across breakpoints -->
-  <div class="mx-auto max-w-6xl px-3 xs:px-3 sm:px-4 3xl:px-10 7xl:px-12 pb-10">
+  <div class="app-container pb-10 3xl:pb-16">
     <div class="pt-4">
-      <!-- Header panel: ensure text is readable on patterned background -->
-      <div class="rounded-[var(--radius)] p-4 ui-transition" :style="panelStyle">
+      <div class="text-panel">
         <div class="flex items-end justify-between gap-3">
           <div>
             <div class="text-xs uppercase tracking-wide" :style="{ color: 'var(--muted)' }">Каталог магазинов</div>
@@ -15,12 +13,11 @@
         </div>
       </div>
 
-      <!-- Grid rules per spec: xs/sm=2 cols, 3xl=3 cols, 7xl=4 cols; bigger gaps on tablet/desktop -->
       <div class="mt-4 grid grid-cols-2 gap-2 sm:gap-3 3xl:grid-cols-3 3xl:gap-8 7xl:grid-cols-4 7xl:gap-10">
         <ShopTile
           v-for="(s, i) in sorted"
           :key="s.id"
-          :name="s.name"
+          :shop="s"
           :seed="i + seedBase"
           @open="go(s.id)"
         />
@@ -51,12 +48,6 @@ const sorted = computed(() => sortShopsByRules({
 }));
 
 const seedBase = computed(() => state.cityId.length * 17);
-
-const panelStyle = computed(() => ({
-  background: "var(--surface)",
-  border: "1px solid color-mix(in oklch, var(--text) 10%, transparent)",
-  boxShadow: "var(--shadow)"
-}));
 
 function go(id: string) {
   router.push({ name: "shop", params: { id } });

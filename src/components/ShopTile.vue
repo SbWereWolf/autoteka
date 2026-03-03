@@ -1,30 +1,29 @@
 <template>
   <button
-    class="ui-transition ui-interactive ui-bounce w-full aspect-square rounded-[var(--radius)] p-3 text-left relative overflow-hidden"
+    class="ui-transition ui-bounce ui-tile w-full aspect-square rounded-[var(--radius)] p-3 text-left relative overflow-hidden"
     :style="tileStyle"
     @click="$emit('open')"
   >
-    <!-- Background (monotone) -->
+    <!-- monotone tinted background (opaque) -->
     <div class="absolute inset-0" :style="bgLayer"></div>
     <div class="absolute inset-0" :style="patternLayer"></div>
 
-    <div class="relative z-10 h-full flex flex-col">
-      <!-- Optional thumbnail (keeps tiles readable + calm) -->
-      <div class="flex-1 rounded-2xl overflow-hidden" :style="thumbWrapStyle">
-        <img
-          v-if="image"
-          class="h-full w-full object-cover"
-          :src="image"
-          :alt="name"
-          loading="lazy"
-        />
-        <div v-else class="h-full w-full" :style="thumbPlaceholder"></div>
-      </div>
+    <!-- optional thumbnail (reserved space to avoid CLS) -->
+    <div v-if="shop.thumbUrl" class="absolute right-3 top-3 w-14 h-14 rounded-2xl overflow-hidden"
+         :style="thumbWrapStyle">
+      <img
+        :src="shop.thumbUrl"
+        :alt="`${shop.name} — миниатюра`"
+        class="w-full h-full object-cover"
+        loading="lazy"
+        decoding="async"
+      />
+    </div>
 
-      <!-- Name on opaque panel -->
-      <div class="mt-3 rounded-2xl px-3 py-2 ui-transition" :style="namePanelStyle">
+    <div class="relative z-10 h-full flex items-end">
+      <div class="rounded-2xl px-3 py-2" :style="titlePlateStyle">
         <div class="stroke-title leading-tight" :style="titleStyle">
-          {{ name }}
+          {{ shop.name }}
         </div>
       </div>
     </div>
@@ -34,10 +33,11 @@
 <script setup lang="ts">
 import { computed } from "vue";
 
-const props = defineProps<{ name: string; seed: number; image?: string | null }>();
+const props = defineProps<{ shop: { name: string; thumbUrl?: string }; seed: number }>();
 defineEmits<{ open: [] }>();
 
 function seeded(n: number) {
+  // deterministic pseudo-random in [0..1)
   const x = Math.sin(n) * 10000;
   return x - Math.floor(x);
 }
@@ -47,17 +47,21 @@ const r2 = computed(() => seeded(props.seed + 97));
 
 const tileStyle = computed(() => ({
   background: "var(--surface)",
-  boxShadow: "var(--shadow)",
-  border: "var(--tile-border)"
+  border: "1px solid var(--border)",
+  boxShadow: "var(--shadow)"
 }));
 
-const bgLayer = computed(() => ({
-  // calm but more saturated tiles
-  background: `linear-gradient(135deg,
-    color-mix(in oklch, var(--accent) ${Math.round(24 + r1.value * 26)}%, var(--bg)),
-    color-mix(in oklch, var(--accent) ${Math.round(16 + r2.value * 22)}%, var(--bg))
-  )`
-}));
+const bgLayer = computed(() => {
+  // More saturated but still calm (no rainbow): accent tint into surface.
+  const a = Math.round(18 + r1.value * 14); // 18..32
+  const b = Math.round(14 + r2.value * 12); // 14..26
+  return {
+    background: `linear-gradient(135deg,
+      color-mix(in oklch, var(--accent) ${a}%, var(--surface)),
+      color-mix(in oklch, var(--accent) ${b}%, var(--surface))
+    )`
+  };
+});
 
 const patternLayer = computed(() => ({
   backgroundImage: "var(--tile-pattern)",
@@ -65,31 +69,22 @@ const patternLayer = computed(() => ({
   opacity: "var(--tile-pattern-opacity)"
 }));
 
-const thumbWrapStyle = computed(() => ({
+const titlePlateStyle = computed(() => ({
   background: "var(--surface-strong)",
-  border: "1px solid color-mix(in oklch, var(--text) 10%, transparent)",
-  boxShadow: "var(--shadow)"
-}));
-
-const thumbPlaceholder = computed(() => ({
-  background: `linear-gradient(135deg,
-    color-mix(in oklch, var(--accent) ${Math.round(14 + r1.value * 18)}%, var(--surface-strong)),
-    color-mix(in oklch, var(--accent) ${Math.round(10 + r2.value * 14)}%, var(--surface-strong))
-  )`
-}));
-
-const namePanelStyle = computed(() => ({
-  background: "var(--surface-strong)",
-  border: "1px solid color-mix(in oklch, var(--text) 10%, transparent)",
-  boxShadow: "var(--shadow)"
+  border: "1px solid var(--border)",
+  boxShadow: "0 10px 18px oklch(0 0 0 / 0.10)"
 }));
 
 const titleStyle = computed(() => ({
   fontFamily: "var(--font-display)",
   color: "var(--text)",
-  fontSize: "clamp(14px, 3.2vw, 18px)",
-  letterSpacing: "var(--tile-letter-spacing)",
-  textTransform: "var(--tile-text-transform)",
-  fontWeight: "var(--tile-font-weight)"
+  fontSize: "clamp(14px, 3.6vw, 18px)",
+  fontWeight: 800
+}));
+
+const thumbWrapStyle = computed(() => ({
+  border: "1px solid var(--border)",
+  background: "var(--surface-strong)",
+  boxShadow: "0 10px 18px oklch(0 0 0 / 0.10)"
 }));
 </script>

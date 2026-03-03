@@ -1,20 +1,18 @@
 <template>
-  <div class="mx-auto max-w-4xl 3xl:max-w-5xl 7xl:max-w-6xl px-3 xs:px-3 sm:px-4 3xl:px-6 7xl:px-8 pb-16 3xl:pb-24 7xl:pb-28">
+  <div class="app-container pb-16 3xl:pb-24 7xl:pb-28">
     <div class="pt-4">
-      <button class="ui-transition ui-interactive ui-bounce rounded-xl px-3 py-2 text-sm"
-              :style="backStyle"
+      <button class="ui-transition ui-interactive ui-bounce rounded-xl min-h-12 px-4 py-3 text-sm"
               @click="router.back()">
         ← Назад
       </button>
 
-      <div class="mt-3 rounded-[var(--radius)] p-4 ui-transition" :style="titleCardStyle">
-        <div class="text-xs uppercase tracking-wide" :style="{ color: 'var(--muted)' }">Магазин</div>
-        <div class="mt-1 text-2xl font-bold" :style="{ color: 'var(--text)', fontFamily: 'var(--font-display)' }">
+      <div class="mt-3 text-panel">
+        <div class="text-2xl font-bold" :style="{ fontFamily: 'var(--font-display)' }">
           {{ shop?.name ?? "Магазин" }}
         </div>
       </div>
 
-      <div v-if="shop" class="mt-4 space-y-4">
+      <div v-if="shop" class="mt-4 space-y-4 3xl:space-y-6">
         <div class="relative">
           <GalleryCarousel :items="galleryItems" />
           <div class="absolute left-3 top-3 rounded-2xl px-3 py-2 text-xs ui-transition"
@@ -23,19 +21,19 @@
           </div>
         </div>
 
-        <section class="rounded-[var(--radius)] p-4 ui-transition" :style="cardStyle">
+        <section class="text-panel">
           <div class="text-xs uppercase tracking-wide" :style="{ color: 'var(--muted)' }">Описание</div>
           <div class="mt-2 text-sm leading-relaxed" :style="{ color: 'var(--text)' }">{{ shop.description }}</div>
         </section>
 
-        <section class="rounded-[var(--radius)] p-4 ui-transition" :style="cardStyle">
+        <section class="text-panel">
           <div class="text-xs uppercase tracking-wide" :style="{ color: 'var(--muted)' }">Контакты</div>
           <ul class="mt-2 space-y-2">
             <li v-for="(c, i) in shop.contacts" :key="i">
-              <a v-if="hrefFor(c)" class="ui-transition ui-interactive text-sm underline"
+              <a v-if="hrefFor(c)" class="ui-transition ui-link text-sm underline"
                  :style="{ color: 'var(--text)' }"
                  :href="hrefFor(c)!"
-                 target="_blank"
+                 :target="targetFor(c)"
                  rel="noreferrer">
                 {{ labelFor(c) }}
               </a>
@@ -44,9 +42,9 @@
           </ul>
         </section>
 
-        <section class="flex gap-3">
-          <a class="ui-transition ui-interactive inline-flex items-center justify-center rounded-2xl px-4 py-3 text-sm font-semibold"
-             :style="primaryStyle"
+        <section class="flex gap-3 3xl:gap-6">
+          <a class="ui-transition ui-primary ui-bounce inline-flex items-center justify-center rounded-2xl min-h-12 px-4 py-3 text-sm font-semibold"
+             :style="{ boxShadow: 'var(--shadow)' }"
              :href="shop.siteUrl"
              target="_self">
             Перейти на сайт
@@ -57,7 +55,6 @@
           </div>
         </section>
 
-        <!-- Ensure there is enough scroll room for overscroll-to-open on large screens -->
         <div class="h-24 3xl:h-56 7xl:h-64"></div>
       </div>
 
@@ -84,53 +81,24 @@ const shopId = computed(() => String(route.params.id ?? ""));
 const shop = computed(() => (shops as any[]).find(s => s.id === shopId.value));
 
 const galleryItems = computed(() => {
-  if (!shop.value) return [];
-  const imgs = (shop.value as any).galleryImages as string[] | undefined;
-  if (Array.isArray(imgs) && imgs.length) {
-    const nm = (shop.value as any).name ?? "Магазин";
-    return imgs.map((src, i) => ({ src, alt: `${nm} — ${i + 1}` }));
-  }
-  const placeholders = ((shop.value as any).gallery ?? []) as any[];
-  return placeholders.map((g, i) => ({ label: g?.label ?? `Слайд ${i + 1}` }));
+  const s: any = shop.value;
+  if (!s) return [];
+  if (Array.isArray(s.galleryImages) && s.galleryImages.length) return s.galleryImages;
+  if (Array.isArray(s.gallery) && s.gallery.length) return s.gallery;
+  return [{ kind: "placeholder", label: "Галерея" }];
 });
-
-const backStyle = computed(() => ({
-  background: "var(--surface)",
-  color: "var(--text)",
-  border: "1px solid color-mix(in oklch, var(--text) 12%, transparent)"
-}));
-
-const cardStyle = computed(() => ({
-  background: "var(--surface)",
-  color: "var(--text)",
-  border: "1px solid color-mix(in oklch, var(--text) 10%, transparent)",
-  boxShadow: "var(--shadow)"
-}));
-
-const titleCardStyle = computed(() => ({
-  background: "var(--surface-strong)",
-  color: "var(--text)",
-  border: "1px solid color-mix(in oklch, var(--text) 12%, transparent)",
-  boxShadow: "var(--shadow)"
-}));
 
 const hoursStyle = computed(() => ({
   background: "var(--surface-strong)",
   color: "var(--text)",
-  border: "1px solid color-mix(in oklch, var(--text) 12%, transparent)",
-  boxShadow: "var(--shadow)"
-}));
-
-const primaryStyle = computed(() => ({
-  background: "var(--accent)",
-  color: "color-mix(in oklch, oklch(100% 0 0) 92%, transparent)",
+  border: "1px solid var(--border)",
   boxShadow: "var(--shadow)"
 }));
 
 const hintStyle = computed(() => ({
-  background: "var(--surface)",
+  background: "var(--surface-strong)",
   color: "var(--muted)",
-  border: "1px solid color-mix(in oklch, var(--text) 10%, transparent)"
+  border: "1px solid var(--border)"
 }));
 
 function hrefFor(c: { type: string; value: string }) {
@@ -139,6 +107,12 @@ function hrefFor(c: { type: string; value: string }) {
   if (c.type === "telegram" || c.type === "whatsapp") return c.value;
   // address could be a maps link later
   return null;
+}
+
+function targetFor(c: { type: string; value: string }) {
+  const href = hrefFor(c);
+  if (!href) return undefined;
+  return href.startsWith("http") ? "_blank" : "_self";
 }
 
 function labelFor(c: { type: string; value: string }) {
