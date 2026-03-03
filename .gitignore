@@ -6,3 +6,5 @@ dist
 /src/mocks/
 /lint/win.env
 /lint/nix.env
+/logs/
+/.vite/
