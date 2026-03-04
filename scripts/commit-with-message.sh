@@ -16,6 +16,8 @@ USAGE
 SUBJECT=""
 AGENT_ID="assistant"
 MODEL_NAME="gpt-5"
+COMMIT_USER_NAME="assistant"
+COMMIT_USER_EMAIL="assistant@local"
 BODY_PARTS=()
 
 while [[ $# -gt 0 ]]; do
@@ -39,6 +41,16 @@ while [[ $# -gt 0 ]]; do
       shift
       [[ $# -gt 0 ]] || { echo "ERROR: --model-name requires value"; exit 1; }
       MODEL_NAME="$1"
+      ;;
+    --commit-user-name)
+      shift
+      [[ $# -gt 0 ]] || { echo "ERROR: --commit-user-name requires value"; exit 1; }
+      COMMIT_USER_NAME="$1"
+      ;;
+    --commit-user-email)
+      shift
+      [[ $# -gt 0 ]] || { echo "ERROR: --commit-user-email requires value"; exit 1; }
+      COMMIT_USER_EMAIL="$1"
       ;;
     -h|--help)
       usage
@@ -84,4 +96,4 @@ trap cleanup EXIT
 npx prettier --write "$TMP_FILE"
 npx markdownlint-cli --fix --disable MD041 "$TMP_FILE"
 npx markdownlint-cli --disable MD041 "$TMP_FILE"
-git commit -F "$TMP_FILE"
+git -c "user.name=$COMMIT_USER_NAME" -c "user.email=$COMMIT_USER_EMAIL" commit -F "$TMP_FILE"

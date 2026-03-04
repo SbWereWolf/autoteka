@@ -28,7 +28,9 @@ pwsh ./scripts/commit-with-message.ps1 `
     "Keep metrics page cacheable while data.json stays no-cache."
   ) `
   -AgentId "assistant" `
-  -ModelName "gpt-5"
+  -ModelName "gpt-5" `
+  -CommitUserName "assistant" `
+  -CommitUserEmail "assistant@local"
 ```
 
 ## \*nix (bash)
@@ -41,7 +43,9 @@ bash ./scripts/commit-with-message.sh \
   --body "Add explicit nginx rules for metrics routes and caching." \
   --body "Keep metrics page cacheable while data.json stays no-cache." \
   --agent-id "assistant" \
-  --model-name "gpt-5"
+  --model-name "gpt-5" \
+  --commit-user-name "assistant" \
+  --commit-user-email "assistant@local"
 ```
 
 ## Поведение
@@ -53,3 +57,5 @@ bash ./scripts/commit-with-message.sh \
 - правило `MD041` отключается только для временного commit message
   файла, общие конфиги не изменяются
 - временный файл сообщения удаляется после `git commit`
+- подпись коммита можно задать отдельно от вашего git-профиля:
+  по умолчанию скрипты используют `assistant <assistant@local>`

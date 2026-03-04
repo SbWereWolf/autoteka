@@ -6,7 +6,9 @@ param(
   [string[]]$Body,
 
   [string]$AgentId = "assistant",
-  [string]$ModelName = "gpt-5"
+  [string]$ModelName = "gpt-5",
+  [string]$CommitUserName = "assistant",
+  [string]$CommitUserEmail = "assistant@local"
 )
 
 Set-StrictMode -Version Latest
@@ -97,7 +99,7 @@ try {
   & npx markdownlint-cli --disable MD041 $tmpPath
   if ($LASTEXITCODE -ne 0) { throw "markdownlint failed: $tmpPath" }
 
-  & git commit -F $tmpPath
+  & git -c "user.name=$CommitUserName" -c "user.email=$CommitUserEmail" commit -F $tmpPath
   if ($LASTEXITCODE -ne 0) {
     throw "git commit failed."
   }
