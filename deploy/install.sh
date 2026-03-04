@@ -65,6 +65,9 @@ mkdir -p /etc/vue-app
 if [ ! -f /etc/vue-app/telegram.env ] && [ -f "$SCRIPTS_DIR/config/telegram.env.example" ]; then
   install -m 0600 "$SCRIPTS_DIR/config/telegram.env.example" /etc/vue-app/telegram.env
 fi
+if [ ! -f /etc/vue-app/deploy.env ] && [ -f "$SCRIPTS_DIR/config/deploy.env.example" ]; then
+  install -m 0600 "$SCRIPTS_DIR/config/deploy.env.example" /etc/vue-app/deploy.env
+fi
 
 # systemd units
 install -m 0644 "$SCRIPTS_DIR/systemd/vue-app.service" /etc/systemd/system/vue-app.service

@@ -8,7 +8,7 @@ set -euo pipefail
 # - protected from parallel runs via flock
 
 APP_DIR="/opt/vue-app"
-BRANCH="${BRANCH:-main}"
+BRANCH="${BRANCH:-master}"
 REMOTE="${REMOTE:-origin}"
 LOG="/var/log/vue-app-deploy.log"
 LOCK="/var/lock/vue-app-deploy.lock"
