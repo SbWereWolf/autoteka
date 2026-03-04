@@ -60,7 +60,7 @@ done
 }
 [[ ${#BODY_PARTS[@]} -gt 0 ]] || { echo "ERROR: at least one --body required"; exit 1; }
 
-TMP_FILE=".git/commit-message-$(date +%s)-$RANDOM.md"
+TMP_FILE=".commit-message-$(date +%s)-$RANDOM.md"
 
 cleanup() {
   rm -f "$TMP_FILE"
@@ -81,5 +81,7 @@ trap cleanup EXIT
   printf '%s\n' "Created by $AGENT_ID $MODEL_NAME" | fold -s -w 70
 } > "$TMP_FILE"
 
-bash ./lint/lint.sh -Path "$TMP_FILE"
+npx prettier --write "$TMP_FILE"
+npx markdownlint-cli --fix --disable MD041 "$TMP_FILE"
+npx markdownlint-cli --disable MD041 "$TMP_FILE"
 git commit -F "$TMP_FILE"

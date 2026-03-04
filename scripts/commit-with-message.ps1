@@ -82,16 +82,20 @@ foreach ($line in $bodyLines) {
   $messageLines.Add($line)
 }
 
-$tmpName = "commit-message-$([guid]::NewGuid().ToString()).md"
-$tmpPath = Join-Path ".git" $tmpName
+$tmpName = ".commit-message-$([guid]::NewGuid().ToString()).md"
+$tmpPath = Join-Path "." $tmpName
 
 try {
   $messageLines | Set-Content -Path $tmpPath -Encoding utf8
 
-  & pwsh ./lint/lint.ps1 -Path $tmpPath
-  if ($LASTEXITCODE -ne 0) {
-    throw "Lint failed for commit message file: $tmpPath"
-  }
+  & npx prettier --write $tmpPath
+  if ($LASTEXITCODE -ne 0) { throw "Prettier failed: $tmpPath" }
+
+  & npx markdownlint-cli --fix --disable MD041 $tmpPath
+  if ($LASTEXITCODE -ne 0) { throw "markdownlint --fix failed: $tmpPath" }
+
+  & npx markdownlint-cli --disable MD041 $tmpPath
+  if ($LASTEXITCODE -ne 0) { throw "markdownlint failed: $tmpPath" }
 
   & git commit -F $tmpPath
   if ($LASTEXITCODE -ne 0) {
