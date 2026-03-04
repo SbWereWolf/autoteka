@@ -8,8 +8,11 @@
   - После subject обязательно одна пустая строка
 - Если делаешь коммит, обязательно пиши body
   - Body объясняет причины и последствия изменений
+  - В конце body добавляй отдельный абзац подписи:
+    `Author: <agent-id> <model-name>`
 - Коммит делай с помощью скрипта:
   - Пример для Win10/WSL2:
+
 ```powershell
 pwsh ./scripts/commit-with-message.ps1 `
   -Subject "Configure metrics caching and routing" `
@@ -20,7 +23,9 @@ pwsh ./scripts/commit-with-message.ps1 `
   -AgentId "assistant" `
   -ModelName "gpt-5"
 ```
-  - Пример для \*nix:
+
+- Пример для \*nix:
+
 ```bash
 bash ./scripts/commit-with-message.sh \
   --subject "Configure metrics caching and routing" \

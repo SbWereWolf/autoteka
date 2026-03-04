@@ -81,7 +81,8 @@ trap cleanup EXIT
 
 {
   printf '%s\n\n' "$SUBJECT"
-  for part in "${BODY_PARTS[@]}"; do
+  for i in "${!BODY_PARTS[@]}"; do
+    part="${BODY_PARTS[$i]}"
     while IFS= read -r line; do
       if [[ -z "$line" ]]; then
         printf '\n'
@@ -89,8 +90,12 @@ trap cleanup EXIT
         printf '%s\n' "$line" | fold -s -w 70
       fi
     done <<< "$part"
+    if [[ "$i" -lt $((${#BODY_PARTS[@]} - 1)) ]]; then
+      printf '\n'
+    fi
   done
-  printf '%s\n' "Created by $AGENT_ID $MODEL_NAME" | fold -s -w 70
+  printf '\n'
+  printf '%s\n' "Author: $AGENT_ID $MODEL_NAME" | fold -s -w 70
 } > "$TMP_FILE"
 
 npx prettier --write "$TMP_FILE"

@@ -60,17 +60,28 @@ if ($Subject.Length -gt 50) {
 }
 
 $bodySourceLines = New-Object System.Collections.Generic.List[string]
-foreach ($part in $Body) {
+for ($i = 0; $i -lt $Body.Count; $i++) {
+  $part = $Body[$i]
   $splitLines = $part -split "(`r`n|`n|`r)"
   foreach ($line in $splitLines) {
     $bodySourceLines.Add($line)
   }
+  if ($i -lt $Body.Count - 1) {
+    $bodySourceLines.Add("")
+  }
 }
 
-$bodySourceLines.Add("Created by $AgentId $ModelName")
+if ($bodySourceLines.Count -gt 0 -and $bodySourceLines[$bodySourceLines.Count - 1] -ne "") {
+  $bodySourceLines.Add("")
+}
+$bodySourceLines.Add("Author: $AgentId $ModelName")
 
 $bodyLines = New-Object System.Collections.Generic.List[string]
 foreach ($line in $bodySourceLines) {
+  if ($line -eq "") {
+    $bodyLines.Add("")
+    continue
+  }
   $wrapped = Format-TextWrap -Text $line -Width 70
   foreach ($wrappedLine in $wrapped) {
     $bodyLines.Add($wrappedLine)
@@ -88,7 +99,9 @@ $tmpName = ".commit-message-$([guid]::NewGuid().ToString()).md"
 $tmpPath = Join-Path "." $tmpName
 
 try {
-  $messageLines | Set-Content -Path $tmpPath -Encoding utf8
+  $messageText = ([string]::Join("`n", $messageLines)) + "`n"
+  $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+  [System.IO.File]::WriteAllText($tmpPath, $messageText, $utf8NoBom)
 
   & npx prettier --write $tmpPath
   if ($LASTEXITCODE -ne 0) { throw "Prettier failed: $tmpPath" }
