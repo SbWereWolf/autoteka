@@ -9,4 +9,4 @@
 - Если делаешь коммит, обязательно пиши body
   - Body объясняет причины и последствия изменений
   - Каждая строка body не длиннее 70 символов
-  - Запиши в Body `Crated by <agent-id> <model-name>`
+  - Запиши в Body `Created by <agent-id> <model-name>`
