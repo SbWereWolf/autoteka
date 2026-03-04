@@ -54,6 +54,22 @@
   --menu-category-chip-padding-x: 0.75rem;
   --menu-category-chip-padding-y: 0.75rem;
   --menu-category-chip-gap: 0.5rem;
+
+  /* shop page badges */
+  --shop-badge-bg: var(--surface-strong);
+  --shop-badge-border: var(--border);
+  --shop-badge-text: var(--text);
+  --shop-feature-badge-bg: color-mix(
+    in oklch,
+    var(--accent) 16%,
+    var(--surface)
+  );
+  --shop-feature-badge-border: color-mix(
+    in oklch,
+    var(--accent) 52%,
+    var(--border)
+  );
+  --shop-feature-badge-text: var(--text);
 }
 
 /* Derived vars (do not override per theme unless needed) */

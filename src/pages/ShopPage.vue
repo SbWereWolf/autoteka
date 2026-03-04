@@ -16,6 +16,12 @@
           {{ shop?.name ?? "Магазин" }}
         </div>
       </div>
+      <div v-if="shop" class="mt-3 text-panel">
+        <ShopMetaBadges
+          :categories="shop.categories"
+          :features="shop.features"
+        />
+      </div>
 
       <div v-if="shop" class="mt-4 space-y-4 3xl:space-y-6">
         <!-- Media / Gallery area (always reserved). If there are no images, show empty-state text. -->
@@ -61,7 +67,7 @@
             <li v-for="(c, i) in shop.contacts" :key="i">
               <a
                 v-if="hrefFor(c)"
-                class="ui-transition ui-link text-sm underline"
+                class="ui-transition shop-contact-link text-sm underline"
                 :style="{ color: 'var(--text)' }"
                 :href="hrefFor(c)!"
                 :target="targetFor(c)"
@@ -141,6 +147,7 @@ import { useRoute, useRouter } from "vue-router";
 import shops from "../mocks/shops";
 import GalleryCarousel from "../components/GalleryCarousel.vue";
 import OverscrollOpenLink from "../components/OverscrollOpenLink.vue";
+import ShopMetaBadges from "../components/ShopMetaBadges.vue";
 import { uiConfig } from "../config/ui";
 import type { Contact, Shop } from "../types";
 
