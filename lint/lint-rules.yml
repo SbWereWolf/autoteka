@@ -8,6 +8,19 @@ rules:
       - "vendor/bin/phpstan analyse"
       - "vendor/bin/phpcs"
 
+  ".vue":
+    format: "${NPX_PATH} ${PRETTIER_PATH} --write"
+    lint:
+      - "${NPX_PATH} ${ESLINT_PATH}"
+
+  ".ts":
+    format: "${NPX_PATH} ${PRETTIER_PATH} --write"
+    lint:
+      - "${NPX_PATH} ${ESLINT_PATH}"
+  ".tsx":
+    format: "${NPX_PATH} ${PRETTIER_PATH} --write"
+    lint:
+      - "${NPX_PATH} ${ESLINT_PATH}"
   ".js":
     format: "${NPX_PATH} ${PRETTIER_PATH} --write"
     lint:
