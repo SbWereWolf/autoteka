@@ -24,8 +24,16 @@
       </div>
 
       <!-- Slides -->
-      <div v-else class="h-full flex ui-transition" :style="trackStyle">
-        <div v-for="(g, i) in items" :key="i" class="min-w-full h-full">
+      <div
+        v-else
+        class="h-full flex ui-transition"
+        :style="trackStyle"
+      >
+        <div
+          v-for="(g, i) in items"
+          :key="i"
+          class="min-w-full h-full"
+        >
           <!-- string URL support (mocks may provide galleryImages as string[]) -->
           <UiImage
             v-if="typeof g === 'string'"
@@ -54,7 +62,11 @@
           <div
             v-else
             class="w-full h-full grid place-items-center text-sm"
-            :style="{ color: 'var(--text)', background: 'color-mix(in oklch, var(--accent) 10%, var(--surface-strong))' }"
+            :style="{
+              color: 'var(--text)',
+              background:
+                'color-mix(in oklch, var(--accent) 10%, var(--surface-strong))',
+            }"
           >
             {{ g.label }}
           </div>
@@ -79,12 +91,20 @@
       ›
     </button>
 
-    <div v-if="items.length > 1" class="absolute bottom-2 left-0 right-0 flex justify-center gap-1">
+    <div
+      v-if="items.length > 1"
+      class="absolute bottom-2 left-0 right-0 flex justify-center gap-1"
+    >
       <div
         v-for="(_g, i) in items"
         :key="'dot' + i"
         class="h-1.5 w-1.5 rounded-full"
-        :style="{ background: i === idx ? 'var(--accent)' : 'color-mix(in oklch, var(--text) 28%, transparent)' }"
+        :style="{
+          background:
+            i === idx
+              ? 'var(--accent)'
+              : 'color-mix(in oklch, var(--text) 28%, transparent)',
+        }"
       />
     </div>
   </div>
@@ -93,9 +113,16 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 import UiImage from "./UiImage.vue";
+import { uiConfig } from "../config/ui";
 
 type GalleryItem =
-  | { kind: "image"; src: string; alt: string; width: number; height: number }
+  | {
+      kind: "image";
+      src: string;
+      alt: string;
+      width: number;
+      height: number;
+    }
   | { kind: "placeholder"; label: string };
 
 const props = withDefaults(
@@ -106,15 +133,16 @@ const props = withDefaults(
   }>(),
   {
     emptyTitle: "",
-    emptyText: ""
-  }
+    emptyText: "",
+  },
 );
 
 const idx = ref(0);
 
 function clamp() {
   if (idx.value < 0) idx.value = 0;
-  if (idx.value > props.items.length - 1) idx.value = props.items.length - 1;
+  if (idx.value > props.items.length - 1)
+    idx.value = props.items.length - 1;
 }
 function prev() {
   idx.value--;
@@ -127,7 +155,7 @@ function next() {
 
 const trackStyle = computed(() => ({
   transform: `translateX(-${idx.value * 100}%)`,
-  transitionDuration: "220ms"
+  transitionDuration: `${uiConfig.gallery.transitionMs}ms`,
 }));
 
 // Swipe support (touch/mouse). Keep it simple and avoid fighting the page scroll.
@@ -157,7 +185,7 @@ function onUp(e: PointerEvent) {
   if (!dragging) return;
   dragging = false;
   const dx = e.clientX - startX;
-  if (Math.abs(dx) < 45) return;
+  if (Math.abs(dx) < uiConfig.gallery.swipeThresholdPx) return;
   if (dx < 0) next();
   else prev();
 }

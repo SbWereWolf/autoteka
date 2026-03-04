@@ -1,18 +1,5 @@
 import rawShops from "./shops.json";
-
-export type Shop = {
-  id: string;
-  name: string;
-  city: string;
-  categories: string[];
-  features: string[];
-  workHours: string;
-  description: string;
-  contacts: { type: string; value: string }[];
-  siteUrl: string;
-  thumbUrl?: string;
-  galleryImages?: string[];
-};
+import type { Shop } from "../types";
 
 function hashToSeed(str: string): number {
   // FNV-1a 32-bit

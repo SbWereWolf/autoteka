@@ -27,6 +27,6 @@ export default createRouter({
   },
   routes: [
     { path: "/", name: "catalog", component: CatalogPage },
-    { path: "/shop/:id", name: "shop", component: ShopPage, props: true },
+    { path: "/shop/:id", name: "shop", component: ShopPage },
   ],
 });

@@ -9,7 +9,10 @@
       </button>
 
       <div class="mt-3 text-panel">
-        <div class="text-2xl font-bold" :style="{ fontFamily: 'var(--font-display)' }">
+        <div
+          class="text-2xl font-bold"
+          :style="{ fontFamily: 'var(--font-display)' }"
+        >
           {{ shop?.name ?? "Магазин" }}
         </div>
       </div>
@@ -26,19 +29,34 @@
             class="absolute left-3 top-3 rounded-2xl px-3 py-2 text-xs ui-transition"
             :style="hoursStyle"
           >
-            <div class="whitespace-pre-line">{{ shop.workHours }}</div>
+            <div class="whitespace-pre-line">
+              {{ shop.workHours }}
+            </div>
           </div>
         </div>
 
         <section class="text-panel">
-          <div class="text-xs uppercase tracking-wide" :style="{ color: 'var(--muted)' }">Описание</div>
-          <div class="mt-2 text-sm leading-relaxed" :style="{ color: 'var(--text)' }">
+          <div
+            class="text-xs uppercase tracking-wide"
+            :style="{ color: 'var(--muted)' }"
+          >
+            Описание
+          </div>
+          <div
+            class="mt-2 text-sm leading-relaxed"
+            :style="{ color: 'var(--text)' }"
+          >
             {{ shop.description }}
           </div>
         </section>
 
         <section class="text-panel">
-          <div class="text-xs uppercase tracking-wide" :style="{ color: 'var(--muted)' }">Контакты</div>
+          <div
+            class="text-xs uppercase tracking-wide"
+            :style="{ color: 'var(--muted)' }"
+          >
+            Контакты
+          </div>
           <ul class="mt-2 space-y-2">
             <li v-for="(c, i) in shop.contacts" :key="i">
               <a
@@ -51,7 +69,13 @@
               >
                 {{ labelFor(c) }}
               </a>
-              <div v-else class="text-sm" :style="{ color: 'var(--text)' }">{{ labelFor(c) }}</div>
+              <div
+                v-else
+                class="text-sm"
+                :style="{ color: 'var(--text)' }"
+              >
+                {{ labelFor(c) }}
+              </div>
             </li>
           </ul>
         </section>
@@ -78,19 +102,36 @@
             Сайт недоступен
           </button>
 
-          <div class="flex-1 rounded-2xl px-4 py-3 text-xs ui-transition" :style="hintStyle">
-            <template v-if="hasSiteUrl">Или дотяните вниз в конце страницы</template>
-            <template v-else>Ссылка на сайт не указана в моках</template>
+          <div
+            class="flex-1 rounded-2xl px-4 py-3 text-xs ui-transition"
+            :style="hintStyle"
+          >
+            <template v-if="hasSiteUrl"
+              >Или дотяните вниз в конце страницы</template
+            >
+            <template v-else
+              >Ссылка на сайт не указана в моках</template
+            >
           </div>
         </section>
 
         <div class="h-24 3xl:h-56 7xl:h-64"></div>
       </div>
 
-      <div v-else class="mt-8 text-sm" :style="{ color: 'var(--muted)' }">Магазин не найден.</div>
+      <div
+        v-else
+        class="mt-8 text-sm"
+        :style="{ color: 'var(--muted)' }"
+      >
+        Магазин не найден.
+      </div>
     </div>
 
-    <OverscrollOpenLink v-if="shop && hasSiteUrl" :url="siteUrl" :thresholdPx="90" />
+    <OverscrollOpenLink
+      v-if="shop && hasSiteUrl"
+      :url="siteUrl"
+      :threshold-px="uiConfig.overscroll.thresholdPx"
+    />
   </div>
 </template>
 
@@ -100,57 +141,67 @@ import { useRoute, useRouter } from "vue-router";
 import shops from "../mocks/shops";
 import GalleryCarousel from "../components/GalleryCarousel.vue";
 import OverscrollOpenLink from "../components/OverscrollOpenLink.vue";
+import { uiConfig } from "../config/ui";
+import type { Contact, Shop } from "../types";
 
 const route = useRoute();
 const router = useRouter();
 
 const shopId = computed(() => String(route.params.id ?? ""));
-const shop = computed(() => (shops as any[]).find((s) => s.id === shopId.value));
+const shop = computed(() =>
+  shops.find((s: Shop) => s.id === shopId.value),
+);
 
 const galleryImages = computed<string[]>(() => {
-  const s: any = shop.value;
+  const s = shop.value;
   if (!s) return [];
-  return Array.isArray(s.galleryImages) ? s.galleryImages.filter(Boolean) : [];
+  return Array.isArray(s.galleryImages)
+    ? s.galleryImages.filter(Boolean)
+    : [];
 });
 
-const siteUrl = computed(() => String((shop.value as any)?.siteUrl ?? "").trim());
+const siteUrl = computed(() =>
+  String(shop.value?.siteUrl ?? "").trim(),
+);
 const hasSiteUrl = computed(() => siteUrl.value.length > 0);
 
 const hoursStyle = computed(() => ({
-  background: "color-mix(in oklch, var(--surface-strong) 88%, transparent)",
+  background:
+    "color-mix(in oklch, var(--surface-strong) 88%, transparent)",
   color: "var(--text)",
   border: "1px solid var(--border)",
-  boxShadow: "var(--shadow)"
+  boxShadow: "var(--shadow)",
 }));
 
 const hintStyle = computed(() => ({
   background: "var(--surface-strong)",
   color: "var(--muted)",
-  border: "1px solid var(--border)"
+  border: "1px solid var(--border)",
 }));
 
-function hrefFor(c: { type: string; value: string }) {
-  if (c.type === "phone") return `tel:${c.value.replace(/\s|\(|\)|-/g, "")}`;
+function hrefFor(c: Contact) {
+  if (c.type === "phone")
+    return `tel:${c.value.replace(/\s|\(|\)|-/g, "")}`;
   if (c.type === "email") return `mailto:${c.value}`;
   if (c.type === "telegram" || c.type === "whatsapp") return c.value;
   // address could be a maps link later
   return null;
 }
 
-function targetFor(c: { type: string; value: string }) {
+function targetFor(c: Contact) {
   const href = hrefFor(c);
   if (!href) return undefined;
   return href.startsWith("http") ? "_blank" : "_self";
 }
 
-function labelFor(c: { type: string; value: string }) {
+function labelFor(c: Contact) {
   const map: Record<string, string> = {
     phone: "Телефон",
     email: "Email",
     telegram: "Telegram",
     whatsapp: "WhatsApp",
     address: "Адрес",
-    text: "Контакт"
+    text: "Контакт",
   };
   return `${map[c.type] ?? c.type}: ${c.value}`;
 }

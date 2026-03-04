@@ -32,27 +32,9 @@
   </div>
 </template>
 
-
 <script setup lang="ts">
 import dicts from "../mocks/dicts.json";
 import { state, setTheme } from "../state";
 
 const themes = dicts.themes;
-
-function activeOutline(id: string) {
-  const active = state.theme === id;
-  return {
-    outline: active ? `2px solid var(--focus)` : "2px solid transparent",
-    outlineOffset: "2px",
-    background: active ? "var(--surface-strong)" : "var(--surface)",
-    borderColor: active ? "var(--border)" : "var(--border)"
-  };
-}
-
-function dotColor(id: string) {
-  // palette hint: neutral = muted dot, accent = accent dot
-  return id.includes("accent")
-    ? "var(--accent)"
-    : "color-mix(in oklch, var(--text) 55%, transparent)";
-}
 </script>
