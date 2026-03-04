@@ -24,6 +24,15 @@
 - Нет CI-пайплайна для автоматического запуска `check:data` в PR.
 - Ручной smoke-тест UI остаётся обязательным после крупных правок.
 
+## Работа приложения
+
+- [IMPLEMENTATION](docs/IMPLEMENTATION.md)
+- [DOC_EXTRAS](docs/DOC_EXTRAS.md)
+
+### Развёртывание
+
+- [DEPLOY](deploy/DEPLOY.md)
+
 ## Запуск
 
 ```bash
