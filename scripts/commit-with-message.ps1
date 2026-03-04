@@ -14,6 +14,21 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
+function Resolve-CommitIdentity {
+  param(
+    [Parameter(Mandatory = $true)][string]$Name,
+    [Parameter(Mandatory = $true)][string]$Email
+  )
+
+  $safeName = if ($Name -match "^[A-Za-z0-9._-]{1,64}$") { $Name } else { "assistant" }
+  $safeEmail = if ($Email -match "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$") { $Email } else { "assistant@local" }
+
+  return @{
+    Name = $safeName
+    Email = $safeEmail
+  }
+}
+
 function Format-TextWrap {
   param(
     [Parameter(Mandatory = $true)][string]$Text,
@@ -112,17 +127,21 @@ try {
   & npx markdownlint-cli --disable MD041 $tmpPath
   if ($LASTEXITCODE -ne 0) { throw "markdownlint failed: $tmpPath" }
 
+  $identity = Resolve-CommitIdentity -Name $CommitUserName -Email $CommitUserEmail
+  $effectiveCommitUserName = $identity.Name
+  $effectiveCommitUserEmail = $identity.Email
+
   $oldAuthorName = $env:GIT_AUTHOR_NAME
   $oldAuthorEmail = $env:GIT_AUTHOR_EMAIL
   $oldCommitterName = $env:GIT_COMMITTER_NAME
   $oldCommitterEmail = $env:GIT_COMMITTER_EMAIL
   try {
-    $env:GIT_AUTHOR_NAME = $CommitUserName
-    $env:GIT_AUTHOR_EMAIL = $CommitUserEmail
-    $env:GIT_COMMITTER_NAME = $CommitUserName
-    $env:GIT_COMMITTER_EMAIL = $CommitUserEmail
+    $env:GIT_AUTHOR_NAME = $effectiveCommitUserName
+    $env:GIT_AUTHOR_EMAIL = $effectiveCommitUserEmail
+    $env:GIT_COMMITTER_NAME = $effectiveCommitUserName
+    $env:GIT_COMMITTER_EMAIL = $effectiveCommitUserEmail
 
-    & git -c "user.name=$CommitUserName" -c "user.email=$CommitUserEmail" commit --author "$CommitUserName <$CommitUserEmail>" -F $tmpPath
+    & git -c "user.name=$effectiveCommitUserName" -c "user.email=$effectiveCommitUserEmail" commit --author "$effectiveCommitUserName <$effectiveCommitUserEmail>" -F $tmpPath
     if ($LASTEXITCODE -ne 0) {
       throw "git commit failed."
     }

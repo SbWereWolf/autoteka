@@ -72,6 +72,13 @@ done
 }
 [[ ${#BODY_PARTS[@]} -gt 0 ]] || { echo "ERROR: at least one --body required"; exit 1; }
 
+if [[ ! "$COMMIT_USER_NAME" =~ ^[A-Za-z0-9._-]{1,64}$ ]]; then
+  COMMIT_USER_NAME="assistant"
+fi
+if [[ ! "$COMMIT_USER_EMAIL" =~ ^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$ ]]; then
+  COMMIT_USER_EMAIL="assistant@local"
+fi
+
 TMP_FILE=".commit-message-$(date +%s)-$RANDOM.md"
 
 cleanup() {
