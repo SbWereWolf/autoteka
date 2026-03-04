@@ -47,6 +47,7 @@ git clone https://github.com/SbWereWolf/autoteka.git .
 ### 4) Запустить bootstrap
 
 ```bash
+chmod +x /opt/vue-app/deploy/install.sh
 sudo /opt/vue-app/deploy/install.sh
 ```
 
