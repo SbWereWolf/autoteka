@@ -8,3 +8,4 @@ dist
 /lint/nix.env
 /logs/
 /.vite/
+/metrics/data.json

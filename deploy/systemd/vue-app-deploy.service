@@ -1,0 +1,9 @@
+[Unit]
+Description=Vue App Auto Deploy (git polling)
+After=network-online.target docker.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/vue-app
+ExecStart=/opt/vue-app/deploy/deploy.sh

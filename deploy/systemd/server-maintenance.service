@@ -1,0 +1,7 @@
+[Unit]
+Description=Server Maintenance (daily cleanup)
+After=network.target
+
+[Service]
+Type=oneshot
+ExecStart=/opt/vue-app/deploy/server-maintenance.sh

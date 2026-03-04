@@ -1,0 +1,9 @@
+[Unit]
+Description=Server Watchdog (self-healing checks)
+Wants=docker.service
+After=docker.service
+
+[Service]
+Type=oneshot
+EnvironmentFile=-/etc/vue-app/telegram.env
+ExecStart=/opt/vue-app/deploy/server-watchdog.sh

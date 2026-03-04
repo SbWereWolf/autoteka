@@ -1,0 +1,12 @@
+[Unit]
+Description=Run Vue App Auto Deploy every 5 minutes
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=5min
+RandomizedDelaySec=20
+Persistent=true
+Unit=vue-app-deploy.service
+
+[Install]
+WantedBy=timers.target
