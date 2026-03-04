@@ -112,9 +112,26 @@ try {
   & npx markdownlint-cli --disable MD041 $tmpPath
   if ($LASTEXITCODE -ne 0) { throw "markdownlint failed: $tmpPath" }
 
-  & git -c "user.name=$CommitUserName" -c "user.email=$CommitUserEmail" commit -F $tmpPath
-  if ($LASTEXITCODE -ne 0) {
-    throw "git commit failed."
+  $oldAuthorName = $env:GIT_AUTHOR_NAME
+  $oldAuthorEmail = $env:GIT_AUTHOR_EMAIL
+  $oldCommitterName = $env:GIT_COMMITTER_NAME
+  $oldCommitterEmail = $env:GIT_COMMITTER_EMAIL
+  try {
+    $env:GIT_AUTHOR_NAME = $CommitUserName
+    $env:GIT_AUTHOR_EMAIL = $CommitUserEmail
+    $env:GIT_COMMITTER_NAME = $CommitUserName
+    $env:GIT_COMMITTER_EMAIL = $CommitUserEmail
+
+    & git -c "user.name=$CommitUserName" -c "user.email=$CommitUserEmail" commit --author "$CommitUserName <$CommitUserEmail>" -F $tmpPath
+    if ($LASTEXITCODE -ne 0) {
+      throw "git commit failed."
+    }
+  }
+  finally {
+    $env:GIT_AUTHOR_NAME = $oldAuthorName
+    $env:GIT_AUTHOR_EMAIL = $oldAuthorEmail
+    $env:GIT_COMMITTER_NAME = $oldCommitterName
+    $env:GIT_COMMITTER_EMAIL = $oldCommitterEmail
   }
 }
 finally {

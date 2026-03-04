@@ -101,4 +101,9 @@ trap cleanup EXIT
 npx prettier --write "$TMP_FILE"
 npx markdownlint-cli --fix --disable MD041 "$TMP_FILE"
 npx markdownlint-cli --disable MD041 "$TMP_FILE"
-git -c "user.name=$COMMIT_USER_NAME" -c "user.email=$COMMIT_USER_EMAIL" commit -F "$TMP_FILE"
+GIT_AUTHOR_NAME="$COMMIT_USER_NAME" \
+  GIT_AUTHOR_EMAIL="$COMMIT_USER_EMAIL" \
+  GIT_COMMITTER_NAME="$COMMIT_USER_NAME" \
+  GIT_COMMITTER_EMAIL="$COMMIT_USER_EMAIL" \
+  git -c "user.name=$COMMIT_USER_NAME" -c "user.email=$COMMIT_USER_EMAIL" \
+  commit --author "$COMMIT_USER_NAME <$COMMIT_USER_EMAIL>" -F "$TMP_FILE"
