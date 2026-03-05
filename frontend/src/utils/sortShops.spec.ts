@@ -3,18 +3,18 @@ import { sortShopsByRules } from "./sortShops";
 import type { Shop } from "../types";
 
 const baseShop = (
-  id: string,
-  categoryIds: string[],
-  featureIds: string[],
+  code: string,
+  categoryCodes: string[],
+  featureCodes: string[],
 ): Shop => ({
-  id,
-  cityId: "barnaul",
-  name: id,
+  code,
+  cityCode: "barnaul",
+  name: code,
   description: "",
   workHours: "",
   siteUrl: "",
-  categoryIds,
-  featureIds,
+  categoryCodes,
+  featureCodes,
 });
 
 describe("sortShopsByRules", () => {
@@ -28,11 +28,11 @@ describe("sortShopsByRules", () => {
 
     const result = sortShopsByRules({
       shops,
-      selectedCategoryIds: ["A"],
-      selectedFeatureId: "F",
+      selectedCategoryCodes: ["A"],
+      selectedFeatureCode: "F",
     });
 
-    expect(result.map((shop) => shop.id)).toEqual([
+    expect(result.map((shop) => shop.code)).toEqual([
       "A1",
       "A2",
       "B1",

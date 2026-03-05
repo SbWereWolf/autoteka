@@ -1,32 +1,32 @@
 export type City = {
-  id: string;
+  code: string;
   name: string;
   sort: number;
 };
 
 export type Category = {
-  id: string;
+  code: string;
   name: string;
   sort: number;
 };
 
 export type Feature = {
-  id: string;
+  code: string;
   name: string;
   sort: number;
 };
 
 export type ShopPublic = {
-  id: string;
-  cityId: string;
+  code: string;
+  cityCode: string;
   name: string;
   description: string;
   workHours: string;
   siteUrl: string;
   thumbUrl?: string;
   galleryImages?: string[];
-  categoryIds: string[];
-  featureIds: string[];
+  categoryCodes: string[];
+  featureCodes: string[];
 };
 
 export type Contact = {

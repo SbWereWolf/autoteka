@@ -5,10 +5,10 @@
   >
     <button
       v-for="c in categories"
-      :key="c.id"
+      :key="c.code"
       class="ui-transition ui-interactive ui-bounce rounded-2xl min-h-12 text-sm"
       :style="chipStyle(c)"
-      @click="toggleCategory(c.id)"
+      @click="toggleCategory(c.code)"
     >
       {{ c.name }}
     </button>
@@ -21,8 +21,8 @@ import { state, toggleCategory } from "../state";
 
 const categories = computed(() => state.categories);
 
-function chipStyle(c: { id: string }) {
-  const active = state.selectedCategoryIds.includes(c.id);
+function chipStyle(c: { code: string }) {
+  const active = state.selectedCategoryCodes.includes(c.code);
   return {
     width: "var(--menu-category-chip-width, 100%)",
     textAlign: "var(--menu-category-chip-text-align, left)",

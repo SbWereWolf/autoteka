@@ -7,7 +7,8 @@
 ### Модули и роли
 
 - `frontend/src/mocks/*` — источник данных (справочники + магазины)
-- `frontend/src/state.ts` — единое глобальное состояние (без Pinia/Vuex)
+- `frontend/src/state.ts` — единое глобальное состояние (без
+  Pinia/Vuex)
 - `frontend/src/utils/*` — чистые утилиты (localStorage, сортировка)
 - `frontend/src/router/*` — маршрутизация
 - `frontend/src/pages/*` — страницы (Catalog/Shop)
@@ -25,7 +26,7 @@
 
 ### Поток: карточка → внешний переход
 
-1. `ShopPage` получает `id` из URL и ищет объект в `shops.json`
+1. `ShopPage` получает `code` из URL и ищет объект в `shops.json`
 2. По кнопке или overscroll выполняется
    `window.location.href = siteUrl`
 
@@ -36,9 +37,9 @@
 ### Добавить город
 
 1. `frontend/src/mocks/dicts.json`: добавить в `cities[]`
-   `{    "id": "new-city",    "name": "Новый город" }`
-2. Для магазинов этого города в `frontend/src/mocks/shops.json` поставить
-   `city: "new-city"`
+   `{    "code": "new-city",    "name": "Новый город" }`
+2. Для магазинов этого города в `frontend/src/mocks/shops.json`
+   поставить `cityCode: "new-city"`
 3. Если хотите дефолт — поставить `isDefault: true` (желательно ровно
    у одного города).
 
@@ -46,32 +47,33 @@
 
 1. `dicts.json`: добавить строку в `categories[]` или `features[]`
 2. В `shops.json`: использовать **точно такую же строку** в
-   `categories[]`/`features[]`
+   `categoryCodes[]`/`featureCodes[]`
 3. Для дефолтной фишки — обновить `defaultFeature` (и убедиться, что
    такая фишка есть в `features[]`)
 
 ### Добавить тему
 
 1. `dicts.json`: добавить объект в `themes[]` с новым `id`
-2. `frontend/src/styles/themes.css`: добавить блок `.theme-<id> { ... }`
-3. (Опционально) добавить новый файл обоев в `frontend/public/bg/*` и сослаться
-   на него через `--app-bg-image`.
+2. `frontend/src/styles/themes.css`: добавить блок
+   `.theme-<id> { ... }`
+3. (Опционально) добавить новый файл обоев в `frontend/public/bg/*` и
+   сослаться на него через `--app-bg-image`.
 
 ### Добавить магазин
 
 1. `shops.json`: добавить объект с полями
-   `id/name/city/categories/features/workHours/description/contacts/siteUrl`
+   `code/name/cityCode/categoryCodes/featureCodes/workHours/description/contacts/siteUrl`
 2. Картинки:
    - положить файлы в `frontend/public/generated/*`
    - указать `thumbUrl: "/generated/xxx.png"` и (если нужно)
      `galleryImages: ["/generated/a.png", ...]`
-3. Проверить, что `id` уникален и что карточка открывается по
-   `/shop/<id>`.
+3. Проверить, что `code` уникален и что карточка открывается по
+   `/shop/<code>`.
 
 ### Добавить новый тип контакта (требует кода)
 
-Тут уже нужна правка `frontend/src/pages/ShopPage.vue`: правила формирования
-ссылки/label/target для нового `contact.type`.
+Тут уже нужна правка `frontend/src/pages/ShopPage.vue`: правила
+формирования ссылки/label/target для нового `contact.type`.
 
 ---
 
@@ -98,14 +100,14 @@ API‑вызовами без изменения UI.
 
 ### 4.2. Каталог
 
-- `GET /api/shops?cityId=<id>` → список карточек (минимальный набор:
-  `id,name,thumbUrl,categories,features`)
+- `GET /api/shops?cityCode=<code>` → список карточек (минимальный
+  набор: `code,name,thumbUrl,categoryCodes,featureCodes`)
   - важно: сортировка сейчас на фронте — можно оставить фронтовой,
     либо переносить на бэк.
 
 ### 4.3. Карточка
 
-- `GET /api/shops/<id>` → полная карточка
+- `GET /api/shops/<code>` → полная карточка
   (`description, contacts, workHours, siteUrl, galleryImages`)
 
 > Продуктовое решение, которое нужно уточнять: какие поля должны быть
@@ -128,7 +130,8 @@ API‑вызовами без изменения UI.
 - изображения: `loading="lazy"` и `decoding="async"` (частично есть)
 - избегать тяжёлых CSS‑фильтров на больших областях (не поднимать
   saturate/brightness слишком высоко)
-- держать размер `frontend/public/generated/*` под контролем (скрипт проверки)
+- держать размер `frontend/public/generated/*` под контролем (скрипт
+  проверки)
 
 ---
 
@@ -143,4 +146,3 @@ API‑вызовами без изменения UI.
 
 (Команды уже доступны в `package.json`; следующий шаг — подключить их
 в CI.)
-

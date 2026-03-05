@@ -26,10 +26,10 @@
       >
         <ShopTile
           v-for="(s, i) in sorted"
-          :key="s.id"
+          :key="s.code"
           :shop="s"
           :seed="i + seedBase"
-          @open="go(s.id)"
+          @open="go(s.code)"
         />
       </div>
 
@@ -81,7 +81,7 @@ async function loadCityShops() {
   isLoading.value = true;
   loadError.value = false;
   try {
-    const response = await apiClient.getCityShops(state.cityId, {
+    const response = await apiClient.getCityShops(state.cityCode, {
       page: 1,
       perPage: 500,
     });
@@ -101,19 +101,19 @@ async function loadCityShops() {
 const sorted = computed(() =>
   sortShopsByRules({
     shops: cityShops.value,
-    selectedCategoryIds: state.selectedCategoryIds,
-    selectedFeatureId: state.selectedFeatureId,
+    selectedCategoryCodes: state.selectedCategoryCodes,
+    selectedFeatureCode: state.selectedFeatureCode,
   }),
 );
 
-const seedBase = computed(() => state.cityId.length * 17);
+const seedBase = computed(() => state.cityCode.length * 17);
 
-function go(id: string) {
-  router.push({ name: "shop", params: { id } });
+function go(code: string) {
+  router.push({ name: "shop", params: { code } });
 }
 
 watch(
-  () => state.cityId,
+  () => state.cityCode,
   () => {
     loadCityShops();
   },

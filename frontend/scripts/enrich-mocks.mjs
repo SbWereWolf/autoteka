@@ -14,7 +14,7 @@ const toSort = (index) => index * 10;
 
 function toCityList(dicts) {
   return dicts.cities.map((city, index) => ({
-    id: city.id,
+    code: String(city.code ?? city.id ?? "").trim(),
     name: city.name,
     sort: Number.isFinite(city.sort) ? city.sort : toSort(index),
   }));
@@ -22,19 +22,43 @@ function toCityList(dicts) {
 
 function toRefList(values) {
   return values.map((name, index) => ({
-    id: name,
+    code: name,
     name,
     sort: toSort(index),
   }));
 }
 
 function enrichShops(shops) {
-  return shops.map((shop) => ({
-    ...shop,
-    cityId: shop.city,
-    categoryIds: Array.isArray(shop.categories) ? shop.categories.slice() : [],
-    featureIds: Array.isArray(shop.features) ? shop.features.slice() : [],
-  }));
+  return shops.map((shop) => {
+    const {
+      id,
+      city,
+      categories,
+      features,
+      cityId,
+      categoryIds,
+      featureIds,
+      ...rest
+    } = shop;
+    return {
+      ...rest,
+      code: String(shop.code ?? id ?? "").trim(),
+      cityCode: String(shop.cityCode ?? cityCodeFrom(shop, city, cityId)).trim(),
+      categoryCodes: normalizeCodes(shop.categoryCodes, categories, categoryIds),
+      featureCodes: normalizeCodes(shop.featureCodes, features, featureIds),
+    };
+  });
+}
+
+function cityCodeFrom(shop, city, cityId) {
+  return shop.cityCode ?? city ?? cityId ?? "";
+}
+
+function normalizeCodes(primary, legacyNames, legacyIds) {
+  if (Array.isArray(primary)) return primary.slice();
+  if (Array.isArray(legacyNames)) return legacyNames.slice();
+  if (Array.isArray(legacyIds)) return legacyIds.slice();
+  return [];
 }
 
 async function main() {

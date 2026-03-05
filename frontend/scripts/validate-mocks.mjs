@@ -38,17 +38,17 @@ async function main() {
   const themesCss = await fs.readFile(themesCssPath, "utf8");
 
   const features = new Set(dicts.features);
-  const cityIds = new Set();
-  const categoryIds = new Set();
-  const featureIds = new Set();
+  const cityCodes = new Set();
+  const categoryCodes = new Set();
+  const featureCodes = new Set();
 
   if (!features.has(dicts.defaultFeature)) {
     fail(`defaultFeature '${dicts.defaultFeature}' отсутствует в dicts.features`);
   }
 
   for (const [index, city] of cityList.entries()) {
-    if (typeof city.id !== "string" || city.id.length === 0) {
-      fail(`city-list[${index}].id должен быть непустой строкой`);
+    if (typeof city.code !== "string" || city.code.length === 0) {
+      fail(`city-list[${index}].code должен быть непустой строкой`);
     }
     if (typeof city.name !== "string" || city.name.length === 0) {
       fail(`city-list[${index}].name должен быть непустой строкой`);
@@ -56,15 +56,15 @@ async function main() {
     if (typeof city.sort !== "number" || !Number.isFinite(city.sort)) {
       fail(`city-list[${index}].sort должен быть числом`);
     }
-    if (cityIds.has(city.id)) {
-      fail(`city-list: повтор id '${city.id}'`);
+    if (cityCodes.has(city.code)) {
+      fail(`city-list: повтор code '${city.code}'`);
     }
-    cityIds.add(city.id);
+    cityCodes.add(city.code);
   }
 
   for (const [index, category] of categoryList.entries()) {
-    if (typeof category.id !== "string" || category.id.length === 0) {
-      fail(`category-list[${index}].id должен быть непустой строкой`);
+    if (typeof category.code !== "string" || category.code.length === 0) {
+      fail(`category-list[${index}].code должен быть непустой строкой`);
     }
     if (typeof category.name !== "string" || category.name.length === 0) {
       fail(`category-list[${index}].name должен быть непустой строкой`);
@@ -72,15 +72,15 @@ async function main() {
     if (typeof category.sort !== "number" || !Number.isFinite(category.sort)) {
       fail(`category-list[${index}].sort должен быть числом`);
     }
-    if (categoryIds.has(category.id)) {
-      fail(`category-list: повтор id '${category.id}'`);
+    if (categoryCodes.has(category.code)) {
+      fail(`category-list: повтор code '${category.code}'`);
     }
-    categoryIds.add(category.id);
+    categoryCodes.add(category.code);
   }
 
   for (const [index, feature] of featureList.entries()) {
-    if (typeof feature.id !== "string" || feature.id.length === 0) {
-      fail(`feature-list[${index}].id должен быть непустой строкой`);
+    if (typeof feature.code !== "string" || feature.code.length === 0) {
+      fail(`feature-list[${index}].code должен быть непустой строкой`);
     }
     if (typeof feature.name !== "string" || feature.name.length === 0) {
       fail(`feature-list[${index}].name должен быть непустой строкой`);
@@ -88,10 +88,10 @@ async function main() {
     if (typeof feature.sort !== "number" || !Number.isFinite(feature.sort)) {
       fail(`feature-list[${index}].sort должен быть числом`);
     }
-    if (featureIds.has(feature.id)) {
-      fail(`feature-list: повтор id '${feature.id}'`);
+    if (featureCodes.has(feature.code)) {
+      fail(`feature-list: повтор code '${feature.code}'`);
     }
-    featureIds.add(feature.id);
+    featureCodes.add(feature.code);
   }
 
   const themeClassMatches = [...themesCss.matchAll(/\.theme-([a-z0-9-]+)/g)];
@@ -103,62 +103,79 @@ async function main() {
     }
   }
 
-  const shopIds = new Set();
+  const shopCodes = new Set();
   for (const [shopIndex, shop] of shops.entries()) {
-    if (typeof shop.id !== "string" || shop.id.length === 0) {
-      fail(`shops[${shopIndex}].id должен быть непустой строкой`);
+    if (typeof shop.code !== "string" || shop.code.length === 0) {
+      fail(`shops[${shopIndex}].code должен быть непустой строкой`);
     }
-    if (shopIds.has(shop.id)) {
-      fail(`shops: повтор id '${shop.id}'`);
+    if (shopCodes.has(shop.code)) {
+      fail(`shops: повтор code '${shop.code}'`);
     }
-    shopIds.add(shop.id);
+    shopCodes.add(shop.code);
 
-    if (typeof shop.cityId !== "string" || !cityIds.has(shop.cityId)) {
-      fail(`Магазин '${shop.id}': неизвестный cityId '${shop.cityId}'`);
+    if (
+      typeof shop.cityCode !== "string" ||
+      !cityCodes.has(shop.cityCode)
+    ) {
+      fail(
+        `Магазин '${shop.code}': неизвестный cityCode '${shop.cityCode}'`,
+      );
     }
 
-    if (!Array.isArray(shop.categoryIds)) {
-      fail(`Магазин '${shop.id}': categoryIds должен быть массивом`);
+    if (!Array.isArray(shop.categoryCodes)) {
+      fail(`Магазин '${shop.code}': categoryCodes должен быть массивом`);
     }
-    for (const categoryId of shop.categoryIds ?? []) {
-      if (!categoryIds.has(categoryId)) {
-        fail(`Магазин '${shop.id}': неизвестная categoryId '${categoryId}'`);
+    for (const categoryCode of shop.categoryCodes ?? []) {
+      if (!categoryCodes.has(categoryCode)) {
+        fail(
+          `Магазин '${shop.code}': неизвестный categoryCode '${categoryCode}'`,
+        );
       }
     }
 
-    if (!Array.isArray(shop.featureIds)) {
-      fail(`Магазин '${shop.id}': featureIds должен быть массивом`);
+    if (!Array.isArray(shop.featureCodes)) {
+      fail(`Магазин '${shop.code}': featureCodes должен быть массивом`);
     }
-    for (const featureId of shop.featureIds ?? []) {
-      if (!featureIds.has(featureId)) {
-        fail(`Магазин '${shop.id}': неизвестная featureId '${featureId}'`);
+    for (const featureCode of shop.featureCodes ?? []) {
+      if (!featureCodes.has(featureCode)) {
+        fail(
+          `Магазин '${shop.code}': неизвестный featureCode '${featureCode}'`,
+        );
       }
     }
 
     if (shop.thumbUrl != null && typeof shop.thumbUrl !== "string") {
-      fail(`Магазин '${shop.id}': thumbUrl должен быть строкой`);
+      fail(`Магазин '${shop.code}': thumbUrl должен быть строкой`);
     }
     if (shop.galleryImages != null && !Array.isArray(shop.galleryImages)) {
-      fail(`Магазин '${shop.id}': galleryImages должен быть массивом строк`);
+      fail(
+        `Магазин '${shop.code}': galleryImages должен быть массивом строк`,
+      );
     }
     if (Array.isArray(shop.galleryImages)) {
       for (const [i, image] of shop.galleryImages.entries()) {
         if (typeof image !== "string") {
-          fail(`Магазин '${shop.id}': galleryImages[${i}] должен быть строкой`);
+          fail(
+            `Магазин '${shop.code}': galleryImages[${i}] должен быть строкой`,
+          );
         }
       }
     }
 
     if (shop.contacts != null) {
       if (!Array.isArray(shop.contacts)) {
-        fail(`Магазин '${shop.id}': contacts должен быть массивом`);
+        fail(`Магазин '${shop.code}': contacts должен быть массивом`);
       }
       for (const [i, contact] of (shop.contacts ?? []).entries()) {
         if (typeof contact?.type !== "string" || typeof contact?.value !== "string") {
-          fail(`Магазин '${shop.id}': contacts[${i}] должен иметь type/value строками`);
+          fail(
+            `Магазин '${shop.code}': contacts[${i}] должен иметь type/value строками`,
+          );
         }
         if (contact.value.trim().length === 0) {
-          fail(`Магазин '${shop.id}': contacts[${i}].value не должен быть пустым`);
+          fail(
+            `Магазин '${shop.code}': contacts[${i}].value не должен быть пустым`,
+          );
         }
       }
     }
@@ -170,7 +187,7 @@ async function main() {
     for (const imageRef of imageRefs) {
       const filePath = toPublicFsPath(imageRef);
       if (!(await pathExists(filePath))) {
-        fail(`Магазин '${shop.id}': ассет не найден '${imageRef}'`);
+        fail(`Магазин '${shop.code}': ассет не найден '${imageRef}'`);
       }
     }
   }

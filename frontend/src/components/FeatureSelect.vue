@@ -1,10 +1,10 @@
 <template>
   <div class="relative">
     <select
-      v-model="featureId"
+      v-model="featureCode"
       class="ui-transition ui-interactive ui-bounce w-full min-h-12 rounded-2xl px-3 py-3 text-sm outline-none"
     >
-      <option v-for="f in features" :key="f.id" :value="f.id">
+      <option v-for="f in features" :key="f.code" :value="f.code">
         {{ f.name }}
       </option>
     </select>
@@ -17,8 +17,8 @@ import { setFeature, state } from "../state";
 
 const features = computed(() => state.features);
 
-const featureId = computed({
-  get: () => state.selectedFeatureId,
+const featureCode = computed({
+  get: () => state.selectedFeatureCode,
   set: (v: string) => setFeature(v),
 });
 </script>

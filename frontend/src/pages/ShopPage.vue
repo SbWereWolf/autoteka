@@ -173,7 +173,7 @@ import type { ContactsResponse, Shop } from "../types";
 import { apiClient } from "../api/MockApiClient";
 import { ApiError } from "../api/ApiClient";
 import { state } from "../state";
-import { mapIdsToNames } from "../utils/mapIdsToNames";
+import { mapCodesToNames } from "../utils/mapCodesToNames";
 
 const route = useRoute();
 const router = useRouter();
@@ -186,7 +186,7 @@ const ACCEPTABLE_TYPES = [
   "address",
 ];
 
-const shopId = computed(() => String(route.params.id ?? ""));
+const shopCode = computed(() => String(route.params.code ?? ""));
 const shop = ref<Shop | null>(null);
 const contacts = ref<ContactsResponse>({});
 const isLoading = ref(false);
@@ -200,17 +200,18 @@ const titleText = computed(() => {
 });
 
 const categoryMap = computed(
-  () => new Map(state.categories.map((item) => [item.id, item.name])),
+  () =>
+    new Map(state.categories.map((item) => [item.code, item.name])),
 );
 const featureMap = computed(
-  () => new Map(state.features.map((item) => [item.id, item.name])),
+  () => new Map(state.features.map((item) => [item.code, item.name])),
 );
 
 const categoryNames = computed(() =>
-  mapIdsToNames(shop.value?.categoryIds ?? [], categoryMap.value),
+  mapCodesToNames(shop.value?.categoryCodes ?? [], categoryMap.value),
 );
 const featureNames = computed(() =>
-  mapIdsToNames(shop.value?.featureIds ?? [], featureMap.value),
+  mapCodesToNames(shop.value?.featureCodes ?? [], featureMap.value),
 );
 
 const galleryImages = computed<string[]>(() => {
@@ -288,9 +289,9 @@ async function loadShop() {
   shop.value = null;
   contacts.value = {};
   try {
-    const loadedShop = await apiClient.getShop(shopId.value);
+    const loadedShop = await apiClient.getShop(shopCode.value);
     const loadedContacts = await apiClient.postAcceptableContactTypes(
-      shopId.value,
+      shopCode.value,
       ACCEPTABLE_TYPES,
     );
     shop.value = loadedShop;
@@ -306,7 +307,7 @@ async function loadShop() {
   }
 }
 
-watch(shopId, () => {
+watch(shopCode, () => {
   loadShop();
 });
 

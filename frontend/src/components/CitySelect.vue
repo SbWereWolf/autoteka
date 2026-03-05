@@ -4,7 +4,7 @@
       class="ui-transition ui-interactive ui-bounce w-full min-h-12 rounded-2xl px-3 py-3 text-sm outline-none"
       v-model="city"
     >
-      <option v-for="c in cities" :key="c.id" :value="c.id">
+      <option v-for="c in cities" :key="c.code" :value="c.code">
         {{ c.name }}
       </option>
     </select>
@@ -18,7 +18,7 @@ import { state, setCity } from "../state";
 const cities = computed(() => state.cities);
 
 const city = computed({
-  get: () => state.cityId,
+  get: () => state.cityCode,
   set: (v: string) => setCity(v),
 });
 </script>

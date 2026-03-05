@@ -13,7 +13,8 @@
 
 Файл: `frontend/src/mocks/dicts.json`
 
-- `id: string` — ключ (используется в `shop.city` и `state.cityId`)
+- `code: string` — ключ (используется в `shop.cityCode` и
+  `state.cityCode`)
 - `name: string` — отображаемое имя
 - `isDefault?: boolean` — какой город выбирать при первом запуске
 
@@ -31,7 +32,8 @@
 
 #### Theme
 
-Файл: `frontend/src/mocks/dicts.json`, CSS: `frontend/src/styles/themes.css`
+Файл: `frontend/src/mocks/dicts.json`, CSS:
+`frontend/src/styles/themes.css`
 
 - `id: string` → класс `.theme-<id>`
 - `label: string` → текст в UI
@@ -42,12 +44,13 @@
 
 #### Shop
 
-Файлы: `frontend/src/mocks/shops.json`, тип: `frontend/src/types/shop.ts`
+Файлы: `frontend/src/mocks/shops.json`, тип:
+`frontend/src/types/shop.ts`
 
 Ключевые поля (фактическое использование):
 
-- `id, name, city`
-- `categories: string[]`, `features: string[]`
+- `code, name, cityCode`
+- `categoryCodes: string[]`, `featureCodes: string[]`
 - `workHours: string`, `description: string`
 - `contacts: Array<{type:string;value:string}>`
 - `siteUrl: string`
@@ -74,7 +77,7 @@
 #### `CitySelect.vue`
 
 - `<select>` города
-- `setCity(cityId)` обновляет `state.cityId`
+- `setCity(cityCode)` обновляет `state.cityCode`
 - значение сохраняется в `localStorage` (ключ `autoteka_city`)
 
 #### `CategoryChips.vue`
@@ -121,16 +124,16 @@
 
 - `state.theme: ThemeId`
 - `state.menuOpen: boolean`
-- `state.cityId: string`
-- `state.selectedCategories: string[]`
-- `state.selectedFeature: string`
+- `state.cityCode: string`
+- `state.selectedCategoryCodes: string[]`
+- `state.selectedFeatureCode: string`
 
 Методы:
 
 - `setTheme(themeId)`
-- `setCity(cityId)`
-- `toggleCategory(cat)`
-- `setFeature(feature)`
+- `setCity(cityCode)`
+- `toggleCategory(categoryCode)`
+- `setFeature(featureCode)`
 
 Сохранение:
 
@@ -153,8 +156,8 @@
 ```ts
 sortShopsByRules({
   shops,
-  selectedCategories,
-  selectedFeature
+  selectedCategoryCodes,
+  selectedFeatureCode
 }) => Shop[]
 ```
 
@@ -183,7 +186,7 @@ sortShopsByRules({
    перезагрузки.
 4. Выбрать категории/фишку → меняется порядок плиток по алгоритму и
    сохраняется после перезагрузки.
-5. Открыть магазин → `/shop/:id`.
+5. Открыть магазин → `/shop/:code`.
 6. В карточке: кнопка «Перейти на сайт» → переход.
 7. В карточке: «доскролл вниз» → переход (touch/wheel).
 8. Переключить тему → сохраняется и восстанавливается из
@@ -199,7 +202,7 @@ sortShopsByRules({
 - сортировка по выбранным категориям/фишке
 - переход в карточку магазина
 
-### `/shop/:id` Карточка магазина
+### `/shop/:code` Карточка магазина
 
 - название, режим работы, описание
 - галерея (если есть `galleryImages`)
@@ -219,10 +222,10 @@ sortShopsByRules({
 
 Где настраивать:
 
-- `frontend/src/styles/themes.css` — **токены темы** (цвета, радиусы, тени,
-  интерактив, обои)
-- `frontend/src/styles/tailwind.css` — **UI‑примитивы**, которые читают эти
-  токены через `var(--*)`
+- `frontend/src/styles/themes.css` — **токены темы** (цвета, радиусы,
+  тени, интерактив, обои)
+- `frontend/src/styles/tailwind.css` — **UI‑примитивы**, которые
+  читают эти токены через `var(--*)`
 
 > Механика: класс темы вида `.theme-<id>` навешивается на корневой
 > контейнер `.app`.  
@@ -444,11 +447,12 @@ sortShopsByRules({
 ## 8. Проверки и тестирование
 
 - `npm run validate:mocks`:
-  - `shops[].city` в `dicts.cities[].id`
-  - `shops[].categories[]` в `dicts.categories[]`
-  - `shops[].features[]` в `dicts.features[]`
+- `shops[].cityCode` в `city-list[].code`
+- `shops[].categoryCodes[]` в `category-list[].code`
+- `shops[].featureCodes[]` в `feature-list[].code`
   - `dicts.defaultFeature` в `dicts.features[]`
-  - `dicts.themes[].id` ↔ `.theme-<id>` в `frontend/src/styles/themes.css`
+  - `dicts.themes[].id` ↔ `.theme-<id>` в
+    `frontend/src/styles/themes.css`
   - существование ссылок из `thumbUrl/galleryImages` (если заданы)
 - `npm run check:unused-assets`:
   - отсутствие лишних/пропущенных файлов в `frontend/public/generated`
@@ -498,15 +502,20 @@ UI без правки `frontend/src/styles/themes.css`.
 ### 9.2. Файлы реализации
 
 - `frontend/src/components/CssVarsEditor.vue` — панель редактора.
-- `frontend/src/components/CssVarsEditorVarRow.vue` — строка переменной.
-- `frontend/src/utils/themeOverrides.ts` — storage, apply/remove, валидация.
-- `frontend/src/components/CssVarsEditorVarRow.vue` использует `data-testid`
-  формата `css-var-input-<varName>` для стабильных E2E-селекторов.
-- `frontend/src/App.vue` — применение/очистка overrides при смене темы.
+- `frontend/src/components/CssVarsEditorVarRow.vue` — строка
+  переменной.
+- `frontend/src/utils/themeOverrides.ts` — storage, apply/remove,
+  валидация.
+- `frontend/src/components/CssVarsEditorVarRow.vue` использует
+  `data-testid` формата `css-var-input-<varName>` для стабильных
+  E2E-селекторов.
+- `frontend/src/App.vue` — применение/очистка overrides при смене
+  темы.
 - `frontend/src/components/TopBar.vue` — кнопка открытия редактора.
-- `frontend/src/pages/CatalogPage.vue`, `frontend/src/pages/ShopPage.vue` — встраивание
-  панели.
-- `frontend/src/state.ts` — флаги `themeEditorOpen/themeEditorEnabled`.
+- `frontend/src/pages/CatalogPage.vue`,
+  `frontend/src/pages/ShopPage.vue` — встраивание панели.
+- `frontend/src/state.ts` — флаги
+  `themeEditorOpen/themeEditorEnabled`.
 
 ### 9.3. Ключи localStorage
 
@@ -581,4 +590,3 @@ sequenceDiagram
 - Нет CI-пайплайна для автоматического запуска `check:data` в PR.
 - Нет CI-пайплайна для автоматического запуска `test:e2e` в PR.
 - Ручной smoke-тест UI остаётся обязательным после крупных правок.
-

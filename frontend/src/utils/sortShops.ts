@@ -2,21 +2,22 @@ import type { Shop } from "../types";
 
 export function sortShopsByRules(params: {
   shops: Shop[];
-  selectedCategoryIds: string[];
-  selectedFeatureId: string | null;
+  selectedCategoryCodes: string[];
+  selectedFeatureCode: string | null;
 }): Shop[] {
-  const { shops, selectedCategoryIds, selectedFeatureId } = params;
+  const { shops, selectedCategoryCodes, selectedFeatureCode } =
+    params;
 
   const hasAnySelectedCategory = (shop: Shop) => {
-    if (selectedCategoryIds.length === 0) return false;
-    return shop.categoryIds.some((id) =>
-      selectedCategoryIds.includes(id),
+    if (selectedCategoryCodes.length === 0) return false;
+    return shop.categoryCodes.some((code) =>
+      selectedCategoryCodes.includes(code),
     );
   };
 
   const hasSelectedFeature = (shop: Shop) => {
-    if (!selectedFeatureId) return false;
-    return shop.featureIds.includes(selectedFeatureId);
+    if (!selectedFeatureCode) return false;
+    return shop.featureCodes.includes(selectedFeatureCode);
   };
 
   const A: Shop[] = [];

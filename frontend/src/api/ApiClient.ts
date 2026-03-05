@@ -18,12 +18,12 @@ export interface ApiClient {
   getCategoryList(): Promise<Category[]>;
   getFeatureList(): Promise<Feature[]>;
   getCityShops(
-    cityId: string,
+    cityCode: string,
     query?: CityShopsQuery,
   ): Promise<CityShopsResponse>;
-  getShop(shopId: string): Promise<ShopPublic>;
+  getShop(shopCode: string): Promise<ShopPublic>;
   postAcceptableContactTypes(
-    shopId: string,
+    shopCode: string,
     types: string[],
   ): Promise<ContactsResponse>;
 }

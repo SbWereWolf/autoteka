@@ -15,11 +15,11 @@ import { ApiError } from "./ApiClient";
 
 type ShopWithContacts = ShopPublic & { contacts?: Contact[] };
 
-function sortByOrder<T extends { sort: number; id: string }>(
+function sortByOrder<T extends { sort: number; code: string }>(
   items: T[],
 ): T[] {
   return [...items].sort(
-    (a, b) => a.sort - b.sort || a.id.localeCompare(b.id, "ru"),
+    (a, b) => a.sort - b.sort || a.code.localeCompare(b.code, "ru"),
   );
 }
 
@@ -62,15 +62,15 @@ export class MockApiClient implements ApiClient {
     return featureList;
   }
 
-  async getCityShops(cityId: string, query: CityShopsQuery = {}) {
-    if (!cityList.some((city) => city.id === cityId)) {
+  async getCityShops(cityCode: string, query: CityShopsQuery = {}) {
+    if (!cityList.some((city) => city.code === cityCode)) {
       throw new ApiError(404, "City Not Found");
     }
     const q = String(query.q ?? "")
       .trim()
       .toLocaleLowerCase("ru");
     let filtered = shopsWithContacts.filter(
-      (shop) => shop.cityId === cityId,
+      (shop) => shop.cityCode === cityCode,
     );
     if (q.length > 0) {
       filtered = filtered.filter((shop) =>
@@ -78,7 +78,7 @@ export class MockApiClient implements ApiClient {
       );
     }
     const ordered = [...filtered].sort((a, b) =>
-      a.id.localeCompare(b.id, "ru"),
+      a.code.localeCompare(b.code, "ru"),
     );
     const page = query.page ?? 1;
     const perPage = query.perPage ?? 24;
@@ -86,16 +86,23 @@ export class MockApiClient implements ApiClient {
     return result;
   }
 
-  async getShop(shopId: string) {
-    const shop = shopsWithContacts.find((item) => item.id === shopId);
+  async getShop(shopCode: string) {
+    const shop = shopsWithContacts.find(
+      (item) => item.code === shopCode,
+    );
     if (!shop) {
       throw new ApiError(404, "Shop Not Found");
     }
     return toShopPublic(shop);
   }
 
-  async postAcceptableContactTypes(shopId: string, types: string[]) {
-    const shop = shopsWithContacts.find((item) => item.id === shopId);
+  async postAcceptableContactTypes(
+    shopCode: string,
+    types: string[],
+  ) {
+    const shop = shopsWithContacts.find(
+      (item) => item.code === shopCode,
+    );
     if (!shop) {
       throw new ApiError(404, "Shop Not Found");
     }
