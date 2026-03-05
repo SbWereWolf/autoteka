@@ -4,11 +4,17 @@ declare(strict_types=1);
 
 namespace App\MoonShine\Layouts;
 
+use App\MoonShine\Resources\CategoryResource;
+use App\MoonShine\Resources\CityResource;
+use App\MoonShine\Resources\ContactTypeResource;
+use App\MoonShine\Resources\FeatureResource;
 use MoonShine\Laravel\Layouts\AppLayout;
 use MoonShine\ColorManager\Palettes\PurplePalette;
 use MoonShine\ColorManager\ColorManager;
 use MoonShine\Contracts\ColorManager\ColorManagerContract;
 use MoonShine\Contracts\ColorManager\PaletteContract;
+use MoonShine\MenuManager\MenuGroup;
+use MoonShine\MenuManager\MenuItem;
 
 final class MoonShineLayout extends AppLayout
 {
@@ -27,6 +33,12 @@ final class MoonShineLayout extends AppLayout
     protected function menu(): array
     {
         return [
+            MenuGroup::make('Данные', [
+                MenuItem::make(CityResource::class),
+                MenuItem::make(CategoryResource::class),
+                MenuItem::make(FeatureResource::class),
+                MenuItem::make(ContactTypeResource::class),
+            ]),
             ...parent::menu(),
         ];
     }
