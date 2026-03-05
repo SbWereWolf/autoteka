@@ -36,8 +36,8 @@
 
 ### Добавить город
 
-1. `frontend/src/mocks/dicts.json`: добавить в `cities[]`
-   `{    "code": "new-city",    "name": "Новый город" }`
+1. `frontend/src/mocks/city-list.json`: добавить объект
+   `{ "code": "new-city", "name": "Новый город", "sort": 999 }`
 2. Для магазинов этого города в `frontend/src/mocks/shops.json`
    поставить `cityCode: "new-city"`
 3. Если хотите дефолт — поставить `isDefault: true` (желательно ровно
@@ -45,15 +45,14 @@
 
 ### Добавить категорию/фишку
 
-1. `dicts.json`: добавить строку в `categories[]` или `features[]`
+1. Добавить запись в `category-list.json` или `feature-list.json`
 2. В `shops.json`: использовать **точно такую же строку** в
    `categoryCodes[]`/`featureCodes[]`
-3. Для дефолтной фишки — обновить `defaultFeature` (и убедиться, что
-   такая фишка есть в `features[]`)
+3. Дефолтная фишка берётся как первая запись `feature-list` по `sort`.
 
 ### Добавить тему
 
-1. `dicts.json`: добавить объект в `themes[]` с новым `id`
+1. `theme-list.json`: добавить объект темы с новым `id`
 2. `frontend/src/styles/themes.css`: добавить блок
    `.theme-<id> { ... }`
 3. (Опционально) добавить новый файл обоев в `frontend/public/bg/*` и

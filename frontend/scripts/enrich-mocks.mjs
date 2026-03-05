@@ -4,29 +4,10 @@ import path from "node:path";
 const root = path.resolve(".");
 const mocksDir = path.join(root, "src", "mocks");
 
-const dictsPath = path.join(mocksDir, "dicts.json");
 const shopsPath = path.join(mocksDir, "shops.json");
 const cityListPath = path.join(mocksDir, "city-list.json");
 const categoryListPath = path.join(mocksDir, "category-list.json");
 const featureListPath = path.join(mocksDir, "feature-list.json");
-
-const toSort = (index) => index * 10;
-
-function toCityList(dicts) {
-  return dicts.cities.map((city, index) => ({
-    code: String(city.code ?? city.id ?? "").trim(),
-    name: city.name,
-    sort: Number.isFinite(city.sort) ? city.sort : toSort(index),
-  }));
-}
-
-function toRefList(values) {
-  return values.map((name, index) => ({
-    code: name,
-    name,
-    sort: toSort(index),
-  }));
-}
 
 function enrichShops(shops) {
   return shops.map((shop) => {
@@ -61,18 +42,77 @@ function normalizeCodes(primary, legacyNames, legacyIds) {
   return [];
 }
 
+function toMapByCode(list) {
+  const out = new Map();
+  for (const item of list ?? []) {
+    const code = String(item?.code ?? "").trim();
+    if (!code) continue;
+    out.set(code, {
+      code,
+      name: String(item?.name ?? code).trim() || code,
+      sort: Number.isFinite(item?.sort) ? item.sort : null,
+    });
+  }
+  return out;
+}
+
+function nextSort(map) {
+  const sorts = [...map.values()]
+    .map((item) => item.sort)
+    .filter((v) => Number.isFinite(v));
+  if (sorts.length === 0) return 0;
+  return Math.max(...sorts) + 10;
+}
+
+function ensureRef(map, code) {
+  const key = String(code ?? "").trim();
+  if (!key) return;
+  if (map.has(key)) return;
+  map.set(key, { code: key, name: key, sort: nextSort(map) });
+}
+
+function toSortedList(map) {
+  return [...map.values()]
+    .map((item) => ({
+      code: item.code,
+      name: item.name,
+      sort: Number.isFinite(item.sort) ? item.sort : 0,
+    }))
+    .sort((a, b) => a.sort - b.sort || a.code.localeCompare(b.code, "ru"));
+}
+
 async function main() {
-  const dicts = JSON.parse(await fs.readFile(dictsPath, "utf8"));
   const shops = JSON.parse(await fs.readFile(shopsPath, "utf8"));
+  const cityList = JSON.parse(await fs.readFile(cityListPath, "utf8"));
+  const categoryList = JSON.parse(await fs.readFile(categoryListPath, "utf8"));
+  const featureList = JSON.parse(await fs.readFile(featureListPath, "utf8"));
 
-  const cityList = toCityList(dicts);
-  const categoryList = toRefList(dicts.categories ?? []);
-  const featureList = toRefList(dicts.features ?? []);
   const nextShops = enrichShops(shops);
+  const cityMap = toMapByCode(cityList);
+  const categoryMap = toMapByCode(categoryList);
+  const featureMap = toMapByCode(featureList);
 
-  await fs.writeFile(cityListPath, `${JSON.stringify(cityList, null, 2)}\n`, "utf8");
-  await fs.writeFile(categoryListPath, `${JSON.stringify(categoryList, null, 2)}\n`, "utf8");
-  await fs.writeFile(featureListPath, `${JSON.stringify(featureList, null, 2)}\n`, "utf8");
+  for (const shop of nextShops) {
+    ensureRef(cityMap, shop.cityCode);
+    for (const code of shop.categoryCodes ?? []) {
+      ensureRef(categoryMap, code);
+    }
+    for (const code of shop.featureCodes ?? []) {
+      ensureRef(featureMap, code);
+    }
+  }
+
+  await fs.writeFile(cityListPath, `${JSON.stringify(toSortedList(cityMap), null, 2)}\n`, "utf8");
+  await fs.writeFile(
+    categoryListPath,
+    `${JSON.stringify(toSortedList(categoryMap), null, 2)}\n`,
+    "utf8",
+  );
+  await fs.writeFile(
+    featureListPath,
+    `${JSON.stringify(toSortedList(featureMap), null, 2)}\n`,
+    "utf8",
+  );
   await fs.writeFile(shopsPath, `${JSON.stringify(nextShops, null, 2)}\n`, "utf8");
 
   console.log("enrich:mocks OK");

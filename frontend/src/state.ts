@@ -1,9 +1,9 @@
 import { computed, reactive } from "vue";
-import dicts from "./mocks/dicts.json";
+import themeList from "./mocks/theme-list.json";
 import type { Category, City, Feature } from "./types";
 import { loadLocal, saveLocal } from "./utils/storage";
 
-export type ThemeId = (typeof dicts)["themes"][number]["id"];
+export type ThemeId = string;
 
 const THEME_KEY = "autoteka_theme";
 const CITY_KEY = "autoteka_city";
@@ -75,7 +75,7 @@ export function initState(params: {
   const featureSet = new Set(
     state.features.map((feature) => feature.code),
   );
-  const themeSet = new Set(dicts.themes.map((theme) => theme.id));
+  const themeSet = new Set(themeList.map((theme) => theme.id));
 
   const fallbackCityCode = state.cities[0]?.code ?? "";
   const fallbackFeatureCode = state.features[0]?.code ?? "";
@@ -138,5 +138,5 @@ export function setFeature(featureCode: string) {
 }
 
 export const activeThemeMeta = computed(() =>
-  dicts.themes.find((theme) => theme.id === state.theme),
+  themeList.find((theme) => theme.id === state.theme),
 );

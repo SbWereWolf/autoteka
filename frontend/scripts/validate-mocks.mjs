@@ -3,7 +3,7 @@ import path from "node:path";
 
 const root = path.resolve(".");
 
-const dictsPath = path.join(root, "src/mocks/dicts.json");
+const themeListPath = path.join(root, "src/mocks/theme-list.json");
 const shopsPath = path.join(root, "src/mocks/shops.json");
 const cityListPath = path.join(root, "src/mocks/city-list.json");
 const categoryListPath = path.join(root, "src/mocks/category-list.json");
@@ -30,21 +30,16 @@ async function pathExists(filePath) {
 }
 
 async function main() {
-  const dicts = JSON.parse(await fs.readFile(dictsPath, "utf8"));
+  const themeList = JSON.parse(await fs.readFile(themeListPath, "utf8"));
   const shops = JSON.parse(await fs.readFile(shopsPath, "utf8"));
   const cityList = JSON.parse(await fs.readFile(cityListPath, "utf8"));
   const categoryList = JSON.parse(await fs.readFile(categoryListPath, "utf8"));
   const featureList = JSON.parse(await fs.readFile(featureListPath, "utf8"));
   const themesCss = await fs.readFile(themesCssPath, "utf8");
 
-  const features = new Set(dicts.features);
   const cityCodes = new Set();
   const categoryCodes = new Set();
   const featureCodes = new Set();
-
-  if (!features.has(dicts.defaultFeature)) {
-    fail(`defaultFeature '${dicts.defaultFeature}' отсутствует в dicts.features`);
-  }
 
   for (const [index, city] of cityList.entries()) {
     if (typeof city.code !== "string" || city.code.length === 0) {
@@ -97,7 +92,7 @@ async function main() {
   const themeClassMatches = [...themesCss.matchAll(/\.theme-([a-z0-9-]+)/g)];
   const themeClasses = new Set(themeClassMatches.map((m) => m[1]));
 
-  for (const t of dicts.themes) {
+  for (const t of themeList) {
     if (!themeClasses.has(t.id)) {
       fail(`Для темы '${t.id}' отсутствует CSS-класс .theme-${t.id}`);
     }

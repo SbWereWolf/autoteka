@@ -38,8 +38,8 @@
 </template>
 
 <script setup lang="ts">
-import dicts from "../mocks/dicts.json";
+import themeList from "../mocks/theme-list.json";
 import { state, setTheme } from "../state";
 
-const themes = dicts.themes;
+const themes = themeList;
 </script>

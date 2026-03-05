@@ -11,7 +11,7 @@
 
 #### City
 
-Файл: `frontend/src/mocks/dicts.json`
+Файл: `frontend/src/mocks/city-list.json`
 
 - `code: string` — ключ (используется в `shop.cityCode` и
   `state.cityCode`)
@@ -22,7 +22,8 @@
 
 #### Category / Feature
 
-Файл: `frontend/src/mocks/dicts.json`
+Файлы: `frontend/src/mocks/category-list.json`,
+`frontend/src/mocks/feature-list.json`
 
 - `categories: string[]`
 - `features: string[]`
@@ -32,7 +33,7 @@
 
 #### Theme
 
-Файл: `frontend/src/mocks/dicts.json`, CSS:
+Файл: `frontend/src/mocks/theme-list.json`, CSS:
 `frontend/src/styles/themes.css`
 
 - `id: string` → класс `.theme-<id>`
@@ -215,7 +216,7 @@ sortShopsByRules({
 
 ### 5.1. Мок‑данные
 
-- `frontend/src/mocks/dicts.json`
+- `frontend/src/mocks/theme-list.json`
 - `frontend/src/mocks/shops.json`
 
 ### 5.2. Темизация и UI‑тюнинг через CSS‑переменные
@@ -437,7 +438,9 @@ sortShopsByRules({
 
 ## 7. Какие данные замоканы и как их менять
 
-- Справочники: `frontend/src/mocks/dicts.json`
+- Справочники: `frontend/src/mocks/city-list.json`,
+  `frontend/src/mocks/category-list.json`,
+  `frontend/src/mocks/feature-list.json`
 - Магазины: `frontend/src/mocks/shops.json`
 - Картинки: `frontend/public/generated/*` (проверяются командой
   `npm run check:unused-assets`)
@@ -450,8 +453,8 @@ sortShopsByRules({
 - `shops[].cityCode` в `city-list[].code`
 - `shops[].categoryCodes[]` в `category-list[].code`
 - `shops[].featureCodes[]` в `feature-list[].code`
-  - `dicts.defaultFeature` в `dicts.features[]`
-  - `dicts.themes[].id` ↔ `.theme-<id>` в
+  - дефолтная фишка = первая запись `feature-list` по `sort`
+  - `theme-list[].id` ↔ `.theme-<id>` в
     `frontend/src/styles/themes.css`
   - существование ссылок из `thumbUrl/galleryImages` (если заданы)
 - `npm run check:unused-assets`:
