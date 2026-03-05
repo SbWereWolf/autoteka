@@ -26,11 +26,13 @@
 
 ## Работа приложения
 
+Актуальная (рабочая документация), как тут всё устроено и задумано:
 - [IMPLEMENTATION](docs/foundations/IMPLEMENTATION.md)
 - [DOC_EXTRAS](docs/foundations/DOC_EXTRAS.md)
 
 ### Развёртывание
 
+Как выполнять развёртывание:
 - [DEPLOY](deploy/DEPLOY.md)
 
 ## Запуск
