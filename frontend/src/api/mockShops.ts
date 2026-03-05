@@ -1,4 +1,4 @@
-import rawShops from "./shops.json";
+import rawShops from "../mocks/shops.json";
 
 type RawShop = (typeof rawShops)[number];
 

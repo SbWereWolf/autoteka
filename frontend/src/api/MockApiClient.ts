@@ -1,7 +1,7 @@
 import cityListRaw from "../mocks/city-list.json";
 import categoryListRaw from "../mocks/category-list.json";
 import featureListRaw from "../mocks/feature-list.json";
-import shops from "../mocks/shops";
+import shops from "./mockShops";
 import type {
   Category,
   City,
