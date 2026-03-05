@@ -8,6 +8,7 @@ const THEME_KEY = "autoteka_theme";
 const CITY_KEY = "autoteka_city";
 const CATEGORIES_KEY = "autoteka_categories";
 const FEATURE_KEY = "autoteka_feature";
+const THEME_EDITOR_ENABLED_KEY = "autoteka_theme_editor_enabled";
 
 const cityIds = new Set(dicts.cities.map((c) => c.id));
 const categorySet = new Set(dicts.categories);
@@ -40,10 +41,13 @@ const defaultTheme = sanitizeTheme(loadLocal<string>(THEME_KEY, "a-neutral"));
 const defaultCityId = sanitizeCity(loadLocal<string>(CITY_KEY, fallbackCityId));
 const defaultCategories = sanitizeCategories(loadLocal<unknown>(CATEGORIES_KEY, []));
 const defaultFeature = sanitizeFeature(loadLocal<string>(FEATURE_KEY, fallbackFeature));
+const defaultThemeEditorEnabled = loadLocal<boolean>(THEME_EDITOR_ENABLED_KEY, import.meta.env.DEV);
 
 export const state = reactive({
   theme: defaultTheme,
   menuOpen: false,
+  themeEditorOpen: false,
+  themeEditorEnabled: defaultThemeEditorEnabled,
 
   cityId: defaultCityId,
   selectedCategories: defaultCategories,

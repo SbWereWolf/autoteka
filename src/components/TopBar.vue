@@ -16,6 +16,18 @@
             <div class="truncate text-sm" :style="{ color: 'var(--muted)' }">Автотека</div>
           </div>
 
+          <button
+            v-if="showThemeEditorButton"
+            class="ui-transition ui-interactive ui-bounce hidden 3xl:inline-flex items-center justify-center rounded-xl h-12 w-12"
+            type="button"
+            @click="state.themeEditorOpen = !state.themeEditorOpen"
+            :aria-pressed="state.themeEditorOpen"
+            aria-label="CSS переменные"
+            title="CSS переменные"
+          >
+            <span class="text-lg leading-none">≡</span>
+          </button>
+
           <ThemeSwitcher />
         </div>
       </div>
@@ -24,6 +36,22 @@
 </template>
 
 <script setup lang="ts">
+import { computed, watch } from "vue";
+import { useRoute } from "vue-router";
 import { state } from "../state";
 import ThemeSwitcher from "./ThemeSwitcher.vue";
+
+const route = useRoute();
+
+const showThemeEditorButton = computed(() => {
+  if (!state.themeEditorEnabled) return false;
+  return route.name === "catalog" || route.name === "shop";
+});
+
+watch(
+  () => route.name,
+  (name) => {
+    if (name !== "catalog" && name !== "shop") state.themeEditorOpen = false;
+  },
+);
 </script>

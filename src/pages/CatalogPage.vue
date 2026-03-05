@@ -31,6 +31,8 @@
           @open="go(s.id)"
         />
       </div>
+
+      <CssVarsEditor />
     </div>
   </div>
 </template>
@@ -43,6 +45,7 @@ import shops from "../mocks/shops";
 import { state } from "../state";
 import { sortShopsByRules } from "../utils/sortShops";
 import ShopTile from "../components/ShopTile.vue";
+import CssVarsEditor from "../components/CssVarsEditor.vue";
 import type { Shop } from "../types";
 
 const router = useRouter();

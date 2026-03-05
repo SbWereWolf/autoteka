@@ -121,6 +121,8 @@
           </div>
         </section>
 
+        <CssVarsEditor />
+
         <div class="h-24 3xl:h-56 7xl:h-64"></div>
       </div>
 
@@ -148,6 +150,7 @@ import shops from "../mocks/shops";
 import GalleryCarousel from "../components/GalleryCarousel.vue";
 import OverscrollOpenLink from "../components/OverscrollOpenLink.vue";
 import ShopMetaBadges from "../components/ShopMetaBadges.vue";
+import CssVarsEditor from "../components/CssVarsEditor.vue";
 import { uiConfig } from "../config/ui";
 import type { Contact, Shop } from "../types";
 
