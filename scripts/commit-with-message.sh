@@ -6,19 +6,34 @@ usage() {
 Usage:
   bash ./scripts/commit-with-message.sh \
     --subject "Subject" \
-    --body "Body paragraph 1" \
-    [--body "Body paragraph 2"] \
-    [--agent-id "assistant"] \
-    [--model-name "gpt-5"]
+    --body "Body explanation 1" \
+    [--body "Body explanation 2"] \
+    --platform "codex" \
+    [--model-name "gpt-5"] \
+    [--dry-run]
 USAGE
 }
 
 SUBJECT=""
-AGENT_ID="assistant"
+PLATFORM=""
 MODEL_NAME="gpt-5"
-COMMIT_USER_NAME="assistant"
-COMMIT_USER_EMAIL="assistant@local"
+DRY_RUN="false"
 BODY_PARTS=()
+
+assert_slug_part() {
+  local value="$1"
+  local name="$2"
+
+  [[ -n "$value" ]] || {
+    echo "ERROR: $name is required"
+    exit 1
+  }
+
+  if [[ ! "$value" =~ ^[A-Za-z0-9._-]{1,64}$ ]]; then
+    echo "ERROR: $name has invalid format: '$value'. Allowed: [A-Za-z0-9._-], max 64"
+    exit 1
+  fi
+}
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -32,25 +47,18 @@ while [[ $# -gt 0 ]]; do
       [[ $# -gt 0 ]] || { echo "ERROR: --body requires value"; exit 1; }
       BODY_PARTS+=("$1")
       ;;
-    --agent-id)
+    --platform)
       shift
-      [[ $# -gt 0 ]] || { echo "ERROR: --agent-id requires value"; exit 1; }
-      AGENT_ID="$1"
+      [[ $# -gt 0 ]] || { echo "ERROR: --platform requires value"; exit 1; }
+      PLATFORM="$1"
       ;;
     --model-name)
       shift
       [[ $# -gt 0 ]] || { echo "ERROR: --model-name requires value"; exit 1; }
       MODEL_NAME="$1"
       ;;
-    --commit-user-name)
-      shift
-      [[ $# -gt 0 ]] || { echo "ERROR: --commit-user-name requires value"; exit 1; }
-      COMMIT_USER_NAME="$1"
-      ;;
-    --commit-user-email)
-      shift
-      [[ $# -gt 0 ]] || { echo "ERROR: --commit-user-email requires value"; exit 1; }
-      COMMIT_USER_EMAIL="$1"
+    --dry-run)
+      DRY_RUN="true"
       ;;
     -h|--help)
       usage
@@ -72,45 +80,52 @@ done
 }
 [[ ${#BODY_PARTS[@]} -gt 0 ]] || { echo "ERROR: at least one --body required"; exit 1; }
 
-if [[ ! "$COMMIT_USER_NAME" =~ ^[A-Za-z0-9._-]{1,64}$ ]]; then
-  COMMIT_USER_NAME="assistant"
-fi
-if [[ ! "$COMMIT_USER_EMAIL" =~ ^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$ ]]; then
-  COMMIT_USER_EMAIL="assistant@local"
-fi
+assert_slug_part "$PLATFORM" "platform"
+assert_slug_part "$MODEL_NAME" "model-name"
 
+IDENTITY_NAME="${PLATFORM}-${MODEL_NAME}"
+IDENTITY_EMAIL="${IDENTITY_NAME}@local"
 TMP_FILE=".commit-message-$(date +%s)-$RANDOM.md"
+
+build_message() {
+  {
+    printf '%s\n\n' "$SUBJECT"
+    for i in "${!BODY_PARTS[@]}"; do
+      item_number=$((i + 1))
+      part="${BODY_PARTS[$i]}"
+      normalized_part="$(printf '%s' "$part" | tr '\r\n' '  ' | tr -s '[:space:]' ' ' | sed 's/^ //; s/ $//')"
+      [[ -n "$normalized_part" ]] || {
+        echo "ERROR: body item #$item_number is empty after normalization"
+        exit 1
+      }
+      printf '%s\n' "${item_number}. ${normalized_part}" | fold -s -w 70
+    done
+    printf '%s\n' "Author: ${IDENTITY_NAME}"
+  }
+}
 
 cleanup() {
   rm -f "$TMP_FILE"
 }
 trap cleanup EXIT
 
-{
-  printf '%s\n\n' "$SUBJECT"
-  for i in "${!BODY_PARTS[@]}"; do
-    part="${BODY_PARTS[$i]}"
-    while IFS= read -r line; do
-      if [[ -z "$line" ]]; then
-        printf '\n'
-      else
-        printf '%s\n' "$line" | fold -s -w 70
-      fi
-    done <<< "$part"
-    if [[ "$i" -lt $((${#BODY_PARTS[@]} - 1)) ]]; then
-      printf '\n'
-    fi
-  done
-  printf '\n'
-  printf '%s\n' "Author: $AGENT_ID $MODEL_NAME" | fold -s -w 70
-} > "$TMP_FILE"
+build_message > "$TMP_FILE"
 
 npx prettier --write "$TMP_FILE"
-npx markdownlint-cli --fix --disable MD041 "$TMP_FILE"
-npx markdownlint-cli --disable MD041 "$TMP_FILE"
-GIT_AUTHOR_NAME="$COMMIT_USER_NAME" \
-  GIT_AUTHOR_EMAIL="$COMMIT_USER_EMAIL" \
-  GIT_COMMITTER_NAME="$COMMIT_USER_NAME" \
-  GIT_COMMITTER_EMAIL="$COMMIT_USER_EMAIL" \
-  git -c "user.name=$COMMIT_USER_NAME" -c "user.email=$COMMIT_USER_EMAIL" \
-  commit --author "$COMMIT_USER_NAME <$COMMIT_USER_EMAIL>" -F "$TMP_FILE"
+
+build_message > "$TMP_FILE"
+
+if [[ "$DRY_RUN" == "true" ]]; then
+  echo "Dry run mode: commit was not created."
+  echo "Author: ${IDENTITY_NAME} <${IDENTITY_EMAIL}>"
+  echo "Commit message:"
+  cat "$TMP_FILE"
+  exit 0
+fi
+
+GIT_AUTHOR_NAME="$IDENTITY_NAME" \
+  GIT_AUTHOR_EMAIL="$IDENTITY_EMAIL" \
+  GIT_COMMITTER_NAME="$IDENTITY_NAME" \
+  GIT_COMMITTER_EMAIL="$IDENTITY_EMAIL" \
+  git -c "user.name=$IDENTITY_NAME" -c "user.email=$IDENTITY_EMAIL" \
+  commit --author "$IDENTITY_NAME <$IDENTITY_EMAIL>" -F "$TMP_FILE"

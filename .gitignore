@@ -10,3 +10,4 @@ dist
 /.vite/
 /metrics/data.json
 /inbox/
+scripts/.env

@@ -9,9 +9,12 @@
 - Если делаешь коммит, обязательно пиши body
   - Body объясняет причины и последствия изменений
   - Перечисление причин и последствий оформи как нумерованный md-список
+  - В body не должно быть пустых строк, кроме отделения subject от body
   - В конце body отдельно добавляй свою подпись:
     `Author: {platform}-{model}`
-- Пример, если делаешь коммит на Win10/WSL2:
+- Коммит делай с помощью helper-скрипта
+
+Пример, если делаешь коммит на Win10/WSL2:
 
 ```powershell
 pwsh ./scripts/commit-with-message.ps1 `
@@ -20,16 +23,43 @@ pwsh ./scripts/commit-with-message.ps1 `
     "Add explicit nginx rules for metrics routes and caching.",
     "Keep metrics page cacheable while data.json stays no-cache."
   ) `
-  -AgentId "assistant" `
-  -ModelName "gpt-5"
+  -Platform "codex" `
+  -Model "gpt-5"
 ```
-- Пример, если делаешь коммит на \*nix:
+
+Пример preview без создания commit:
+
+```powershell
+pwsh ./scripts/commit-with-message.ps1 `
+  -Subject "Configure metrics caching and routing" `
+  -Body @(
+    "Add explicit nginx rules for metrics routes and caching.",
+    "Keep metrics page cacheable while data.json stays no-cache."
+  ) `
+  -Platform "codex" `
+  -Model "gpt-5" `
+  -DryRun
+```
+
+Пример, если делаешь коммит на *nix:
 
 ```bash
 bash ./scripts/commit-with-message.sh \
   --subject "Configure metrics caching and routing" \
   --body "Add explicit nginx rules for metrics routes and caching." \
   --body "Keep metrics page cacheable while data.json stays no-cache." \
-  --agent-id "assistant" \
+  --platform "codex" \
   --model-name "gpt-5"
+```
+
+Пример preview без создания commit на *nix:
+
+```bash
+bash ./scripts/commit-with-message.sh \
+  --subject "Configure metrics caching and routing" \
+  --body "Add explicit nginx rules for metrics routes and caching." \
+  --body "Keep metrics page cacheable while data.json stays no-cache." \
+  --platform "codex" \
+  --model-name "gpt-5" \
+  --dry-run
 ```
