@@ -26,8 +26,8 @@
 
 ## Работа приложения
 
-- [IMPLEMENTATION](docs/IMPLEMENTATION.md)
-- [DOC_EXTRAS](docs/DOC_EXTRAS.md)
+- [IMPLEMENTATION](docs/foundations/IMPLEMENTATION.md)
+- [DOC_EXTRAS](docs/foundations/DOC_EXTRAS.md)
 
 ### Развёртывание
 
