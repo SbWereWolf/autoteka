@@ -11,7 +11,7 @@
 
 #### City
 
-Файл: `src/mocks/dicts.json`
+Файл: `frontend/src/mocks/dicts.json`
 
 - `id: string` — ключ (используется в `shop.city` и `state.cityId`)
 - `name: string` — отображаемое имя
@@ -21,7 +21,7 @@
 
 #### Category / Feature
 
-Файл: `src/mocks/dicts.json`
+Файл: `frontend/src/mocks/dicts.json`
 
 - `categories: string[]`
 - `features: string[]`
@@ -31,7 +31,7 @@
 
 #### Theme
 
-Файл: `src/mocks/dicts.json`, CSS: `src/styles/themes.css`
+Файл: `frontend/src/mocks/dicts.json`, CSS: `frontend/src/styles/themes.css`
 
 - `id: string` → класс `.theme-<id>`
 - `label: string` → текст в UI
@@ -42,7 +42,7 @@
 
 #### Shop
 
-Файлы: `src/mocks/shops.json`, тип: `src/types/shop.ts`
+Файлы: `frontend/src/mocks/shops.json`, тип: `frontend/src/types/shop.ts`
 
 Ключевые поля (фактическое использование):
 
@@ -102,14 +102,14 @@
 
 - поддерживает `items` как `string[]` (URL) или как объектные элементы
 - свайп (pointer events), prev/next
-- использует параметры из `src/config/ui.ts`
+- использует параметры из `frontend/src/config/ui.ts`
 
 #### `OverscrollOpenLink.vue`
 
 - переход на внешний URL, если пользователь «дотянул вниз» в конце
   страницы
 - работает для touch и wheel
-- использует параметры из `src/config/ui.ts`
+- использует параметры из `frontend/src/config/ui.ts`
 
 ---
 
@@ -117,7 +117,7 @@
 
 ### 2.1. Глобальное состояние
 
-Файл: `src/state.ts`
+Файл: `frontend/src/state.ts`
 
 - `state.theme: ThemeId`
 - `state.menuOpen: boolean`
@@ -148,7 +148,7 @@
 
 ### 2.2. Сортировка
 
-Файл: `src/utils/sortShops.ts`
+Файл: `frontend/src/utils/sortShops.ts`
 
 ```ts
 sortShopsByRules({
@@ -168,7 +168,7 @@ sortShopsByRules({
 
 ### 2.3. Storage helpers
 
-Файл: `src/utils/storage.ts`
+Файл: `frontend/src/utils/storage.ts`
 
 - `loadLocal(key, fallback)`
 - `saveLocal(key, value)`
@@ -212,16 +212,16 @@ sortShopsByRules({
 
 ### 5.1. Мок‑данные
 
-- `src/mocks/dicts.json`
-- `src/mocks/shops.json`
+- `frontend/src/mocks/dicts.json`
+- `frontend/src/mocks/shops.json`
 
 ### 5.2. Темизация и UI‑тюнинг через CSS‑переменные
 
 Где настраивать:
 
-- `src/styles/themes.css` — **токены темы** (цвета, радиусы, тени,
+- `frontend/src/styles/themes.css` — **токены темы** (цвета, радиусы, тени,
   интерактив, обои)
-- `src/styles/tailwind.css` — **UI‑примитивы**, которые читают эти
+- `frontend/src/styles/tailwind.css` — **UI‑примитивы**, которые читают эти
   токены через `var(--*)`
 
 > Механика: класс темы вида `.theme-<id>` навешивается на корневой
@@ -357,7 +357,7 @@ sortShopsByRules({
 #### 5.2.6. Обои приложения
 
 - `--app-bg-image` — картинка‑обои (`url("/bg/...")`), используется в
-  `src/styles/pattern.css`.
+  `frontend/src/styles/pattern.css`.
   - **Если файл не существует** → будет 404, но фон всё равно
     останется `--bg` (приложение не упадёт).
   - **Риск:** если полагаться на обои для «настроения» темы, 404 будет
@@ -411,32 +411,32 @@ sortShopsByRules({
 
 ### 5.3. Брейкпоинты
 
-- `tailwind.config.js` — screens `xs/sm/3xl/7xl`
+- `frontend/tailwind.config.js` — screens `xs/sm/3xl/7xl`
 
 ### 5.4. UI-конфиг
 
-- `src/config/ui.ts` — параметры overscroll и карусели
+- `frontend/src/config/ui.ts` — параметры overscroll и карусели
   (`uiConfig.overscroll.*`, `uiConfig.gallery.*`)
 
 ### 5.5. Ассеты
 
-- `public/bg/*` — фоны стилей
-- `public/generated/*` — изображения для плиток/галерей
+- `frontend/public/bg/*` — фоны стилей
+- `frontend/public/generated/*` — изображения для плиток/галерей
 
 ---
 
 ## 6. Жёстко заданные значения (нельзя поменять без кода)
 
-- Алгоритм сортировки: `src/utils/sortShops.ts`
-- Роуты: `src/router/index.ts`
+- Алгоритм сортировки: `frontend/src/utils/sortShops.ts`
+- Роуты: `frontend/src/router/index.ts`
 
 ---
 
 ## 7. Какие данные замоканы и как их менять
 
-- Справочники: `src/mocks/dicts.json`
-- Магазины: `src/mocks/shops.json`
-- Картинки: `public/generated/*` (проверяются командой
+- Справочники: `frontend/src/mocks/dicts.json`
+- Магазины: `frontend/src/mocks/shops.json`
+- Картинки: `frontend/public/generated/*` (проверяются командой
   `npm run check:unused-assets`)
 
 ---
@@ -448,18 +448,18 @@ sortShopsByRules({
   - `shops[].categories[]` в `dicts.categories[]`
   - `shops[].features[]` в `dicts.features[]`
   - `dicts.defaultFeature` в `dicts.features[]`
-  - `dicts.themes[].id` ↔ `.theme-<id>` в `src/styles/themes.css`
+  - `dicts.themes[].id` ↔ `.theme-<id>` в `frontend/src/styles/themes.css`
   - существование ссылок из `thumbUrl/galleryImages` (если заданы)
 - `npm run check:unused-assets`:
-  - отсутствие лишних/пропущенных файлов в `public/generated`
+  - отсутствие лишних/пропущенных файлов в `frontend/public/generated`
 - `npm run check:data`:
   - агрегатор (`validate:mocks` + `check:unused-assets`)
 
 ### 8.1. E2E инструменты (Playwright)
 
 - Зависимость: `@playwright/test` (см. `package.json`).
-- Конфиг: `playwright.config.ts`.
-- Тесты: `e2e/*.spec.ts`.
+- Конфиг: `frontend/playwright.config.ts`.
+- Тесты: `frontend/e2e/*.spec.ts`.
 - Команды:
   - `npm run test:e2e`
   - `npm run test:e2e:headed`
@@ -468,7 +468,7 @@ sortShopsByRules({
 
 Текущий регрессионный сценарий:
 
-- `e2e/theme-editor-theme-switch.spec.ts` — при смене темы в
+- `frontend/e2e/theme-editor-theme-switch.spec.ts` — при смене темы в
   `CssVarsEditor` должны обновляться не только заголовок, но и
   значения полей формы.
 
@@ -486,7 +486,7 @@ sortShopsByRules({
 ## 9. Редактор темы оформления (runtime)
 
 Редактор темы позволяет менять CSS‑переменные активной темы прямо из
-UI без правки `src/styles/themes.css`.
+UI без правки `frontend/src/styles/themes.css`.
 
 ### 9.1. Назначение и границы
 
@@ -497,16 +497,16 @@ UI без правки `src/styles/themes.css`.
 
 ### 9.2. Файлы реализации
 
-- `src/components/CssVarsEditor.vue` — панель редактора.
-- `src/components/CssVarsEditorVarRow.vue` — строка переменной.
-- `src/utils/themeOverrides.ts` — storage, apply/remove, валидация.
-- `src/components/CssVarsEditorVarRow.vue` использует `data-testid`
+- `frontend/src/components/CssVarsEditor.vue` — панель редактора.
+- `frontend/src/components/CssVarsEditorVarRow.vue` — строка переменной.
+- `frontend/src/utils/themeOverrides.ts` — storage, apply/remove, валидация.
+- `frontend/src/components/CssVarsEditorVarRow.vue` использует `data-testid`
   формата `css-var-input-<varName>` для стабильных E2E-селекторов.
-- `src/App.vue` — применение/очистка overrides при смене темы.
-- `src/components/TopBar.vue` — кнопка открытия редактора.
-- `src/pages/CatalogPage.vue`, `src/pages/ShopPage.vue` — встраивание
+- `frontend/src/App.vue` — применение/очистка overrides при смене темы.
+- `frontend/src/components/TopBar.vue` — кнопка открытия редактора.
+- `frontend/src/pages/CatalogPage.vue`, `frontend/src/pages/ShopPage.vue` — встраивание
   панели.
-- `src/state.ts` — флаги `themeEditorOpen/themeEditorEnabled`.
+- `frontend/src/state.ts` — флаги `themeEditorOpen/themeEditorEnabled`.
 
 ### 9.3. Ключи localStorage
 
@@ -581,3 +581,4 @@ sequenceDiagram
 - Нет CI-пайплайна для автоматического запуска `check:data` в PR.
 - Нет CI-пайплайна для автоматического запуска `test:e2e` в PR.
 - Ручной smoke-тест UI остаётся обязательным после крупных правок.
+

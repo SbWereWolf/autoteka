@@ -6,14 +6,14 @@
 
 ### Модули и роли
 
-- `src/mocks/*` — источник данных (справочники + магазины)
-- `src/state.ts` — единое глобальное состояние (без Pinia/Vuex)
-- `src/utils/*` — чистые утилиты (localStorage, сортировка)
-- `src/router/*` — маршрутизация
-- `src/pages/*` — страницы (Catalog/Shop)
-- `src/components/*` — UI‑компоненты (меню, плитки, карусель)
-- `src/styles/*` — токены темы + примитивы UI + фон‑паттерн
-- `public/*` — ассеты (обои и картинки магазинов)
+- `frontend/src/mocks/*` — источник данных (справочники + магазины)
+- `frontend/src/state.ts` — единое глобальное состояние (без Pinia/Vuex)
+- `frontend/src/utils/*` — чистые утилиты (localStorage, сортировка)
+- `frontend/src/router/*` — маршрутизация
+- `frontend/src/pages/*` — страницы (Catalog/Shop)
+- `frontend/src/components/*` — UI‑компоненты (меню, плитки, карусель)
+- `frontend/src/styles/*` — токены темы + примитивы UI + фон‑паттерн
+- `frontend/public/*` — ассеты (обои и картинки магазинов)
 
 ### Поток: меню → состояние → каталог
 
@@ -35,9 +35,9 @@
 
 ### Добавить город
 
-1. `src/mocks/dicts.json`: добавить в `cities[]`
+1. `frontend/src/mocks/dicts.json`: добавить в `cities[]`
    `{    "id": "new-city",    "name": "Новый город" }`
-2. Для магазинов этого города в `src/mocks/shops.json` поставить
+2. Для магазинов этого города в `frontend/src/mocks/shops.json` поставить
    `city: "new-city"`
 3. Если хотите дефолт — поставить `isDefault: true` (желательно ровно
    у одного города).
@@ -53,8 +53,8 @@
 ### Добавить тему
 
 1. `dicts.json`: добавить объект в `themes[]` с новым `id`
-2. `src/styles/themes.css`: добавить блок `.theme-<id> { ... }`
-3. (Опционально) добавить новый файл обоев в `public/bg/*` и сослаться
+2. `frontend/src/styles/themes.css`: добавить блок `.theme-<id> { ... }`
+3. (Опционально) добавить новый файл обоев в `frontend/public/bg/*` и сослаться
    на него через `--app-bg-image`.
 
 ### Добавить магазин
@@ -62,7 +62,7 @@
 1. `shops.json`: добавить объект с полями
    `id/name/city/categories/features/workHours/description/contacts/siteUrl`
 2. Картинки:
-   - положить файлы в `public/generated/*`
+   - положить файлы в `frontend/public/generated/*`
    - указать `thumbUrl: "/generated/xxx.png"` и (если нужно)
      `galleryImages: ["/generated/a.png", ...]`
 3. Проверить, что `id` уникален и что карточка открывается по
@@ -70,7 +70,7 @@
 
 ### Добавить новый тип контакта (требует кода)
 
-Тут уже нужна правка `src/pages/ShopPage.vue`: правила формирования
+Тут уже нужна правка `frontend/src/pages/ShopPage.vue`: правила формирования
 ссылки/label/target для нового `contact.type`.
 
 ---
@@ -128,7 +128,7 @@ API‑вызовами без изменения UI.
 - изображения: `loading="lazy"` и `decoding="async"` (частично есть)
 - избегать тяжёлых CSS‑фильтров на больших областях (не поднимать
   saturate/brightness слишком высоко)
-- держать размер `public/generated/*` под контролем (скрипт проверки)
+- держать размер `frontend/public/generated/*` под контролем (скрипт проверки)
 
 ---
 
@@ -137,9 +137,10 @@ API‑вызовами без изменения UI.
 - `npm run validate:mocks` — проверка консистентности моков и наличия
   файлов
 - `npm run check:unused-assets` — проверка лишних/пропущенных файлов в
-  `public/generated/*`
+  `frontend/public/generated/*`
 - `npm run check:data` — агрегатор (`validate:mocks` +
   `check:unused-assets`)
 
 (Команды уже доступны в `package.json`; следующий шаг — подключить их
 в CI.)
+
