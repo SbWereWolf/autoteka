@@ -2,9 +2,10 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
+use MoonShine\Laravel\Models\MoonshineUser;
+use MoonShine\Laravel\Models\MoonshineUserRole;
 
 class AdminUserSeeder extends Seeder
 {
@@ -14,12 +15,12 @@ class AdminUserSeeder extends Seeder
         $password = (string) env('MOONSHINE_ADMIN_PASSWORD', 'admin12345');
         $name = (string) env('MOONSHINE_ADMIN_NAME', 'MoonShine Admin');
 
-        User::query()->updateOrCreate(
+        MoonshineUser::query()->updateOrCreate(
             ['email' => $email],
             [
+                'moonshine_user_role_id' => MoonshineUserRole::DEFAULT_ROLE_ID,
                 'name' => $name,
                 'password' => $password,
-                'email_verified_at' => now(),
                 'remember_token' => Str::random(10),
             ]
         );

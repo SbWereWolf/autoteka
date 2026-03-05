@@ -4,6 +4,11 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use App\MoonShine\Resources\CategoryResource;
+use App\MoonShine\Resources\CityResource;
+use App\MoonShine\Resources\ContactTypeResource;
+use App\MoonShine\Resources\FeatureResource;
+use App\MoonShine\Resources\ShopResource;
 use Illuminate\Support\ServiceProvider;
 use MoonShine\Contracts\Core\DependencyInjection\CoreContract;
 use MoonShine\Laravel\DependencyInjection\MoonShine;
@@ -22,6 +27,11 @@ class MoonShineServiceProvider extends ServiceProvider
             ->resources([
                 MoonShineUserResource::class,
                 MoonShineUserRoleResource::class,
+                CityResource::class,
+                CategoryResource::class,
+                FeatureResource::class,
+                ContactTypeResource::class,
+                ShopResource::class,
             ])
             ->pages([
                 ...$core->getConfig()->getPages(),
