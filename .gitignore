@@ -13,3 +13,8 @@ dist
 scripts/.env
 test-results/
 playwright-report/
+/frontend/.vite/
+/frontend/dist/
+/deploy/metrics/data.json
+/frontend/scripts/.env
+/backup/etc/

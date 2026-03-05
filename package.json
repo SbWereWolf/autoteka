@@ -1,55 +1,26 @@
 {
-  "name": "autoteka-mock-app",
+  "name": "autoteka-monorepo",
   "private": true,
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview",
-    "test": "vitest run",
-    "test:unit": "vitest run",
-    "test:e2e": "playwright test",
-    "test:e2e:headed": "playwright test --headed",
-    "images:regen": "node scripts/generate-shop-images.mjs",
-    "enrich:mocks": "node scripts/enrich-mocks.mjs",
-    "validate:mocks": "node scripts/validate-mocks.mjs",
-    "check:mocks": "node scripts/validate-mocks.mjs",
-    "check:unused-assets": "node scripts/check-unused-assets.mjs",
-    "check:data": "npm run check:mocks && npm run check:unused-assets"
-  },
-  "dependencies": {
-    "vue": "^3.5.0",
-    "vue-router": "^4.5.0"
+    "lint": "bash ./lint/lint.sh -Path . -Mode Warn",
+    "lint:strict": "bash ./lint/lint.sh -Path . -Mode Strict",
+    "lint:dry": "bash ./lint/lint.sh -Path . -Mode DryRun",
+    "format": "bash ./lint/lint.sh -Path . -Mode Warn"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "@playwright/test": "^1.58.2",
-    "@tailwindcss/postcss": "^4.1.0",
-    "@vitejs/plugin-vue": "^5.1.0",
-    "autoprefixer": "^10.4.20",
     "eslint": "^10.0.2",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-vue": "^10.8.0",
     "globals": "^17.4.0",
     "htmlhint": "^1.9.1",
     "markdownlint-cli": "^0.47.0",
-    "postcss": "^8.4.49",
     "prettier": "^3.8.1",
     "stylelint": "^17.4.0",
     "svgo": "^4.0.0",
-    "tailwindcss": "^4.1.0",
     "typescript": "^5.6.3",
-    "typescript-eslint": "^8.56.1",
-    "vitest": "^3.2.4",
-    "vite": "^5.4.8"
-  },
-  "description": "Это скелет проекта под согласованное ТЗ: каталог плиток, меню (город/категории/фишка), сортировка по алгоритму a/b/c/d, 6 тем (3 стиля × 2 палитры), страница магазина, переход на сайт через кнопку и через \"доскролл вниз\".",
-  "main": "postcss.config.js",
-  "directories": {
-    "doc": "docs"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC"
+    "typescript-eslint": "^8.56.1"
+  }
 }

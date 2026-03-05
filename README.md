@@ -1,45 +1,31 @@
-# Автотека — клиентский макет (SPA)
+# Автотека — monorepo (frontend + backend + deploy)
 
-**Актуально по коду на 2026-03-03.**  
-Этот документ заменяет/уточняет старый `README.md` и любые устаревшие
-ТЗ.
+**Актуально по коду на 2026‑03‑05.**
 
 ## Что это
 
-Демонстрационный SPA‑макет каталога магазинов (без бэкенда):
+Монорепозиторий:
 
-- **Каталог** магазинов по выбранному городу (плитки).
-- **Карточка магазина**.
-- **Меню (гамбургер):** город (фильтр), категории (мультивыбор →
-  влияет на сортировку), фишка (одиночный выбор → влияет на
-  сортировку).
-- **Сортировка** по алгоритму **A1 → A2 → B1 → B2** (см. ниже).
-- **6 тем** (3 стиля × 2 палитры), **сохранение только темы** в
-  `localStorage`.
-- Переход на сайт магазина: **кнопкой** и через **«доскролл вниз»**
-  (wheel/touch) с вибро‑откликом (где доступно).
+- `frontend/` — клиентский SPA‑макет (Vue/Vite)
+- `backend/` — заготовка под будущий Laravel + MoonShine
+- `deploy/` — всё, что относится к деплою (compose/nginx/systemd/скрипты/метрики)
 
-## Известные ограничения/долги (по текущей реализации)
+Документация по устройству текущего фронта:
 
-- Нет CI-пайплайна для автоматического запуска `check:data` в PR.
-- Нет CI-пайплайна для автоматического запуска `test:e2e` в PR.
-- Ручной smoke-тест UI остаётся обязательным после крупных правок.
+- [IMPLEMENTATION](docs/foundations/IMPLEMENTATION.md)
+- [USER_MANUAL](docs/foundations/USER_MANUAL.md)
+- [DOC_EXTRAS](docs/foundations/DOC_EXTRAS.md)
 
-## Работа приложения
+Деплой:
 
-Актуальная (рабочая) документация — как тут всё устроено и задумано:
+- [DEPLOY](deploy/DEPLOY.md)
 
-- [IMPLEMENTATION](docs/foundations/IMPLEMENTATION.md) — как получилось
-- [DOC_EXTRAS](docs/foundations/DOC_EXTRAS.md) — дополнительно
-- [USER_MANUAL](docs/foundations/USER_MANUAL.md) — как пользоваться
+## Запуск frontend локально
 
-### Развёртывание
-
-- [DEPLOY](deploy/DEPLOY.md) — как выполнять развёртывание
-
-## Запуск
+Из `frontend/`:
 
 ```bash
+cd frontend
 npm i
 npm run dev
 ```
@@ -47,55 +33,32 @@ npm run dev
 Сборка/превью:
 
 ```bash
+cd frontend
 npm run build
 npm run preview
 ```
 
-## Проверки данных и ассетов
+## Проверки данных и ассетов (frontend)
 
 ```bash
-npm run validate:mocks
-npm run check:unused-assets
+cd frontend
 npm run check:data
 ```
-
-Описание:
-
-- `validate:mocks` — валидирует согласованность моков:
-  города/категории/фишки, `defaultFeature`, соответствие тем в
-  `dicts.json` и `themes.css`, а также наличие ассетов из
-  `thumbUrl/galleryImages` (если они присутствуют в моках).
-- `check:unused-assets` — сверяет содержимое `public/generated` с
-  ожидаемым набором `gen-*` и падает при лишних/отсутствующих файлах.
-- `check:data` — агрегатор (`validate:mocks` + `check:unused-assets`).
 
 ## E2E тестирование UI (Playwright)
 
 ```bash
+cd frontend
 npx playwright install chromium
 npm run test:e2e
 npm run test:e2e:headed
 ```
 
-Описание:
+## Общий линт репозитория
 
-- `test:e2e` — запускает E2E тесты из `e2e/*.spec.ts`.
-- `test:e2e:headed` — запуск E2E в headed-режиме.
-- Текущий регрессионный кейс: `e2e/theme-editor-theme-switch.spec.ts`
-  (проверка, что при смене темы в редакторе подгружаются значения
-  новой темы).
+Из корня:
 
-## Страницы
-
-- `/` — каталог
-- `/shop/:id` — карточка магазина
-
-## Структура
-
-- `src/pages/*` — страницы
-- `src/components/*` — компоненты UI
-- `src/state.ts` — глобальное состояние (без стороннего стора)
-- `src/utils/*` — утилиты (сортировка, localStorage)
-- `src/styles/*` — Tailwind и тема/фон
-- `src/mocks/*` — мок‑данные
-- `public/*` — статические ассеты (фон/картинки)
+```bash
+npm i
+npm run lint
+```
