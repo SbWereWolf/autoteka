@@ -1,0 +1,52 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ENV_FILE="/etc/vue-app/deploy.env"
+
+if [ -f "$ENV_FILE" ]; then
+  # shellcheck disable=SC1090
+  set -a
+  source "$ENV_FILE" || true
+  set +a
+fi
+
+if [ -z "${AUTOTEKA_ROOT:-}" ]; then
+  echo "AUTOTEKA_ROOT is not set. Set it in $ENV_FILE or export AUTOTEKA_ROOT." >&2
+  exit 1
+fi
+
+CMD="${1:-}"
+shift || true
+
+case "$CMD" in
+  up)
+    exec /usr/bin/docker compose -f "$AUTOTEKA_ROOT/deploy/docker-compose.yml" up -d --remove-orphans
+    ;;
+  down)
+    exec /usr/bin/docker compose -f "$AUTOTEKA_ROOT/deploy/docker-compose.yml" down
+    ;;
+  deploy)
+    exec "$AUTOTEKA_ROOT/deploy/deploy.sh" "$@"
+    ;;
+  watchdog)
+    exec "$AUTOTEKA_ROOT/deploy/server-watchdog.sh" "$@"
+    ;;
+  maintenance)
+    exec "$AUTOTEKA_ROOT/deploy/server-maintenance.sh" "$@"
+    ;;
+  undeploy)
+    exec "$AUTOTEKA_ROOT/deploy/undeploy.sh" "$@"
+    ;;
+  *)
+    cat >&2 <<'USAGE'
+Usage:
+  autoteka up
+  autoteka down
+  autoteka deploy
+  autoteka watchdog
+  autoteka maintenance
+  autoteka undeploy [soft|purge|nuke] [--force]
+USAGE
+    exit 2
+    ;;
+esac

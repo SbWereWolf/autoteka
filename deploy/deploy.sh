@@ -1,13 +1,17 @@
-#!/bin/bash
+#!/usr/bin/env bash
 set -euo pipefail
 
 # Auto-deploy (polling) from git:
-# - fetch origin/main (by default)
+# - fetch origin/<branch>
 # - if new commits -> reset --hard and docker compose up -d --build
 # - logs to /var/log/vue-app-deploy.log
 # - protected from parallel runs via flock
 
-APP_DIR="/opt/vue-app"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck disable=SC1090
+source "$SCRIPT_DIR/_common.sh"
+load_autoteka_env
+
 BRANCH="${BRANCH:-master}"
 REMOTE="${REMOTE:-origin}"
 LOG="/var/log/vue-app-deploy.log"
@@ -22,11 +26,12 @@ fi
 
 {
   echo "=== $(date) deploy start ==="
+  echo "AUTOTEKA_ROOT=$AUTOTEKA_ROOT"
 
   # some systems require safe.directory if owner differs
-  git config --global --add safe.directory "$APP_DIR" >/dev/null 2>&1 || true
+  git config --global --add safe.directory "$AUTOTEKA_ROOT" >/dev/null 2>&1 || true
 
-  cd "$APP_DIR"
+  cd "$AUTOTEKA_ROOT"
 
   git fetch "$REMOTE" "$BRANCH"
 
@@ -44,9 +49,9 @@ fi
   git reset --hard "$REMOTE/$BRANCH"
 
   # optional: update base images
-  docker compose pull || true
+  compose pull || true
 
-  docker compose up -d --build --remove-orphans
+  compose up -d --build --remove-orphans
 
   echo "$REMOTE_HASH" > /var/lib/vue-app-last-good || true
   echo "=== $(date) deploy success ($REMOTE_HASH) ==="

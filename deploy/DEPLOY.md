@@ -1,36 +1,31 @@
 # Deploy on a fresh server (Debian/Ubuntu)
 
-Эта папка содержит админ-скрипты, которые поднимают сервер с нуля и
-держат его в self-healing состоянии. Основная цель: **автоматическая
-публикация через git pull + docker compose**.
+Эта папка содержит админ‑скрипты, которые поднимают сервер с нуля и
+держат его в self‑healing состоянии. Основная цель: **автодеплой через git polling + docker compose**.
 
-## Требования и допущения
+## Концепция
 
-- Репозиторий клонируется на сервер **в /opt/vue-app**
-- Деплой работает через polling (systemd timer) — без webhook
-- Приложение — статический Vue/Vite сайт, публикуется через Docker
-  (nginx)
+- Корень проекта задаётся переменной **`AUTOTEKA_ROOT`**.
+- `AUTOTEKA_ROOT` хранится в `/etc/vue-app/deploy.env`.
+- systemd unit’ы **не содержат** жёстких путей вида `/opt/vue-app/...` и вызывают стабильный wrapper `/usr/local/bin/autoteka`.
 
-## Что делает deploy/install.sh
+## Что делает `deploy/install.sh`
 
 - ставит базовые утилиты (curl/git/wget/bc/logrotate/fail2ban)
-- ставит Docker **только если Docker ещё не установлен** (на Debian
-  использует `docker.io`)
+- ставит Docker **только если Docker ещё не установлен** (на Debian использует `docker.io`)
 - включает docker service и проверяет наличие `docker compose`
-- ограничивает docker-логи (`/etc/docker/daemon.json`)
-- ограничивает systemd journal (drop-in в
-  `/etc/systemd/journald.conf.d/`)
+- ограничивает docker‑логи (`/etc/docker/daemon.json`)
+- ограничивает systemd journal (drop‑in в `/etc/systemd/journald.conf.d/`)
 - настраивает fail2ban (jail `sshd`)
-- включает self-healing watchdog (`server-watchdog.timer`, запуск
-  каждые 2 минуты)
-- включает daily maintenance (`server-maintenance.timer`)
-- ставит systemd unit `vue-app.service` для `docker compose up -d`
-- включает авто-деплой из git (`vue-app-deploy.timer`, каждые 5 минут)
+- кладёт `/etc/vue-app/deploy.env` (если нет) и **проставляет `AUTOTEKA_ROOT` текущим путём репозитория**
+- (опционально) кладёт `/etc/vue-app/telegram.env` для Telegram‑уведомлений
+- устанавливает wrapper `/usr/local/bin/autoteka`
+- ставит systemd unit’ы и включает:
+  - `vue-app.service` (docker compose up -d)
+  - `vue-app-deploy.timer` (git polling каждые 5 минут)
+  - `server-watchdog.timer` (каждые 2 минуты)
+  - `server-maintenance.timer` (ежедневно)
 - добавляет logrotate для логов watchdog/metrics/maintenance/deploy
-- готовит файл `/etc/vue-app/telegram.env` (опционально) для
-  Telegram-уведомлений
-- готовит файл `/etc/vue-app/deploy.env` для настройки ветки/remote
-  автодеплоя
 
 ## Поднятие с нуля
 
@@ -42,22 +37,23 @@
 apt update && apt install -y git
 ```
 
-### 3) Склонировать репозиторий в /opt/vue-app
+### 3) Склонировать репозиторий в любой каталог
+
+> Этот каталог и будет `AUTOTEKA_ROOT`.
 
 ```bash
 mkdir -p /opt/vue-app
 cd /opt/vue-app
-git clone https://github.com/SbWereWolf/autoteka.git .
+git clone <YOUR_REPO_URL> .
 ```
-
-> Если репозиторий приватный — добавьте SSH-ключи, чтобы `git pull`
-> работал без пароля.
 
 ### 4) Запустить bootstrap
 
+Из корня репозитория:
+
 ```bash
-chmod +x /opt/vue-app/deploy/install.sh
-sudo /opt/vue-app/deploy/install.sh
+chmod +x ./deploy/install.sh
+sudo ./deploy/install.sh
 ```
 
 ### 5) Проверить состояние
@@ -76,23 +72,18 @@ systemctl status server-maintenance.timer
 - `/var/log/server-metrics.log`
 - `/var/log/server-maintenance.log`
 
-## Настройка ветки
+## Настройка ветки/remote
 
-По умолчанию деплой следит за `origin/master`. Сервис
-`vue-app-deploy.service` читает переменные из
-`/etc/vue-app/deploy.env`:
+`vue-app-deploy.service` читает переменные из `/etc/vue-app/deploy.env`:
 
+- `AUTOTEKA_ROOT` — путь к репозиторию
 - `BRANCH` (по умолчанию `master`)
 - `REMOTE` (по умолчанию `origin`)
 
 Пример:
 
 ```bash
-cat >/etc/vue-app/deploy.env <<'EOF'
-BRANCH=master
-REMOTE=origin
-EOF
-chmod 600 /etc/vue-app/deploy.env
+sudoedit /etc/vue-app/deploy.env
 systemctl daemon-reload
 systemctl restart vue-app-deploy.timer
 systemctl start vue-app-deploy.service
@@ -105,3 +96,8 @@ systemctl list-timers --all | grep vue-app-deploy
 journalctl -u vue-app-deploy.service -n 100 --no-pager
 tail -n 100 /var/log/vue-app-deploy.log
 ```
+
+## Undeploy
+
+- До переезда (legacy схема): `./deploy/undeploy-pre-move.sh`
+- После переезда (текущая схема): `./deploy/undeploy.sh`

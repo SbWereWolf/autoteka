@@ -4,4 +4,5 @@ After=network.target
 
 [Service]
 Type=oneshot
-ExecStart=/opt/vue-app/deploy/server-maintenance.sh
+EnvironmentFile=-/etc/vue-app/deploy.env
+ExecStart=/usr/local/bin/autoteka maintenance

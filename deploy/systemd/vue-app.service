@@ -1,13 +1,13 @@
 [Unit]
-Description=Vue App (docker compose up -d)
+Description=Autoteka Frontend (docker compose up -d)
 Requires=docker.service
 After=docker.service
 
 [Service]
 Type=oneshot
-WorkingDirectory=/opt/vue-app
-ExecStart=/usr/bin/docker compose up -d --remove-orphans
-ExecStop=/usr/bin/docker compose down
+EnvironmentFile=-/etc/vue-app/deploy.env
+ExecStart=/usr/local/bin/autoteka up
+ExecStop=/usr/local/bin/autoteka down
 RemainAfterExit=yes
 TimeoutStartSec=0
 

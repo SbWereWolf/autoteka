@@ -1,0 +1,21 @@
+version: "3.9"
+
+services:
+  web:
+    build:
+      context: ${AUTOTEKA_ROOT:-..}
+      dockerfile: deploy/nginx/Dockerfile
+    container_name: vue-app
+    restart: always
+    ports:
+      - "${HTTP_PORT:-80}:80"
+    # healthcheck is used by watchdog for self-healing
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O- http://127.0.0.1/ >/dev/null 2>&1 || exit 1"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+    # monitoring output (generated on host by deploy/server-watchdog.sh)
+    volumes:
+      - "${AUTOTEKA_ROOT:-..}/deploy/metrics:/usr/share/nginx/html/metrics:ro"

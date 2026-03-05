@@ -1,12 +1,17 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Convert /var/log/server-metrics.log -> /opt/vue-app/metrics/data.json
+# Convert /var/log/server-metrics.log -> $AUTOTEKA_ROOT/deploy/metrics/data.json
 # Input format (single line):
 #   2026-03-04T03:10:00+03:00 load=0.25 ram=32 health=healthy
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck disable=SC1090
+source "$SCRIPT_DIR/_common.sh"
+load_autoteka_env
+
 INPUT="/var/log/server-metrics.log"
-OUTPUT="/opt/vue-app/metrics/data.json"
+OUTPUT="$AUTOTEKA_ROOT/deploy/metrics/data.json"
 
 mkdir -p "$(dirname "$OUTPUT")"
 
