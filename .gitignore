@@ -8,7 +8,6 @@ dist
 /lint/nix.env
 /logs/
 /.vite/
-/metrics/data.json
 /inbox/
 scripts/.env
 test-results/
@@ -18,3 +17,4 @@ playwright-report/
 /deploy/metrics/data.json
 /frontend/scripts/.env
 /backup/etc/
+/frontend/src/mocks/

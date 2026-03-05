@@ -99,5 +99,4 @@ tail -n 100 /var/log/vue-app-deploy.log
 
 ## Undeploy
 
-- До переезда (legacy схема): `./deploy/undeploy-pre-move.sh`
-- После переезда (текущая схема): `./deploy/undeploy.sh`
+- Текущая схема: `./deploy/undeploy.sh`
