@@ -22,17 +22,21 @@
 ## Известные ограничения/долги (по текущей реализации)
 
 - Нет CI-пайплайна для автоматического запуска `check:data` в PR.
+- Нет CI-пайплайна для автоматического запуска `test:e2e` в PR.
 - Ручной smoke-тест UI остаётся обязательным после крупных правок.
 
 ## Работа приложения
 
 Актуальная (рабочая документация), как тут всё устроено и задумано:
+
 - [IMPLEMENTATION](docs/foundations/IMPLEMENTATION.md)
+- [USER_MANUAL](docs/foundations/USER_MANUAL.md)
 - [DOC_EXTRAS](docs/foundations/DOC_EXTRAS.md)
 
 ### Развёртывание
 
 Как выполнять развёртывание:
+
 - [DEPLOY](deploy/DEPLOY.md)
 
 ## Запуск
@@ -66,6 +70,22 @@ npm run check:data
 - `check:unused-assets` — сверяет содержимое `public/generated` с
   ожидаемым набором `gen-*` и падает при лишних/отсутствующих файлах.
 - `check:data` — агрегатор (`validate:mocks` + `check:unused-assets`).
+
+## E2E тестирование UI (Playwright)
+
+```bash
+npx playwright install chromium
+npm run test:e2e
+npm run test:e2e:headed
+```
+
+Описание:
+
+- `test:e2e` — запускает E2E тесты из `e2e/*.spec.ts`.
+- `test:e2e:headed` — запуск E2E в headed-режиме.
+- Текущий регрессионный кейс: `e2e/theme-editor-theme-switch.spec.ts`
+  (проверка, что при смене темы в редакторе подгружаются значения
+  новой темы).
 
 ## Страницы
 

@@ -441,7 +441,7 @@ sortShopsByRules({
 
 ---
 
-## 8. Проверки данных и ассетов
+## 8. Проверки и тестирование
 
 - `npm run validate:mocks`:
   - `shops[].city` в `dicts.cities[].id`
@@ -455,9 +455,129 @@ sortShopsByRules({
 - `npm run check:data`:
   - агрегатор (`validate:mocks` + `check:unused-assets`)
 
+### 8.1. E2E инструменты (Playwright)
+
+- Зависимость: `@playwright/test` (см. `package.json`).
+- Конфиг: `playwright.config.ts`.
+- Тесты: `e2e/*.spec.ts`.
+- Команды:
+  - `npm run test:e2e`
+  - `npm run test:e2e:headed`
+- Предусловие локального запуска:
+  - `npx playwright install chromium`
+
+Текущий регрессионный сценарий:
+
+- `e2e/theme-editor-theme-switch.spec.ts` — при смене темы в
+  `CssVarsEditor` должны обновляться не только заголовок, но и
+  значения полей формы.
+
+### 8.2. Временные артефакты тестов
+
+После запуска Playwright локально могут появляться:
+
+- `test-results/`
+- `playwright-report/`
+
+Это временные артефакты запуска тестов.
+
 ---
 
-## 9. Известные ограничения/долги (по текущей реализации)
+## 9. Редактор темы оформления (runtime)
+
+Редактор темы позволяет менять CSS‑переменные активной темы прямо из
+UI без правки `src/styles/themes.css`.
+
+### 9.1. Назначение и границы
+
+- Инструмент runtime-настройки темы для разработки/отладки.
+- Правки применяются к корневому `.app` через inline CSS properties.
+- Значения сохраняются в `localStorage`.
+- Исходные CSS-файлы и моки не изменяются.
+
+### 9.2. Файлы реализации
+
+- `src/components/CssVarsEditor.vue` — панель редактора.
+- `src/components/CssVarsEditorVarRow.vue` — строка переменной.
+- `src/utils/themeOverrides.ts` — storage, apply/remove, валидация.
+- `src/components/CssVarsEditorVarRow.vue` использует `data-testid`
+  формата `css-var-input-<varName>` для стабильных E2E-селекторов.
+- `src/App.vue` — применение/очистка overrides при смене темы.
+- `src/components/TopBar.vue` — кнопка открытия редактора.
+- `src/pages/CatalogPage.vue`, `src/pages/ShopPage.vue` — встраивание
+  панели.
+- `src/state.ts` — флаги `themeEditorOpen/themeEditorEnabled`.
+
+### 9.3. Ключи localStorage
+
+- `autoteka_theme_editor_enabled` — включение редактора (по умолчанию
+  в dev, в prod/stage можно включить вручную).
+- `autoteka_theme_overrides_v1` — значения переменных по темам.
+
+Формат `autoteka_theme_overrides_v1`:
+
+```json
+{
+  "a-neutral": {
+    "--bg": "oklch(0.22 0.02 260)",
+    "--accent": "oklch(0.74 0.14 200)"
+  },
+  "b-accent": {
+    "--hover-amt": "10%"
+  }
+}
+```
+
+### 9.4. Поток применения значения
+
+```mermaid
+flowchart TD
+  A[Пользователь вводит значение] --> B{validateVarValue}
+  B -- невалидно --> C[Показать состояние invalid]
+  B -- валидно --> D[setProperty на .app]
+  D --> E[setThemeOverride]
+  E --> F[Сохранить в localStorage]
+  F --> G[UI обновлен мгновенно]
+```
+
+### 9.5. Смена темы и пере-применение overrides
+
+```mermaid
+sequenceDiagram
+  participant U as User
+  participant TS as ThemeSwitcher
+  participant S as state.theme
+  participant A as App watcher
+  participant ST as localStorage
+  participant APP as .app style
+
+  U->>TS: Выбирает тему
+  TS->>S: setTheme(themeId)
+  S->>A: watch(theme) срабатывает
+  A->>APP: removeThemeOverridesFromApp(prevTheme)
+  A->>ST: loadThemeOverrides(nextTheme)
+  A->>APP: applyThemeOverrides(nextTheme)
+```
+
+### 9.6. Ограничения и диагностика
+
+- Валидация `best-effort` через `CSS.supports`
+  (цвета/фильтры/проценты).
+- Невалидные значения не применяются, но остаются в draft-поле.
+- Для диагностики:
+  - проверить `localStorage.autoteka_theme_editor_enabled`;
+  - проверить `localStorage.autoteka_theme_overrides_v1`;
+  - убедиться, что на `.app` выставлены inline CSS properties.
+- Для полного сброса:
+  - удалить `autoteka_theme_overrides_v1`;
+  - при необходимости удалить `autoteka_theme_editor_enabled`.
+
+См. пользовательское руководство: `docs/foundations/USER_MANUAL.md`.
+
+---
+
+## 10. Известные ограничения/долги (по текущей реализации)
 
 - Нет CI-пайплайна для автоматического запуска `check:data` в PR.
+- Нет CI-пайплайна для автоматического запуска `test:e2e` в PR.
 - Ручной smoke-тест UI остаётся обязательным после крупных правок.
