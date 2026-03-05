@@ -1,0 +1,41 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Models;
+
+use App\Models\Concerns\UsesTableName;
+use App\Models\Concerns\GeneratesCodeOnSave;
+use App\Support\Database\TableName;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+
+class City extends Model
+{
+    use HasFactory;
+    use GeneratesCodeOnSave;
+    use UsesTableName;
+
+    protected $fillable = [
+        'code',
+        'title',
+        'sort',
+        'is_published',
+    ];
+
+    protected $casts = [
+        'sort' => 'integer',
+        'is_published' => 'boolean',
+    ];
+
+    protected static function tableName(): TableName
+    {
+        return TableName::CITY;
+    }
+
+    public function shops(): HasMany
+    {
+        return $this->hasMany(Shop::class, 'city_id');
+    }
+}
