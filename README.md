@@ -1,13 +1,13 @@
 # Автотека — monorepo (frontend + backend + deploy)
 
-**Актуально по коду на 2026‑03‑05.**
+**Актуально по коду на 2026‑03‑06.**
 
 ## Что это
 
 Монорепозиторий:
 
 - `frontend/` — клиентский SPA‑макет (Vue/Vite)
-- `backend/` — заготовка под будущий Laravel + MoonShine
+- `backend/` — Laravel 12 + MoonShine 4 (admin panel)
 - `deploy/` — всё, что относится к деплою (compose/nginx/systemd/скрипты/метрики)
 
 Документация по устройству текущего фронта:
@@ -37,6 +37,26 @@ cd frontend
 npm run build
 npm run preview
 ```
+
+## Запуск backend локально
+
+Из `backend/`:
+
+```bash
+cd backend
+composer install
+cp example.env .env
+php artisan key:generate
+php artisan migrate
+php artisan db:seed --class=AdminUserSeeder
+php artisan serve
+```
+
+Админка MoonShine:
+
+- URL: `http://127.0.0.1:8000/admin/login`
+- Логин/пароль по умолчанию: `admin@example.com` / `admin12345`
+- Рекомендуется переопределить `MOONSHINE_ADMIN_*` в `.env`
 
 ## Проверки данных и ассетов (frontend)
 

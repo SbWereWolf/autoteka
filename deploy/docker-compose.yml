@@ -1,5 +1,15 @@
 
 services:
+  php:
+    build:
+      context: ${AUTOTEKA_ROOT:-..}
+      dockerfile: deploy/php/Dockerfile
+    container_name: autoteka-php
+    restart: always
+    working_dir: /var/www/backend
+    volumes:
+      - "${AUTOTEKA_ROOT:-..}/backend:/var/www/backend"
+
   web:
     build:
       context: ${AUTOTEKA_ROOT:-..}
@@ -18,3 +28,6 @@ services:
     # monitoring output (generated on host by deploy/server-watchdog.sh)
     volumes:
       - "${AUTOTEKA_ROOT:-..}/deploy/metrics:/usr/share/nginx/html/metrics:ro"
+      - "${AUTOTEKA_ROOT:-..}/backend:/var/www/backend:ro"
+    depends_on:
+      - php

@@ -3,6 +3,11 @@
 Эта папка содержит админ‑скрипты, которые поднимают сервер с нуля и
 держат его в self‑healing состоянии. Основная цель: **автодеплой через git polling + docker compose**.
 
+Текущий docker-контур:
+
+- `web` (nginx) — раздаёт frontend и проксирует backend-маршруты.
+- `php` (php-fpm) — исполняет Laravel backend.
+
 ## Концепция
 
 - Корень проекта задаётся переменной **`AUTOTEKA_ROOT`**.
@@ -96,6 +101,32 @@ systemctl list-timers --all | grep vue-app-deploy
 journalctl -u vue-app-deploy.service -n 100 --no-pager
 tail -n 100 /var/log/vue-app-deploy.log
 ```
+
+## Backend (Laravel + MoonShine) в compose
+
+После `install.sh` backend стартует как часть `vue-app.service` (docker compose).
+
+Проверки:
+
+```bash
+docker compose -f deploy/docker-compose.yml ps
+docker compose -f deploy/docker-compose.yml logs -f php
+docker compose -f deploy/docker-compose.yml logs -f web
+```
+
+URL:
+
+- frontend: `http://<HOST>/`
+- MoonShine login: `http://<HOST>/admin/login`
+
+Параметры initial admin задаются в `backend/.env`:
+
+- `MOONSHINE_ADMIN_NAME`
+- `MOONSHINE_ADMIN_EMAIL`
+- `MOONSHINE_ADMIN_PASSWORD`
+
+Если `backend/.env` отсутствует, контейнер `php` создаёт его из
+`backend/example.env`.
 
 ## Undeploy
 

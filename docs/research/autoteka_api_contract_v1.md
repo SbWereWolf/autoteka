@@ -35,7 +35,8 @@
 
 ```json
 {
-  "id": "barnaul",
+  "id": 11,
+  "code": "barnaul",
   "name": "Барнаул",
   "sort": 10
 }
@@ -45,7 +46,8 @@
 
 ```json
 {
-  "id": "cat_domestic",
+  "id": 22,
+  "code": "cat_domestic",
   "name": "Отечественные запчасти",
   "sort": 10
 }
@@ -55,7 +57,8 @@
 
 ```json
 {
-  "id": "feat_fast_delivery",
+  "id": 33,
+  "code": "feat_fast_delivery",
   "name": "Самая быстрая доставка",
   "sort": 10
 }
@@ -68,7 +71,8 @@
 
 ```json
 {
-  "id": "shop_001",
+  "id": 44,
+  "code": "shop_001",
   "cityId": "barnaul",
 
   "name": "Авто‑Мир",
