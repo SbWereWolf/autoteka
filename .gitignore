@@ -11,3 +11,5 @@ dist
 /metrics/data.json
 /inbox/
 scripts/.env
+test-results/
+playwright-report/

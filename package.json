@@ -7,6 +7,8 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
+    "test:e2e": "playwright test",
+    "test:e2e:headed": "playwright test --headed",
     "images:regen": "node scripts/generate-shop-images.mjs",
     "validate:mocks": "node scripts/validate-mocks.mjs",
     "check:unused-assets": "node scripts/check-unused-assets.mjs",
@@ -18,6 +20,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.58.2",
     "@tailwindcss/postcss": "^4.1.0",
     "@vitejs/plugin-vue": "^5.1.0",
     "autoprefixer": "^10.4.20",
