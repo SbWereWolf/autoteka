@@ -27,17 +27,15 @@
 
 ## Работа приложения
 
-Актуальная (рабочая документация), как тут всё устроено и задумано:
+Актуальная (рабочая) документация — как тут всё устроено и задумано:
 
-- [IMPLEMENTATION](docs/foundations/IMPLEMENTATION.md)
-- [USER_MANUAL](docs/foundations/USER_MANUAL.md)
-- [DOC_EXTRAS](docs/foundations/DOC_EXTRAS.md)
+- [IMPLEMENTATION](docs/foundations/IMPLEMENTATION.md) — как получилось
+- [DOC_EXTRAS](docs/foundations/DOC_EXTRAS.md) — дополнительно
+- [USER_MANUAL](docs/foundations/USER_MANUAL.md) — как пользоваться
 
 ### Развёртывание
 
-Как выполнять развёртывание:
-
-- [DEPLOY](deploy/DEPLOY.md)
+- [DEPLOY](deploy/DEPLOY.md) — как выполнять развёртывание
 
 ## Запуск
 
