@@ -1,5 +1,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
+import { materializeShops } from "./materialize-shop-media.mjs";
 
 const root = path.resolve(".");
 const mocksDir = path.join(root, "src", "mocks");
@@ -87,7 +88,7 @@ async function main() {
   const categoryList = JSON.parse(await fs.readFile(categoryListPath, "utf8"));
   const featureList = JSON.parse(await fs.readFile(featureListPath, "utf8"));
 
-  const nextShops = enrichShops(shops);
+  const nextShops = materializeShops(enrichShops(shops));
   const cityMap = toMapByCode(cityList);
   const categoryMap = toMapByCode(categoryList);
   const featureMap = toMapByCode(featureList);
