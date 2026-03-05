@@ -22,6 +22,16 @@ pwsh ./scripts/commit-with-message.ps1 `
   -Model "gpt-5"
 ```
 
+- Частая ошибка для PowerShell:
+  - Не передавай `-Body` как набор отдельных строк без массива,
+    иначе PowerShell может интерпретировать часть значений как
+    позиционные аргументы и завершиться с ошибкой
+    `A positional parameter cannot be found...`.
+  - Безопасный вариант для one-liner:
+```powershell
+pwsh -Command "& { ./scripts/commit-with-message.ps1 -Subject 'Configure metrics caching and routing' -Body @('Add explicit nginx rules for metrics routes and caching.','Keep metrics page cacheable while data.json stays no-cache.') -Platform 'codex' -Model 'gpt-5' }"
+```
+
 - Пример, если делаешь коммит на *nix:
 ```bash
 bash ./scripts/commit-with-message.sh \
