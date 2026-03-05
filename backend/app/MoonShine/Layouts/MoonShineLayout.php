@@ -33,7 +33,7 @@ final class MoonShineLayout extends AppLayout
     protected function menu(): array
     {
         return [
-            MenuGroup::make('Данные', [
+            MenuGroup::make('Справочники', [
                 MenuItem::make(CityResource::class),
                 MenuItem::make(CategoryResource::class),
                 MenuItem::make(FeatureResource::class),
