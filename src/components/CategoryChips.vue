@@ -5,24 +5,24 @@
   >
     <button
       v-for="c in categories"
-      :key="c"
+      :key="c.id"
       class="ui-transition ui-interactive ui-bounce rounded-2xl min-h-12 text-sm"
       :style="chipStyle(c)"
-      @click="toggleCategory(c)"
+      @click="toggleCategory(c.id)"
     >
-      {{ c }}
+      {{ c.name }}
     </button>
   </div>
 </template>
 
 <script setup lang="ts">
-import dicts from "../mocks/dicts.json";
+import { computed } from "vue";
 import { state, toggleCategory } from "../state";
 
-const categories = dicts.categories;
+const categories = computed(() => state.categories);
 
-function chipStyle(c: string) {
-  const active = state.selectedCategories.includes(c);
+function chipStyle(c: { id: string }) {
+  const active = state.selectedCategoryIds.includes(c.id);
   return {
     width: "var(--menu-category-chip-width, 100%)",
     textAlign: "var(--menu-category-chip-text-align, left)",

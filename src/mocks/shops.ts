@@ -1,5 +1,5 @@
 import rawShops from "./shops.json";
-import type { Shop } from "../types";
+import type { Contact, ShopPublic } from "../types";
 
 function hashToSeed(str: string): number {
   // FNV-1a 32-bit
@@ -75,7 +75,9 @@ function pickImages(shopId: string) {
   return { thumbUrl: galleryImages[0], galleryImages };
 }
 
-export const shops: Shop[] = (rawShops as Shop[]).map((s) => {
+type ShopWithContacts = ShopPublic & { contacts?: Contact[] };
+
+export const shops: ShopWithContacts[] = (rawShops as ShopWithContacts[]).map((s) => {
   const imgs = pickImages(s.id);
   return {
     ...s,

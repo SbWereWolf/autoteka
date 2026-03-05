@@ -5,7 +5,12 @@
       <select
         class="ui-transition ui-interactive ui-bounce w-full min-h-12 rounded-2xl px-3 py-3 text-sm outline-none"
         :value="state.theme"
-        @change="setTheme(($event.target as HTMLSelectElement).value)"
+        @change="
+          setTheme(
+            ($event.target as HTMLSelectElement)
+              .value as typeof state.theme,
+          )
+        "
         aria-label="Тема оформления"
       >
         <option v-for="t in themes" :key="t.id" :value="t.id">

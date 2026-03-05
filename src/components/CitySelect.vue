@@ -13,13 +13,12 @@
 
 <script setup lang="ts">
 import { computed } from "vue";
-import dicts from "../mocks/dicts.json";
 import { state, setCity } from "../state";
 
-const cities = dicts.cities;
+const cities = computed(() => state.cities);
 
 const city = computed({
   get: () => state.cityId,
-  set: (v: string) => setCity(v)
+  set: (v: string) => setCity(v),
 });
 </script>
