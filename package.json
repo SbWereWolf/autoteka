@@ -7,12 +7,16 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
+    "test": "vitest run",
+    "test:unit": "vitest run",
     "test:e2e": "playwright test",
     "test:e2e:headed": "playwright test --headed",
     "images:regen": "node scripts/generate-shop-images.mjs",
+    "enrich:mocks": "node scripts/enrich-mocks.mjs",
     "validate:mocks": "node scripts/validate-mocks.mjs",
+    "check:mocks": "node scripts/validate-mocks.mjs",
     "check:unused-assets": "node scripts/check-unused-assets.mjs",
-    "check:data": "npm run validate:mocks && npm run check:unused-assets"
+    "check:data": "npm run check:mocks && npm run check:unused-assets"
   },
   "dependencies": {
     "vue": "^3.5.0",
@@ -37,6 +41,7 @@
     "tailwindcss": "^4.1.0",
     "typescript": "^5.6.3",
     "typescript-eslint": "^8.56.1",
+    "vitest": "^3.2.4",
     "vite": "^5.4.8"
   },
   "description": "Это скелет проекта под согласованное ТЗ: каталог плиток, меню (город/категории/фишка), сортировка по алгоритму a/b/c/d, 6 тем (3 стиля × 2 палитры), страница магазина, переход на сайт через кнопку и через \"доскролл вниз\".",
