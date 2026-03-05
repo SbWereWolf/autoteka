@@ -129,8 +129,8 @@ for ($i = 0; $i -lt $Body.Count; $i++) {
 }
 $authorLine = "Author: $identityName"
 
-$tmpName = ".commit-message-$([guid]::NewGuid().ToString()).md"
-$tmpPath = Join-Path "." $tmpName
+$tmpName = "commit-message-$([guid]::NewGuid().ToString()).md"
+$tmpPath = Join-Path ([System.IO.Path]::GetTempPath()) $tmpName
 
 try {
   Write-CanonicalMessage -Path $tmpPath -SubjectLine $Subject -BodyLines $bodyLines -AuthorLine $authorLine
@@ -139,6 +139,10 @@ try {
   if ($LASTEXITCODE -ne 0) { throw "Prettier failed: $tmpPath" }
 
   Write-CanonicalMessage -Path $tmpPath -SubjectLine $Subject -BodyLines $bodyLines -AuthorLine $authorLine
+
+  if (-not (Test-Path $tmpPath)) {
+    throw "Temp commit message file was not created: $tmpPath"
+  }
 
   if ($DryRun) {
     Write-Output "Dry run mode: commit was not created."
@@ -158,6 +162,10 @@ try {
     $env:GIT_COMMITTER_NAME = $identityName
     $env:GIT_COMMITTER_EMAIL = $identityEmail
 
+    if (-not (Test-Path $tmpPath)) {
+      throw "Temp commit message file is missing before git commit: $tmpPath"
+    }
+
     & git -c "user.name=$identityName" -c "user.email=$identityEmail" commit --author "$identityName <$identityEmail>" -F $tmpPath
     if ($LASTEXITCODE -ne 0) {
       throw "git commit failed."
@@ -172,6 +180,11 @@ try {
 }
 finally {
   if (Test-Path $tmpPath) {
-    Remove-Item -Path $tmpPath -Force -ErrorAction SilentlyContinue
+    try {
+      Remove-Item -Path $tmpPath -Force -ErrorAction Stop
+    }
+    catch {
+      Write-Warning "Failed to remove temp commit message file: $tmpPath. Error: $($_.Exception.Message)"
+    }
   }
 }

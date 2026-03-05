@@ -20,6 +20,57 @@ MODEL_NAME="gpt-5"
 DRY_RUN="false"
 BODY_PARTS=()
 
+ensure_node_runtime() {
+  if command -v node >/dev/null 2>&1; then
+    return 0
+  fi
+
+  if [[ -f "$HOME/.bashrc" ]]; then
+    # shellcheck disable=SC1090
+    source "$HOME/.bashrc" >/dev/null 2>&1 || true
+  fi
+
+  if command -v node >/dev/null 2>&1; then
+    return 0
+  fi
+
+  if [[ -f "$HOME/.nvm/nvm.sh" ]]; then
+    # shellcheck disable=SC1090
+    source "$HOME/.nvm/nvm.sh" >/dev/null 2>&1 || true
+    if command -v nvm >/dev/null 2>&1; then
+      nvm use default >/dev/null 2>&1 || true
+    fi
+  fi
+
+  if command -v node >/dev/null 2>&1; then
+    return 0
+  fi
+
+  if command -v fnm >/dev/null 2>&1; then
+    eval "$(fnm env --shell bash 2>/dev/null || true)"
+  fi
+
+  if ! command -v node >/dev/null 2>&1; then
+    echo "ERROR: node is not available in PATH"
+    exit 1
+  fi
+}
+
+resolve_temp_dir() {
+  local candidate="${TMPDIR:-}"
+  if [[ -z "$candidate" ]]; then
+    candidate="${TEMP:-${TMP:-/tmp}}"
+  fi
+
+  if command -v cygpath >/dev/null 2>&1; then
+    if [[ "$candidate" =~ ^[A-Za-z]:\\ ]]; then
+      candidate="$(cygpath -u "$candidate")"
+    fi
+  fi
+
+  printf '%s' "$candidate"
+}
+
 assert_slug_part() {
   local value="$1"
   local name="$2"
@@ -82,10 +133,17 @@ done
 
 assert_slug_part "$PLATFORM" "platform"
 assert_slug_part "$MODEL_NAME" "model-name"
+ensure_node_runtime
 
 IDENTITY_NAME="${PLATFORM}-${MODEL_NAME}"
 IDENTITY_EMAIL="${IDENTITY_NAME}@local"
-TMP_FILE=".commit-message-$(date +%s)-$RANDOM.md"
+TMP_DIR="$(resolve_temp_dir)"
+TMP_FILE="$(mktemp "$TMP_DIR/commit-message-XXXXXX.md")"
+
+if [[ -z "$TMP_FILE" || ! -f "$TMP_FILE" ]]; then
+  echo "ERROR: failed to create temp commit message file"
+  exit 1
+fi
 
 build_message() {
   {
@@ -105,7 +163,10 @@ build_message() {
 }
 
 cleanup() {
-  rm -f "$TMP_FILE"
+  if [[ -n "${TMP_FILE:-}" && -e "$TMP_FILE" ]]; then
+    rm -f "$TMP_FILE" || echo "WARN: failed to remove temp commit message file: $TMP_FILE" >&2
+  fi
+  return 0
 }
 trap cleanup EXIT
 
@@ -114,6 +175,11 @@ build_message > "$TMP_FILE"
 npx prettier --write "$TMP_FILE"
 
 build_message > "$TMP_FILE"
+
+[[ -f "$TMP_FILE" ]] || {
+  echo "ERROR: temp commit message file is missing before commit: $TMP_FILE"
+  exit 1
+}
 
 if [[ "$DRY_RUN" == "true" ]]; then
   echo "Dry run mode: commit was not created."
