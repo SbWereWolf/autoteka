@@ -13,40 +13,107 @@ import type {
 import type { ApiClient, CityShopsQuery } from "./ApiClient";
 import { ApiError } from "./ApiClient";
 
+type RawCity = {
+  code: string;
+  name: string;
+  sort: number;
+};
+
+type RawNamedDict = {
+  code: string;
+  name: string;
+  sort: number;
+};
+
+type RawShop = {
+  code: string;
+  cityCode: string;
+  name: string;
+  description: string;
+  workHours: string;
+  siteUrl: string;
+  thumbUrl?: string;
+  galleryImages?: string[];
+  categoryCodes: string[];
+  featureCodes: string[];
+  contacts?: Contact[];
+};
+
 type ShopWithContacts = ShopPublic & { contacts?: Contact[] };
 
-function sortByOrder<T extends { sort: number; code: string }>(
+function sortByOrder<T extends { sort: number; id?: string; code?: string }>(
   items: T[],
 ): T[] {
   return [...items].sort(
-    (a, b) => a.sort - b.sort || a.code.localeCompare(b.code, "ru"),
+    (a, b) =>
+      a.sort - b.sort ||
+      String(a.code ?? a.id).localeCompare(
+        String(b.code ?? b.id),
+        "ru",
+      ),
   );
 }
 
-const cityList: City[] = sortByOrder(cityListRaw as City[]);
+const cityList: City[] = sortByOrder(
+  (cityListRaw as RawCity[]).map((city) => ({
+    code: city.code,
+    title: city.name,
+    sort: city.sort,
+  })),
+);
+
 const categoryList: Category[] = sortByOrder(
-  categoryListRaw as Category[],
+  (categoryListRaw as RawNamedDict[]).map((category) => ({
+    id: category.code,
+    title: category.name,
+    sort: category.sort,
+  })),
 );
+
 const featureList: Feature[] = sortByOrder(
-  featureListRaw as Feature[],
+  (featureListRaw as RawNamedDict[]).map((feature) => ({
+    id: feature.code,
+    title: feature.name,
+    sort: feature.sort,
+  })),
 );
-const shopsWithContacts = shops as ShopWithContacts[];
+
+const categoryIdByLegacyCode = new Map(
+  (categoryListRaw as RawNamedDict[]).map((category) => [
+    category.code,
+    category.code,
+  ]),
+);
+const featureIdByLegacyCode = new Map(
+  (featureListRaw as RawNamedDict[]).map((feature) => [
+    feature.code,
+    feature.code,
+  ]),
+);
+
+const shopsWithContacts: ShopWithContacts[] = (shops as RawShop[]).map(
+  (shop) => ({
+    code: shop.code,
+    cityId: shop.cityCode,
+    title: shop.name,
+    description: shop.description,
+    workHours: shop.workHours,
+    siteUrl: shop.siteUrl,
+    thumbUrl: shop.thumbUrl,
+    galleryImages: shop.galleryImages ?? [],
+    categoryIds: shop.categoryCodes.map(
+      (categoryCode) => categoryIdByLegacyCode.get(categoryCode) ?? categoryCode,
+    ),
+    featureIds: shop.featureCodes.map(
+      (featureCode) => featureIdByLegacyCode.get(featureCode) ?? featureCode,
+    ),
+    contacts: shop.contacts,
+  }),
+);
 
 function toShopPublic(shop: ShopWithContacts): ShopPublic {
   const { contacts: _contacts, ...rest } = shop;
   return rest;
-}
-
-function paginate<T>(items: T[], page = 1, perPage = 24) {
-  const safePage = Math.max(1, page);
-  const safePerPage = Math.max(1, perPage);
-  const start = (safePage - 1) * safePerPage;
-  return {
-    items: items.slice(start, start + safePerPage),
-    page: safePage,
-    perPage: safePerPage,
-    total: items.length,
-  };
 }
 
 export class MockApiClient implements ApiClient {
@@ -66,24 +133,28 @@ export class MockApiClient implements ApiClient {
     if (!cityList.some((city) => city.code === cityCode)) {
       throw new ApiError(404, "City Not Found");
     }
+
     const q = String(query.q ?? "")
       .trim()
       .toLocaleLowerCase("ru");
     let filtered = shopsWithContacts.filter(
-      (shop) => shop.cityCode === cityCode,
+      (shop) => shop.cityId === cityCode,
     );
+
     if (q.length > 0) {
       filtered = filtered.filter((shop) =>
-        shop.name.toLocaleLowerCase("ru").includes(q),
+        shop.title.toLocaleLowerCase("ru").includes(q),
       );
     }
+
     const ordered = [...filtered].sort((a, b) =>
       a.code.localeCompare(b.code, "ru"),
     );
-    const page = query.page ?? 1;
-    const perPage = query.perPage ?? 24;
-    const result = paginate(ordered.map(toShopPublic), page, perPage);
-    return result;
+
+    return {
+      city: cityList.find((city) => city.code === cityCode)!,
+      items: ordered.map(toShopPublic),
+    };
   }
 
   async getShop(shopCode: string) {

@@ -4,17 +4,17 @@ import type { Shop } from "../types";
 
 const baseShop = (
   code: string,
-  categoryCodes: string[],
-  featureCodes: string[],
+  categoryIds: string[],
+  featureIds: string[],
 ): Shop => ({
   code,
-  cityCode: "barnaul",
-  name: code,
+  cityId: "barnaul",
+  title: code,
   description: "",
   workHours: "",
   siteUrl: "",
-  categoryCodes,
-  featureCodes,
+  categoryIds,
+  featureIds,
 });
 
 describe("sortShopsByRules", () => {
@@ -28,8 +28,8 @@ describe("sortShopsByRules", () => {
 
     const result = sortShopsByRules({
       shops,
-      selectedCategoryCodes: ["A"],
-      selectedFeatureCode: "F",
+      selectedCategoryIds: ["A"],
+      selectedFeatureId: "F",
     });
 
     expect(result.map((shop) => shop.code)).toEqual([

@@ -5,7 +5,7 @@
       v-model="city"
     >
       <option v-for="c in cities" :key="c.code" :value="c.code">
-        {{ c.name }}
+        {{ c.title }}
       </option>
     </select>
   </div>

@@ -30,7 +30,7 @@
         v-if="shop.thumbUrl"
         class="absolute inset-0"
         :src="shop.thumbUrl"
-        :alt="`${shop.name} — изображение`"
+        :alt="`${shop.title} — изображение`"
         loading="lazy"
         decoding="async"
         spinner
@@ -44,7 +44,7 @@
         :style="titlePlateStyle"
       >
         <div class="leading-tight tile-title" :style="titleStyle">
-          {{ shop.name }}
+          {{ shop.title }}
         </div>
       </div>
     </div>
@@ -56,7 +56,7 @@ import { computed } from "vue";
 import UiImage from "./UiImage.vue";
 
 const props = defineProps<{
-  shop: { name: string; thumbUrl?: string };
+  shop: { title: string; thumbUrl?: string };
   seed: number;
 }>();
 defineEmits<{ open: [] }>();

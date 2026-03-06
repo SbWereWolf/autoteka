@@ -1,4 +1,4 @@
-import { apiClient } from "./api/MockApiClient";
+import { apiClient } from "./api/HttpApiClient";
 import { initState } from "./state";
 
 export async function bootstrapAppState() {

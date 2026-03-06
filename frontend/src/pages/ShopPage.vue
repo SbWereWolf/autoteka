@@ -170,10 +170,10 @@ import ShopMetaBadges from "../components/ShopMetaBadges.vue";
 import CssVarsEditor from "../components/CssVarsEditor.vue";
 import { uiConfig } from "../config/ui";
 import type { ContactsResponse, Shop } from "../types";
-import { apiClient } from "../api/MockApiClient";
+import { apiClient } from "../api/HttpApiClient";
 import { ApiError } from "../api/ApiClient";
 import { state } from "../state";
-import { mapCodesToNames } from "../utils/mapCodesToNames";
+import { mapIdsToTitles } from "../utils/mapCodesToNames";
 
 const route = useRoute();
 const router = useRouter();
@@ -196,22 +196,22 @@ const notFound = ref(false);
 const titleText = computed(() => {
   if (isLoading.value) return "Загрузка...";
   if (notFound.value) return "Магазин не найден";
-  return shop.value?.name ?? "Магазин";
+  return shop.value?.title ?? "Магазин";
 });
 
 const categoryMap = computed(
   () =>
-    new Map(state.categories.map((item) => [item.code, item.name])),
+    new Map(state.categories.map((item) => [item.id, item.title])),
 );
 const featureMap = computed(
-  () => new Map(state.features.map((item) => [item.code, item.name])),
+  () => new Map(state.features.map((item) => [item.id, item.title])),
 );
 
 const categoryNames = computed(() =>
-  mapCodesToNames(shop.value?.categoryCodes ?? [], categoryMap.value),
+  mapIdsToTitles(shop.value?.categoryIds ?? [], categoryMap.value),
 );
 const featureNames = computed(() =>
-  mapCodesToNames(shop.value?.featureCodes ?? [], featureMap.value),
+  mapIdsToTitles(shop.value?.featureIds ?? [], featureMap.value),
 );
 
 const galleryImages = computed<string[]>(() => {

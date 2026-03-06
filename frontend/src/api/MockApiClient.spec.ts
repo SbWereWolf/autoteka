@@ -13,21 +13,14 @@ describe("MockApiClient", () => {
     expect(response.phone.length).toBeGreaterThan(0);
   });
 
-  it("UT-05: пагинация getCityShops возвращает корректный срез", async () => {
-    const page1 = await client.getCityShops("barnaul", {
+  it("UT-05: getCityShops возвращает город и список магазинов", async () => {
+    const response = await client.getCityShops("barnaul", {
       page: 1,
       perPage: 10,
     });
-    const page2 = await client.getCityShops("barnaul", {
-      page: 2,
-      perPage: 10,
-    });
 
-    expect(page1.items.length).toBe(10);
-    expect(page2.items.length).toBe(7);
-    expect(page1.total).toBe(17);
-    expect(page2.total).toBe(17);
-    expect(page2.page).toBe(2);
+    expect(response.city.code).toBe("barnaul");
+    expect(response.items.length).toBe(17);
   });
 
   it("UT-06: поиск getCityShops работает как case-insensitive substring", async () => {
@@ -39,7 +32,7 @@ describe("MockApiClient", () => {
     expect(response.items.length).toBeGreaterThan(0);
     expect(
       response.items.every((item) =>
-        item.name.toLocaleLowerCase("ru").includes("авто"),
+        item.title.toLocaleLowerCase("ru").includes("авто"),
       ),
     ).toBe(true);
   });

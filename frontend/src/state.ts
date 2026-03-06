@@ -17,8 +17,8 @@ type AppState = {
   themeEditorOpen: boolean;
   themeEditorEnabled: boolean;
   cityCode: string;
-  selectedCategoryCodes: string[];
-  selectedFeatureCode: string;
+  selectedCategoryIds: string[];
+  selectedFeatureId: string;
   cities: City[];
   categories: Category[];
   features: Feature[];
@@ -30,18 +30,31 @@ export const state = reactive<AppState>({
   themeEditorOpen: false,
   themeEditorEnabled: false,
   cityCode: "",
-  selectedCategoryCodes: [],
-  selectedFeatureCode: "",
+  selectedCategoryIds: [],
+  selectedFeatureId: "",
   cities: [],
   categories: [],
   features: [],
 });
 
-function stableSort<T extends { code: string; sort: number }>(
+function stableSort<T extends { sort: number }>(
   items: T[],
 ): T[] {
+  const keyOf = (item: T) =>
+    typeof item === "object" &&
+    item !== null &&
+    "code" in item &&
+    typeof item.code === "string"
+      ? item.code
+      : typeof item === "object" &&
+          item !== null &&
+          "id" in item &&
+          typeof item.id === "string"
+        ? item.id
+        : "";
+
   return [...items].sort(
-    (a, b) => a.sort - b.sort || a.code.localeCompare(b.code, "ru"),
+    (a, b) => a.sort - b.sort || keyOf(a).localeCompare(keyOf(b), "ru"),
   );
 }
 
@@ -69,16 +82,12 @@ export function initState(params: {
   state.features = stableSort(params.features);
 
   const citySet = new Set(state.cities.map((city) => city.code));
-  const categorySet = new Set(
-    state.categories.map((category) => category.code),
-  );
-  const featureSet = new Set(
-    state.features.map((feature) => feature.code),
-  );
+  const categorySet = new Set(state.categories.map((category) => category.id));
+  const featureSet = new Set(state.features.map((feature) => feature.id));
   const themeSet = new Set(themeList.map((theme) => theme.id));
 
   const fallbackCityCode = state.cities[0]?.code ?? "";
-  const fallbackFeatureCode = state.features[0]?.code ?? "";
+  const fallbackFeatureId = state.features[0]?.id ?? "";
   const fallbackThemeId = params.defaultThemeId ?? "a-neutral";
 
   const rawTheme = loadLocal<string>(THEME_KEY, fallbackThemeId);
@@ -94,20 +103,20 @@ export function initState(params: {
   saveLocal(CITY_KEY, state.cityCode);
 
   const rawCategories = loadLocal<unknown>(CATEGORIES_KEY, []);
-  state.selectedCategoryCodes = sanitizeFromSet(
+  state.selectedCategoryIds = sanitizeFromSet(
     rawCategories,
     categorySet,
   );
-  saveLocal(CATEGORIES_KEY, state.selectedCategoryCodes);
+  saveLocal(CATEGORIES_KEY, state.selectedCategoryIds);
 
-  const rawFeatureCode = loadLocal<string>(
+  const rawFeatureId = loadLocal<string>(
     FEATURE_KEY,
-    fallbackFeatureCode,
+    fallbackFeatureId,
   );
-  state.selectedFeatureCode = featureSet.has(rawFeatureCode)
-    ? rawFeatureCode
-    : fallbackFeatureCode;
-  saveLocal(FEATURE_KEY, state.selectedFeatureCode);
+  state.selectedFeatureId = featureSet.has(rawFeatureId)
+    ? rawFeatureId
+    : fallbackFeatureId;
+  saveLocal(FEATURE_KEY, state.selectedFeatureId);
 
   state.themeEditorEnabled = loadLocal<boolean>(
     THEME_EDITOR_ENABLED_KEY,
@@ -120,11 +129,11 @@ export function setTheme(themeId: ThemeId) {
   saveLocal(THEME_KEY, themeId);
 }
 
-export function toggleCategory(categoryCode: string) {
-  const i = state.selectedCategoryCodes.indexOf(categoryCode);
-  if (i >= 0) state.selectedCategoryCodes.splice(i, 1);
-  else state.selectedCategoryCodes.push(categoryCode);
-  saveLocal(CATEGORIES_KEY, state.selectedCategoryCodes);
+export function toggleCategory(categoryId: string) {
+  const i = state.selectedCategoryIds.indexOf(categoryId);
+  if (i >= 0) state.selectedCategoryIds.splice(i, 1);
+  else state.selectedCategoryIds.push(categoryId);
+  saveLocal(CATEGORIES_KEY, state.selectedCategoryIds);
 }
 
 export function setCity(cityCode: string) {
@@ -132,9 +141,9 @@ export function setCity(cityCode: string) {
   saveLocal(CITY_KEY, cityCode);
 }
 
-export function setFeature(featureCode: string) {
-  state.selectedFeatureCode = featureCode;
-  saveLocal(FEATURE_KEY, featureCode);
+export function setFeature(featureId: string) {
+  state.selectedFeatureId = featureId;
+  saveLocal(FEATURE_KEY, featureId);
 }
 
 export const activeThemeMeta = computed(() =>

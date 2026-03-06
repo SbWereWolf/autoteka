@@ -1,6 +1,6 @@
-export function mapCodesToNames(
-  codes: string[],
+export function mapIdsToTitles(
+  ids: string[],
   map: Map<string, string>,
 ): string[] {
-  return codes.map((code) => map.get(code) ?? `[unknown:${code}]`);
+  return ids.map((id) => map.get(id) ?? `[unknown:${id}]`);
 }

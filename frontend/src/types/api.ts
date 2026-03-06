@@ -1,32 +1,32 @@
 export type City = {
   code: string;
-  name: string;
+  title: string;
   sort: number;
 };
 
 export type Category = {
-  code: string;
-  name: string;
+  id: string;
+  title: string;
   sort: number;
 };
 
 export type Feature = {
-  code: string;
-  name: string;
+  id: string;
+  title: string;
   sort: number;
 };
 
 export type ShopPublic = {
   code: string;
-  cityCode: string;
-  name: string;
+  cityId: string;
+  title: string;
   description: string;
   workHours: string;
   siteUrl: string;
   thumbUrl?: string;
   galleryImages?: string[];
-  categoryCodes: string[];
-  featureCodes: string[];
+  categoryIds: string[];
+  featureIds: string[];
 };
 
 export type Contact = {
@@ -37,8 +37,6 @@ export type Contact = {
 export type ContactsResponse = Record<string, string[]>;
 
 export type CityShopsResponse = {
+  city: City;
   items: ShopPublic[];
-  page: number;
-  perPage: number;
-  total: number;
 };

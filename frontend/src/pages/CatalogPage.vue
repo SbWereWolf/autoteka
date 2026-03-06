@@ -64,7 +64,7 @@
 import CitySelect from "../components/CitySelect.vue";
 import { computed, onMounted, ref, watch } from "vue";
 import { useRouter } from "vue-router";
-import { apiClient } from "../api/MockApiClient";
+import { apiClient } from "../api/HttpApiClient";
 import { state } from "../state";
 import { sortShopsByRules } from "../utils/sortShops";
 import ShopTile from "../components/ShopTile.vue";
@@ -81,10 +81,7 @@ async function loadCityShops() {
   isLoading.value = true;
   loadError.value = false;
   try {
-    const response = await apiClient.getCityShops(state.cityCode, {
-      page: 1,
-      perPage: 500,
-    });
+    const response = await apiClient.getCityShops(state.cityCode);
     cityShops.value = response.items;
   } catch (err) {
     cityShops.value = [];
@@ -101,8 +98,8 @@ async function loadCityShops() {
 const sorted = computed(() =>
   sortShopsByRules({
     shops: cityShops.value,
-    selectedCategoryCodes: state.selectedCategoryCodes,
-    selectedFeatureCode: state.selectedFeatureCode,
+    selectedCategoryIds: state.selectedCategoryIds,
+    selectedFeatureId: state.selectedFeatureId,
   }),
 );
 
