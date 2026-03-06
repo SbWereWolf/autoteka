@@ -11,9 +11,9 @@ RM_ETC_VUE_APP="no"
 usage() {
   cat <<'USAGE'
 Usage:
-  sudo ./deploy/undeploy.sh soft  [--force]
-  sudo ./deploy/undeploy.sh purge [--force] [--rm-etc]
-  sudo ./deploy/undeploy.sh nuke  [--force] [--rm-etc] [--rm-root]
+  sudo ./deploy/uninstall.sh soft  [--force]
+  sudo ./deploy/uninstall.sh purge [--force] [--rm-etc]
+  sudo ./deploy/uninstall.sh nuke  [--force] [--rm-etc] [--rm-root]
 
 Modes:
   soft  - stop/disable timers+services + docker compose down. No file removal.
@@ -172,7 +172,7 @@ nuke() {
 
   local ts
   ts="$(date +%Y%m%d-%H%M%S)"
-  local backup_dir="/root/undeploy-backup-$ts"
+  local backup_dir="/root/uninstall-backup-$ts"
   say "Backup: $backup_dir"
   backup_and_remove "$backup_dir" "${SYSTEM_FILES[@]}"
 

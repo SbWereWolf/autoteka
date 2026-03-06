@@ -34,8 +34,8 @@ case "$CMD" in
   maintenance)
     exec "$AUTOTEKA_ROOT/deploy/server-maintenance.sh" "$@"
     ;;
-  undeploy)
-    exec "$AUTOTEKA_ROOT/deploy/undeploy.sh" "$@"
+  uninstall)
+    exec "$AUTOTEKA_ROOT/deploy/uninstall.sh" "$@"
     ;;
   *)
     cat >&2 <<'USAGE'
@@ -45,7 +45,7 @@ Usage:
   autoteka deploy
   autoteka watchdog
   autoteka maintenance
-  autoteka undeploy [soft|purge|nuke] [--force]
+  autoteka uninstall [soft|purge|nuke] [--force]
 USAGE
     exit 2
     ;;

@@ -42,7 +42,7 @@ chmod +x \
   "$SCRIPT_DIR/server-watchdog.sh" \
   "$SCRIPT_DIR/server-maintenance.sh" \
   "$SCRIPT_DIR/metrics-export.sh" \
-  "$SCRIPT_DIR/undeploy.sh" \
+  "$SCRIPT_DIR/uninstall.sh" \
   2>/dev/null || true
 
 # Ensure metrics file exists inside repo
