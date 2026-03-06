@@ -9,6 +9,7 @@ use App\Models\ShopContact;
 use App\Models\ShopGalleryImage;
 use App\Models\ShopSchedule;
 use App\Models\ShopScheduleNote;
+use App\Support\Shop\ShopContactUniqueness;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
@@ -89,7 +90,7 @@ final class SaveShopResourceHandler
                 }
 
                 $typeId = (int) ($row['contact_type_id'] ?? 0);
-                $value = trim((string) ($row['value'] ?? ''));
+                $value = ShopContactUniqueness::normalizeValue($row['value'] ?? '');
                 if ($typeId === 0 || $value === '') {
                     return null;
                 }
@@ -105,13 +106,15 @@ final class SaveShopResourceHandler
             ->filter()
             ->values();
 
+        ShopContactUniqueness::assertUnique($desired->all());
+
         $existing = $shop->contacts()->get()->keyBy('id');
         $keptIds = [];
 
         foreach ($desired as $item) {
             $contact = $item['id'] ? $existing->get($item['id']) : null;
             if (! $contact instanceof ShopContact) {
-                $contact = new ShopContact();
+                $contact = new ShopContact;
                 $contact->shop_id = $shop->getKey();
             }
 
@@ -165,7 +168,7 @@ final class SaveShopResourceHandler
             $image = $item['id'] ? $existing->get($item['id']) : null;
             $oldPath = $image?->file_path;
             if (! $image instanceof ShopGalleryImage) {
-                $image = new ShopGalleryImage();
+                $image = new ShopGalleryImage;
                 $image->shop_id = $shop->getKey();
             }
 
@@ -232,7 +235,7 @@ final class SaveShopResourceHandler
             }
 
             if (! $schedule instanceof ShopSchedule) {
-                $schedule = new ShopSchedule();
+                $schedule = new ShopSchedule;
                 $schedule->shop_id = $shop->getKey();
             }
 
@@ -265,7 +268,7 @@ final class SaveShopResourceHandler
             return;
         }
 
-        $note = new ShopScheduleNote();
+        $note = new ShopScheduleNote;
         $note->shop_id = $shop->getKey();
         $note->text = $text;
         $note->sort = 0;

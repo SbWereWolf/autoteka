@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -93,6 +92,7 @@ return new class extends Migration
             $table->unsignedInteger('sort')->default(0);
             $table->boolean('is_published')->default(true);
             $table->timestamps();
+            $table->unique(['shop_id', 'file_path']);
         });
 
         Schema::create('shop_schedule', function (Blueprint $table): void {
@@ -114,9 +114,8 @@ return new class extends Migration
             $table->unsignedInteger('sort')->default(0);
             $table->boolean('is_published')->default(true);
             $table->timestamps();
+            $table->unique(['shop_id']);
         });
-
-        $this->seedFromMocks();
     }
 
     public function down(): void
@@ -132,220 +131,5 @@ return new class extends Migration
         Schema::dropIfExists('feature');
         Schema::dropIfExists('category');
         Schema::dropIfExists('city');
-    }
-
-    private function seedFromMocks(): void
-    {
-        $now = now();
-        $mocksPath = base_path('../frontend/src/mocks');
-
-        /** @var array<int, array{code: string, name: string, sort: int}> $cityList */
-        $cityList = json_decode(
-            file_get_contents($mocksPath . '/city-list.json') ?: '[]',
-            true,
-            512,
-            JSON_THROW_ON_ERROR,
-        );
-        /** @var array<int, array{code: string, name: string, sort: int}> $categoryList */
-        $categoryList = json_decode(
-            file_get_contents($mocksPath . '/category-list.json') ?: '[]',
-            true,
-            512,
-            JSON_THROW_ON_ERROR,
-        );
-        /** @var array<int, array{code: string, name: string, sort: int}> $featureList */
-        $featureList = json_decode(
-            file_get_contents($mocksPath . '/feature-list.json') ?: '[]',
-            true,
-            512,
-            JSON_THROW_ON_ERROR,
-        );
-        /** @var array<int, array<string, mixed>> $shopList */
-        $shopList = json_decode(
-            file_get_contents($mocksPath . '/shops.json') ?: '[]',
-            true,
-            512,
-            JSON_THROW_ON_ERROR,
-        );
-
-        DB::table('city')->insert(array_map(
-            static fn (array $city): array => [
-                'code' => $city['code'],
-                'title' => $city['name'],
-                'sort' => $city['sort'],
-                'is_published' => true,
-                'created_at' => $now,
-                'updated_at' => $now,
-            ],
-            $cityList,
-        ));
-
-        DB::table('category')->insert(array_map(
-            static fn (array $category): array => [
-                'code' => $category['code'],
-                'title' => $category['name'],
-                'sort' => $category['sort'],
-                'is_published' => true,
-                'created_at' => $now,
-                'updated_at' => $now,
-            ],
-            $categoryList,
-        ));
-
-        DB::table('feature')->insert(array_map(
-            static fn (array $feature): array => [
-                'code' => $feature['code'],
-                'title' => $feature['name'],
-                'sort' => $feature['sort'],
-                'is_published' => true,
-                'created_at' => $now,
-                'updated_at' => $now,
-            ],
-            $featureList,
-        ));
-
-        $contactTypeRows = collect($shopList)
-            ->flatMap(static fn (array $shop): array => $shop['contacts'] ?? [])
-            ->pluck('type')
-            ->filter()
-            ->unique()
-            ->values()
-            ->map(static fn (string $type, int $index) => [
-                'code' => $type,
-                'title' => $type,
-                'sort' => $index * 10,
-                'is_published' => true,
-                'created_at' => $now,
-                'updated_at' => $now,
-            ])
-            ->all();
-
-        DB::table('contact_type')->insert($contactTypeRows);
-
-        $cityIdByCode = DB::table('city')->pluck('id', 'code')->all();
-        $categoryIdByCode = DB::table('category')->pluck('id', 'code')->all();
-        $featureIdByCode = DB::table('feature')->pluck('id', 'code')->all();
-        $contactTypeIdByCode = DB::table('contact_type')->pluck('id', 'code')->all();
-
-        $shopRows = [];
-        foreach ($shopList as $index => $shop) {
-            $shopRows[] = [
-                'code' => (string) $shop['code'],
-                'title' => (string) $shop['name'],
-                'sort' => $index * 10,
-                'city_id' => $cityIdByCode[(string) $shop['cityCode']],
-                'description' => (string) ($shop['description'] ?? ''),
-                'site_url' => (string) ($shop['siteUrl'] ?? ''),
-                'thumb_path' => $this->normalizeMediaPath($shop['thumbUrl'] ?? null),
-                'is_published' => true,
-                'created_at' => $now,
-                'updated_at' => $now,
-            ];
-        }
-
-        DB::table('shop')->insert($shopRows);
-        $shopIdByCode = DB::table('shop')->pluck('id', 'code')->all();
-
-        $shopCategoryRows = [];
-        $shopFeatureRows = [];
-        $shopContactRows = [];
-        $shopGalleryRows = [];
-        $shopScheduleNoteRows = [];
-
-        foreach ($shopList as $shopIndex => $shop) {
-            $shopId = $shopIdByCode[(string) $shop['code']];
-
-            foreach (($shop['categoryCodes'] ?? []) as $categoryCode) {
-                $shopCategoryRows[] = [
-                    'shop_id' => $shopId,
-                    'category_id' => $categoryIdByCode[(string) $categoryCode],
-                    'created_at' => $now,
-                    'updated_at' => $now,
-                ];
-            }
-
-            foreach (($shop['featureCodes'] ?? []) as $featureCode) {
-                $shopFeatureRows[] = [
-                    'shop_id' => $shopId,
-                    'feature_id' => $featureIdByCode[(string) $featureCode],
-                    'created_at' => $now,
-                    'updated_at' => $now,
-                ];
-            }
-
-            foreach (($shop['contacts'] ?? []) as $contactIndex => $contact) {
-                $shopContactRows[] = [
-                    'shop_id' => $shopId,
-                    'contact_type_id' => $contactTypeIdByCode[(string) $contact['type']],
-                    'value' => (string) $contact['value'],
-                    'sort' => $contactIndex * 10,
-                    'is_published' => true,
-                    'created_at' => $now,
-                    'updated_at' => $now,
-                ];
-            }
-
-            foreach (($shop['galleryImages'] ?? []) as $imageIndex => $image) {
-                $normalizedPath = $this->normalizeMediaPath($image);
-                if ($normalizedPath === null) {
-                    continue;
-                }
-
-                $shopGalleryRows[] = [
-                    'shop_id' => $shopId,
-                    'file_path' => $normalizedPath,
-                    'sort' => $imageIndex * 10,
-                    'is_published' => true,
-                    'created_at' => $now,
-                    'updated_at' => $now,
-                ];
-            }
-
-            $workHours = trim((string) ($shop['workHours'] ?? ''));
-            if ($workHours !== '') {
-                $shopScheduleNoteRows[] = [
-                    'shop_id' => $shopId,
-                    'text' => $workHours,
-                    'sort' => $shopIndex * 10,
-                    'is_published' => true,
-                    'created_at' => $now,
-                    'updated_at' => $now,
-                ];
-            }
-        }
-
-        if ($shopCategoryRows !== []) {
-            DB::table('shop_category')->insert($shopCategoryRows);
-        }
-
-        if ($shopFeatureRows !== []) {
-            DB::table('shop_feature')->insert($shopFeatureRows);
-        }
-
-        if ($shopContactRows !== []) {
-            DB::table('shop_contact')->insert($shopContactRows);
-        }
-
-        if ($shopGalleryRows !== []) {
-            DB::table('shop_gallery_image')->insert($shopGalleryRows);
-        }
-
-        if ($shopScheduleNoteRows !== []) {
-            DB::table('shop_schedule_note')->insert($shopScheduleNoteRows);
-        }
-    }
-
-    private function normalizeMediaPath(mixed $value): ?string
-    {
-        if (! is_string($value)) {
-            return null;
-        }
-
-        $trimmed = trim($value);
-        if ($trimmed === '') {
-            return null;
-        }
-
-        return ltrim($trimmed, '/');
     }
 };

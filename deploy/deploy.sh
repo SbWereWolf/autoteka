@@ -16,8 +16,27 @@ BRANCH="${BRANCH:-master}"
 REMOTE="${REMOTE:-origin}"
 LOG="/var/log/vue-app-deploy.log"
 LOCK="/var/lock/vue-app-deploy.lock"
+PHP_READY_TIMEOUT="${PHP_READY_TIMEOUT:-60}"
 
 mkdir -p /var/lock /var/log /var/lib
+
+wait_for_php() {
+  local started_at
+  started_at="$(date +%s)"
+
+  while true; do
+    if compose exec -T php sh -lc 'cd /var/www/backend && pwd >/dev/null' >/dev/null 2>&1; then
+      return 0
+    fi
+
+    if [ $(( $(date +%s) - started_at )) -ge "$PHP_READY_TIMEOUT" ]; then
+      echo "$(date) php container did not become ready within ${PHP_READY_TIMEOUT}s"
+      return 1
+    fi
+
+    sleep 2
+  done
+}
 
 exec 9>"$LOCK"
 if ! flock -n 9; then
@@ -51,7 +70,27 @@ fi
   # optional: update base images
   compose pull || true
 
-  compose up -d --build --remove-orphans
+  compose up -d --build --remove-orphans php
+  wait_for_php
+
+  compose exec -T php sh -lc '
+    set -eu
+    cd /var/www/backend
+    [ -f .env ] || cp example.env .env
+    mkdir -p database
+    touch database/database.sqlite
+    composer install --no-interaction --prefer-dist --optimize-autoloader
+    php artisan --version >/dev/null
+    php artisan down --force
+    if ! grep -q "^APP_KEY=base64:" .env; then
+      php artisan key:generate --force
+    fi
+    php artisan migrate --force
+    php artisan db:seed --class=AdminUserSeeder --force
+    php artisan up
+  '
+
+  compose up -d --build --remove-orphans web
 
   echo "$REMOTE_HASH" > /var/lib/vue-app-last-good || true
   echo "=== $(date) deploy success ($REMOTE_HASH) ==="
