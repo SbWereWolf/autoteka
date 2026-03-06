@@ -10,6 +10,7 @@ use App\Models\ContactType;
 use App\Models\Feature;
 use App\Models\Shop;
 use App\MoonShine\Handlers\SaveShopResourceHandler;
+use Illuminate\Contracts\Database\Eloquent\Builder;
 use MoonShine\Crud\Attributes\SaveHandler;
 use MoonShine\Laravel\Pages\Crud\FormPage;
 use MoonShine\Laravel\Pages\Crud\IndexPage;
@@ -72,6 +73,11 @@ class ShopResource extends ModelResource
     protected function search(): array
     {
         return ['id', 'code', 'title', 'description', 'site_url'];
+    }
+
+    protected function modifyItemQueryBuilder(Builder $builder): Builder
+    {
+        return $builder->with($this->with);
     }
 
     protected function indexFields(): iterable

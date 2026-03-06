@@ -8,6 +8,7 @@ use App\MoonShine\Resources\CategoryResource;
 use App\MoonShine\Resources\CityResource;
 use App\MoonShine\Resources\ContactTypeResource;
 use App\MoonShine\Resources\FeatureResource;
+use App\MoonShine\Resources\ShopResource;
 use MoonShine\Laravel\Layouts\AppLayout;
 use MoonShine\ColorManager\Palettes\PurplePalette;
 use MoonShine\ColorManager\ColorManager;
@@ -38,6 +39,9 @@ final class MoonShineLayout extends AppLayout
                 MenuItem::make(CategoryResource::class),
                 MenuItem::make(FeatureResource::class),
                 MenuItem::make(ContactTypeResource::class),
+            ]),
+            MenuGroup::make('Данные', [
+                MenuItem::make(ShopResource::class),
             ]),
             ...parent::menu(),
         ];
