@@ -8,13 +8,14 @@
 
 - `frontend/` — клиентский SPA‑макет (Vue/Vite)
 - `backend/` — Laravel 12 + MoonShine 4 (admin panel)
-- `deploy/` — всё, что относится к деплою (compose/nginx/systemd/скрипты/метрики)
+- `deploy/` — всё, что относится к деплою
+  (compose/nginx/systemd/скрипты/метрики)
 
 Документация по устройству текущего фронта:
 
 - [IMPLEMENTATION](docs/foundations/IMPLEMENTATION.md)
 - [USER_MANUAL](docs/foundations/USER_MANUAL.md)
-- [DOC_EXTRAS](docs/foundations/DOC_EXTRAS.md)
+- [IMPLEMENTATION](docs/foundations/IMPLEMENTATION.md)
 
 Деплой:
 

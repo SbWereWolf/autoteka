@@ -593,3 +593,132 @@ sequenceDiagram
 - Нет CI-пайплайна для автоматического запуска `check:data` в PR.
 - Нет CI-пайплайна для автоматического запуска `test:e2e` в PR.
 - Ручной smoke-тест UI остаётся обязательным после крупных правок.
+
+---
+
+## 11. Архитектура и потоки данных (as-is)
+
+### 11.1. Модули и роли
+
+- `frontend/src/mocks/*` — источник данных (справочники + магазины)
+- `frontend/src/state.ts` — единое глобальное состояние (без
+  Pinia/Vuex)
+- `frontend/src/utils/*` — чистые утилиты (localStorage, сортировка)
+- `frontend/src/router/*` — маршрутизация
+- `frontend/src/pages/*` — страницы (`CatalogPage`, `ShopPage`)
+- `frontend/src/components/*` — UI-компоненты (меню, плитки, карусель)
+- `frontend/src/styles/*` — токены темы + примитивы UI + фон-паттерн
+- `frontend/public/*` — ассеты (обои и картинки магазинов)
+
+### 11.2. Поток: меню -> состояние -> каталог
+
+1. Пользователь меняет город/категории/фишку в `HamburgerMenu`.
+2. Компоненты вызывают `setCity/toggleCategory/setFeature`.
+3. `CatalogPage` читает `state.*`, фильтрует по городу и сортирует
+   через `sortShopsByRules`.
+4. Сетка `ShopTile` перерисовывается.
+
+### 11.3. Поток: карточка -> внешний переход
+
+1. `ShopPage` получает `code` из URL и ищет объект в `shops.json`.
+2. По кнопке или overscroll выполняется
+   `window.location.href = siteUrl`.
+
+---
+
+## 12. Гайд: как добавить или изменить данные без backend
+
+### 12.1. Добавить город
+
+1. В `frontend/src/mocks/city-list.json` добавить объект
+   `{ "code": "new-city", "name": "Новый город", "sort": 999 }`.
+2. Для магазинов этого города в `frontend/src/mocks/shops.json`
+   поставить `cityCode: "new-city"`.
+3. Если нужен дефолтный город — поставить `isDefault: true` желательно
+   ровно у одного города.
+
+### 12.2. Добавить категорию или фишку
+
+1. Добавить запись в `category-list.json` или `feature-list.json`.
+2. В `shops.json` использовать точно такое же значение в
+   `categoryCodes[]` или `featureCodes[]`.
+3. Дефолтная фишка берётся как первая запись `feature-list` по `sort`.
+
+### 12.3. Добавить тему
+
+1. В `theme-list.json` добавить объект темы с новым `id`.
+2. В `frontend/src/styles/themes.css` добавить блок
+   `.theme-<id> { ... }`.
+3. При необходимости добавить новый файл обоев в
+   `frontend/public/bg/*` и сослаться на него через `--app-bg-image`.
+
+### 12.4. Добавить магазин
+
+1. В `shops.json` добавить объект с полями
+   `code/name/cityCode/categoryCodes/featureCodes/workHours/description/contacts/siteUrl`.
+2. Для картинок:
+   - положить файлы в `frontend/public/generated/*`;
+   - указать `thumbUrl: "/generated/xxx.png"` и, если нужно,
+     `galleryImages: ["/generated/a.png", ...]`.
+3. Проверить, что `code` уникален и карточка открывается по
+   `/shop/<code>`.
+
+### 12.5. Добавить новый тип контакта
+
+Это уже требует правки `frontend/src/pages/ShopPage.vue`: нужно
+добавить правила формирования ссылки, label и target для нового
+`contact.type`.
+
+---
+
+## 13. Подготовка к будущему API
+
+### 13.1. Справочники
+
+- `GET /api/dicts` -> `cities, categories, features`.
+- Темы можно оставить фронтенд-конфигом через CSS, либо тоже отдавать
+  из API, если появится необходимость в централизованном управлении.
+
+### 13.2. Каталог
+
+- `GET /api/shops?cityCode=<code>` -> список карточек с минимальным
+  набором полей: `code,name,thumbUrl,categoryCodes,featureCodes`.
+- Сортировка сейчас фронтовая; при переходе на backend её можно либо
+  оставить на фронте, либо перенести на сервер отдельным решением.
+
+### 13.3. Карточка магазина
+
+- `GET /api/shops/<code>` -> полная карточка:
+  `description, contacts, workHours, siteUrl, galleryImages`.
+
+Важно отдельно договориться, какие поля становятся backend source of
+truth, а какие остаются фронтовыми
+(`темы, декоративные паттерны, тексты по умолчанию`).
+
+---
+
+## 14. Чек-лист качества
+
+### 14.1. Доступность
+
+- меню закрывается по `Escape` и возвращает фокус
+- у интерактивных элементов должен быть видимый `:focus-visible`
+- при добавлении новых иконок и кнопок проверять `aria-label`
+- контролировать контраст `--text` и `--surface-*`, особенно в accent
+  темах
+
+### 14.2. Производительность
+
+- изображения использовать с `loading="lazy"` и `decoding="async"`
+- избегать слишком тяжёлых CSS-фильтров на больших областях
+- держать размер `frontend/public/generated/*` под контролем
+
+### 14.3. Автоматизация
+
+- `npm run validate:mocks` — проверка консистентности моков и наличия
+  файлов
+- `npm run check:unused-assets` — проверка лишних и пропущенных файлов
+  в `frontend/public/generated/*`
+- `npm run check:data` — агрегатор
+
+Следующий очевидный шаг — подключить эти проверки в CI.
