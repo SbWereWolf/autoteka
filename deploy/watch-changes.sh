@@ -16,7 +16,7 @@ load_telegram_env
 BRANCH="${BRANCH:-master}"
 REMOTE="${REMOTE:-origin}"
 LOG="/var/log/autoteka-deploy.log"
-LOCK="/var/lock/autoteka-deploy.lock"
+LOCK="/var/lock/autoteka-watch-changes.lock"
 SCRIPT_ID="watch_changes"
 WATCH_ACTION="проверка изменений для раскатки"
 WATCH_STAGE="инициализация"
