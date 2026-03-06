@@ -28,8 +28,14 @@
 ```bash
 cd frontend
 npm i
+cp .env.example .env
 npm run dev
 ```
+
+Переменные окружения frontend:
+
+- `VITE_API_BASE_URL` — базовый URL backend API, по умолчанию
+  `http://127.0.0.1:8000/api/v1`
 
 Сборка/превью:
 
