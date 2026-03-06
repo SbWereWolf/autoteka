@@ -81,7 +81,7 @@ fi
     touch database/database.sqlite
     composer install --no-interaction --prefer-dist --optimize-autoloader
     php artisan --version >/dev/null
-    php artisan down --force
+    php artisan down
     if ! grep -q "^APP_KEY=base64:" .env; then
       php artisan key:generate --force
     fi
