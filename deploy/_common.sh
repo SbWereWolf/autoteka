@@ -44,43 +44,43 @@ backend_dir() {
 }
 
 detect_php_fpm_runtime_identity() {
-  compose exec -T php sh -lc '
-    set -eu
+  compose exec -T php sh <<'EOF'
+set -eu
 
-    resolve_field() {
-      field="$1"
-      value=""
+resolve_field() {
+  field="$1"
+  value=""
 
-      value="$(awk -F= -v key="$field" "
-        \$1 ~ /^[[:space:]]*[;#]/ { next }
-        \$1 ~ \"^[[:space:]]*\" key \"[[:space:]]*$\" {
-          gsub(/^[[:space:]]+|[[:space:]]+$/, \"\", \$2)
-          print \$2
-          exit
-        }
-      " /usr/local/etc/php-fpm.d/www.conf 2>/dev/null || true)"
-
-      if [ -z "$value" ]; then
-        value="www-data"
-      fi
-
-      printf "%s\n" "$value"
+  value="$(awk -F= -v key="$field" "
+    \$1 ~ /^[[:space:]]*[;#]/ { next }
+    \$1 ~ \"^[[:space:]]*\" key \"[[:space:]]*$\" {
+      gsub(/^[[:space:]]+|[[:space:]]+$/, \"\", \$2)
+      print \$2
+      exit
     }
+  " /usr/local/etc/php-fpm.d/www.conf 2>/dev/null || true)"
 
-    runtime_user="$(resolve_field user)"
-    runtime_group="$(resolve_field group)"
-    runtime_gid="$(awk -F: -v key="$runtime_group" '$1 == key { print $3; exit }' /etc/group)"
+  if [ -z "$value" ]; then
+    value="www-data"
+  fi
 
-    if [ -z "$runtime_gid" ]; then
-      runtime_gid="$(id -g "$runtime_user")"
-    fi
+  printf "%s\n" "$value"
+}
 
-    printf "%s:%s:%s:%s\n" \
-      "$runtime_user" \
-      "$runtime_group" \
-      "$(id -u "$runtime_user")" \
-      "$runtime_gid"
-  '
+runtime_user="$(resolve_field user)"
+runtime_group="$(resolve_field group)"
+runtime_gid="$(awk -F: -v key="$runtime_group" '$1 == key { print $3; exit }' /etc/group)"
+
+if [ -z "$runtime_gid" ]; then
+  runtime_gid="$(id -g "$runtime_user")"
+fi
+
+printf "%s:%s:%s:%s\n" \
+  "$runtime_user" \
+  "$runtime_group" \
+  "$(id -u "$runtime_user")" \
+  "$runtime_gid"
+EOF
 }
 
 laravel_runtime_paths() {
