@@ -28,14 +28,13 @@
 ```bash
 cd frontend
 npm i
-cp .env.example .env
 npm run dev
 ```
 
 Переменная окружения:
 
-- `VITE_API_BASE_URL` — базовый URL backend API. По умолчанию:
-  `http://127.0.0.1:8000/api/v1`.
+- `VITE_API_BASE_URL` — базовый URL backend API. Для same-origin
+  схемы используйте `/api/v1`.
 
 Дополнительные команды:
 
@@ -52,7 +51,6 @@ npm run test
 ```bash
 cd backend
 composer install
-cp example.env .env
 php artisan key:generate
 php artisan migrate
 php artisan db:seed --class=AdminUserSeeder
@@ -66,6 +64,22 @@ Back office MoonShine:
 - Пароль по умолчанию: `admin12345`
 - Production-значения нужно задавать через `MOONSHINE_ADMIN_*` в
   `backend/.env`
+
+## Рабочие env-файлы
+
+- `frontend/.env` — runtime-конфиг frontend сборки.
+  Подробности: [ADMIN_MANUAL §6.1](docs/foundations/ADMIN_MANUAL.md),
+  [DEPLOY §5](deploy/DEPLOY.md).
+- `backend/.env` — runtime-конфиг Laravel backend.
+  Подробности: [ADMIN_MANUAL §6.2](docs/foundations/ADMIN_MANUAL.md),
+  [DEPLOY §5.3](deploy/DEPLOY.md).
+- `/etc/autoteka/deploy.env` — server-side deployment config для
+  `AUTOTEKA_ROOT`, `BRANCH`, `REMOTE`, `HTTP_PORT`.
+  Подробности: [DEPLOY §5.1](deploy/DEPLOY.md).
+- `/etc/autoteka/telegram.env` — server-side Telegram config для
+  deploy/watchdog/maintenance уведомлений.
+  Подробности: [DEPLOY §5.2](deploy/DEPLOY.md),
+  [ADMIN_MANUAL §6.3](docs/foundations/ADMIN_MANUAL.md).
 
 ## Основные проверки
 

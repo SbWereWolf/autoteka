@@ -22,7 +22,7 @@ Modes:
 
 Flags:
   --force     Skip interactive confirmation for destructive actions
-  --rm-etc    Also remove /etc/vue-app/* (secrets!)
+  --rm-etc    Also remove /etc/autoteka/* (secrets!)
   --rm-root   Also remove $AUTOTEKA_ROOT directory (DANGEROUS)
 USAGE
 }
@@ -64,7 +64,7 @@ LOGROTATE_FILES=(
 )
 
 APP_LOGS=(
-  /var/log/vue-app-deploy.log
+  /var/log/autoteka-deploy.log
   /var/log/server-watchdog.log
   /var/log/server-metrics.log
   /var/log/server-maintenance.log
@@ -76,7 +76,7 @@ APP_STATE=(
   /var/lib/vue-app-last-good
   /var/lib/server-watchdog.state
   /var/lib/server-watchdog.reboot
-  /var/lock/vue-app-deploy.lock
+  /var/lock/autoteka-deploy.lock
 )
 
 SYSTEM_FILES=(
@@ -162,9 +162,9 @@ purge() {
   rm -f "${APP_STATE[@]}" 2>/dev/null || true
 
   if [ "$RM_ETC_VUE_APP" = "yes" ]; then
-    confirm_or_exit "REMOVE /etc/vue-app/* (secrets)"
-    rm -f /etc/vue-app/deploy.env /etc/vue-app/telegram.env 2>/dev/null || true
-    rmdir /etc/vue-app 2>/dev/null || true
+    confirm_or_exit "REMOVE /etc/autoteka/* (secrets)"
+    rm -f /etc/autoteka/deploy.env /etc/autoteka/telegram.env 2>/dev/null || true
+    rmdir /etc/autoteka 2>/dev/null || true
   fi
 }
 

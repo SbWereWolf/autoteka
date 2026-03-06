@@ -3,8 +3,8 @@ set -euo pipefail
 
 # Shared helpers for deploy scripts.
 
-ENV_FILE_DEFAULT="/etc/vue-app/deploy.env"
-TELEGRAM_ENV_FILE_DEFAULT="/etc/vue-app/telegram.env"
+ENV_FILE_DEFAULT="/etc/autoteka/deploy.env"
+TELEGRAM_ENV_FILE_DEFAULT="/etc/autoteka/telegram.env"
 TELEGRAM_LOCK_DIR_DEFAULT="${TMPDIR:-/tmp}/autoteka-telegram-locks"
 TELEGRAM_LOG_DEFAULT="/var/log/autoteka-telegram.log"
 

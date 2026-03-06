@@ -22,7 +22,8 @@ php artisan serve
 
 ## Основные URL
 
-- API base: `http://127.0.0.1:8000/api/v1`
+- API base: `/api/v1` через production nginx или
+  `VITE_API_BASE_URL` из frontend-конфига
 - MoonShine login: `http://127.0.0.1:8000/admin/login`
 
 ## Initial admin

@@ -4,7 +4,7 @@ set -euo pipefail
 # Git polling watcher:
 # - fetch origin/<branch>
 # - if new commits -> stash local changes, reset --hard and start rollout
-# - logs to /var/log/vue-app-deploy.log
+# - logs to /var/log/autoteka-deploy.log
 # - protected from parallel runs via flock
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -15,8 +15,8 @@ load_telegram_env
 
 BRANCH="${BRANCH:-master}"
 REMOTE="${REMOTE:-origin}"
-LOG="/var/log/vue-app-deploy.log"
-LOCK="/var/lock/vue-app-deploy.lock"
+LOG="/var/log/autoteka-deploy.log"
+LOCK="/var/lock/autoteka-deploy.lock"
 SCRIPT_ID="watch_changes"
 WATCH_ACTION="проверка изменений для раскатки"
 WATCH_STAGE="инициализация"

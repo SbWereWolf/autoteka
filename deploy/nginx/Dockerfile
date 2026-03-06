@@ -13,6 +13,7 @@ RUN cd frontend && npm ci
 COPY frontend ./frontend
 
 # Build
+RUN cd frontend && [ -f .env ] || cp example.env .env
 RUN cd frontend && npm run build
 
 # 2) Runtime stage

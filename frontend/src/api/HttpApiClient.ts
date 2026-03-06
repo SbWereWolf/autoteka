@@ -220,10 +220,13 @@ export class HttpApiClient implements ApiClient {
   }
 }
 
-const rawBaseUrl = (
-  import.meta.env.VITE_API_BASE_URL ??
-  "http://127.0.0.1:8000/api/v1"
-).trim();
+const rawBaseUrl = import.meta.env.VITE_API_BASE_URL?.trim();
+
+if (!rawBaseUrl) {
+  throw new Error(
+    "VITE_API_BASE_URL is required. Define it in frontend/.env.",
+  );
+}
 
 const baseUrl = rawBaseUrl.endsWith("/")
   ? rawBaseUrl.slice(0, -1)

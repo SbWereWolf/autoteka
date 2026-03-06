@@ -4,7 +4,7 @@ set -euo pipefail
 # Rollout current git HEAD:
 # - does not fetch/reset git state
 # - can be rerun manually for the current working copy
-# - logs to /var/log/vue-app-deploy.log
+# - logs to /var/log/autoteka-deploy.log
 # - protected from parallel runs via flock
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -13,8 +13,8 @@ source "$SCRIPT_DIR/_common.sh"
 load_autoteka_env
 load_telegram_env
 
-LOG="/var/log/vue-app-deploy.log"
-LOCK="/var/lock/vue-app-deploy.lock"
+LOG="/var/log/autoteka-deploy.log"
+LOCK="/var/lock/autoteka-deploy.lock"
 PHP_READY_TIMEOUT="${PHP_READY_TIMEOUT:-60}"
 ADMIN_SMOKE_URL="${ADMIN_SMOKE_URL:-http://127.0.0.1/admin/login}"
 SCRIPT_ID="deploy"
@@ -27,6 +27,35 @@ mkdir -p /var/lock /var/log /var/lib
 
 log() {
   echo "$(date -Is) $*"
+}
+
+log_telegram_status() {
+  local env_file="${TELEGRAM_ENV_FILE_DEFAULT}"
+
+  log "telegram env path: $env_file"
+  if [ -f "$env_file" ]; then
+    log "telegram env file: found"
+  else
+    log "telegram env file: missing"
+  fi
+
+  if [ -n "${TELEGRAM_TOKEN:-}" ]; then
+    log "telegram token: set"
+  else
+    log "telegram token: missing"
+  fi
+
+  if [ -n "${TELEGRAM_CHAT:-}" ]; then
+    log "telegram chat: set"
+  else
+    log "telegram chat: missing"
+  fi
+
+  if telegram_enabled; then
+    log "telegram notifications: enabled"
+  else
+    log "telegram notifications: disabled"
+  fi
 }
 
 deploy_reason_code() {
@@ -101,6 +130,7 @@ fi
 {
   log "=== deploy start ==="
   log "AUTOTEKA_ROOT=$AUTOTEKA_ROOT"
+  log_telegram_status
 
   cd "$AUTOTEKA_ROOT"
 

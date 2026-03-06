@@ -203,6 +203,12 @@ production нужно задавать:
 - `frontend/.env`
 - `VITE_API_BASE_URL`
 
+Для production и deploy-контра используйте same-origin значение
+`/api/v1`.
+
+Если `frontend/.env` отсутствует при сборке web-контейнера, deploy
+создаст его из `frontend/example.env`.
+
 ### 6.2. Backend
 
 - `backend/.env`
@@ -215,9 +221,9 @@ production нужно задавать:
 
 ### 6.3. Серверные env-файлы
 
-- `/etc/vue-app/deploy.env` — `AUTOTEKA_ROOT`, `BRANCH`, `REMOTE`,
+- `/etc/autoteka/deploy.env` — `AUTOTEKA_ROOT`, `BRANCH`, `REMOTE`,
   `HTTP_PORT`
-- `/etc/vue-app/telegram.env` — Telegram-уведомления watchdog
+- `/etc/autoteka/telegram.env` — Telegram-уведомления watchdog
 
 ## 7. Серверные скрипты deploy
 
@@ -252,7 +258,7 @@ production нужно задавать:
 - shared server packages вроде `docker`, `git`, `fail2ban` не
   удаляются;
 - репозиторий удаляется только при явном `--rm-root`;
-- `/etc/vue-app/*` удаляется только при явном `--rm-etc`.
+- `/etc/autoteka/*` удаляется только при явном `--rm-etc`.
 
 ## 9. Минимальный регламент администратора
 

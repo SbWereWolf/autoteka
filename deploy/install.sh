@@ -3,7 +3,7 @@ set -euo pipefail
 
 # Bootstrap server for autoteka deployment.
 # - installs required packages (docker, fail2ban, logrotate)
-# - ensures /etc/vue-app/deploy.env contains AUTOTEKA_ROOT
+# - ensures /etc/autoteka/deploy.env contains AUTOTEKA_ROOT
 # - installs /usr/local/bin/autoteka wrapper
 # - installs and enables systemd units/timers
 
@@ -81,17 +81,17 @@ if [ -f "$SCRIPT_DIR/systemd/docker.override.conf" ]; then
   install -m 0644 "$SCRIPT_DIR/systemd/docker.override.conf" /etc/systemd/system/docker.service.d/override.conf
 fi
 
-# /etc/vue-app envs
-mkdir -p /etc/vue-app
+# /etc/autoteka envs
+mkdir -p /etc/autoteka
 
 # Telegram env (optional)
-if [ ! -f /etc/vue-app/telegram.env ] && [ -f "$SCRIPT_DIR/config/telegram.env.example" ]; then
-  install -m 0600 "$SCRIPT_DIR/config/telegram.env.example" /etc/vue-app/telegram.env
+if [ ! -f /etc/autoteka/telegram.env ] && [ -f "$SCRIPT_DIR/config/telegram.env.example" ]; then
+  install -m 0600 "$SCRIPT_DIR/config/telegram.env.example" /etc/autoteka/telegram.env
 fi
 
 # deploy.env (contains AUTOTEKA_ROOT)
-if [ ! -f /etc/vue-app/deploy.env ] && [ -f "$SCRIPT_DIR/config/deploy.example.env" ]; then
-  install -m 0600 "$SCRIPT_DIR/config/deploy.example.env" /etc/vue-app/deploy.env
+if [ ! -f /etc/autoteka/deploy.env ] && [ -f "$SCRIPT_DIR/config/deploy.example.env" ]; then
+  install -m 0600 "$SCRIPT_DIR/config/deploy.example.env" /etc/autoteka/deploy.env
 fi
 
 upsert_env() {
@@ -105,11 +105,11 @@ upsert_env() {
 }
 
 # Always pin current repo path (no hardcoded /opt/... in units)
-if [ -f /etc/vue-app/deploy.env ]; then
-  upsert_env "AUTOTEKA_ROOT" "$ROOT_DIR" "/etc/vue-app/deploy.env"
+if [ -f /etc/autoteka/deploy.env ]; then
+  upsert_env "AUTOTEKA_ROOT" "$ROOT_DIR" "/etc/autoteka/deploy.env"
 else
-  echo "AUTOTEKA_ROOT=$ROOT_DIR" > /etc/vue-app/deploy.env
-  chmod 600 /etc/vue-app/deploy.env
+  echo "AUTOTEKA_ROOT=$ROOT_DIR" > /etc/autoteka/deploy.env
+  chmod 600 /etc/autoteka/deploy.env
 fi
 
 # Wrapper in PATH (units call it)
@@ -148,4 +148,4 @@ systemctl enable --now server-maintenance.timer
 
 echo "=== autoteka bootstrap finished ==="
 echo "AUTOTEKA_ROOT=$ROOT_DIR"
-echo "Tip: check logs: /var/log/vue-app-deploy.log /var/log/server-watchdog.log /var/log/server-metrics.log /var/log/autoteka-telegram.log"
+echo "Tip: check logs: /var/log/autoteka-deploy.log /var/log/server-watchdog.log /var/log/server-metrics.log /var/log/autoteka-telegram.log"
