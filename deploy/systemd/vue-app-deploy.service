@@ -6,4 +6,5 @@ Wants=network-online.target
 [Service]
 Type=oneshot
 EnvironmentFile=-/etc/vue-app/deploy.env
+EnvironmentFile=-/etc/vue-app/telegram.env
 ExecStart=/usr/local/bin/autoteka deploy

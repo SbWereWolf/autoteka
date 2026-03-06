@@ -60,6 +60,7 @@ UNITS=(
 LOGROTATE_FILES=(
   /etc/logrotate.d/vue-app-deploy
   /etc/logrotate.d/server-watchdog
+  /etc/logrotate.d/autoteka-telegram
 )
 
 APP_LOGS=(
@@ -67,6 +68,7 @@ APP_LOGS=(
   /var/log/server-watchdog.log
   /var/log/server-metrics.log
   /var/log/server-maintenance.log
+  /var/log/autoteka-telegram.log
 )
 
 APP_STATE=(

@@ -1,20 +1,10 @@
 #!/usr/bin/env bash
-set -u
+set -euo pipefail
 
 LOG="/var/log/server-watchdog.log"
 METRIC_LOG="/var/log/server-metrics.log"
 STATE="/var/lib/server-watchdog.state"
 REBOOT_STATE="/var/lib/server-watchdog.reboot"
-
-TELEGRAM_TOKEN="${TELEGRAM_TOKEN:-}"
-TELEGRAM_CHAT="${TELEGRAM_CHAT:-}"
-
-send_telegram() {
-  local msg="$1"
-  [ -n "${TELEGRAM_TOKEN}" ] || return 0
-  [ -n "${TELEGRAM_CHAT}" ] || return 0
-  curl -fsS -X POST "https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage"     --data-urlencode "chat_id=${TELEGRAM_CHAT}"     --data-urlencode "text=${msg}"     >/dev/null 2>&1 || true
-}
 
 # ===== SETTINGS =====
 LOAD_LIMIT="2.0"
@@ -29,6 +19,12 @@ REBOOT_COOLDOWN=3600
 CONTAINER="vue-app"
 COMPOSE_UNIT="vue-app.service"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck disable=SC1090
+source "$SCRIPT_DIR/_common.sh"
+load_autoteka_env
+load_telegram_env
+SCRIPT_ID="server-watchdog"
+WATCHDOG_ACTION="self-healing контейнера и проверка состояния сервера"
 
 mkdir -p /var/lib
 
@@ -88,11 +84,18 @@ fi
 
 # write metrics line (always)
 echo "$(now_ts) load=$LOAD ram=$RAM health=$HEALTH" >> "$METRIC_LOG"
-[ -x "$SCRIPT_DIR/metrics-export.sh" ] && "$SCRIPT_DIR/metrics-export.sh" >/dev/null 2>&1 || true
+if [ -x "$SCRIPT_DIR/metrics-export.sh" ]; then
+  if ! "$SCRIPT_DIR/metrics-export.sh" >/dev/null 2>&1; then
+    log_action "notify metrics export failed"
+    notify_info "$SCRIPT_ID" "$WATCHDOG_ACTION" "WATCHDOG_METRICS_EXPORT_FAILED" \
+      "не удалось обновить deploy/metrics/data.json"
+  fi
+fi
 
 # Success path
 if ! float_gt "$LOAD" "$LOAD_LIMIT" && [ "$RAM" -lt "$RAM_LIMIT" ] && [ "$HEALTH" != "unhealthy" ] && [ "$HEALTH" != "missing" ] && [ "$HEALTH" != "no-docker" ]; then
   echo "0" > "$STATE"
+  clear_script_notification_locks "$SCRIPT_ID"
   exit 0
 fi
 
@@ -111,7 +114,8 @@ if [ "$FAIL_COUNT" -le "$MAX_STAGE1" ]; then
     log_action "stage1: container missing -> start compose unit"
     systemctl start "$COMPOSE_UNIT" >/dev/null 2>&1 || true
   fi
-  send_telegram "Watchdog: stage1 restart (fail=$FAIL_COUNT, load=$LOAD, ram=$RAM, health=$HEALTH)"
+  notify_error_once "$SCRIPT_ID" "$WATCHDOG_ACTION" "WATCHDOG_STAGE1_RESTART" \
+    "stage1 restart, fail=$FAIL_COUNT, load=$LOAD, ram=$RAM, health=$HEALTH"
   exit 0
 fi
 
@@ -119,7 +123,8 @@ if [ "$FAIL_COUNT" -le "$MAX_STAGE2" ]; then
   # Stage 2: restart compose unit
   log_action "stage2: systemctl restart $COMPOSE_UNIT"
   systemctl restart "$COMPOSE_UNIT" >/dev/null 2>&1 || true
-  send_telegram "Watchdog: stage2 systemd restart (fail=$FAIL_COUNT, load=$LOAD, ram=$RAM, health=$HEALTH)"
+  notify_error_once "$SCRIPT_ID" "$WATCHDOG_ACTION" "WATCHDOG_STAGE2_SYSTEMD_RESTART" \
+    "stage2 systemd restart, fail=$FAIL_COUNT, load=$LOAD, ram=$RAM, health=$HEALTH"
   exit 0
 fi
 
@@ -130,11 +135,13 @@ NOW="$(date +%s)"
 
 if [ $((NOW - LAST_REBOOT)) -lt "$REBOOT_COOLDOWN" ]; then
   log_action "stage3: reboot skipped (cooldown)"
-  send_telegram "Watchdog: stage3 reboot skipped (cooldown) (fail=$FAIL_COUNT)"
+  notify_error_once "$SCRIPT_ID" "$WATCHDOG_ACTION" "WATCHDOG_STAGE3_REBOOT_SKIPPED" \
+    "stage3 reboot skipped by cooldown, fail=$FAIL_COUNT"
   exit 0
 fi
 
 echo "$NOW" > "$REBOOT_STATE"
 log_action "stage3: reboot now"
-send_telegram "Watchdog: stage3 reboot NOW (fail=$FAIL_COUNT, load=$LOAD, ram=$RAM, health=$HEALTH)"
+notify_error_once "$SCRIPT_ID" "$WATCHDOG_ACTION" "WATCHDOG_STAGE3_REBOOT_NOW" \
+  "stage3 reboot now, fail=$FAIL_COUNT, load=$LOAD, ram=$RAM, health=$HEALTH"
 /sbin/reboot || true

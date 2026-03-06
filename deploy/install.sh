@@ -128,6 +128,9 @@ fi
 if [ -f "$SCRIPT_DIR/config/logrotate-server-watchdog.conf" ]; then
   install -m 0644 "$SCRIPT_DIR/config/logrotate-server-watchdog.conf" /etc/logrotate.d/server-watchdog
 fi
+if [ -f "$SCRIPT_DIR/config/logrotate-autoteka-telegram.conf" ]; then
+  install -m 0644 "$SCRIPT_DIR/config/logrotate-autoteka-telegram.conf" /etc/logrotate.d/autoteka-telegram
+fi
 
 # Enable services/timers
 systemctl enable --now vue-app.service
@@ -137,4 +140,4 @@ systemctl enable --now server-maintenance.timer
 
 echo "=== autoteka bootstrap finished ==="
 echo "AUTOTEKA_ROOT=$ROOT_DIR"
-echo "Tip: check logs: /var/log/vue-app-deploy.log /var/log/server-watchdog.log /var/log/server-metrics.log"
+echo "Tip: check logs: /var/log/vue-app-deploy.log /var/log/server-watchdog.log /var/log/server-metrics.log /var/log/autoteka-telegram.log"
