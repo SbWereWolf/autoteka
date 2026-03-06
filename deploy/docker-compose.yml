@@ -9,6 +9,9 @@ services:
     working_dir: /var/www/backend
     volumes:
       - "${AUTOTEKA_ROOT:-..}/backend:/var/www/backend"
+      # temporary mounts for the first mock import; remove after success
+      - "${AUTOTEKA_ROOT:-..}/frontend/src/mocks:/var/www/frontend/src/mocks:ro"
+      - "${AUTOTEKA_ROOT:-..}/frontend/public/generated:/var/www/frontend/public/generated:ro"
 
   web:
     build:

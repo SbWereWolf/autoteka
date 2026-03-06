@@ -8,6 +8,8 @@ use App\Support\Shop\ShopContactUniqueness;
 use Illuminate\Console\Command;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use JsonException;
 use Throwable;
@@ -16,9 +18,11 @@ final class ImportInitialData extends Command
 {
     protected $signature = 'autoteka:data:import
         {scope : city|category|feature|shop}
-        {--mode=append : dry-run|refresh|append}';
+        {--mode=append : dry-run|refresh|append}
+        {--file= : Путь к JSON-файлу}
+        {--generated-root= : Корень каталога generated для импорта shop}';
 
-    protected $description = 'Импортирует исходные данные в SQLite из JSON, переданного через STDIN';
+    protected $description = 'Импортирует исходные данные в SQLite из файла';
 
     /**
      * @var array<string, int>
@@ -29,6 +33,21 @@ final class ImportInitialData extends Command
      * @var array<string, int>
      */
     private array $deletedCounts = [];
+
+    /**
+     * @var array<int, array{target:string,backup:?string}>
+     */
+    private array $copiedFiles = [];
+
+    /**
+     * @var list<string>
+     */
+    private array $deferredDeleteFiles = [];
+
+    /**
+     * @var array<string, bool>
+     */
+    private array $importedMediaPaths = [];
 
     public function handle(): int
     {
@@ -59,6 +78,9 @@ final class ImportInitialData extends Command
         $exception = null;
         $this->addedCounts = [];
         $this->deletedCounts = [];
+        $this->copiedFiles = [];
+        $this->deferredDeleteFiles = [];
+        $this->importedMediaPaths = [];
 
         DB::beginTransaction();
 
@@ -75,8 +97,11 @@ final class ImportInitialData extends Command
 
         if (! $success || $mode === 'dry-run') {
             DB::rollBack();
+            $this->rollbackCopiedFiles();
         } else {
             DB::commit();
+            $this->deleteDeferredFiles();
+            $this->cleanupFileBackups();
         }
 
         $this->renderSummary($scope, $mode, $success);
@@ -95,14 +120,18 @@ final class ImportInitialData extends Command
      */
     private function readInputRows(): array
     {
-        $payload = stream_get_contents(STDIN);
-        if (! is_string($payload)) {
-            throw new \InvalidArgumentException('Не удалось прочитать JSON из STDIN.');
+        $file = trim((string) $this->option('file'));
+        if ($file === '') {
+            throw new \InvalidArgumentException('Нужно указать --file с путем к JSON-файлу.');
         }
 
-        $payload = trim($payload);
-        if ($payload === '') {
-            throw new \InvalidArgumentException('STDIN пуст. Передайте JSON-массив через стандартный ввод.');
+        if (! is_file($file)) {
+            throw new \InvalidArgumentException(sprintf('Файл не найден: %s', $file));
+        }
+
+        $payload = file_get_contents($file);
+        if ($payload === false) {
+            throw new \InvalidArgumentException(sprintf('Не удалось прочитать файл: %s', $file));
         }
 
         try {
@@ -146,6 +175,11 @@ final class ImportInitialData extends Command
 
     private function clearShopScope(): void
     {
+        $this->deferredDeleteFiles = array_values(array_unique(array_filter(array_merge(
+            DB::table('shop')->whereNotNull('thumb_path')->pluck('thumb_path')->all(),
+            DB::table('shop_gallery_image')->pluck('file_path')->all(),
+        ))));
+
         $this->deleteRows('shop_schedule');
         $this->deleteRows('shop_schedule_note');
         $this->deleteRows('shop_gallery_image');
@@ -246,6 +280,15 @@ final class ImportInitialData extends Command
      */
     private function importShops(array $rows): void
     {
+        $generatedRoot = trim((string) $this->option('generated-root'));
+        if ($generatedRoot === '') {
+            throw new \InvalidArgumentException('Для scope=shop нужно указать --generated-root.');
+        }
+
+        if (! is_dir($generatedRoot)) {
+            throw new \InvalidArgumentException(sprintf('Каталог generated не найден: %s', $generatedRoot));
+        }
+
         $contactTypeCodes = collect($rows)
             ->flatMap(static fn (array $shop): array => is_iterable($shop['contacts'] ?? null)
                 ? array_values(array_filter((array) $shop['contacts'], 'is_array'))
@@ -289,7 +332,7 @@ final class ImportInitialData extends Command
                 'city_id' => $cityIds[$cityCode],
                 'description' => trim((string) ($shop['description'] ?? '')),
                 'site_url' => trim((string) ($shop['siteUrl'] ?? '')),
-                'thumb_path' => $this->normalizeMediaPath($shop['thumbUrl'] ?? null),
+                'thumb_path' => $this->importMediaFile($shop['thumbUrl'] ?? null, $generatedRoot),
                 'is_published' => (bool) ($shop['is_published'] ?? true),
                 'created_at' => now(),
                 'updated_at' => now(),
@@ -382,7 +425,7 @@ final class ImportInitialData extends Command
             }
 
             foreach ((is_iterable($shop['galleryImages'] ?? null) ? $shop['galleryImages'] : []) as $imageIndex => $image) {
-                $filePath = $this->normalizeMediaPath($image);
+                $filePath = $this->importMediaFile($image, $generatedRoot);
                 if ($filePath === null) {
                     continue;
                 }
@@ -441,6 +484,94 @@ final class ImportInitialData extends Command
         }
 
         return ltrim($value, '/');
+    }
+
+    private function importMediaFile(mixed $value, string $generatedRoot): ?string
+    {
+        $relativePath = $this->normalizeMediaPath($value);
+        if ($relativePath === null) {
+            return null;
+        }
+
+        $sourcePath = $this->resolveGeneratedSourcePath($relativePath, $generatedRoot);
+        if (! is_file($sourcePath)) {
+            throw new \InvalidArgumentException(sprintf('Не найден media-файл для импорта: %s', $sourcePath));
+        }
+
+        $disk = Storage::disk((string) config('autoteka.media.disk'));
+        $targetPath = $disk->path($relativePath);
+        $targetDir = dirname($targetPath);
+        if (! is_dir($targetDir)) {
+            File::ensureDirectoryExists($targetDir);
+        }
+
+        $backupPath = null;
+        if (is_file($targetPath)) {
+            $backupDir = storage_path('app/import-backups');
+            File::ensureDirectoryExists($backupDir);
+            $backupPath = $backupDir.DIRECTORY_SEPARATOR.uniqid('import_', true).'.bak';
+            if (! copy($targetPath, $backupPath)) {
+                throw new \RuntimeException(sprintf('Не удалось создать backup media-файла: %s', $targetPath));
+            }
+        }
+
+        if (! copy($sourcePath, $targetPath)) {
+            throw new \RuntimeException(sprintf('Не удалось скопировать media-файл: %s', $sourcePath));
+        }
+
+        $this->copiedFiles[] = [
+            'target' => $targetPath,
+            'backup' => $backupPath,
+        ];
+        $this->importedMediaPaths[$relativePath] = true;
+
+        return $relativePath;
+    }
+
+    private function resolveGeneratedSourcePath(string $relativePath, string $generatedRoot): string
+    {
+        if (str_starts_with($relativePath, 'generated/')) {
+            $relativePath = substr($relativePath, strlen('generated/'));
+        }
+
+        return rtrim($generatedRoot, DIRECTORY_SEPARATOR.'/').DIRECTORY_SEPARATOR.str_replace('/', DIRECTORY_SEPARATOR, $relativePath);
+    }
+
+    private function rollbackCopiedFiles(): void
+    {
+        foreach (array_reverse($this->copiedFiles) as $file) {
+            if ($file['backup'] !== null && is_file($file['backup'])) {
+                copy($file['backup'], $file['target']);
+            } elseif (is_file($file['target'])) {
+                unlink($file['target']);
+            }
+        }
+
+        $this->cleanupFileBackups();
+    }
+
+    private function cleanupFileBackups(): void
+    {
+        foreach ($this->copiedFiles as $file) {
+            if ($file['backup'] !== null && is_file($file['backup'])) {
+                unlink($file['backup']);
+            }
+        }
+    }
+
+    private function deleteDeferredFiles(): void
+    {
+        $disk = Storage::disk((string) config('autoteka.media.disk'));
+
+        foreach ($this->deferredDeleteFiles as $relativePath) {
+            if (isset($this->importedMediaPaths[$relativePath])) {
+                continue;
+            }
+
+            if ($disk->exists($relativePath)) {
+                $disk->delete($relativePath);
+            }
+        }
     }
 
     private function renderSummary(string $scope, string $mode, bool $success): void

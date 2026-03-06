@@ -351,7 +351,7 @@ sudo systemctl start vue-app-deploy.timer
 Для первичного заполнения справочников и магазинов используется команда:
 
 ```bash
-php artisan autoteka:data:import <scope> --mode=<dry-run|refresh|append>
+php artisan autoteka:data:import <scope> --mode=<dry-run|refresh|append> --file=<path>
 ```
 
 Scope:
@@ -363,42 +363,29 @@ Scope:
 
 Правила:
 
-- JSON передаётся только через `STDIN`;
+- данные читаются из файла через `--file`;
 - команда всегда работает в транзакции;
 - `dry-run` всегда завершает транзакцию откатом;
 - `refresh` сначала очищает данные выбранного scope, затем записывает
   новые;
 - `append` только добавляет данные;
-- в любом режиме команда выводит количество добавленных записей.
+- в любом режиме команда выводит количество добавленных записей;
+- для `shop` дополнительно нужен `--generated-root=<path>`.
 
-Примеры для `*nix`, JSON из файла:
-
-```bash
-cat ../frontend/src/mocks/city-list.json | php artisan autoteka:data:import city --mode=dry-run
-cat ../frontend/src/mocks/category-list.json | php artisan autoteka:data:import category --mode=refresh
-cat ../frontend/src/mocks/feature-list.json | php artisan autoteka:data:import feature --mode=append
-cat ../frontend/src/mocks/shops.json | php artisan autoteka:data:import shop --mode=refresh
-```
-
-Примеры для `*nix`, JSON строкой:
+Примеры для `*nix`:
 
 ```bash
-printf '%s' '[{"code":"ekb","name":"Екатеринбург","sort":10}]' | php artisan autoteka:data:import city --mode=dry-run
-printf '%s' '[{"code":"demo","name":"Demo","cityCode":"ekb","contacts":[{"type":"phone","value":" +7 900 000-00-00 "}],"categoryCodes":[],"featureCodes":[],"galleryImages":[]}]' | php artisan autoteka:data:import shop --mode=append
+php artisan autoteka:data:import city --mode=dry-run --file=/var/www/frontend/src/mocks/city-list.json
+php artisan autoteka:data:import category --mode=refresh --file=/var/www/frontend/src/mocks/category-list.json
+php artisan autoteka:data:import feature --mode=append --file=/var/www/frontend/src/mocks/feature-list.json
+php artisan autoteka:data:import shop --mode=refresh --file=/var/www/frontend/src/mocks/shops.json --generated-root=/var/www/frontend/public/generated
 ```
 
-Примеры для Windows 10 PowerShell, JSON из файла:
+Примеры для Windows 10 PowerShell:
 
 ```powershell
-Get-Content ..\frontend\src\mocks\city-list.json -Raw | php artisan autoteka:data:import city --mode=dry-run
-Get-Content ..\frontend\src\mocks\shops.json -Raw | php artisan autoteka:data:import shop --mode=refresh
-```
-
-Примеры для Windows 10 PowerShell, JSON строкой:
-
-```powershell
-'[{""code"":""ekb"",""name"":""Екатеринбург"",""sort"":10}]' | php artisan autoteka:data:import city --mode=dry-run
-'[{""code"":""demo"",""name"":""Demo"",""cityCode"":""ekb"",""contacts"":[{""type"":""phone"",""value"":"" +7 900 000-00-00 ""}],""categoryCodes"":[],""featureCodes"":[],""galleryImages"":[]}]' | php artisan autoteka:data:import shop --mode=append
+php artisan autoteka:data:import city --mode=dry-run --file="C:\var\www\frontend\src\mocks\city-list.json"
+php artisan autoteka:data:import shop --mode=refresh --file="C:\var\www\frontend\src\mocks\shops.json" --generated-root="C:\var\www\frontend\public\generated"
 ```
 
 Пример успешного `dry-run`:
