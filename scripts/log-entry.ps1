@@ -112,6 +112,18 @@ function Get-LogFileName {
   return $name
 }
 
+function Get-DailyLogDirectory {
+  param(
+    [Parameter(Mandatory = $true)][string]$LogsRoot,
+    [Parameter(Mandatory = $true)][datetime]$Now
+  )
+
+  $yearDir = Join-Path $LogsRoot $Now.ToString("yyyy")
+  $monthDir = Join-Path $yearDir $Now.ToString("MM")
+  $dayDir = Join-Path $monthDir $Now.ToString("dd")
+  return $dayDir
+}
+
 function Add-HeaderForEmptyFile {
   param([Parameter(Mandatory = $true)][string]$FilePath)
 
@@ -195,7 +207,7 @@ if ([string]::IsNullOrWhiteSpace($currentLogId)) {
   $currentLogId = Get-LogId
 
   $now = Get-Date
-  $dailyDir = Join-Path $logsRoot (Join-Path $now.ToString("yyyy") (Join-Path $now.ToString("MM") $now.ToString("dd")))
+  $dailyDir = Get-DailyLogDirectory -LogsRoot $logsRoot -Now $now
   try {
     New-Item -ItemType Directory -Path $dailyDir -Force | Out-Null
     $fileName = Get-LogFileName -PlatformName $Platform -ModelName $Model -DirectoryPath $dailyDir
