@@ -42,6 +42,7 @@ fi
 chmod +x \
   "$SCRIPT_DIR/install.sh" \
   "$SCRIPT_DIR/deploy.sh" \
+  "$SCRIPT_DIR/watch-changes.sh" \
   "$SCRIPT_DIR/repair-runtime.sh" \
   "$SCRIPT_DIR/server-watchdog.sh" \
   "$SCRIPT_DIR/server-maintenance.sh" \

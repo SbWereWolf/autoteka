@@ -224,7 +224,8 @@ production нужно задавать:
 В каталоге `deploy/` находятся:
 
 - `install.sh` — bootstrap новой установки;
-- `deploy.sh` — ручной запуск логики деплоя;
+- `watch-changes.sh` — git polling, update рабочей копии и запуск rollout;
+- `deploy.sh` — ручной rollout текущего `HEAD`;
 - `server-watchdog.sh` — self-healing и экспорт метрик;
 - `metrics-export.sh` — преобразование логов метрик в JSON;
 - `server-maintenance.sh` — ежедневное безопасное техобслуживание;

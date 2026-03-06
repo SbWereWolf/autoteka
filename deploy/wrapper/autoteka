@@ -25,6 +25,9 @@ case "$CMD" in
   down)
     exec /usr/bin/docker compose -f "$AUTOTEKA_ROOT/deploy/docker-compose.yml" down
     ;;
+  watch-changes)
+    exec "$AUTOTEKA_ROOT/deploy/watch-changes.sh" "$@"
+    ;;
   deploy)
     exec "$AUTOTEKA_ROOT/deploy/deploy.sh" "$@"
     ;;
@@ -45,6 +48,7 @@ case "$CMD" in
 Usage:
   autoteka up
   autoteka down
+  autoteka watch-changes
   autoteka deploy
   autoteka repair-runtime
   autoteka watchdog

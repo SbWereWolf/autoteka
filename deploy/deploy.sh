@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Auto-deploy (polling) from git:
-# - fetch origin/<branch>
-# - if new commits -> stash local changes, reset --hard and docker compose up -d --build
+# Rollout current git HEAD:
+# - does not fetch/reset git state
+# - can be rerun manually for the current working copy
 # - logs to /var/log/vue-app-deploy.log
 # - protected from parallel runs via flock
 
@@ -13,8 +13,6 @@ source "$SCRIPT_DIR/_common.sh"
 load_autoteka_env
 load_telegram_env
 
-BRANCH="${BRANCH:-master}"
-REMOTE="${REMOTE:-origin}"
 LOG="/var/log/vue-app-deploy.log"
 LOCK="/var/lock/vue-app-deploy.lock"
 PHP_READY_TIMEOUT="${PHP_READY_TIMEOUT:-60}"
@@ -33,18 +31,6 @@ log() {
 
 deploy_reason_code() {
   case "$1" in
-    git_fetch)
-      echo "DEPLOY_FETCH_FAILED"
-      ;;
-    git_stash)
-      echo "DEPLOY_STASH_FAILED"
-      ;;
-    git_stash_verify)
-      echo "DEPLOY_WORKTREE_DIRTY_AFTER_STASH"
-      ;;
-    git_reset)
-      echo "DEPLOY_RESET_FAILED"
-      ;;
     compose_pull)
       echo "DEPLOY_COMPOSE_PULL_FAILED"
       ;;
@@ -116,57 +102,14 @@ fi
   log "=== deploy start ==="
   log "AUTOTEKA_ROOT=$AUTOTEKA_ROOT"
 
-  # some systems require safe.directory if owner differs
-  git config --global --add safe.directory "$AUTOTEKA_ROOT" >/dev/null 2>&1 || true
-
   cd "$AUTOTEKA_ROOT"
 
-  DEPLOY_STAGE="git_fetch"
-  git fetch "$REMOTE" "$BRANCH"
+  CURRENT_HEAD="$(git rev-parse HEAD)"
+  CURRENT_SUBJECT="$(git log -1 --format=%s "$CURRENT_HEAD")"
+  DEPLOY_REMOTE_HEAD="$CURRENT_HEAD"
 
-  LOCAL="$(git rev-parse HEAD)"
-  REMOTE_HASH="$(git rev-parse "$REMOTE/$BRANCH")"
-  DEPLOY_REMOTE_HEAD="$REMOTE_HASH"
-
-  if [ "$LOCAL" = "$REMOTE_HASH" ]; then
-    clear_script_notification_locks "$SCRIPT_ID"
-    log "no changes ($LOCAL)"
-    exit 0
-  fi
-
-  log "updating $LOCAL -> $REMOTE_HASH"
-
-  WORKTREE_STATUS="$(git status --porcelain --untracked-files=all)"
-  if [ -n "$WORKTREE_STATUS" ]; then
-    STASH_MESSAGE="$(date -Is) autoteka auto deploy: очистка рабочей копии перед обновлением"
-
-    DEPLOY_STAGE="git_stash"
-    log "worktree is dirty; creating stash before update"
-    STASH_OUTPUT="$(git stash push --include-untracked -m "$STASH_MESSAGE" 2>&1)"
-    log "git stash result: $STASH_OUTPUT"
-
-    STASH_ENTRY="$(git stash list -1 --format='%gd %cr %s')"
-    if [ -n "$STASH_ENTRY" ]; then
-      log "stash saved for restore: $STASH_ENTRY"
-    else
-      log "stash command completed without visible stash entry"
-    fi
-
-    DEPLOY_STAGE="git_stash_verify"
-    REMAINING_STATUS="$(git status --porcelain --untracked-files=all)"
-    if [ -n "$REMAINING_STATUS" ]; then
-      log "worktree still dirty after stash:"
-      printf '%s\n' "$REMAINING_STATUS"
-      exit 1
-    fi
-  else
-    log "worktree already clean; stash not required"
-  fi
-
-  printf '%s\n' "$LOCAL" > /var/lib/vue-app-prev-commit || true
-
-  DEPLOY_STAGE="git_reset"
-  git reset --hard "$REMOTE/$BRANCH"
+  log "rolling out HEAD $CURRENT_HEAD"
+  log "commit subject: $CURRENT_SUBJECT"
 
   # optional: update base images
   DEPLOY_STAGE="compose_pull"
@@ -244,12 +187,11 @@ fi
   DEPLOY_STAGE="admin_smoke_check"
   http_smoke_check "$ADMIN_SMOKE_URL"
 
-  printf '%s\n' "$REMOTE_HASH" > /var/lib/vue-app-last-good || true
-  DEPLOY_REMOTE_SUBJECT="$(git log -1 --format=%s "$REMOTE_HASH")"
+  printf '%s\n' "$CURRENT_HEAD" > /var/lib/vue-app-last-good || true
+  DEPLOY_REMOTE_SUBJECT="$CURRENT_SUBJECT"
   clear_script_notification_locks "$SCRIPT_ID"
   notify_info "$SCRIPT_ID" "$DEPLOY_ACTION завершено успешно" "DEPLOY_SUCCESS" \
-    "версия $REMOTE_HASH, commit $DEPLOY_REMOTE_SUBJECT"
-  log "deploy success ($REMOTE_HASH)"
-  log "commit subject: $DEPLOY_REMOTE_SUBJECT"
+    "версия $CURRENT_HEAD, commit $DEPLOY_REMOTE_SUBJECT"
+  log "deploy success ($CURRENT_HEAD)"
   log "=== deploy end ==="
 } >> "$LOG" 2>&1
