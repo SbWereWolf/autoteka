@@ -9,6 +9,9 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+# shellcheck disable=SC1090
+source "$SCRIPT_DIR/_common.sh"
+export AUTOTEKA_ROOT="$ROOT_DIR"
 
 echo "=== autoteka bootstrap started ==="
 
@@ -39,6 +42,7 @@ fi
 chmod +x \
   "$SCRIPT_DIR/install.sh" \
   "$SCRIPT_DIR/deploy.sh" \
+  "$SCRIPT_DIR/repair-runtime.sh" \
   "$SCRIPT_DIR/server-watchdog.sh" \
   "$SCRIPT_DIR/server-maintenance.sh" \
   "$SCRIPT_DIR/metrics-export.sh" \
@@ -134,6 +138,9 @@ fi
 
 # Enable services/timers
 systemctl enable --now vue-app.service
+compose up -d --build --remove-orphans php
+wait_for_php_exec_ready "${PHP_READY_TIMEOUT:-60}"
+prepare_laravel_runtime
 systemctl enable --now vue-app-deploy.timer
 systemctl enable --now server-watchdog.timer
 systemctl enable --now server-maintenance.timer

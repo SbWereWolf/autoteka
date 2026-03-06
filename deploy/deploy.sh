@@ -18,6 +18,7 @@ REMOTE="${REMOTE:-origin}"
 LOG="/var/log/vue-app-deploy.log"
 LOCK="/var/lock/vue-app-deploy.lock"
 PHP_READY_TIMEOUT="${PHP_READY_TIMEOUT:-60}"
+ADMIN_SMOKE_URL="${ADMIN_SMOKE_URL:-http://127.0.0.1/admin/login}"
 SCRIPT_ID="deploy"
 DEPLOY_ACTION="обновление приложения"
 DEPLOY_STAGE="инициализация"
@@ -25,49 +26,6 @@ DEPLOY_REMOTE_HEAD=""
 DEPLOY_REMOTE_SUBJECT=""
 
 mkdir -p /var/lock /var/log /var/lib
-
-prepare_backend_runtime() {
-  compose exec -T php sh -lc '
-    set -eu
-    cd /var/www/backend
-    mkdir -p \
-      bootstrap/cache \
-      database \
-      storage \
-      storage/framework \
-      storage/framework/cache \
-      storage/framework/sessions \
-      storage/framework/views \
-      storage/logs
-    touch database/database.sqlite
-    chown -R www-data:www-data \
-      bootstrap/cache \
-      database \
-      storage
-    chmod -R ug+rwX \
-      bootstrap/cache \
-      database \
-      storage
-  '
-}
-
-wait_for_php() {
-  local started_at
-  started_at="$(date +%s)"
-
-  while true; do
-    if compose exec -T php sh -lc 'cd /var/www/backend && pwd >/dev/null' >/dev/null 2>&1; then
-      return 0
-    fi
-
-    if [ $(( $(date +%s) - started_at )) -ge "$PHP_READY_TIMEOUT" ]; then
-      echo "$(date) php container did not become ready within ${PHP_READY_TIMEOUT}s"
-      return 1
-    fi
-
-    sleep 2
-  done
-}
 
 log() {
   echo "$(date -Is) $*"
@@ -93,8 +51,8 @@ deploy_reason_code() {
     compose_up_php)
       echo "DEPLOY_PHP_UP_FAILED"
       ;;
-    prepare_runtime_permissions)
-      echo "DEPLOY_RUNTIME_PERMISSIONS_FAILED"
+    laravel_prepare)
+      echo "DEPLOY_LARAVEL_PREPARE_FAILED"
       ;;
     wait_for_php)
       echo "DEPLOY_PHP_WAIT_FAILED"
@@ -117,11 +75,17 @@ deploy_reason_code() {
     artisan_seed)
       echo "DEPLOY_SEED_FAILED"
       ;;
+    sqlite_write_check)
+      echo "DEPLOY_SQLITE_WRITE_CHECK_FAILED"
+      ;;
     artisan_up)
       echo "DEPLOY_MAINTENANCE_UP_FAILED"
       ;;
     compose_up_web)
       echo "DEPLOY_WEB_UP_FAILED"
+      ;;
+    admin_smoke_check)
+      echo "DEPLOY_ADMIN_SMOKE_CHECK_FAILED"
       ;;
     *)
       echo "DEPLOY_UNKNOWN_FAILED"
@@ -212,10 +176,10 @@ fi
   compose up -d --build --remove-orphans php
 
   DEPLOY_STAGE="wait_for_php"
-  wait_for_php
+  wait_for_php_exec_ready "$PHP_READY_TIMEOUT"
 
-  DEPLOY_STAGE="prepare_runtime_permissions"
-  prepare_backend_runtime
+  DEPLOY_STAGE="laravel_prepare"
+  prepare_laravel_runtime
 
   DEPLOY_STAGE="composer_install"
   compose exec -T php sh -lc '
@@ -231,6 +195,8 @@ fi
     cd /var/www/backend
     php artisan --version >/dev/null
   '
+
+  clear_laravel_optimizations
 
   DEPLOY_STAGE="artisan_down"
   compose exec -T php sh -lc '
@@ -262,6 +228,9 @@ fi
     php artisan db:seed --class=AdminUserSeeder --force
   '
 
+  DEPLOY_STAGE="sqlite_write_check"
+  check_sqlite_write_access
+
   DEPLOY_STAGE="artisan_up"
   compose exec -T php sh -lc '
     set -eu
@@ -271,6 +240,9 @@ fi
 
   DEPLOY_STAGE="compose_up_web"
   compose up -d --build --remove-orphans web
+
+  DEPLOY_STAGE="admin_smoke_check"
+  http_smoke_check "$ADMIN_SMOKE_URL"
 
   printf '%s\n' "$REMOTE_HASH" > /var/lib/vue-app-last-good || true
   DEPLOY_REMOTE_SUBJECT="$(git log -1 --format=%s "$REMOTE_HASH")"

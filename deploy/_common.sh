@@ -39,6 +39,165 @@ compose() {
   /usr/bin/docker compose -f "$AUTOTEKA_ROOT/deploy/docker-compose.yml" "$@"
 }
 
+backend_dir() {
+  printf '%s\n' "$AUTOTEKA_ROOT/backend"
+}
+
+detect_php_fpm_runtime_identity() {
+  compose exec -T php sh -lc '
+    set -eu
+
+    resolve_field() {
+      local field="$1"
+      local value
+
+      value="$(awk -F= -v key="$field" "
+        \$1 ~ /^[[:space:]]*[;#]/ { next }
+        \$1 ~ \"^[[:space:]]*\" key \"[[:space:]]*$\" {
+          gsub(/^[[:space:]]+|[[:space:]]+$/, \"\", \$2)
+          print \$2
+          exit
+        }
+      " /usr/local/etc/php-fpm.d/www.conf 2>/dev/null || true)"
+
+      if [ -z "$value" ]; then
+        value="www-data"
+      fi
+
+      printf "%s\n" "$value"
+    }
+
+    runtime_user="$(resolve_field user)"
+    runtime_group="$(resolve_field group)"
+    runtime_gid="$(awk -F: -v key="$runtime_group" '$1 == key { print $3; exit }' /etc/group)"
+
+    if [ -z "$runtime_gid" ]; then
+      runtime_gid="$(id -g "$runtime_user")"
+    fi
+
+    printf "%s:%s:%s:%s\n" \
+      "$runtime_user" \
+      "$runtime_group" \
+      "$(id -u "$runtime_user")" \
+      "$runtime_gid"
+  '
+}
+
+laravel_runtime_paths() {
+  cat <<EOF
+$(backend_dir)/database
+$(backend_dir)/storage
+$(backend_dir)/storage/app
+$(backend_dir)/storage/app/public
+$(backend_dir)/storage/app/private
+$(backend_dir)/storage/framework
+$(backend_dir)/storage/framework/cache
+$(backend_dir)/storage/framework/cache/data
+$(backend_dir)/storage/framework/sessions
+$(backend_dir)/storage/framework/views
+$(backend_dir)/storage/framework/testing
+$(backend_dir)/storage/logs
+$(backend_dir)/bootstrap/cache
+EOF
+}
+
+prepare_laravel_runtime() {
+  local backend
+  local runtime_identity
+  local runtime_user
+  local runtime_group
+  local runtime_uid
+  local runtime_gid
+  local path
+
+  backend="$(backend_dir)"
+
+  mkdir -p "$backend"
+  if [ ! -f "$backend/.env" ] && [ -f "$backend/example.env" ]; then
+    cp "$backend/example.env" "$backend/.env"
+  fi
+  mkdir -p "$backend/database"
+  touch "$backend/database/database.sqlite"
+
+  while IFS= read -r path; do
+    [ -n "$path" ] || continue
+    mkdir -p "$path"
+  done <<EOF
+$(laravel_runtime_paths)
+EOF
+
+  runtime_identity="$(detect_php_fpm_runtime_identity)"
+  IFS=':' read -r runtime_user runtime_group runtime_uid runtime_gid <<EOF
+$runtime_identity
+EOF
+
+  while IFS= read -r path; do
+    [ -n "$path" ] || continue
+    chown -R "$runtime_uid:$runtime_gid" "$path"
+  done <<EOF
+$(laravel_runtime_paths)
+EOF
+
+  chown "$runtime_uid:$runtime_gid" "$backend/database/database.sqlite"
+
+  while IFS= read -r path; do
+    [ -n "$path" ] || continue
+    find "$path" -type d -exec chmod 775 {} \;
+    find "$path" -type f -exec chmod 664 {} \;
+  done <<EOF
+$(laravel_runtime_paths)
+EOF
+
+  chmod 664 "$backend/database/database.sqlite"
+  rm -f "$backend/database/database.sqlite-wal" "$backend/database/database.sqlite-shm"
+
+  echo "laravel runtime prepared for ${runtime_user}:${runtime_group} (${runtime_uid}:${runtime_gid})"
+}
+
+artisan_in_php() {
+  local command="$1"
+
+  compose exec -T php sh -lc "
+    set -eu
+    cd /var/www/backend
+    php artisan $command
+  "
+}
+
+wait_for_php_exec_ready() {
+  local timeout="${1:-60}"
+  local started_at
+
+  started_at="$(date +%s)"
+
+  while true; do
+    if compose exec -T php sh -lc 'cd /var/www/backend && pwd >/dev/null' >/dev/null 2>&1; then
+      return 0
+    fi
+
+    if [ $(( $(date +%s) - started_at )) -ge "$timeout" ]; then
+      echo "php container did not become ready within ${timeout}s" >&2
+      return 1
+    fi
+
+    sleep 2
+  done
+}
+
+clear_laravel_optimizations() {
+  artisan_in_php "optimize:clear"
+}
+
+check_sqlite_write_access() {
+  artisan_in_php "tinker --execute=\"session(['deploy_runtime_check' => 'ok']); DB::table('sessions')->count(); cache()->put('deploy_runtime_check', 'ok', 60);\""
+}
+
+http_smoke_check() {
+  local url="$1"
+
+  curl -fsS -o /dev/null -L "$url"
+}
+
 load_telegram_env() {
   local env_file="${1:-$TELEGRAM_ENV_FILE_DEFAULT}"
 

@@ -28,6 +28,9 @@ case "$CMD" in
   deploy)
     exec "$AUTOTEKA_ROOT/deploy/deploy.sh" "$@"
     ;;
+  repair-runtime)
+    exec "$AUTOTEKA_ROOT/deploy/repair-runtime.sh" "$@"
+    ;;
   watchdog)
     exec "$AUTOTEKA_ROOT/deploy/server-watchdog.sh" "$@"
     ;;
@@ -43,6 +46,7 @@ Usage:
   autoteka up
   autoteka down
   autoteka deploy
+  autoteka repair-runtime
   autoteka watchdog
   autoteka maintenance
   autoteka uninstall [soft|purge|nuke] [--force]
