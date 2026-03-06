@@ -17,7 +17,7 @@ MAX_STAGE3=5
 REBOOT_COOLDOWN=3600
 
 CONTAINER="vue-app"
-COMPOSE_UNIT="vue-app.service"
+COMPOSE_UNIT="autoteka.service"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck disable=SC1090
 source "$SCRIPT_DIR/_common.sh"

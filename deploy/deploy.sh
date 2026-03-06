@@ -169,6 +169,8 @@ fi
     php artisan --version >/dev/null
   '
 
+  ensure_public_storage_link
+
   clear_laravel_optimizations
 
   DEPLOY_STAGE="artisan_down"

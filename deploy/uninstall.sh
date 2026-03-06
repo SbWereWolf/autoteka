@@ -48,9 +48,9 @@ source "$SCRIPT_DIR/_common.sh"
 load_autoteka_env
 
 UNITS=(
-  vue-app.service
-  vue-app-deploy.service
-  vue-app-deploy.timer
+  autoteka.service
+  autoteka-deploy.service
+  autoteka-deploy.timer
   server-watchdog.service
   server-watchdog.timer
   server-maintenance.service
@@ -125,11 +125,11 @@ soft() {
   say "AUTOTEKA_ROOT=$AUTOTEKA_ROOT"
   say "Stopping timers/services (soft)..."
 
-  safe_systemctl stop vue-app-deploy.timer server-watchdog.timer server-maintenance.timer
-  safe_systemctl disable vue-app-deploy.timer server-watchdog.timer server-maintenance.timer
+  safe_systemctl stop autoteka-deploy.timer server-watchdog.timer server-maintenance.timer
+  safe_systemctl disable autoteka-deploy.timer server-watchdog.timer server-maintenance.timer
 
-  safe_systemctl stop vue-app-deploy.service server-watchdog.service server-maintenance.service vue-app.service
-  safe_systemctl disable vue-app.service || true
+  safe_systemctl stop autoteka-deploy.service server-watchdog.service server-maintenance.service autoteka.service
+  safe_systemctl disable autoteka.service || true
 
   if command -v docker >/dev/null 2>&1; then
     say "docker compose down"
@@ -200,5 +200,5 @@ case "$MODE" in
 esac
 
 say "Check:"
-echo "  systemctl list-timers --all | egrep 'vue-app|server-watchdog|server-maintenance' || true"
+echo "  systemctl list-timers --all | egrep 'autoteka|server-watchdog|server-maintenance' || true"
 echo "  docker ps -a | grep vue-app || true"

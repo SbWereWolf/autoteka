@@ -115,10 +115,19 @@ fi
 # Wrapper in PATH (units call it)
 install -m 0755 "$SCRIPT_DIR/wrapper/autoteka" /usr/local/bin/autoteka
 
+# remove legacy unit names before installing new ones
+systemctl stop vue-app-deploy.timer vue-app-deploy.service vue-app.service >/dev/null 2>&1 || true
+systemctl disable vue-app-deploy.timer vue-app.service >/dev/null 2>&1 || true
+rm -f \
+  /etc/systemd/system/vue-app.service \
+  /etc/systemd/system/vue-app-deploy.service \
+  /etc/systemd/system/vue-app-deploy.timer \
+  2>/dev/null || true
+
 # systemd units
-install -m 0644 "$SCRIPT_DIR/systemd/vue-app.service" /etc/systemd/system/vue-app.service
-install -m 0644 "$SCRIPT_DIR/systemd/vue-app-deploy.service" /etc/systemd/system/vue-app-deploy.service
-install -m 0644 "$SCRIPT_DIR/systemd/vue-app-deploy.timer" /etc/systemd/system/vue-app-deploy.timer
+install -m 0644 "$SCRIPT_DIR/systemd/autoteka.service" /etc/systemd/system/autoteka.service
+install -m 0644 "$SCRIPT_DIR/systemd/autoteka-deploy.service" /etc/systemd/system/autoteka-deploy.service
+install -m 0644 "$SCRIPT_DIR/systemd/autoteka-deploy.timer" /etc/systemd/system/autoteka-deploy.timer
 install -m 0644 "$SCRIPT_DIR/systemd/server-watchdog.service" /etc/systemd/system/server-watchdog.service
 install -m 0644 "$SCRIPT_DIR/systemd/server-watchdog.timer" /etc/systemd/system/server-watchdog.timer
 install -m 0644 "$SCRIPT_DIR/systemd/server-maintenance.service" /etc/systemd/system/server-maintenance.service
@@ -138,11 +147,11 @@ if [ -f "$SCRIPT_DIR/config/logrotate-autoteka-telegram.conf" ]; then
 fi
 
 # Enable services/timers
-systemctl enable --now vue-app.service
+systemctl enable --now autoteka.service
 compose up -d --build --remove-orphans php
 wait_for_php_exec_ready "${PHP_READY_TIMEOUT:-60}"
 prepare_laravel_runtime
-systemctl enable --now vue-app-deploy.timer
+systemctl enable --now autoteka-deploy.timer
 systemctl enable --now server-watchdog.timer
 systemctl enable --now server-maintenance.timer
 

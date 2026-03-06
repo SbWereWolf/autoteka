@@ -154,6 +154,22 @@ EOF
   echo "laravel runtime prepared for ${runtime_user}:${runtime_group} (${runtime_uid}:${runtime_gid})"
 }
 
+ensure_public_storage_link() {
+  local backend
+
+  backend="$(backend_dir)"
+
+  if [ -L "$backend/public/storage" ] || [ -d "$backend/public/storage" ]; then
+    return 0
+  fi
+
+  compose exec -T php sh -lc '
+    set -eu
+    cd /var/www/backend
+    php artisan storage:link >/dev/null
+  '
+}
+
 artisan_in_php() {
   local command="$1"
 
@@ -190,6 +206,7 @@ clear_laravel_optimizations() {
 
 prepare_laravel_runtime_and_clear() {
   prepare_laravel_runtime
+  ensure_public_storage_link
   clear_laravel_optimizations
 }
 
