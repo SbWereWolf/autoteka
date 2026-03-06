@@ -18,3 +18,4 @@ playwright-report/
 /frontend/scripts/.env
 /backup/etc/
 /frontend/src/mocks/
+/tasks/
