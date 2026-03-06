@@ -12,6 +12,7 @@
     "test:e2e": "playwright test",
     "test:e2e:headed": "playwright test --headed",
     "images:regen": "node scripts/generate-shop-images.mjs",
+    "images:moonshine": "node scripts/convert-generated-images-for-moonshine.mjs",
     "enrich:mocks": "node scripts/enrich-mocks.mjs",
     "materialize:shop-media": "node scripts/materialize-shop-media.mjs",
     "sync:backend-media": "node scripts/sync-generated-to-backend.mjs",
