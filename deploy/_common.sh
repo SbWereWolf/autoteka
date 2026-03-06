@@ -48,8 +48,8 @@ detect_php_fpm_runtime_identity() {
     set -eu
 
     resolve_field() {
-      local field="$1"
-      local value
+      field="$1"
+      value=""
 
       value="$(awk -F= -v key="$field" "
         \$1 ~ /^[[:space:]]*[;#]/ { next }
@@ -186,6 +186,11 @@ wait_for_php_exec_ready() {
 
 clear_laravel_optimizations() {
   artisan_in_php "optimize:clear"
+}
+
+prepare_laravel_runtime_and_clear() {
+  prepare_laravel_runtime
+  clear_laravel_optimizations
 }
 
 check_sqlite_write_access() {

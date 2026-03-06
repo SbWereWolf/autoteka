@@ -11,7 +11,8 @@ ADMIN_SMOKE_URL="${ADMIN_SMOKE_URL:-http://127.0.0.1/admin/login}"
 
 compose up -d --build --remove-orphans php
 wait_for_php_exec_ready "$PHP_READY_TIMEOUT"
-prepare_laravel_runtime_and_clear
+prepare_laravel_runtime
+clear_laravel_optimizations
 check_sqlite_write_access
 compose up -d --build --remove-orphans web
 http_smoke_check "$ADMIN_SMOKE_URL"
