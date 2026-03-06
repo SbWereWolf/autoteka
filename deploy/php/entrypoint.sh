@@ -1,13 +1,1 @@
-#!/usr/bin/env sh
-set -eu
-
-cd /var/www/backend
-
-if [ ! -f .env ]; then
-  cp example.env .env
-fi
-
-mkdir -p database
-touch database/database.sqlite
-
-exec php-fpm -F
+#!/usr/bin/env sh set -eu  cd /var/www/backend  if [ ! -f .env ]; then   cp example.env .env fi  mkdir -p database touch database/database.sqlite  exec php-fpm -F
