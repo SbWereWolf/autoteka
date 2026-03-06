@@ -216,8 +216,23 @@ check_sqlite_write_access() {
 
 http_smoke_check() {
   local url="$1"
+  local retries="${HTTP_SMOKE_RETRIES:-20}"
+  local delay="${HTTP_SMOKE_DELAY_SEC:-2}"
+  local attempt=1
 
-  curl -fsS -o /dev/null -L "$url"
+  while [ "$attempt" -le "$retries" ]; do
+    if curl -fsS -o /dev/null -L "$url"; then
+      return 0
+    fi
+
+    if [ "$attempt" -lt "$retries" ]; then
+      sleep "$delay"
+    fi
+
+    attempt=$((attempt + 1))
+  done
+
+  return 1
 }
 
 load_telegram_env() {
