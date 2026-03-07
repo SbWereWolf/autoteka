@@ -6,12 +6,14 @@ namespace Tests\Unit;
 
 use App\Models\City;
 use App\Models\Shop;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\DatabaseTransactions;
+use PHPUnit\Framework\Attributes\Group;
 use Tests\TestCase;
 
-class ModelRulesTest extends TestCase
+#[Group('realdb')]
+class ModelRulesRealDbTest extends TestCase
 {
-    use RefreshDatabase;
+    use DatabaseTransactions;
 
     public function test_code_is_generated_from_title_when_missing(): void
     {
@@ -29,16 +31,16 @@ class ModelRulesTest extends TestCase
     public function test_site_url_is_normalized_but_blank_values_stay_blank(): void
     {
         $city = City::query()->create([
-            'code' => 'test-city',
-            'title' => 'Тестовый город',
-            'sort' => 1,
+            'code' => 'test-city-real-db',
+            'title' => 'Тестовый город RealDb',
+            'sort' => 99999,
             'is_published' => true,
         ]);
 
         $shop = Shop::query()->create([
-            'code' => '',
+            'code' => 'test-shop-real-db',
             'title' => 'Тестовый магазин',
-            'sort' => 1000,
+            'sort' => 99999,
             'city_id' => $city->getKey(),
             'description' => '',
             'site_url' => 'example.com',

@@ -45,6 +45,27 @@ Production-значения задаются через:
 - `MOONSHINE_ADMIN_EMAIL`
 - `MOONSHINE_ADMIN_PASSWORD`
 
+## Тесты
+
+По умолчанию тесты используют SQLite in-memory (пустая БД). Тесты с группой
+`realdb` исключены из стандартного прогона.
+
+Для запуска `PublicApiContractRealDbTest` и `ModelRulesRealDbTest` на рабочей
+БД SQLite используйте отдельный конфиг:
+
+```bash
+php artisan test --configuration=phpunit.realdb.xml
+```
+
+Через Docker:
+
+```bash
+docker exec -w /var/www/backend autoteka-php php artisan test --configuration=phpunit.realdb.xml
+```
+
+Путь к БД задаётся в `phpunit.realdb.xml` (`DB_DATABASE=database/database.sqlite`)
+и должен соответствовать реальному файлу БД.
+
 ## Что читать дальше
 
 - `../docs/foundations/IMPLEMENTATION.md` — устройство backend и API.
