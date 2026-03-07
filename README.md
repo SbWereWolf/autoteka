@@ -1,25 +1,44 @@
-# Автотека — monorepo
-
-**Актуально по коду на 2026-03-06.**
+# Автотека — картотека магазинов автомобильной тематики
 
 ## Что в репозитории
 
-- `frontend/` — front office на Vue/Vite.
-- `backend/` — backend на Laravel 12 с MoonShine 4 для back office.
 - `deploy/` — инфраструктура развёртывания, автодеплоя, наблюдаемости
-  и техобслуживания.
+  и техобслуживания;
+- `frontend/` — frontend на Vue3/Vite для front office;
+- `backend/` — backend на Laravel 12 с MoonShine 4 для back office;
+
+## Временные оперативные файлы
+
+Каталоги `tasks/` и `logs/` используются только как временные
+оперативные файлы для текущих работ и диагностики.
+
+Для длительного использования этой кодовой базы они не являются
+значимыми артефактами и не должны рассматриваться как часть постоянной
+истории проекта.
 
 ## Карта документации
 
+### Обслуживание
+
+- [ADMIN_MANUAL](docs/foundations/ADMIN_MANUAL.md) — редактор для тем
+  оформления, организация работы back office, серверные настройки и
+  служебные скрипты;
+- [DEPLOY](deploy/DEPLOY.md) — развёртывание, наблюдаемость,
+  диагностика поломок и техническое обслуживание;
+
+### Использование
+
+- [USER_MANUAL](docs/foundations/USER_MANUAL.md) — работа с front
+  office для получения информации картотеки;
+- [CLERC_MANUAL](docs/foundations/CLERC_MANUAL.md) — работа с данными
+  картотеки: способы ввода и редактирования (+требования качества);
+
+### Разработка
+
 - [IMPLEMENTATION](docs/foundations/IMPLEMENTATION.md) — техническое
   устройство системы as-is.
-- [USER_MANUAL](docs/foundations/USER_MANUAL.md) — работа с front
-  office для обычного пользователя.
-- [ADMIN_MANUAL](docs/foundations/ADMIN_MANUAL.md) — редактор темы,
-  back office, серверные настройки и служебные скрипты.
-- [DEPLOY](deploy/DEPLOY.md) — развёртывание, наблюдаемость,
-  диагностика поломок и техническое обслуживание.
-- [backend/README](backend/README.md) — быстрый вход в backend-зону.
+- [backend/README](backend/README.md) — быстрый вход в backend-зону;
+- [frontend/README.md](frontend/README.md) - вход во frontend-зону;
 
 ## Локальный запуск
 
@@ -33,8 +52,8 @@ npm run dev
 
 Переменная окружения:
 
-- `VITE_API_BASE_URL` — базовый URL backend API. Для same-origin
-  схемы используйте `/api/v1`.
+- `VITE_API_BASE_URL` — базовый URL backend API. Для same-origin схемы
+  используйте `/api/v1`.
 
 Дополнительные команды:
 
@@ -42,7 +61,6 @@ npm run dev
 cd frontend
 npm run build
 npm run preview
-npm run check:data
 npm run test
 ```
 
@@ -57,50 +75,24 @@ php artisan db:seed --class=AdminUserSeeder
 php artisan serve
 ```
 
-Back office MoonShine:
+вход в back office MoonShine:
 
-- URL: `http://127.0.0.1:8000/admin/login`
-- Логин по умолчанию: `admin@example.com`
-- Пароль по умолчанию: `admin12345`
-- Production-значения нужно задавать через `MOONSHINE_ADMIN_*` в
-  `backend/.env`
+- URL: `/admin/login`
+- Production-значения учётки смотри в [backend/.env](backend/.env) ->
+  `MOONSHINE_ADMIN_*`
 
 ## Рабочие env-файлы
 
-- `frontend/.env` — runtime-конфиг frontend сборки.
-  Подробности: [ADMIN_MANUAL §6.1](docs/foundations/ADMIN_MANUAL.md),
+- `frontend/.env` — runtime-конфиг frontend сборки. Подробности:
+  [ADMIN_MANUAL §6.1](docs/foundations/ADMIN_MANUAL.md),
   [DEPLOY §5](deploy/DEPLOY.md).
-- `backend/.env` — runtime-конфиг Laravel backend.
-  Подробности: [ADMIN_MANUAL §6.2](docs/foundations/ADMIN_MANUAL.md),
+- `backend/.env` — runtime-конфиг Laravel backend. Подробности:
+  [ADMIN_MANUAL §6.2](docs/foundations/ADMIN_MANUAL.md),
   [DEPLOY §5.3](deploy/DEPLOY.md).
 - `/etc/autoteka/deploy.env` — server-side deployment config для
-  `AUTOTEKA_ROOT`, `BRANCH`, `REMOTE`, `HTTP_PORT`.
-  Подробности: [DEPLOY §5.1](deploy/DEPLOY.md).
+  `AUTOTEKA_ROOT`, `BRANCH`, `REMOTE`, `HTTP_PORT`. Подробности:
+  [DEPLOY §5.1](deploy/DEPLOY.md).
 - `/etc/autoteka/telegram.env` — server-side Telegram config для
-  deploy/watchdog/maintenance уведомлений.
-  Подробности: [DEPLOY §5.2](deploy/DEPLOY.md),
+  deploy/watchdog/maintenance уведомлений. Подробности:
+  [DEPLOY §5.2](deploy/DEPLOY.md),
   [ADMIN_MANUAL §6.3](docs/foundations/ADMIN_MANUAL.md).
-
-## Основные проверки
-
-Из `frontend/`:
-
-```bash
-npm run check:data
-npm run test:e2e
-```
-
-Из корня:
-
-```bash
-npm i
-npm run lint
-```
-
-## Что читать в зависимости от задачи
-
-- Нужно понять устройство frontend/backend: `IMPLEMENTATION`.
-- Нужно пользоваться сайтом как клиент: `USER_MANUAL`.
-- Нужно работать с админкой, theme editor или служебными скриптами:
-  `ADMIN_MANUAL`.
-- Нужно развернуть систему или расследовать инцидент: `DEPLOY`.
