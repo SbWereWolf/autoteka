@@ -332,7 +332,11 @@ final class ImportInitialData extends Command
                 'city_id' => $cityIds[$cityCode],
                 'description' => trim((string) ($shop['description'] ?? '')),
                 'site_url' => trim((string) ($shop['siteUrl'] ?? '')),
-                'thumb_path' => $this->importMediaFile($shop['thumbUrl'] ?? null, $generatedRoot),
+                'thumb_path' => $this->importMediaFile(
+                    $shop['thumbUrl'] ?? null,
+                    $generatedRoot,
+                    (string) config('autoteka.media.shop_thumb_dir'),
+                ),
                 'is_published' => (bool) ($shop['is_published'] ?? true),
                 'created_at' => now(),
                 'updated_at' => now(),
@@ -425,7 +429,11 @@ final class ImportInitialData extends Command
             }
 
             foreach ((is_iterable($shop['galleryImages'] ?? null) ? $shop['galleryImages'] : []) as $imageIndex => $image) {
-                $filePath = $this->importMediaFile($image, $generatedRoot);
+                $filePath = $this->importMediaFile(
+                    $image,
+                    $generatedRoot,
+                    (string) config('autoteka.media.shop_gallery_dir'),
+                );
                 if ($filePath === null) {
                     continue;
                 }
@@ -486,7 +494,7 @@ final class ImportInitialData extends Command
         return ltrim($value, '/');
     }
 
-    private function importMediaFile(mixed $value, string $generatedRoot): ?string
+    private function importMediaFile(mixed $value, string $generatedRoot, string $targetDir): ?string
     {
         $relativePath = $this->normalizeMediaPath($value);
         if ($relativePath === null) {
@@ -499,10 +507,13 @@ final class ImportInitialData extends Command
         }
 
         $disk = Storage::disk((string) config('autoteka.media.disk'));
-        $targetPath = $disk->path($relativePath);
-        $targetDir = dirname($targetPath);
-        if (! is_dir($targetDir)) {
-            File::ensureDirectoryExists($targetDir);
+        $extension = pathinfo($sourcePath, PATHINFO_EXTENSION);
+        $targetFileName = uniqid('import_', true).'.'.$extension;
+        $targetRelativePath = rtrim($targetDir, '/').'/'.$targetFileName;
+        $targetPath = $disk->path($targetRelativePath);
+        $targetDirPath = dirname($targetPath);
+        if (! is_dir($targetDirPath)) {
+            File::ensureDirectoryExists($targetDirPath);
         }
 
         $backupPath = null;
@@ -525,7 +536,7 @@ final class ImportInitialData extends Command
         ];
         $this->importedMediaPaths[$relativePath] = true;
 
-        return $relativePath;
+        return $targetRelativePath;
     }
 
     private function resolveGeneratedSourcePath(string $relativePath, string $generatedRoot): string
