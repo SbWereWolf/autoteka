@@ -1,0 +1,14 @@
+{
+  "name": "autoteka-system-tests",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Э4: интеграционные тесты проверки документации",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "devDependencies": {
+    "vitest": "^3.2.4"
+  }
+}
