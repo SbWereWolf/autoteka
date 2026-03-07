@@ -32,7 +32,7 @@ Follow rules/commit-rules.md strictly:
 - One logical change per commit. Split into multiple commits if changes are unrelated.
 - Message in English.
 - Subject: max 50 chars, explains the goal.
-- Body: explains why and consequences. End with `Author: {platform} {model}` (script adds this).
+- Body: explains why and consequences. End with `Author: {ai-platform} {llm-name}` (script adds this).
 - Use helper script, never raw `git commit -m`.
 
 ### Windows/WSL2 (PowerShell):
