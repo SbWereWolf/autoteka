@@ -20,7 +20,7 @@
 
 ### Обслуживание
 
-- [ADMIN_MANUAL](docs/foundations/ADMIN_MANUAL.md) — редактор для тем
+- [ADMIN_MANUAL](docs/manual/ADMIN_MANUAL.md) — редактор для тем
   оформления, организация работы back office, серверные настройки и
   служебные скрипты;
 - [DEPLOY](deploy/DEPLOY.md) — развёртывание, наблюдаемость,
@@ -28,9 +28,9 @@
 
 ### Использование
 
-- [USER_MANUAL](docs/foundations/USER_MANUAL.md) — работа с front
+- [USER_MANUAL](docs/manual/USER_MANUAL.md) — работа с front
   office для получения информации картотеки;
-- [CLERC_MANUAL](docs/foundations/CLERC_MANUAL.md) — работа с данными
+- [CLERC_MANUAL](docs/manual/CLERC_MANUAL.md) — работа с данными
   картотеки: способы ввода и редактирования (+требования качества);
 
 ### Разработка
@@ -87,11 +87,11 @@ php artisan serve
 
 - `frontend/example.env` — шаблон frontend-конфига. Локально:
   `cp frontend/example.env frontend/.env`. Подробности:
-  [ADMIN_MANUAL §6.1](docs/foundations/ADMIN_MANUAL.md),
+  [ADMIN_MANUAL §6.1](docs/manual/ADMIN_MANUAL.md),
   [DEPLOY §5](deploy/DEPLOY.md).
 - `backend/example.env` — шаблон Laravel-конфига. Локально:
   `cp backend/example.env backend/.env`. Подробности:
-  [ADMIN_MANUAL §6.2](docs/foundations/ADMIN_MANUAL.md),
+  [ADMIN_MANUAL §6.2](docs/manual/ADMIN_MANUAL.md),
   [DEPLOY §5.3](deploy/DEPLOY.md).
 - `/etc/autoteka/deploy.env` — server-side deployment config для
   `AUTOTEKA_ROOT`, `BRANCH`, `REMOTE`, `HTTP_PORT`. Подробности:
@@ -99,4 +99,4 @@ php artisan serve
 - `/etc/autoteka/telegram.env` — server-side Telegram config для
   deploy/watchdog/maintenance уведомлений. Подробности:
   [DEPLOY §5.2](deploy/DEPLOY.md),
-  [ADMIN_MANUAL §6.3](docs/foundations/ADMIN_MANUAL.md).
+  [ADMIN_MANUAL §6.3](docs/manual/ADMIN_MANUAL.md).
