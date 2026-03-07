@@ -210,7 +210,7 @@ if ([string]::IsNullOrWhiteSpace($currentLogId)) {
   $dailyDir = Get-DailyLogDirectory -LogsRoot $logsRoot -Now $now
   try {
     New-Item -ItemType Directory -Path $dailyDir -Force | Out-Null
-    $fileName = Get-LogFileName -PlatformName $AIPlatform -ModelName $LLMName -DirectoryPath $dailyDir
+    $fileName = Get-LogFileName -AIPlatform $AIPlatform -LLMName $LLMName -DirectoryPath $dailyDir
     $targetFile = Join-Path $dailyDir $fileName
 
     if (-not (Test-Path -LiteralPath $targetFile)) {

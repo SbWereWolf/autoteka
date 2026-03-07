@@ -38,12 +38,12 @@ Follow rules/commit-rules.md strictly:
 ### Windows/WSL2 (PowerShell):
 
 ```powershell
-pwsh ./scripts/commit-with-message.ps1 -Subject "Short subject" -Body @("Body line 1.","Body line 2.") -Platform "codex" -Model "gpt-5.3-codex-spark"
+pwsh ./scripts/commit-with-message.ps1 -Subject "Short subject" -Body @("Body line 1.","Body line 2.") -AIPlatform "codex" -LLMName "gpt-5.3-codex-spark"
 ```
 
 For one-liner (avoids positional param errors):
 ```powershell
-pwsh -Command "& { ./scripts/commit-with-message.ps1 -Subject 'Subject' -Body @('Line 1.','Line 2.') -Platform 'codex' -Model 'gpt-5.3-codex-spark' }"
+pwsh -Command "& { ./scripts/commit-with-message.ps1 -Subject 'Subject' -Body @('Line 1.','Line 2.') -AIPlatform 'codex' -LLMName 'gpt-5.3-codex-spark' }"
 ```
 
 ### *nix (bash):
