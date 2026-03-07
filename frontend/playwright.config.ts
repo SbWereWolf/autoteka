@@ -1,5 +1,11 @@
 import { defineConfig } from "@playwright/test";
 
+/**
+ * E2E-тесты против приложения, развёрнутого в Docker.
+ * Перед запуском: docker compose up, frontend собран (npm run build).
+ * baseURL: http://localhost (порт 80 по умолчанию).
+ * Для другого порта задать PLAYWRIGHT_BASE_URL.
+ */
 export default defineConfig({
   testDir: "./e2e",
   timeout: 30000,
@@ -7,14 +13,9 @@ export default defineConfig({
   workers: 1,
   retries: 0,
   use: {
-    baseURL: "http://127.0.0.1:4173",
+    baseURL: process.env.PLAYWRIGHT_BASE_URL ?? "http://localhost",
     headless: true,
     viewport: { width: 1280, height: 900 },
   },
-  webServer: {
-    command: "npm run dev -- --host 127.0.0.1 --port 4173",
-    url: "http://127.0.0.1:4173",
-    reuseExistingServer: true,
-    timeout: 120000,
-  },
+  // Без webServer: приложение уже в Docker. Запускать после docker compose up.
 });
