@@ -9,9 +9,6 @@ services:
     working_dir: /var/www/backend
     volumes:
       - "${AUTOTEKA_ROOT:-..}/backend:/var/www/backend"
-      # temporary mounts for the first mock import; remove after success
-      - "${AUTOTEKA_ROOT:-..}/frontend/src/mocks:/var/www/frontend/src/mocks:ro"
-      - "${AUTOTEKA_ROOT:-..}/frontend/public/generated:/var/www/frontend/public/generated:ro"
 
   web:
     build:
@@ -28,8 +25,8 @@ services:
       timeout: 3s
       retries: 3
       start_period: 10s
-    # monitoring output (generated on host by deploy/server-watchdog.sh)
     volumes:
+      # monitoring output (generated on host by deploy/server-watchdog.sh)
       - "${AUTOTEKA_ROOT:-..}/deploy/metrics:/usr/share/nginx/html/metrics:ro"
       - "${AUTOTEKA_ROOT:-..}/backend:/var/www/backend:ro"
     depends_on:
