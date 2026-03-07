@@ -19,3 +19,5 @@ playwright-report/
 /backup/etc/
 /frontend/src/mocks/
 /tasks/
+/backup/
+!backup/README.md
