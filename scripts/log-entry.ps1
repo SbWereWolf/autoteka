@@ -7,10 +7,10 @@ param(
   [string]$Message,
 
   [Parameter(Mandatory = $true)]
-  [string]$Platform,
+  [string]$AIPlatform,
 
   [Parameter(Mandatory = $true)]
-  [string]$Model,
+  [string]$LLMName,
 
   [string]$LogId
 )
@@ -96,8 +96,8 @@ function Write-Index {
 
 function Get-LogFileName {
   param(
-    [Parameter(Mandatory = $true)][string]$PlatformName,
-    [Parameter(Mandatory = $true)][string]$ModelName,
+    [Parameter(Mandatory = $true)][string]$AIPlatform,
+    [Parameter(Mandatory = $true)][string]$LLMName,
     [Parameter(Mandatory = $true)][string]$DirectoryPath
   )
 
@@ -105,7 +105,7 @@ function Get-LogFileName {
 
   do {
     $rand = Get-Random -Minimum 1111 -Maximum 10000
-    $name = "$PlatformName-$ModelName-$unix-$rand.md"
+    $name = "$unix-$rand-$AIPlatform-$LLMName.md"
     $candidate = Join-Path $DirectoryPath $name
   } while (Test-Path -LiteralPath $candidate)
 
@@ -210,7 +210,7 @@ if ([string]::IsNullOrWhiteSpace($currentLogId)) {
   $dailyDir = Get-DailyLogDirectory -LogsRoot $logsRoot -Now $now
   try {
     New-Item -ItemType Directory -Path $dailyDir -Force | Out-Null
-    $fileName = Get-LogFileName -PlatformName $Platform -ModelName $Model -DirectoryPath $dailyDir
+    $fileName = Get-LogFileName -PlatformName $AIPlatform -ModelName $LLMName -DirectoryPath $dailyDir
     $targetFile = Join-Path $dailyDir $fileName
 
     if (-not (Test-Path -LiteralPath $targetFile)) {

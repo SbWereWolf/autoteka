@@ -9,12 +9,12 @@
       </button>
 
       <div class="mt-3 text-panel">
-        <div
-          class="text-2xl font-bold"
+        <h1
+          class="text-2xl font-bold m-0"
           :style="{ fontFamily: 'var(--font-display)' }"
         >
           {{ titleText }}
-        </div>
+        </h1>
       </div>
 
       <div
@@ -95,7 +95,13 @@
         </div>
 
         <div class="mt-4 space-y-4 3xl:space-y-6">
-          <div class="relative">
+          <section class="relative" aria-labelledby="shop-gallery-heading">
+            <h2
+              id="shop-gallery-heading"
+              class="sr-only"
+            >
+              Фото
+            </h2>
             <GalleryCarousel
               :items="galleryImages"
               empty-title=""
@@ -109,15 +115,16 @@
                 {{ shop.workHours }}
               </div>
             </div>
-          </div>
+          </section>
 
-          <section class="text-panel">
-            <div
-              class="text-xs uppercase tracking-wide"
+          <section class="text-panel" aria-labelledby="shop-desc-heading">
+            <h2
+              id="shop-desc-heading"
+              class="text-xs uppercase tracking-wide font-normal m-0"
               :style="{ color: 'var(--muted)' }"
             >
               Описание
-            </div>
+            </h2>
             <div
               class="mt-2 text-sm leading-relaxed"
               :style="{ color: 'var(--text)' }"
@@ -126,13 +133,14 @@
             </div>
           </section>
 
-          <section class="text-panel">
-            <div
-              class="text-xs uppercase tracking-wide"
+          <section class="text-panel" aria-labelledby="shop-contacts-heading">
+            <h2
+              id="shop-contacts-heading"
+              class="text-xs uppercase tracking-wide font-normal m-0"
               :style="{ color: 'var(--muted)' }"
             >
               Контакты
-            </div>
+            </h2>
             <ul class="mt-2 space-y-2">
               <li v-for="item in contactRows" :key="item.key">
                 <a

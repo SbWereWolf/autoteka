@@ -4,12 +4,12 @@
       <div class="text-panel">
         <div class="flex items-end justify-between gap-3">
           <div>
-            <div
-              class="text-xs uppercase tracking-wide"
+            <h1
+              class="text-xs uppercase tracking-wide font-normal m-0"
               :style="{ color: 'var(--muted)' }"
             >
               Каталог магазинов
-            </div>
+            </h1>
             <div class="mt-2">
               <CitySelect class="max-w-[14rem]" />
             </div>

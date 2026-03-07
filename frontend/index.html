@@ -5,6 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Автотека — макет</title>
   </head>
+  <style>
+    .app-bootstrap-spinner {
+      width: 1.25rem;
+      height: 1.25rem;
+      border: 2px solid #e2e8f0;
+      border-top-color: #64748b;
+      border-radius: 50%;
+      animation: app-bootstrap-spin 0.7s linear infinite;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .app-bootstrap-spinner { animation: none; }
+    }
+    @keyframes app-bootstrap-spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
   <body>
     <div id="app">
       <div
@@ -14,9 +30,10 @@
         role="status"
       >
         <div
-          style="min-height: 100vh; display: flex; align-items: center; justify-content: center; font-family: system-ui, -apple-system, sans-serif; color: #64748b; font-size: 0.875rem;"
+          style="min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.75rem; font-family: system-ui, -apple-system, sans-serif; color: #64748b; font-size: 0.875rem;"
         >
-          Загрузка…
+          <div class="app-bootstrap-spinner" aria-hidden="true"></div>
+          <span>Загрузка…</span>
         </div>
       </div>
     </div>
