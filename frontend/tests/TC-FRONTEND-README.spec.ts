@@ -52,7 +52,6 @@ describe("TC-FRONTEND-README-005", () => {
     expect(scripts["images:regen"]).toBeDefined();
     expect(scripts["images:moonshine"]).toBeDefined();
     expect(scripts["materialize:shop-media"]).toBeDefined();
-    expect(scripts["sync:backend-media"]).toBeDefined();
   });
 });
 

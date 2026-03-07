@@ -37,7 +37,6 @@ npm run check:data
 - `npm run images:regen`
 - `npm run images:moonshine`
 - `npm run materialize:shop-media`
-- `npm run sync:backend-media`
 
 ## Основные маршруты
 

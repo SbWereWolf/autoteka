@@ -15,7 +15,6 @@
     "images:moonshine": "node scripts/convert-generated-images-for-moonshine.mjs",
     "enrich:mocks": "node scripts/enrich-mocks.mjs",
     "materialize:shop-media": "node scripts/materialize-shop-media.mjs",
-    "sync:backend-media": "node scripts/sync-generated-to-backend.mjs",
     "validate:mocks": "node scripts/validate-mocks.mjs",
     "check:mocks": "node scripts/validate-mocks.mjs",
     "check:unused-assets": "node scripts/check-unused-assets.mjs",

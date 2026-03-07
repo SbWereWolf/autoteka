@@ -17,9 +17,6 @@
   сценариях).
 - `check-unused-assets.mjs` — проверка лишних/отсутствующих файлов в
   `frontend/public/generated`.
-- `sync-generated-to-backend.mjs` — синхронизирует ассеты из
-  `frontend/public/generated` в
-  `backend/storage/app/public/generated`.
 
 ## Быстрые команды
 
@@ -29,6 +26,5 @@
 npm run images:regen
 npm run images:moonshine
 npm run materialize:shop-media
-npm run sync:backend-media
 npm run check:data
 ```

@@ -19,7 +19,7 @@ describe("TC-FSCRIPTS-README-001", () => {
 });
 
 describe("TC-FSCRIPTS-README-009", () => {
-  it("команды images:regen, images:moonshine, materialize:shop-media, sync:backend-media, check:data", () => {
+  it("команды images:regen, images:moonshine, materialize:shop-media, check:data", () => {
     const pkg = JSON.parse(
       readFileSync(join(FRONTEND_ROOT, "package.json"), "utf-8"),
     );
@@ -27,7 +27,6 @@ describe("TC-FSCRIPTS-README-009", () => {
     expect(s["images:regen"]).toBeDefined();
     expect(s["images:moonshine"]).toBeDefined();
     expect(s["materialize:shop-media"]).toBeDefined();
-    expect(s["sync:backend-media"]).toBeDefined();
     expect(s["check:data"]).toBeDefined();
   });
 });
