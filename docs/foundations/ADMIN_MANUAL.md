@@ -178,9 +178,7 @@ public media.
 - `npm run images:regen` — генерация изображений магазинов;
 - `npm run images:moonshine` — подготовка изображений для MoonShine;
 - `npm run enrich:mocks` — обогащение мок-данных;
-- `npm run materialize:shop-media` — материализация медиа магазинов;
-- `npm run sync:backend-media` — синхронизация generated media в
-  backend.
+- `npm run materialize:shop-media` — материализация медиа магазинов.
 
 Использовать эти команды нужно после массовых правок моков,
 изображений или структуры данных каталога.
@@ -195,10 +193,10 @@ public media.
 
 Специальная команда:
 
-- `php artisan autoteka:media:update-generated-paths-to-png`
+- `php artisan autoteka:media:fix-shops-paths`
 
-Она обновляет пути `generated/*.svg` на `generated/*.png` и
-подготавливает mirror-файлы для preview в MoonShine.
+Переносит медиа в `shops/thumbs/` и `shops/gallery/`, обновляет пути
+в БД. Используйте при путях `generated/*` или `shops/*/generated/*`.
 
 ## 6. Важные настройки окружения
 

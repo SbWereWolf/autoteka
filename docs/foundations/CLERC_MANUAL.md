@@ -45,17 +45,14 @@ npm run check:data
 Публикация выполняется на сервере через контейнер `php`:
 
 ```bash
-docker compose -f deploy/docker-compose.yml exec php php artisan autoteka:data:import <scope> --mode=<dry-run|refresh|append> --file=<path>
+docker compose -f deploy/docker-compose.yml exec php php artisan autoteka:data:import <scope> --mode=<dry-run|refresh|append> --file=/var/www/frontend/src/mocks/<файл> [--generated-root=/var/www/frontend/public/generated]
 ```
 
-Scope:
+Scope и файлы: `city` → `city-list.json`, `category` → `category-list.json`,
+`feature` → `feature-list.json`, `shop` → `shops.json`.
 
-- `city`
-- `category`
-- `feature`
-- `shop`
-
-Для `shop` дополнительно требуется `--generated-root=<path>`.
+Для `scope=shop` параметр `--generated-root=/var/www/frontend/public/generated`
+обязателен.
 
 ## 5. Рабочая инструкция (полный цикл)
 
@@ -85,12 +82,8 @@ npm run check:data
   `thumbUrl/galleryImages` в `shops.json`;
 - `check:data` — выполняет контроль целостности моков и ассетов.
 
-Если используется серверный backend, после подготовки синхронизировать
-ассеты в backend storage:
-
-```bash
-npm run sync:backend-media
-```
+Для импорта `shop` укажите `--generated-root` на каталог
+`frontend/public/generated` (или путь внутри контейнера).
 
 ### 5.2. Публикация в backend (БД + media)
 
@@ -99,37 +92,35 @@ npm run sync:backend-media
 1. Проверить импорт на `dry-run`:
 
 ```bash
-docker compose -f deploy/docker-compose.yml exec php php artisan autoteka:data:import <scope> --mode=dry-run --file=<path> [--generated-root=<path>]
+docker compose -f deploy/docker-compose.yml exec php php artisan autoteka:data:import <scope> --mode=dry-run --file=/var/www/frontend/src/mocks/<файл> [--generated-root=/var/www/frontend/public/generated]
 ```
 
-1. Если отчёт корректный — выполнить рабочий импорт:
+2. Если отчёт корректный — выполнить рабочий импорт:
 
 ```bash
-docker compose -f deploy/docker-compose.yml exec php php artisan autoteka:data:import <scope> --mode=<refresh|append> --file=<path> [--generated-root=<path>]
+docker compose -f deploy/docker-compose.yml exec php php artisan autoteka:data:import <scope> --mode=<refresh|append> --file=/var/www/frontend/src/mocks/<файл> [--generated-root=/var/www/frontend/public/generated]
 ```
+
+Файлы: `city-list.json`, `category-list.json`, `feature-list.json`, `shops.json`.
 
 Правила:
 
-- для `scope=shop` параметр `--generated-root` обязателен;
+- для `scope=shop` параметр `--generated-root=/var/www/frontend/public/generated` обязателен;
 - `dry-run` не сохраняет изменения в БД;
 - `refresh` очищает и перезаписывает scope;
 - `append` только добавляет данные.
 
-### 5.3. Приведение путей media к PNG и preview для MoonShine
+### 5.3. Исправление путей media (shops/thumbs, shops/gallery)
 
-Если в БД уже есть исторические ссылки на `generated/*.svg`,
-выполнить:
+Если в БД есть пути `generated/*` или `shops/*/generated/*`, выполнить:
 
 ```bash
-docker compose -f deploy/docker-compose.yml exec php php artisan autoteka:media:update-generated-paths-to-png --dry-run
-docker compose -f deploy/docker-compose.yml exec php php artisan autoteka:media:update-generated-paths-to-png
+docker compose -f deploy/docker-compose.yml exec php php artisan autoteka:media:fix-shops-paths --dry-run
+docker compose -f deploy/docker-compose.yml exec php php artisan autoteka:media:fix-shops-paths
 ```
 
-Команда:
-
-- переводит пути `generated/*.svg` -> `generated/*.png` в SQLite;
-- подготавливает preview-копии для MoonShine;
-- в `--dry-run` только показывает план изменений.
+Команда переносит файлы в `shops/thumbs/` и `shops/gallery/`, обновляет
+пути в БД. В `--dry-run` только показывает план изменений.
 
 ## 6. Рекомендуемая последовательность
 
