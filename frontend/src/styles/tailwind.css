@@ -11,6 +11,10 @@
     color-scheme: light dark;
   }
 
+  html {
+    scroll-padding-top: 3.5rem; /* компенсация sticky TopBar (h-14) */
+  }
+
   html,
   body {
     height: 100%;

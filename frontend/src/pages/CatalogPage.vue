@@ -15,7 +15,7 @@
             </div>
           </div>
           <div class="text-xs" :style="{ color: 'var(--muted)' }">
-            {{ sorted.length }} шт.
+            {{ countText }}
           </div>
         </div>
       </div>
@@ -35,17 +35,46 @@
 
       <div
         v-else-if="isLoading"
-        class="mt-4 text-sm"
-        :style="{ color: 'var(--muted)' }"
+        class="mt-4 grid grid-cols-2 gap-2 sm:gap-3 3xl:grid-cols-3 3xl:gap-8 7xl:grid-cols-4 7xl:gap-10"
+        aria-busy="true"
+        aria-live="polite"
       >
-        Загрузка каталога...
+        <div
+          v-for="i in 8"
+          :key="'skeleton-' + i"
+          class="relative w-full aspect-square rounded-[var(--radius)] overflow-hidden"
+          :style="{
+            background: 'var(--surface)',
+            border: '1px solid var(--border)',
+            boxShadow: 'var(--shadow)',
+          }"
+        >
+          <div
+            class="absolute inset-0 ui-skeleton"
+            aria-hidden="true"
+          />
+          <div
+            class="relative z-10 h-full flex items-end p-3"
+            aria-hidden="true"
+          >
+            <div
+              class="ui-skeleton w-3/4 h-6 rounded-2xl"
+              aria-hidden="true"
+            />
+          </div>
+        </div>
       </div>
-      <div
-        v-else-if="loadError"
-        class="mt-4 text-sm"
-        :style="{ color: 'var(--muted)' }"
-      >
-        Не удалось загрузить каталог.
+      <div v-else-if="loadError" class="mt-4 text-panel space-y-4">
+        <p class="text-sm" :style="{ color: 'var(--muted)' }">
+          Не удалось загрузить каталог.
+        </p>
+        <button
+          type="button"
+          class="ui-transition ui-interactive ui-bounce rounded-2xl min-h-12 px-4 py-3 text-sm font-semibold"
+          @click="loadCityShops"
+        >
+          Повторить
+        </button>
       </div>
       <div
         v-else
@@ -104,6 +133,11 @@ const sorted = computed(() =>
 );
 
 const seedBase = computed(() => state.cityCode.length * 17);
+
+const countText = computed(() => {
+  if (isLoading.value) return "—";
+  return `${sorted.value.length} шт.`;
+});
 
 function go(code: string) {
   router.push({ name: "shop", params: { code } });

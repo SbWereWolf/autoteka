@@ -19,10 +19,50 @@
 
       <div
         v-if="isLoading"
-        class="mt-8 text-sm"
-        :style="{ color: 'var(--muted)' }"
+        class="mt-8 space-y-4 3xl:space-y-6"
+        aria-busy="true"
+        aria-live="polite"
       >
-        Загрузка магазина...
+        <div class="text-panel">
+          <div
+            class="ui-skeleton h-8 w-48 rounded"
+            aria-hidden="true"
+          />
+          <div class="mt-3 flex gap-2">
+            <div
+              class="ui-skeleton h-7 w-20 rounded-full"
+              aria-hidden="true"
+            />
+            <div
+              class="ui-skeleton h-7 w-24 rounded-full"
+              aria-hidden="true"
+            />
+          </div>
+        </div>
+        <div
+          class="aspect-[3/2] 3xl:aspect-[9/4] 7xl:aspect-[9/4] rounded-[var(--radius)] overflow-hidden"
+          :style="{
+            background: 'var(--surface-strong)',
+            border: '1px solid var(--border)',
+            boxShadow: 'var(--shadow)',
+          }"
+        >
+          <div class="h-full w-full ui-skeleton" aria-hidden="true" />
+        </div>
+        <div class="text-panel space-y-2">
+          <div
+            class="ui-skeleton h-4 w-24 rounded"
+            aria-hidden="true"
+          />
+          <div
+            class="ui-skeleton h-4 w-full rounded"
+            aria-hidden="true"
+          />
+          <div
+            class="ui-skeleton h-4 w-[80%] rounded"
+            aria-hidden="true"
+          />
+        </div>
       </div>
 
       <div
@@ -33,12 +73,17 @@
         Магазин не найден.
       </div>
 
-      <div
-        v-else-if="loadError"
-        class="mt-8 text-sm"
-        :style="{ color: 'var(--muted)' }"
-      >
-        Ошибка загрузки магазина.
+      <div v-else-if="loadError" class="mt-8 text-panel space-y-4">
+        <p class="text-sm" :style="{ color: 'var(--muted)' }">
+          Ошибка загрузки магазина.
+        </p>
+        <button
+          type="button"
+          class="ui-transition ui-interactive ui-bounce rounded-2xl min-h-12 px-4 py-3 text-sm font-semibold"
+          @click="loadShop"
+        >
+          Повторить
+        </button>
       </div>
 
       <div v-else-if="shop" class="mt-3">

@@ -6,7 +6,20 @@
     <title>Автотека — макет</title>
   </head>
   <body>
-    <div id="app"></div>
+    <div id="app">
+      <div
+        class="app-bootstrap-loading"
+        aria-live="polite"
+        aria-busy="true"
+        role="status"
+      >
+        <div
+          style="min-height: 100vh; display: flex; align-items: center; justify-content: center; font-family: system-ui, -apple-system, sans-serif; color: #64748b; font-size: 14px;"
+        >
+          Загрузка…
+        </div>
+      </div>
+    </div>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>
