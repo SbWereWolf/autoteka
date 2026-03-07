@@ -6,7 +6,7 @@ param(
   [string[]]$Body,
 
   [Parameter(Mandatory = $true)]
-  [string]$AIPlatform,
+  [string]$AISystemName,
 
   [string]$LLMName = "gpt-5",
 
@@ -113,10 +113,10 @@ if ($Body.Count -eq 0) {
   throw "At least one Body item is required."
 }
 
-Assert-SlugPart -Value $AIPlatform -Name "AIPlatform"
+Assert-SlugPart -Value $AISystemName -Name "AISystemName"
 Assert-SlugPart -Value $LLMName -Name "LLMName"
 
-$identityName = "$AIPlatform $LLMName"
+$identityName = "$AISystemName $LLMName"
 $identityEmail = "$identityName@local"
 
 $bodyLines = New-Object System.Collections.Generic.List[string]

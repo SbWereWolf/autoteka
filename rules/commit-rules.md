@@ -33,7 +33,7 @@
 - Если делаешь коммит, обязательно пиши body
   - Body объясняет причины и последствия изменений
   - В конце body отдельно добавляй свою подпись:
-    `Author: {platform} {model}`
+    `Author: {ai-system-name} {llm-name}`
 - Коммит делай с помощью helper-скрипта
 - Пример, если делаешь коммит на Win10/WSL2:
 
@@ -44,8 +44,8 @@ pwsh ./scripts/commit-with-message.ps1 `
     "Add explicit nginx rules for metrics routes and caching.",
     "Keep metrics page cacheable while data.json stays no-cache."
   ) `
-  -Platform "codex" `
-  -Model "gpt-5"
+  -AISystemName "codex" `
+  -LLMName "gpt-5"
 ```
 
 - Частая ошибка для PowerShell:
@@ -56,7 +56,7 @@ pwsh ./scripts/commit-with-message.ps1 `
   - Безопасный вариант для one-liner:
 
 ```powershell
-pwsh -Command "& { ./scripts/commit-with-message.ps1 -Subject 'Configure metrics caching and routing' -Body @('Add explicit nginx rules for metrics routes and caching.','Keep metrics page cacheable while data.json stays no-cache.') -Platform 'codex' -Model 'gpt-5' }"
+pwsh -Command "& { ./scripts/commit-with-message.ps1 -Subject 'Configure metrics caching and routing' -Body @('Add explicit nginx rules for metrics routes and caching.','Keep metrics page cacheable while data.json stays no-cache.') -AISystemName 'codex' -LLMName 'gpt-5' }"
 ```
 
 - Пример, если делаешь коммит на \*nix:
