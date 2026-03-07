@@ -139,8 +139,7 @@ async function copyJson() {
     // fallback: best-effort
     const ta = document.createElement("textarea");
     ta.value = payload;
-    ta.style.position = "fixed";
-    ta.style.left = "-9999px";
+    ta.style.display = "none";
     document.body.appendChild(ta);
     ta.select();
     try {

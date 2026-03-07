@@ -189,11 +189,11 @@ const pillStyle = computed(() => {
   const visible = pull.value > 0 && !triggered.value;
   return {
     background: "var(--surface-strong)",
-    border: "1px solid var(--border)",
+    border: "0.0625rem solid var(--border)",
     boxShadow: "var(--shadow)",
     transitionDuration: "200ms",
     opacity: visible ? 1 : 0,
-    transform: visible ? "translateY(0)" : "translateY(12px)",
+    transform: visible ? "translateY(0)" : "translateY(0.75rem)",
   };
 });
 

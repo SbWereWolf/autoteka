@@ -72,7 +72,7 @@ const r2 = computed(() => seeded(props.seed + 97));
 
 const tileStyle = computed(() => ({
   background: "var(--surface)",
-  border: "1px solid var(--border)",
+  border: "0.0625rem solid var(--border)",
   boxShadow: "var(--shadow)",
 }));
 
@@ -96,14 +96,14 @@ const patternLayer = computed(() => ({
 
 const titlePlateStyle = computed(() => ({
   background: "var(--surface-strong)",
-  border: "1px solid var(--border)",
+  border: "0.0625rem solid var(--border)",
   boxShadow: "0 10px 18px oklch(0 0 0 / 0.10)",
 }));
 
 const titleStyle = computed(() => ({
   fontFamily: "var(--font-display)",
   color: "var(--text)",
-  fontSize: "clamp(14px, 3.6vw, 18px)",
+  fontSize: "clamp(0.875rem, 3.6vw, 1.125rem)",
   fontWeight: 800,
 }));
 

@@ -42,7 +42,7 @@
         </div>
 
         <div
-          class="p-4 space-y-5 overflow-y-auto h-[calc(100%-56px)]"
+          class="p-4 space-y-5 overflow-y-auto h-[calc(100%-3.5rem)]"
         >
           <section class="space-y-2">
             <div

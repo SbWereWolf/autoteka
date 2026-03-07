@@ -10,7 +10,7 @@
         />
         <code class="text-xs truncate" :style="{ color: 'var(--muted)' }">{{ varName }}</code>
       </div>
-      <div v-if="isOverridden" class="mt-1 text-[11px]" :style="{ color: 'var(--muted)' }">
+      <div v-if="isOverridden" class="mt-1 text-[0.6875rem]" :style="{ color: 'var(--muted)' }">
         override
       </div>
     </div>
@@ -25,7 +25,7 @@
         :data-invalid="invalid ? 'true' : 'false'"
         :aria-invalid="invalid"
       />
-      <div v-if="invalid" class="mt-1 text-[11px]" :style="{ color: 'var(--muted)' }">
+      <div v-if="invalid" class="mt-1 text-[0.6875rem]" :style="{ color: 'var(--muted)' }">
         Значение не похоже на валидное для {{ varName }}
       </div>
     </div>

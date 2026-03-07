@@ -32,7 +32,7 @@ defineProps<{
   min-height: 1.75rem;
   border-radius: 9999px;
   padding: 0.25rem 0.625rem;
-  border: 1px solid var(--shop-badge-border);
+  border: 0.0625rem solid var(--shop-badge-border);
   background: var(--shop-badge-bg);
   color: var(--shop-badge-text);
   font-size: 0.75rem;

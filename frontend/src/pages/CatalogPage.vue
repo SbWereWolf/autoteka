@@ -45,7 +45,7 @@
           class="relative w-full aspect-square rounded-[var(--radius)] overflow-hidden"
           :style="{
             background: 'var(--surface)',
-            border: '1px solid var(--border)',
+            border: '0.0625rem solid var(--border)',
             boxShadow: 'var(--shadow)',
           }"
         >

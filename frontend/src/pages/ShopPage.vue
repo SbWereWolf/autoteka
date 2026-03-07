@@ -43,7 +43,7 @@
           class="aspect-[3/2] 3xl:aspect-[9/4] 7xl:aspect-[9/4] rounded-[var(--radius)] overflow-hidden"
           :style="{
             background: 'var(--surface-strong)',
-            border: '1px solid var(--border)',
+            border: '0.0625rem solid var(--border)',
             boxShadow: 'var(--shadow)',
           }"
         >
@@ -276,14 +276,14 @@ const hoursStyle = computed(() => ({
   background:
     "color-mix(in oklch, var(--surface-strong) 88%, transparent)",
   color: "var(--text)",
-  border: "1px solid var(--border)",
+  border: "0.0625rem solid var(--border)",
   boxShadow: "var(--shadow)",
 }));
 
 const hintStyle = computed(() => ({
   background: "var(--surface-strong)",
   color: "var(--muted)",
-  border: "1px solid var(--border)",
+  border: "0.0625rem solid var(--border)",
 }));
 
 const contactRows = computed(() => {

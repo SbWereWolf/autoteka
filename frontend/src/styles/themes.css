@@ -16,8 +16,8 @@
   --muted: oklch(0.8 0.01 260);
   --accent: oklch(0.74 0.14 200);
 
-  --radius: 18px;
-  --shadow: 0 12px 28px oklch(0 0 0 / 0.18);
+  --radius: 1.125rem;
+  --shadow: 0 0.75rem 1.75rem oklch(0 0 0 / 0.18);
 
   --font-display:
     ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial,
@@ -41,12 +41,12 @@
 
   --bounce-scale: 1.06;
   --bounce-scale-active: 0.985;
-  --bounce-lift: 4px;
-  --bounce-lift-active: 1px;
+  --bounce-lift: 0.25rem;
+  --bounce-lift-active: 0.0625rem;
 
   /* background wallpaper (mandatory) */
   --app-bg-image: url("/bg/style-b.jpg");
-  --app-bg-size: 420px;
+  --app-bg-size: 26.25rem;
 
   /* menu category chips */
   --menu-category-chip-width: 100%;
@@ -102,11 +102,11 @@
 
   /* Tile ornament */
   --tile-pattern: radial-gradient(
-    circle at 12px 12px,
-    color-mix(in oklch, var(--text) 12%, transparent) 2px,
-    transparent 3px
+    circle at 0.75rem 0.75rem,
+    color-mix(in oklch, var(--text) 12%, transparent) 0.125rem,
+    transparent 0.1875rem
   );
-  --tile-pattern-size: 36px 36px;
+  --tile-pattern-size: 2.25rem 2.25rem;
   --tile-pattern-opacity: 0.22;
 }
 
@@ -114,7 +114,7 @@
 .theme-a-neutral,
 .theme-a-accent {
   --app-bg-image: url("/bg/style-a.jpg");
-  --app-bg-size: 360px;
+  --app-bg-size: 22.5rem;
 }
 
 .theme-a-neutral {
@@ -131,8 +131,8 @@
   --hover-amt: 9%;
   --active-amt: 14%;
 
-  --radius: 20px;
-  --shadow: 0 10px 24px oklch(0 0 0 / 0.1);
+  --radius: 1.25rem;
+  --shadow: 0 0.625rem 1.5rem oklch(0 0 0 / 0.1);
 
   --font-display:
     ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial,
@@ -158,8 +158,8 @@
   --hover-amt: 10%;
   --active-amt: 16%;
 
-  --radius: 20px;
-  --shadow: 0 10px 24px oklch(0 0 0 / 0.1);
+  --radius: 1.25rem;
+  --shadow: 0 0.625rem 1.5rem oklch(0 0 0 / 0.1);
 
   --font-display:
     ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial,
@@ -175,7 +175,7 @@
 .theme-b-neutral,
 .theme-b-accent {
   --app-bg-image: url("/bg/style-b.jpg");
-  --app-bg-size: 420px;
+  --app-bg-size: 26.25rem;
 }
 
 .theme-b-neutral {
@@ -192,8 +192,8 @@
   --hover-amt: 8%;
   --active-amt: 12%;
 
-  --radius: 18px;
-  --shadow: 0 14px 34px oklch(0 0 0 / 0.28);
+  --radius: 1.125rem;
+  --shadow: 0 0.875rem 2.125rem oklch(0 0 0 / 0.28);
 
   --font-display:
     ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial,
@@ -219,8 +219,8 @@
   --hover-amt: 8%;
   --active-amt: 12%;
 
-  --radius: 18px;
-  --shadow: 0 14px 34px oklch(0 0 0 / 0.3);
+  --radius: 1.125rem;
+  --shadow: 0 0.875rem 2.125rem oklch(0 0 0 / 0.3);
 
   --font-display:
     ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial,
@@ -236,7 +236,7 @@
 .theme-c-neutral,
 .theme-c-accent {
   --app-bg-image: url("/bg/style-c.png");
-  --app-bg-size: 360px;
+  --app-bg-size: 22.5rem;
 }
 
 .theme-c-neutral {
@@ -253,8 +253,8 @@
   --hover-amt: 10%;
   --active-amt: 16%;
 
-  --radius: 10px;
-  --shadow: 0 8px 18px oklch(0 0 0 / 0.1);
+  --radius: 0.625rem;
+  --shadow: 0 0.5rem 1.125rem oklch(0 0 0 / 0.1);
 
   --font-display:
     ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
@@ -264,10 +264,10 @@
 
   --tile-pattern: linear-gradient(
     135deg,
-    color-mix(in oklch, var(--text) 12%, transparent) 1px,
-    transparent 1px
+    color-mix(in oklch, var(--text) 12%, transparent) 0.0625rem,
+    transparent 0.0625rem
   );
-  --tile-pattern-size: 18px 18px;
+  --tile-pattern-size: 1.125rem 1.125rem;
   --tile-pattern-opacity: 0.2;
 
   --tile-hover-brightness: 0.96;
@@ -288,8 +288,8 @@
   --hover-amt: 10%;
   --active-amt: 16%;
 
-  --radius: 10px;
-  --shadow: 0 8px 18px oklch(0 0 0 / 0.1);
+  --radius: 0.625rem;
+  --shadow: 0 0.5rem 1.125rem oklch(0 0 0 / 0.1);
 
   --font-display:
     ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
@@ -299,10 +299,10 @@
 
   --tile-pattern: linear-gradient(
     135deg,
-    color-mix(in oklch, var(--text) 12%, transparent) 1px,
-    transparent 1px
+    color-mix(in oklch, var(--text) 12%, transparent) 0.0625rem,
+    transparent 0.0625rem
   );
-  --tile-pattern-size: 18px 18px;
+  --tile-pattern-size: 1.125rem 1.125rem;
   --tile-pattern-opacity: 0.2;
 
   --tile-hover-brightness: 0.96;
