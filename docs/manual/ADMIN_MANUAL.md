@@ -224,8 +224,20 @@ public media.
 ### 6.3. Серверные env-файлы
 
 - `/etc/autoteka/deploy.env` — `AUTOTEKA_ROOT`, `BRANCH`, `REMOTE`,
-  `HTTP_PORT`
-- `/etc/autoteka/telegram.env` — Telegram-уведомления watchdog
+  `HTTP_PORT` (см. [DEPLOY §5.1](../deploy/DEPLOY.md#51-etcautotekadeployenv))
+- `/etc/autoteka/telegram.env` — Telegram-уведомления watchdog (см.
+  [DEPLOY §5.2](../deploy/DEPLOY.md#52-etcautotekatelegramenv))
+
+**Шаблоны в репозитории:**
+
+- `deploy/config/deploy.example.env` — шаблон для `/etc/autoteka/deploy.env`.
+  Устанавливается `install.sh` при первом запуске, если файл отсутствует.
+  Содержит параметры `AUTOTEKA_ROOT`, `BRANCH`, `REMOTE`, `HTTP_PORT`. Подробности
+  см. [DEPLOY §5.5](../deploy/DEPLOY.md#55-deployconfigdeployexampleenv).
+- `deploy/config/telegram.env.example` — шаблон для `/etc/autoteka/telegram.env`.
+  Устанавливается `install.sh` опционально, если файл отсутствует. Содержит
+  `TELEGRAM_TOKEN` и `TELEGRAM_CHAT`. Подробности см.
+  [DEPLOY §5.6](../deploy/DEPLOY.md#56-deployconfigtelegramenvexample).
 
 ## 7. Серверные скрипты deploy
 
