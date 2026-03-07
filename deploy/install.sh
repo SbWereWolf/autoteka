@@ -155,6 +155,10 @@ systemctl enable --now autoteka-deploy.timer
 systemctl enable --now server-watchdog.timer
 systemctl enable --now server-maintenance.timer
 
+# Инициализация счётчика watchdog (сброс при установке)
+mkdir -p /var/lib
+echo "0" > /var/lib/server-watchdog.state
+
 echo "=== autoteka bootstrap finished ==="
 echo "AUTOTEKA_ROOT=$ROOT_DIR"
 echo "Tip: check logs: /var/log/autoteka-deploy.log /var/log/server-watchdog.log /var/log/server-metrics.log /var/log/autoteka-telegram.log"

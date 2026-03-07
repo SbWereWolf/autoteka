@@ -18,4 +18,8 @@ check_sqlite_write_access
 compose up -d --build --remove-orphans web
 http_smoke_check "$ADMIN_SMOKE_URL"
 
+# Сброс счётчика watchdog: после успешного repair система здорова
+mkdir -p /var/lib
+echo "0" > /var/lib/server-watchdog.state
+
 echo "Laravel runtime repaired and smoke-check passed: $ADMIN_SMOKE_URL"

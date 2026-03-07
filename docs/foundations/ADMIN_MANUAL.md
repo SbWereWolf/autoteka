@@ -234,6 +234,8 @@ public media.
 - `install.sh` — bootstrap новой установки;
 - `watch-changes.sh` — git polling, update рабочей копии и запуск rollout;
 - `deploy.sh` — ручной rollout текущего `HEAD`;
+- `repair-runtime.sh` — восстановление PHP runtime и smoke-check;
+- `repair-infra.sh` — восстановление таймеров и счётчика watchdog;
 - `server-watchdog.sh` — self-healing и экспорт метрик;
 - `metrics-export.sh` — преобразование логов метрик в JSON;
 - `server-maintenance.sh` — ежедневное безопасное техобслуживание;

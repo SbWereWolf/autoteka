@@ -423,6 +423,30 @@ tail -n 100 /var/log/autoteka-deploy.log
 3. существует ли `deploy/metrics/data.json`;
 4. смонтирован ли `deploy/metrics` в контейнер `web`.
 
+### 7.5.1. Счётчик watchdog застрял (метрики устарели)
+
+Если `health=missing` или `fail=N` не сбрасывается, хотя контейнеры работают:
+
+1. Проверьте таймер: `systemctl status server-watchdog.timer`
+2. Запустите `autoteka repair-infra` — включает таймеры и сбрасывает счётчик
+3. Или `autoteka repair-runtime` — если нужно восстановить runtime
+4. Или сбросьте вручную: `echo "0" > /var/lib/server-watchdog.state`
+
+### 7.5.2. repair-infra — починка инфраструктуры
+
+Команда `autoteka repair-infra` восстанавливает таймеры и состояние:
+
+- включает и запускает `server-watchdog.timer`, `server-maintenance.timer`,
+  `autoteka-deploy.timer`;
+- сбрасывает счётчик watchdog;
+- проверяет `docker.service`.
+
+Использовать после перезагрузки или когда метрики не обновляются.
+
+```bash
+sudo autoteka repair-infra
+```
+
 ### 7.6. Не приходят Telegram-уведомления
 
 Проверьте:
