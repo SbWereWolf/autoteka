@@ -47,6 +47,8 @@ chmod +x \
   "$SCRIPT_DIR/server-watchdog.sh" \
   "$SCRIPT_DIR/server-maintenance.sh" \
   "$SCRIPT_DIR/metrics-export.sh" \
+  "$SCRIPT_DIR/backup-deploy.sh" \
+  "$SCRIPT_DIR/restore-deploy.sh" \
   "$SCRIPT_DIR/uninstall.sh" \
   2>/dev/null || true
 

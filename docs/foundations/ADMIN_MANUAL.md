@@ -239,6 +239,9 @@ public media.
 - `server-watchdog.sh` — self-healing и экспорт метрик;
 - `metrics-export.sh` — преобразование логов метрик в JSON;
 - `server-maintenance.sh` — ежедневное безопасное техобслуживание;
+- `backup-deploy.sh` — резервное копирование deploy-настроек (env, systemd,
+  docker, fail2ban, logrotate);
+- `restore-deploy.sh` — восстановление из резервной копии;
 - `uninstall.sh` — удаление установленной системы.
 
 Развёртывание и эксплуатация подробно описаны в `deploy/DEPLOY.md`.

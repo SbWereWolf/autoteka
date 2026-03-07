@@ -927,3 +927,45 @@ sudo ./deploy/uninstall.sh <mode> [flags]
 
 - `/etc/logrotate.d/autoteka-telegram`;
 - `/var/log/autoteka-telegram.log`.
+
+## 10. Резервное копирование и восстановление deploy-настроек
+
+Скрипты `backup-deploy.sh` и `restore-deploy.sh` сохраняют и восстанавливают
+серверные настройки, влияющие на работу приложения и Docker-сервисов:
+
+- `/etc/autoteka/deploy.env`, `/etc/autoteka/telegram.env`;
+- `backend/.env`, `frontend/.env`;
+- systemd unit'ы (autoteka, deploy, watchdog, maintenance);
+- конфиги Docker, journald, fail2ban, logrotate.
+
+**Backup** создаёт tar.gz-архив с timestamp в имени:
+
+```bash
+sudo autoteka backup
+# или
+sudo ./deploy/backup-deploy.sh [--output-dir=/path]
+```
+
+По умолчанию архив сохраняется в `/root/autoteka-backup-YYYYMMDD-HHMMSS.tar.gz`.
+
+**Restore** восстанавливает файлы из архива:
+
+```bash
+sudo autoteka restore /root/autoteka-backup-20260307-143022.tar.gz
+# или
+sudo ./deploy/restore-deploy.sh <archive> [--dry-run] [--force] [--target-root=/path]
+```
+
+Опции restore:
+
+- `--dry-run` — показать, что будет восстановлено, без записи;
+- `--force` — без интерактивного подтверждения;
+- `--target-root=/path` — путь к репозиторию для `backend/.env` и
+  `frontend/.env` (при переносе на новый сервер с другим путём).
+
+После restore выполняются `systemctl daemon-reload` и перезапуск
+journald, fail2ban, docker, autoteka.service.
+
+**Безопасность:** архив содержит секреты (APP_KEY, TELEGRAM_TOKEN,
+пароли). Храните в защищённом месте, не коммитьте в git, не передавайте
+по незащищённым каналам.

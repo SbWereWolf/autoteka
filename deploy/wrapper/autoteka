@@ -46,6 +46,12 @@ case "$CMD" in
   uninstall)
     exec "$AUTOTEKA_ROOT/deploy/uninstall.sh" "$@"
     ;;
+  backup)
+    exec "$AUTOTEKA_ROOT/deploy/backup-deploy.sh" "$@"
+    ;;
+  restore)
+    exec "$AUTOTEKA_ROOT/deploy/restore-deploy.sh" "$@"
+    ;;
   *)
     cat >&2 <<'USAGE'
 Usage:
@@ -57,6 +63,8 @@ Usage:
   autoteka repair-infra
   autoteka watchdog
   autoteka maintenance
+  autoteka backup [--output-dir=/path]
+  autoteka restore <archive> [--dry-run] [--force] [--target-root=/path]
   autoteka uninstall [soft|purge|nuke] [--force]
 USAGE
     exit 2
