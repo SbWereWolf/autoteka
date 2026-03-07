@@ -21,3 +21,4 @@ playwright-report/
 /tasks/
 /backup/
 !backup/README.md
+/frontend/.env

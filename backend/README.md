@@ -1,6 +1,6 @@
 # Backend Автотеки
 
-**Актуально по коду на 2026-03-06.**
+**Актуально по коду на 2026-03-07.**
 
 Backend реализован на Laravel 12 и используется для:
 
@@ -19,11 +19,17 @@ php artisan migrate
 php artisan db:seed --class=AdminUserSeeder
 php artisan serve
 ```
+## Быстрая проверка гипотез
+
+```shell
+php artisan tinker
+```
+Для работы с БД можно использовать facade Illuminate\Support\Facades\DB
 
 ## Основные URL
 
-- API base: `/api/v1` через production nginx или
-  `VITE_API_BASE_URL` из frontend-конфига
+- API base: `/api/v1` (см. `backend/routes/api.php` и
+  `frontend/.env` с `VITE_API_BASE_URL=/api/v1`)
 - MoonShine login: `http://127.0.0.1:8000/admin/login`
 
 ## Initial admin

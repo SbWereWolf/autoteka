@@ -47,6 +47,7 @@
 ```bash
 cd frontend
 npm i
+cp example.env .env
 npm run dev
 ```
 
@@ -69,6 +70,7 @@ npm run test
 ```bash
 cd backend
 composer install
+cp example.env .env
 php artisan key:generate
 php artisan migrate
 php artisan db:seed --class=AdminUserSeeder
@@ -78,15 +80,17 @@ php artisan serve
 вход в back office MoonShine:
 
 - URL: `/admin/login`
-- Production-значения учётки смотри в [backend/.env](backend/.env) ->
-  `MOONSHINE_ADMIN_*`
+- Локальные значения учётки берутся из `backend/.env` (создаётся из
+  `backend/example.env`) -> `MOONSHINE_ADMIN_*`
 
-## Рабочие env-файлы
+## Шаблоны env и рабочие env-файлы
 
-- `frontend/.env` — runtime-конфиг frontend сборки. Подробности:
+- `frontend/example.env` — шаблон frontend-конфига. Локально:
+  `cp frontend/example.env frontend/.env`. Подробности:
   [ADMIN_MANUAL §6.1](docs/foundations/ADMIN_MANUAL.md),
   [DEPLOY §5](deploy/DEPLOY.md).
-- `backend/.env` — runtime-конфиг Laravel backend. Подробности:
+- `backend/example.env` — шаблон Laravel-конфига. Локально:
+  `cp backend/example.env backend/.env`. Подробности:
   [ADMIN_MANUAL §6.2](docs/foundations/ADMIN_MANUAL.md),
   [DEPLOY §5.3](deploy/DEPLOY.md).
 - `/etc/autoteka/deploy.env` — server-side deployment config для

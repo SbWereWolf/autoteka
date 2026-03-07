@@ -4,11 +4,16 @@
 
 ## Состав
 
-- `commit-with-message.ps1` — helper для создания commit с сообщением (PowerShell).
+- `commit-with-message.ps1` — helper для создания commit с сообщением 
+  (PowerShell).
 - `commit-with-message.sh` — helper для создания commit с сообщением (bash).
-- `read-scripts-env.ps1` — чтение локального `scripts/.env` в key/value-словарь.
-- `resolve-bash-runtime.ps1` — выбор bash-интерпретатора через `scripts/.env` и PATH.
-- `check-bash-runtime.ps1` — проверка запуска bash и синтаксиса `commit-with-message.sh`.
+- `read-scripts-env.ps1` — чтение локального `scripts/.env` в
+  key/value-словарь.
+- `resolve-bash-runtime.ps1` — выбор bash-интерпретатора через
+  `scripts/.env` и PATH.
+- `check-bash-runtime.ps1` — проверка запуска bash и синтаксиса
+  `commit-with-message.sh`.
+- `log-entry.ps1` — запись журнала работ в `logs/` по правилам из `rules/logging-rules.md`.
 - `example.env` — пример формата `scripts/.env`.
 
 Фронтовые `.mjs` утилиты переехали в `frontend/scripts/`.

@@ -1,6 +1,6 @@
 # Руководство администратора
 
-**Дата актуализации: 2026-03-06.**
+**Дата актуализации: 2026-03-07.**
 
 Документ описывает:
 
@@ -195,7 +195,7 @@ public media.
 
 Специальная команда:
 
-- `php artisan app:update-generated-media-paths-to-png`
+- `php artisan autoteka:media:update-generated-paths-to-png`
 
 Она обновляет пути `generated/*.svg` на `generated/*.png` и
 подготавливает mirror-файлы для preview в MoonShine.
