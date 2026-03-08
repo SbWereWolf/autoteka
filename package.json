@@ -7,7 +7,9 @@
     "lint": "bash ./lint/lint.sh -Path . -Mode Warn",
     "lint:strict": "bash ./lint/lint.sh -Path . -Mode Strict",
     "lint:dry": "bash ./lint/lint.sh -Path . -Mode DryRun",
-    "format": "bash ./lint/lint.sh -Path . -Mode Warn"
+    "format": "bash ./lint/lint.sh -Path . -Mode Warn",
+    "test:profile:offline": "npx concurrently -k --names \"system,deploy,frontend-offline,backend-offline\" \"cd system-tests && npm test\" \"cd deploy/tests && npm test\" \"cd frontend && npm run test && npm run test:ui:mock\" \"cd backend && php artisan test && php artisan test --configuration=phpunit.realdb.xml\"",
+    "test:profile:installation-e2e": "npx concurrently -k --names \"system,deploy,frontend-unit,frontend-api-online,frontend-e2e-online,backend,backend-realdb\" \"cd system-tests && npm test\" \"cd deploy/tests && npm test\" \"cd frontend && npm run test\" \"cd frontend && npm run test:api:online\" \"cd frontend && npm run test:e2e\" \"cd backend && php artisan test\" \"cd backend && php artisan test --configuration=phpunit.realdb.xml\""
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

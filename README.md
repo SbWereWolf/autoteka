@@ -28,8 +28,8 @@
 
 ### Использование
 
-- [USER_MANUAL](docs/manual/USER_MANUAL.md) — работа с front
-  office для получения информации картотеки;
+- [USER_MANUAL](docs/manual/USER_MANUAL.md) — работа с front office
+  для получения информации картотеки;
 - [CLERC_MANUAL](docs/manual/CLERC_MANUAL.md) — работа с данными
   картотеки: способы ввода и редактирования (+требования качества);
 
@@ -63,6 +63,9 @@ cd frontend
 npm run build
 npm run preview
 npm run test
+npm run test:api:online
+npm run test:ui:mock   # offline UI на mock-данных
+npm run test:e2e       # online e2e (нужен backend)
 ```
 
 ### Backend и back office
@@ -100,3 +103,22 @@ php artisan serve
   deploy/watchdog/maintenance уведомлений. Подробности:
   [DEPLOY §5.2](deploy/DEPLOY.md),
   [ADMIN_MANUAL §6.3](docs/manual/ADMIN_MANUAL.md).
+
+## Профили тестирования
+
+Из корня монорепозитория доступны два явных профиля:
+
+- `npm run test:profile:offline` — offline-проверки (frontend unit+UI
+  mock, backend phpunit + real-db, system/deploy tests).
+- `npm run test:profile:installation-e2e` — проверка конкретной
+  инсталляции с online API/e2e интеграцией frontend+backend.
+
+Для online-проверок используйте явные переменные окружения:
+
+```bash
+# frontend API integration tests
+API_BASE_URL=http://127.0.0.1/api/v1 npm --prefix frontend run test:api:online
+
+# frontend online e2e
+PLAYWRIGHT_BASE_URL=http://127.0.0.1 npm --prefix frontend run test:e2e
+```

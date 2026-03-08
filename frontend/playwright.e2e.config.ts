@@ -1,8 +1,8 @@
 import { defineConfig } from "@playwright/test";
 
 /**
- * Дефолтный конфиг Playwright: online e2e для установленного контура.
- * Для offline UI на mock-данных используйте playwright.ui-mock.config.ts.
+ * Online e2e: проверка установленного контура frontend+backend.
+ * Тесты НЕ поднимают локальный webServer и НЕ подменяют API моками.
  */
 export default defineConfig({
   testDir: "./e2e",

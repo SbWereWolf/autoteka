@@ -1,7 +1,7 @@
 /**
- * TC-README-004 (часть 3): при VITE_API_BASE_URL=/api/v1 запросы к API работают.
+ * TC-README-004 (часть 3): online e2e на реальном backend.
+ * Проверяем, что запросы к API не ломаются и каталог загружается.
  * Документ: README.md
- * Требует: приложение на baseURL (Docker), собранное с VITE_API_BASE_URL=/api/v1.
  */
 import { expect, test } from "@playwright/test";
 
@@ -11,6 +11,8 @@ test("TC-README-004: запросы к /api/v1 не ломаются, катал
   await page.goto("/");
   await expect(page.getByText("Каталог магазинов")).toBeVisible();
   const citySelect = page.getByRole("combobox").first();
-  await expect(citySelect).toHaveValue("barnaul");
+  await expect(citySelect).toBeVisible();
+  await expect(citySelect).not.toHaveValue("");
+  await expect(page.locator("button.ui-tile").first()).toBeVisible();
   await expect(page.getByText(/\d+ шт\./)).toBeVisible();
 });

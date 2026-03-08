@@ -217,6 +217,77 @@ php artisan migrate
 Если все три команды проходят без ошибок, миграция считается
 корректной.
 
+### 4.6. Проверка real-db API после install и restore
+
+Если установка включала восстановление БД из backup
+(`autoteka restore ...`), после install/restore обязательно запускайте
+полный прогон тестов всех контуров.
+
+Последовательно:
+
+```bash
+cd "$AUTOTEKA_ROOT/system-tests"
+npm test
+cd ../deploy/tests
+npm test
+cd ../../frontend
+npm test
+npm run test:ui:mock
+npm run test:api:online
+npm run test:e2e
+cd ../backend
+php artisan test
+php artisan test --configuration=phpunit.realdb.xml
+```
+
+Параллельно:
+
+```bash
+npx concurrently -k --names "system,deploy,frontend-offline-ui,frontend-api-online,frontend-e2e-online,backend,backend-realdb" \
+"cd system-tests && npm test" \
+"cd deploy/tests && npm test" \
+"cd frontend && npm run test && npm run test:ui:mock" \
+"cd frontend && npm run test:api:online" \
+"cd frontend && npm run test:e2e" \
+"cd backend && php artisan test" \
+"cd backend && php artisan test --configuration=phpunit.realdb.xml"
+```
+
+Явные профили из корня монорепозитория:
+
+```bash
+npm run test:profile:offline
+npm run test:profile:installation-e2e
+```
+
+Где:
+
+- `test:profile:offline` — offline-проверки frontend/backend без
+  требования online backend для UI (используются UI mock-тесты).
+- `test:profile:installation-e2e` — проверка конкретной инсталляции с
+  online API и online e2e интеграцией frontend+backend.
+
+Переменные окружения для online-части проверок:
+
+```bash
+# frontend API integration tests
+cd frontend && API_BASE_URL=http://127.0.0.1/api/v1 npm run test:api:online
+
+# frontend online e2e
+cd frontend && PLAYWRIGHT_BASE_URL=http://127.0.0.1 npm run test:e2e
+```
+
+Через Docker (если backend тесты запускаются в контейнере):
+
+```bash
+docker exec -w /var/www/backend autoteka-php php artisan test
+docker exec -w /var/www/backend autoteka-php php artisan test --configuration=phpunit.realdb.xml
+wait
+```
+
+Запуск real-db через стандартный `phpunit.xml` недопустим: он
+использует `DB_DATABASE=:memory:` и не проверяет рабочую БД.
+
 ## 5. Настройки окружения
 
 ### 5.0. frontend/.env
@@ -782,6 +853,10 @@ tail -n 100 /var/log/autoteka-deploy.log
    `autoteka health-reset all`
 5. Базовый host-level счётчик можно сбросить вручную:
    `echo "0" > /var/lib/server-watchdog.state`
+6. После recovery выполните полный прогон тестов
+   (system/deploy/frontend/backend
+   - backend realdb), предпочтительно параллельно по команде из
+     раздела 4.6.
 
 ### 7.5.2. repair-infra — починка инфраструктуры
 
@@ -1350,6 +1425,45 @@ sudo ./deploy/restore-deploy.sh <archive> [--dry-run] [--force] [--target-root=/
 
 После restore выполняются `systemctl daemon-reload` и перезапуск
 journald, fail2ban, docker, autoteka.service.
+
+После restore из backup БД обязательно выполните полный прогон тестов
+всех контуров:
+
+```bash
+cd "$AUTOTEKA_ROOT/system-tests"
+npm test
+cd ../deploy/tests
+npm test
+cd ../../frontend
+npm test
+npm run test:ui:mock
+npm run test:api:online
+npm run test:e2e
+cd ../backend
+php artisan test
+php artisan test --configuration=phpunit.realdb.xml
+```
+
+Параллельный вариант:
+
+```bash
+npx concurrently -k --names "system,deploy,frontend-offline-ui,frontend-api-online,frontend-e2e-online,backend,backend-realdb" \
+"cd system-tests && npm test" \
+"cd deploy/tests && npm test" \
+"cd frontend && npm run test && npm run test:ui:mock" \
+"cd frontend && npm run test:api:online" \
+"cd frontend && npm run test:e2e" \
+"cd backend && php artisan test" \
+"cd backend && php artisan test --configuration=phpunit.realdb.xml"
+wait
+```
+
+Также можно использовать профили из корня:
+
+```bash
+npm run test:profile:offline
+npm run test:profile:installation-e2e
+```
 
 **Безопасность:** архив содержит секреты (APP_KEY, TELEGRAM_TOKEN,
 пароли). Храните в защищённом месте, не коммитьте в git, не

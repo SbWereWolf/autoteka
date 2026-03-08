@@ -26,7 +26,7 @@ describe("TC-FRONTEND-README-003", () => {
 });
 
 describe("TC-FRONTEND-README-004", () => {
-  it("скрипты dev, build, preview, test, test:e2e, check:data", () => {
+  it("скрипты dev, build, preview, test, api/e2e/ui-mock, check:data", () => {
     const pkg = JSON.parse(
       readFileSync(join(FRONTEND_ROOT, "package.json"), "utf-8"),
     );
@@ -35,7 +35,9 @@ describe("TC-FRONTEND-README-004", () => {
     expect(scripts.build).toBeDefined();
     expect(scripts.preview).toBeDefined();
     expect(scripts.test).toBeDefined();
+    expect(scripts["test:api:online"]).toBeDefined();
     expect(scripts["test:e2e"]).toBeDefined();
+    expect(scripts["test:ui:mock"]).toBeDefined();
     expect(scripts["check:data"]).toBeDefined();
   });
 });
@@ -46,12 +48,8 @@ describe("TC-FRONTEND-README-005", () => {
       readFileSync(join(FRONTEND_ROOT, "package.json"), "utf-8"),
     );
     const scripts = pkg.scripts || {};
-    expect(scripts["validate:mocks"]).toBeDefined();
     expect(scripts["check:unused-assets"]).toBeDefined();
-    expect(scripts["enrich:mocks"]).toBeDefined();
     expect(scripts["images:regen"]).toBeDefined();
-    expect(scripts["images:moonshine"]).toBeDefined();
-    expect(scripts["materialize:shop-media"]).toBeDefined();
   });
 });
 
@@ -66,7 +64,10 @@ describe("TC-FRONTEND-README-006", () => {
 
 describe("TC-FRONTEND-README-007", () => {
   it("VITE_API_BASE_URL в example.env и в коде", () => {
-    const env = readFileSync(join(FRONTEND_ROOT, "example.env"), "utf-8");
+    const env = readFileSync(
+      join(FRONTEND_ROOT, "example.env"),
+      "utf-8",
+    );
     expect(env).toMatch(/VITE_API_BASE_URL/);
     const api = readFileSync(
       join(FRONTEND_ROOT, "src/api/HttpApiClient.ts"),

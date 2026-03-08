@@ -185,8 +185,9 @@
 
 - Утверждение: список проверок раздела 7 исполним: frontend
   (`validate:mocks`, `check:unused-assets`, `check:data`, `test`,
-  `test:e2e`), backend (`artisan test`, `migrate`,
-  `db:seed --class=AdminUserSeeder`), monorepo (`npm run lint`).
+  `test:ui:mock`, `test:api:online`, `test:e2e`), backend
+  (`artisan test`, `migrate`, `db:seed --class=AdminUserSeeder`),
+  monorepo (`npm run lint`).
 - Проверка:
   1. Проверить наличие соответствующих скриптов/команд.
   2. Выполнить их в поддерживаемом окружении.
