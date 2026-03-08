@@ -53,7 +53,7 @@ describe("TC-SCRIPTS-README-009", () => {
 });
 
 describe("TC-SCRIPTS-README-007", () => {
-  it("log-entry.ps1 существует и имеет параметры Type, Message, Platform, Model", () => {
+  it("log-entry.ps1 существует и имеет параметры Type, Message, AISystemName, LLMName", () => {
     expect(existsSync(join(SCRIPTS_DIR, "log-entry.ps1"))).toBe(true);
     const content = readFileSync(join(SCRIPTS_DIR, "log-entry.ps1"), "utf-8");
     expect(content).toMatch(/UserRequest|ProposedPlan|ResultReport/);

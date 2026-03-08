@@ -12,7 +12,7 @@ param(
   [Parameter(Mandatory = $true)]
   [string]$LLMName,
 
-  [string]$LogId
+  [string]$LogFilename
 )
 
 Set-StrictMode -Version Latest
@@ -23,10 +23,6 @@ function Write-Warn {
   [Console]::Error.WriteLine("[warn] $Text")
 }
 
-function Get-LogId {
-  return ([guid]::NewGuid().ToString("N"))
-}
-
 function Get-SectionTitleByType {
   param([Parameter(Mandatory = $true)][string]$EntryType)
 
@@ -35,62 +31,6 @@ function Get-SectionTitleByType {
     "ProposedPlan" { return "Предложенный план" }
     "ResultReport" { return "Доклад" }
     default { return "Запись" }
-  }
-}
-
-function Read-Index {
-  param([Parameter(Mandatory = $true)][string]$IndexPath)
-
-  $map = [ordered]@{}
-
-  if (-not (Test-Path -LiteralPath $IndexPath)) {
-    return $map
-  }
-
-  try {
-    foreach ($line in (Get-Content -LiteralPath $IndexPath -Encoding utf8)) {
-      if ([string]::IsNullOrWhiteSpace($line)) {
-        continue
-      }
-
-      $eqIdx = $line.IndexOf("=")
-      if ($eqIdx -lt 1) {
-        continue
-      }
-
-      $key = $line.Substring(0, $eqIdx).Trim()
-      $value = $line.Substring($eqIdx + 1)
-      if ([string]::IsNullOrWhiteSpace($key)) {
-        continue
-      }
-
-      $map[$key] = $value
-    }
-  }
-  catch {
-    Write-Warn "Не удалось прочитать индекс ${IndexPath}: $($_.Exception.Message)"
-  }
-
-  return $map
-}
-
-function Write-Index {
-  param(
-    [Parameter(Mandatory = $true)][string]$IndexPath,
-    [Parameter(Mandatory = $true)][hashtable]$Map
-  )
-
-  try {
-    $lines = New-Object System.Collections.Generic.List[string]
-    foreach ($k in $Map.Keys) {
-      $lines.Add("$k=$($Map[$k])")
-    }
-
-    $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
-    [System.IO.File]::WriteAllLines($IndexPath, $lines, $utf8NoBom)
-  }
-  catch {
-    Write-Warn "Не удалось записать индекс ${IndexPath}: $($_.Exception.Message)"
   }
 }
 
@@ -110,6 +50,26 @@ function Get-LogFileName {
   } while (Test-Path -LiteralPath $candidate)
 
   return $name
+}
+
+function Get-DateFromLogFilename {
+  param(
+    [Parameter(Mandatory = $true)][string]$FileName,
+    [Parameter(Mandatory = $true)][datetime]$FallbackDate
+  )
+
+  if ($FileName -match '^(?<UnixTs>\d+)') {
+    try {
+      $unix = [int64]$matches.UnixTs
+      $utcDate = [DateTimeOffset]::FromUnixTimeSeconds($unix).UtcDateTime
+      return $utcDate.ToLocalTime()
+    }
+    catch {
+      return $FallbackDate
+    }
+  }
+
+  return $FallbackDate
 }
 
 function Get-DailyLogDirectory {
@@ -190,8 +150,7 @@ function Invoke-LogLint {
 
 $repoRoot = (Get-Location).Path
 $logsRoot = Join-Path $repoRoot "logs"
-$indexPath = Join-Path $logsRoot "log-index.map"
-$currentLogId = $LogId
+$currentLogFilename = $LogFilename
 $targetFile = $null
 
 try {
@@ -201,42 +160,47 @@ catch {
   Write-Warn "Не удалось создать корневой каталог логов ${logsRoot}: $($_.Exception.Message)"
 }
 
-$index = Read-Index -IndexPath $indexPath
-
-if ([string]::IsNullOrWhiteSpace($currentLogId)) {
-  $currentLogId = Get-LogId
-
+if ([string]::IsNullOrWhiteSpace($currentLogFilename)) {
   $now = Get-Date
   $dailyDir = Get-DailyLogDirectory -LogsRoot $logsRoot -Now $now
   try {
     New-Item -ItemType Directory -Path $dailyDir -Force | Out-Null
-    $fileName = Get-LogFileName -AISystemName $AISystemName -LLMName $LLMName -DirectoryPath $dailyDir
-    $targetFile = Join-Path $dailyDir $fileName
+    $currentLogFilename = Get-LogFileName -AISystemName $AISystemName -LLMName $LLMName -DirectoryPath $dailyDir
+    $targetFile = Join-Path $dailyDir $currentLogFilename
 
     if (-not (Test-Path -LiteralPath $targetFile)) {
       New-Item -ItemType File -Path $targetFile -Force | Out-Null
     }
-
-    $relativeFromRepo = [System.IO.Path]::GetRelativePath($repoRoot, $targetFile)
-    $index[$currentLogId] = $relativeFromRepo
-    Write-Index -IndexPath $indexPath -Map $index
   }
   catch {
     Write-Warn "Не удалось создать новый log-файл: $($_.Exception.Message)"
   }
 }
 else {
-  if ($index.Contains($currentLogId)) {
-    $savedPath = [string]$index[$currentLogId]
-    if ([System.IO.Path]::IsPathRooted($savedPath)) {
-      $targetFile = $savedPath
-    }
-    else {
-      $targetFile = Join-Path $repoRoot $savedPath
-    }
+  $currentLogFilename = [System.IO.Path]::GetFileName($currentLogFilename)
+
+  if ([string]::IsNullOrWhiteSpace($currentLogFilename)) {
+    $now = Get-Date
+    $dailyDir = Get-DailyLogDirectory -LogsRoot $logsRoot -Now $now
+    $currentLogFilename = Get-LogFileName -AISystemName $AISystemName -LLMName $LLMName -DirectoryPath $dailyDir
+    $targetFile = Join-Path $dailyDir $currentLogFilename
   }
   else {
-    Write-Warn "log_id не найден в индексе: $currentLogId"
+    $nowForLog = Get-Date
+    $targetDate = Get-DateFromLogFilename -FileName $currentLogFilename -FallbackDate $nowForLog
+    $targetDir = Get-DailyLogDirectory -LogsRoot $logsRoot -Now $targetDate
+
+    try {
+      New-Item -ItemType Directory -Path $targetDir -Force | Out-Null
+      $targetFile = Join-Path $targetDir $currentLogFilename
+
+      if (-not (Test-Path -LiteralPath $targetFile)) {
+        New-Item -ItemType File -Path $targetFile -Force | Out-Null
+      }
+    }
+    catch {
+      Write-Warn "Не удалось создать log-файл по имени ${currentLogFilename}: $($_.Exception.Message)"
+    }
   }
 }
 
@@ -245,14 +209,7 @@ if (-not [string]::IsNullOrWhiteSpace($targetFile)) {
   $section = Get-SectionTitleByType -EntryType $Type
   Add-Entry -FilePath $targetFile -Section $section -Body $Message
   Invoke-LogLint -RepoRoot $repoRoot -FilePath $targetFile
-
-  if ($Type -eq "ResultReport") {
-    if ($index.Contains($currentLogId)) {
-      $index.Remove($currentLogId)
-      Write-Index -IndexPath $indexPath -Map $index
-    }
-  }
 }
 
-Write-Output $currentLogId
+Write-Output $currentLogFilename
 exit 0
