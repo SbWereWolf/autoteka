@@ -7,7 +7,15 @@ scripts/.env
 /frontend/dist/
 /deploy/metrics/data.json
 /frontend/.env
+/PLAN.md
+/TODO.md
+/DECISIONS.md
+/EVIDENCE.md
 /tasks/
 /backup/
 !backup/README.md
 /frontend/test-results/
+/DECISIONS.md
+/EVIDENCE.md
+/PLAN.md
+/TODO.md
