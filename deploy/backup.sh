@@ -3,8 +3,7 @@ set -euo pipefail
 
 # Backup deploy settings: env, systemd, docker, fail2ban, logrotate.
 # Creates tar.gz archive with deploy configuration affecting app and Docker services.
-#
-# Usage: sudo ./deploy/backup.sh [--output-dir=/path]
+# Runtime health incident state is intentionally NOT included.
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck disable=SC1090
@@ -16,10 +15,29 @@ OUTPUT_DIR="/root"
 usage() {
   cat <<'USAGE'
 Usage:
-  sudo ./deploy/backup.sh [--output-dir=/path]
+  sudo ./deploy/backup.sh [--output-dir=PATH]
+
+Purpose:
+  Create a backup archive with deploy-time configuration and secrets needed to
+  restore autoteka deployment settings on the same or another host.
+
+Included in backup:
+  - /etc/autoteka/deploy.env
+  - /etc/autoteka/telegram.env
+  - backend/.env and frontend/.env from AUTOTEKA_ROOT
+  - systemd units installed by deploy/install.sh
+  - docker/journald/fail2ban/logrotate configuration managed by this project
+
+Explicitly NOT included:
+  - active watchdog/health incident state in /var/lib/server-watchdog*
+  - Telegram notification dedup locks in ${TMPDIR:-/tmp}/autoteka-telegram-locks
+  - Docker images, volumes, bind-mounted runtime data, database contents
+  - application logs and temporary files
 
 Options:
-  --output-dir=PATH  Directory for backup archive (default: /root)
+  --output-dir=PATH   Directory where the .tar.gz archive will be created.
+                      Default: /root
+  -h, --help          Show this help.
 USAGE
 }
 
@@ -117,6 +135,18 @@ copy_if_exists /etc/logrotate.d/server-watchdog \
 copy_if_exists /etc/logrotate.d/autoteka-telegram \
   "$BACKUP_ROOT/etc/logrotate.d/autoteka-telegram" || true
 
+Path="$BACKUP_ROOT/BACKUP_NOTES.txt"
+cat > "$Path" <<NOTES
+Autoteka deploy backup created at: $(date -Is)
+AUTOTEKA_ROOT snapshot source: $AUTOTEKA_ROOT
+
+This archive contains deploy-time configuration only.
+It intentionally does NOT include runtime watchdog/health incident state,
+Telegram deduplication locks, logs, Docker images, volumes, or application data.
+
+After restore, restart monitoring from a clean state.
+NOTES
+
 # Create archive
 mkdir -p "$OUTPUT_DIR"
 ARCHIVE="$OUTPUT_DIR/${BACKUP_NAME}.tar.gz"
@@ -126,4 +156,4 @@ tar -czf "$ARCHIVE" -C "$TMP_DIR" "$BACKUP_NAME"
 echo
 echo "Backup created: $ARCHIVE"
 echo "WARNING: Archive contains secrets. Store securely, do not commit to git."
-
+echo "NOTE: Runtime health incident state is intentionally excluded."

@@ -250,9 +250,16 @@ public media.
 - `watch-changes.sh` — git polling, update рабочей копии и запуск
   rollout;
 - `deploy.sh` — ручной rollout текущего `HEAD`;
-- `repair-runtime.sh` — восстановление PHP runtime и smoke-check;
-- `repair-infra.sh` — восстановление таймеров и счётчика watchdog;
-- `server-watchdog.sh` — self-healing и экспорт метрик;
+- `repair-runtime.sh` — ручное восстановление runtime и smoke-check
+  `/up`, `/api/v1/category-list`, `/admin/login`;
+- `repair-health.sh` — точечная автопочинка health-domain (`nginx`,
+  `php`, `backend`, `admin`);
+- `health-reset.sh` — ручной сброс active incident state и Telegram
+  dedup lock'ов по домену;
+- `repair-infra.sh` — восстановление таймеров и базового состояния
+  watchdog;
+- `server-watchdog.sh` — healthcheck системы, bounded auto-remediation
+  и экспорт метрик;
 - `metrics-export.sh` — преобразование логов метрик в JSON;
 - `server-maintenance.sh` — ежедневное безопасное техобслуживание;
 - `backup.sh` — резервное копирование deploy-настроек (env, systemd,
@@ -298,3 +305,88 @@ public media.
 2. проверить `docker compose ps`;
 3. проверить логи deploy/watchdog/maintenance;
 4. проверить `/metrics`.
+
+## 10. Healthcheck и диагностика
+
+### 10.1. Набор проверок
+
+Система использует пять health-domain:
+
+- `nginx` — docker healthcheck контейнера `web` через
+  `GET /healthcheck`;
+- `php` — docker healthcheck контейнера `php` через FPM
+  `ping.path=/fpm-ping`;
+- `backend` — `GET /up`;
+- `admin` — `GET /admin/login`;
+- `api` — `GET /api/v1/category-list`.
+
+Порядок проверки и реакции иерархический:
+
+1. `nginx`
+2. `php`
+3. `backend`
+4. `admin` и `api` (независимо друг от друга, только если `backend`
+   healthy)
+
+### 10.2. Как реагирует watchdog
+
+Для `nginx`, `php`, `backend`, `admin`:
+
+- первая неуспешная проверка → `DEGRADED`, отправляется alert;
+- вторая подряд неуспешная → запускается автопочинка;
+- если автопочинка не помогла → ставится cooldown;
+- после cooldown делается ещё одна и последняя попытка;
+- если и она не помогла → домен переводится в `manual_required`, новых
+  авто-починок нет.
+
+Для `api` автопочинка не выполняется: после повторного сбоя watchdog
+только фиксирует `MANUAL_REQUIRED`.
+
+### 10.3. Что делать руками
+
+Проверить текущее состояние:
+
+```bash
+autoteka watchdog --dry-run
+autoteka repair-runtime --dry-run
+```
+
+Сбросить только один инцидент без лечения:
+
+```bash
+autoteka health-reset admin
+```
+
+Сбросить все активные health incidents:
+
+```bash
+autoteka health-reset all
+```
+
+После ручной починки обычно ничего сбрасывать не нужно: если проверка
+снова стала green, `server-watchdog` сам удалит state и lock-файлы
+этого домена и отправит сообщение `...RECOVERED`.
+
+### 10.4. Локальные файлы состояния
+
+Watchdog хранит active incident state в каталоге:
+
+```text
+/var/lib/server-watchdog/health/
+```
+
+Для каждого домена используются файлы вида:
+
+- `nginx.fail_count`
+- `nginx.phase`
+- `nginx.cooldown_until`
+- `nginx.repair_attempts`
+- `nginx.active_since`
+
+Telegram dedup lock'и хранятся отдельно в:
+
+```text
+/tmp/autoteka-telegram-locks/
+```
+
+Состояние одного домена не должно очищать lock'и соседнего домена.

@@ -2,6 +2,7 @@ FROM php:8.2-fpm-alpine
 
 RUN apk add --no-cache \
     bash \
+    fcgi \
     git \
     unzip \
     sqlite \
@@ -16,6 +17,7 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www/backend
 
+COPY deploy/php/zz-healthcheck.conf /usr/local/etc/php-fpm.d/zz-healthcheck.conf
 COPY deploy/php/entrypoint.sh /usr/local/bin/backend-entrypoint
 RUN chmod +x /usr/local/bin/backend-entrypoint
 

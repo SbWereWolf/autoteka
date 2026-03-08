@@ -683,9 +683,70 @@ smoke-check `GET /admin/login`.
 
 Watchdog умеет:
 
-- перезапустить контейнер;
-- перезапустить compose unit;
-- выполнить reboot с cooldown.
+- выполнять docker liveness checks для `nginx` и `php`;
+- выполнять software checks для `/up`, `/api/v1/category-list`,
+  `/admin/login`;
+- запускать bounded auto-remediation без бесконечного цикла
+  перезапусков;
+- сохранять per-domain state (`fail_count`, `phase`, `cooldown_until`,
+  `repair_attempts`);
+- перезапустить compose unit и выполнить reboot с cooldown для
+  host-level аварий.
+
+### 7.3.1. Матрица healthcheck
+
+| Домен     | Что проверяется                                 | Чем лечится автоматически        | Команда для ручной работы         |
+| --------- | ----------------------------------------------- | -------------------------------- | --------------------------------- |
+| `nginx`   | docker health `web` → `GET /healthcheck`        | `autoteka repair-health nginx`   | `autoteka repair-health nginx`    |
+| `php`     | docker health `php` → FPM `ping.path=/fpm-ping` | `autoteka repair-health php`     | `autoteka repair-health php`      |
+| `backend` | `GET /up`                                       | `autoteka repair-health backend` | `autoteka repair-runtime`         |
+| `admin`   | `GET /admin/login`                              | `autoteka repair-health admin`   | `autoteka repair-runtime`         |
+| `api`     | `GET /api/v1/category-list`                     | не лечится автоматически         | разбирать endpoint/данные вручную |
+
+Порядок проверки: `nginx` → `php` → `backend` → (`admin`, `api`). Если
+верхний слой красный, нижний слой не переводится в новый инцидент в
+этот цикл.
+
+### 7.3.2. Фазы инцидента
+
+Для доменов `nginx`, `php`, `backend`, `admin` используется одна
+схема:
+
+1. первая неудачная проверка → `DEGRADED`;
+2. вторая подряд → первая попытка auto-repair;
+3. если repair не помог → `REPAIR_FAILED` и cooldown;
+4. после cooldown → последняя попытка auto-repair;
+5. если снова не помогло → `MANUAL_REQUIRED`, автопочинка больше не
+   запускается.
+
+Для `api` автопочинка не делается: watchdog только шлёт alert и ждёт
+восстановления вручную.
+
+### 7.3.3. Ручные команды
+
+Проверить, что бы сделал watchdog, не меняя состояние:
+
+```bash
+autoteka watchdog --dry-run
+```
+
+Проверить тяжёлый runtime repair без изменений:
+
+```bash
+autoteka repair-runtime --dry-run
+```
+
+Сбросить state и lock'и только одного домена:
+
+```bash
+autoteka health-reset backend
+```
+
+Сбросить все health incidents:
+
+```bash
+autoteka health-reset all
+```
 
 ### 7.4. Не работает автодеплой
 
@@ -717,7 +778,10 @@ tail -n 100 /var/log/autoteka-deploy.log
 2. Запустите `autoteka repair-infra` — включает таймеры и сбрасывает
    счётчик
 3. Или `autoteka repair-runtime` — если нужно восстановить runtime
-4. Или сбросьте вручную: `echo "0" > /var/lib/server-watchdog.state`
+4. Или сбросьте только health incidents через
+   `autoteka health-reset all`
+5. Базовый host-level счётчик можно сбросить вручную:
+   `echo "0" > /var/lib/server-watchdog.state`
 
 ### 7.5.2. repair-infra — починка инфраструктуры
 
@@ -940,6 +1004,38 @@ sudo autoteka repair-infra
   `/var/log/autoteka-telegram.log`.
 - Исправление: исправить права/путь; событие не блокирует watchdog и
   не требует очистки lock-файлов.
+
+#### Watchdog health domains
+
+Префиксы reason code формируются по домену, например:
+
+- `WATCHDOG_NGINX_DEGRADED`
+- `WATCHDOG_NGINX_AUTO_REPAIR_STARTED`
+- `WATCHDOG_NGINX_REPAIR_FAILED`
+- `WATCHDOG_NGINX_REPAIR_SKIPPED`
+- `WATCHDOG_NGINX_MANUAL_REQUIRED`
+- `WATCHDOG_NGINX_AUTO_RECOVERED`
+- `WATCHDOG_NGINX_RECOVERED`
+
+Аналогично для доменов `PHP`, `BACKEND`, `ADMIN`, `API`.
+
+Смысл событий:
+
+- `DEGRADED` — первая провальная проверка, создан active incident;
+- `AUTO_REPAIR_STARTED` — watchdog запустил bounded auto-remediation;
+- `REPAIR_FAILED` — repair не помог, включён cooldown;
+- `REPAIR_SKIPPED` — домен всё ещё болеет, повторная попытка отложена
+  до конца cooldown;
+- `MANUAL_REQUIRED` — лимит авто-починок исчерпан, дальше только
+  ручная диагностика;
+- `AUTO_RECOVERED` — домен восстановился после автоматического
+  лечения;
+- `RECOVERED` — домен снова healthy после ручной починки или
+  естественного восстановления.
+
+Lock-файлы Telegram дедупликации создаются адресно по reason code и
+очищаются только при recovery того же домена или через
+`autoteka health-reset`.
 
 #### Maintenance
 

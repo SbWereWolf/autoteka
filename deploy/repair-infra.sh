@@ -22,7 +22,7 @@ systemctl enable --now server-maintenance.timer
 systemctl enable --now watch-changes.timer
 
 # Счётчик watchdog — сброс
-mkdir -p /var/lib
+mkdir -p /var/lib /var/lib/server-watchdog/health
 echo "0" > /var/lib/server-watchdog.state
 
 # Проверка docker.service

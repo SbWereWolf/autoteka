@@ -76,7 +76,9 @@ APP_STATE=(
   /var/lib/vue-app-last-good
   /var/lib/server-watchdog.state
   /var/lib/server-watchdog.reboot
+  /var/lib/server-watchdog
   /var/lock/autoteka-deploy.lock
+  /var/lock/autoteka-server-watchdog.lock
 )
 
 SYSTEM_FILES=(
