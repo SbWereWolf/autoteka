@@ -38,7 +38,7 @@
 </template>
 
 <script setup lang="ts">
-import themeList from "../mocks/theme-list.json";
+import { themeList } from "../config/themeList";
 import { state, setTheme } from "../state";
 
 const themes = themeList;

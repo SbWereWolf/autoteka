@@ -1,5 +1,5 @@
 import { computed, reactive } from "vue";
-import themeList from "./mocks/theme-list.json";
+import { themeList } from "./config/themeList";
 import type { Category, City, Feature } from "./types";
 import { loadLocal, saveLocal } from "./utils/storage";
 
@@ -37,9 +37,7 @@ export const state = reactive<AppState>({
   features: [],
 });
 
-function stableSort<T extends { sort: number }>(
-  items: T[],
-): T[] {
+function stableSort<T extends { sort: number }>(items: T[]): T[] {
   const keyOf = (item: T) =>
     typeof item === "object" &&
     item !== null &&
@@ -54,7 +52,8 @@ function stableSort<T extends { sort: number }>(
         : "";
 
   return [...items].sort(
-    (a, b) => a.sort - b.sort || keyOf(a).localeCompare(keyOf(b), "ru"),
+    (a, b) =>
+      a.sort - b.sort || keyOf(a).localeCompare(keyOf(b), "ru"),
   );
 }
 
@@ -82,8 +81,12 @@ export function initState(params: {
   state.features = stableSort(params.features);
 
   const citySet = new Set(state.cities.map((city) => city.code));
-  const categorySet = new Set(state.categories.map((category) => category.id));
-  const featureSet = new Set(state.features.map((feature) => feature.id));
+  const categorySet = new Set(
+    state.categories.map((category) => category.id),
+  );
+  const featureSet = new Set(
+    state.features.map((feature) => feature.id),
+  );
   const themeSet = new Set(themeList.map((theme) => theme.id));
 
   const fallbackCityCode = state.cities[0]?.code ?? "";
