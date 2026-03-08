@@ -43,10 +43,10 @@
 7. давать финальный ответ только после обязательных проверок.
 8. Прочитай файлы (если файлов нет, то создай их)
 
-- [PLAN.md](PLAN.md),
-- [TODO.md](TODO.md),
-- [DECISIONS.md](DECISIONS.md),
-- [EVIDENCE.md](EVIDENCE.md)
+- [PLAN.md](operational/PLAN.md),
+- [TODO.md](operational/TODO.md),
+- [DECISIONS.md](operational/DECISIONS.md),
+- [EVIDENCE.md](operational/EVIDENCE.md)
 
 1. После каждого завершенного шага обнови соответствующий файл
 2. В ответе возвращай только:
