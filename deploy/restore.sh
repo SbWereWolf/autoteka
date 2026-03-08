@@ -3,7 +3,7 @@ set -euo pipefail
 
 # Restore deploy settings from backup archive.
 #
-# Usage: sudo ./deploy/restore-deploy.sh <archive> [--dry-run] [--force] [--target-root=/path]
+# Usage: sudo ./deploy/restore.sh <archive> [--dry-run] [--force] [--target-root=/path]
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
@@ -16,7 +16,7 @@ ARCHIVE=""
 usage() {
   cat <<'USAGE'
 Usage:
-  sudo ./deploy/restore-deploy.sh <archive> [--dry-run] [--force] [--target-root=/path]
+  sudo ./deploy/restore.sh <archive> [--dry-run] [--force] [--target-root=/path]
 
 Options:
   --dry-run       Show what would be restored, do not write files
@@ -204,7 +204,7 @@ restore_file_private "$BACKUP_ROOT/project/backend/.env" "$TARGET_ROOT/backend/.
 restore_file_private "$BACKUP_ROOT/project/frontend/.env" "$TARGET_ROOT/frontend/.env"
 
 say "Restoring systemd units..."
-for u in autoteka.service autoteka-deploy.service autoteka-deploy.timer \
+for u in autoteka.service watch-changes.service watch-changes.timer \
   server-watchdog.service server-watchdog.timer \
   server-maintenance.service server-maintenance.timer; do
   restore_file "$BACKUP_ROOT/etc/systemd/system/$u" "/etc/systemd/system/$u"

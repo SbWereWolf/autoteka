@@ -42,15 +42,15 @@ case "$CMD" in
     ;;
   maintenance)
     exec "$AUTOTEKA_ROOT/deploy/server-maintenance.sh" "$@"
-    ;;
+  ;;
   uninstall)
     exec "$AUTOTEKA_ROOT/deploy/uninstall.sh" "$@"
     ;;
   backup)
-    exec "$AUTOTEKA_ROOT/deploy/backup-deploy.sh" "$@"
+    exec "$AUTOTEKA_ROOT/deploy/backup.sh" "$@"
     ;;
   restore)
-    exec "$AUTOTEKA_ROOT/deploy/restore-deploy.sh" "$@"
+    exec "$AUTOTEKA_ROOT/deploy/restore.sh" "$@"
     ;;
   *)
     cat >&2 <<'USAGE'

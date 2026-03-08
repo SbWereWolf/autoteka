@@ -47,8 +47,8 @@ chmod +x \
   "$SCRIPT_DIR/server-watchdog.sh" \
   "$SCRIPT_DIR/server-maintenance.sh" \
   "$SCRIPT_DIR/metrics-export.sh" \
-  "$SCRIPT_DIR/backup-deploy.sh" \
-  "$SCRIPT_DIR/restore-deploy.sh" \
+  "$SCRIPT_DIR/backup.sh" \
+  "$SCRIPT_DIR/restore.sh" \
   "$SCRIPT_DIR/uninstall.sh" \
   2>/dev/null || true
 
@@ -128,8 +128,8 @@ rm -f \
 
 # systemd units
 install -m 0644 "$SCRIPT_DIR/systemd/autoteka.service" /etc/systemd/system/autoteka.service
-install -m 0644 "$SCRIPT_DIR/systemd/autoteka-deploy.service" /etc/systemd/system/autoteka-deploy.service
-install -m 0644 "$SCRIPT_DIR/systemd/autoteka-deploy.timer" /etc/systemd/system/autoteka-deploy.timer
+install -m 0644 "$SCRIPT_DIR/systemd/watch-changes.service" /etc/systemd/system/watch-changes.service
+install -m 0644 "$SCRIPT_DIR/systemd/watch-changes.timer" /etc/systemd/system/watch-changes.timer
 install -m 0644 "$SCRIPT_DIR/systemd/server-watchdog.service" /etc/systemd/system/server-watchdog.service
 install -m 0644 "$SCRIPT_DIR/systemd/server-watchdog.timer" /etc/systemd/system/server-watchdog.timer
 install -m 0644 "$SCRIPT_DIR/systemd/server-maintenance.service" /etc/systemd/system/server-maintenance.service
@@ -153,7 +153,7 @@ systemctl enable --now autoteka.service
 compose up -d --build --remove-orphans php
 wait_for_php_exec_ready "${PHP_READY_TIMEOUT:-60}"
 prepare_laravel_runtime
-systemctl enable --now autoteka-deploy.timer
+systemctl enable --now watch-changes.timer
 systemctl enable --now server-watchdog.timer
 systemctl enable --now server-maintenance.timer
 

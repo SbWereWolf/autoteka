@@ -4,7 +4,7 @@ set -euo pipefail
 # Backup deploy settings: env, systemd, docker, fail2ban, logrotate.
 # Creates tar.gz archive with deploy configuration affecting app and Docker services.
 #
-# Usage: sudo ./deploy/backup-deploy.sh [--output-dir=/path]
+# Usage: sudo ./deploy/backup.sh [--output-dir=/path]
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck disable=SC1090
@@ -16,7 +16,7 @@ OUTPUT_DIR="/root"
 usage() {
   cat <<'USAGE'
 Usage:
-  sudo ./deploy/backup-deploy.sh [--output-dir=/path]
+  sudo ./deploy/backup.sh [--output-dir=/path]
 
 Options:
   --output-dir=PATH  Directory for backup archive (default: /root)
@@ -88,7 +88,7 @@ copy_if_exists "$AUTOTEKA_ROOT/backend/.env" "$BACKUP_ROOT/project/backend/.env"
 copy_if_exists "$AUTOTEKA_ROOT/frontend/.env" "$BACKUP_ROOT/project/frontend/.env" || true
 
 # systemd units
-for u in autoteka.service autoteka-deploy.service autoteka-deploy.timer \
+for u in autoteka.service watch-changes.service watch-changes.timer \
   server-watchdog.service server-watchdog.timer \
   server-maintenance.service server-maintenance.timer; do
   copy_if_exists "/etc/systemd/system/$u" "$BACKUP_ROOT/etc/systemd/system/$u" || true
@@ -126,3 +126,4 @@ tar -czf "$ARCHIVE" -C "$TMP_DIR" "$BACKUP_NAME"
 echo
 echo "Backup created: $ARCHIVE"
 echo "WARNING: Archive contains secrets. Store securely, do not commit to git."
+

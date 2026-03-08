@@ -11,8 +11,8 @@
 
 ### TC-DEPLOY-001
 
-- Утверждение: deployment-контур использует `docker compose`, контейнеры
-  `web` и `php`.
+- Утверждение: deployment-контур использует `docker compose`,
+  контейнеры `web` и `php`.
 - Проверка:
   1. Проверить `deploy/docker-compose.yml`.
   2. Убедиться, что сервисы `web` и `php` объявлены.
@@ -39,7 +39,8 @@
   `git stash push --include-untracked` и пишет stash-id в deploy log.
 - Проверка:
   1. Смоделировать локальные изменения перед запуском watcher.
-  2. Проверить появление stash и запись в `/var/log/autoteka-deploy.log`.
+  2. Проверить появление stash и запись в
+     `/var/log/autoteka-deploy.log`.
 - Ожидаемый результат:
   - stash создаётся;
   - в deploy log есть статус `git stash` и идентификатор stash.
@@ -53,7 +54,8 @@
 - Проверка:
   1. Проанализировать `deploy/deploy.sh`.
   2. Проверить отсутствие `git fetch` и `git reset` в скрипте.
-- Ожидаемый результат: `deploy.sh` не делает повторную git-синхронизацию.
+- Ожидаемый результат: `deploy.sh` не делает повторную
+  git-синхронизацию.
 - Тип: automated
 - Каталог тестов: `deploy/tests`
 
@@ -89,8 +91,8 @@
 - Проверка:
   1. Проверить чтение переменных в deploy wrapper/скриптах.
   2. Проверить реакцию системы на изменение значений.
-- Ожидаемый результат:
-  переменные подхватываются и влияют на поведение деплоя.
+- Ожидаемый результат: переменные подхватываются и влияют на поведение
+  деплоя.
 - Тип: automated
 - Каталог тестов: `deploy/tests`
 
@@ -107,25 +109,26 @@
 
 ### TC-DEPLOY-009
 
-- Утверждение: `install.sh` устанавливает пакеты, Docker, unit'ы, timer'ы,
-  logrotate и готовит `/etc/autoteka/*.env`.
+- Утверждение: `install.sh` устанавливает пакеты, Docker, unit'ы,
+  timer'ы, logrotate и готовит `/etc/autoteka/*.env`.
 - Проверка:
   1. Проверить шаги в `deploy/install.sh`.
   2. Выполнить установку в чистом стенде.
   3. Проверить наличие заявленных артефактов.
-- Ожидаемый результат:
-  после install присутствуют пакеты, unit'ы/timer'ы, env и logrotate.
+- Ожидаемый результат: после install присутствуют пакеты,
+  unit'ы/timer'ы, env и logrotate.
 - Тип: automated
 - Каталог тестов: `deploy/tests`
 
 ### TC-DEPLOY-010
 
 - Утверждение: после bootstrap проверка состояния включает
-  `autoteka.service`, `autoteka-deploy.timer`,
-  `server-watchdog.timer`, `server-maintenance.timer` и compose `ps`.
-- Проверка: выполнить команды статуса из документа и валидировать output.
-- Ожидаемый результат:
-  все сервисы и timer'ы активны, compose-контур в рабочем состоянии.
+  `autoteka.service`, `watch-changes.timer`, `server-watchdog.timer`,
+  `server-maintenance.timer` и compose `ps`.
+- Проверка: выполнить команды статуса из документа и валидировать
+  output.
+- Ожидаемый результат: все сервисы и timer'ы активны, compose-контур в
+  рабочем состоянии.
 - Тип: automated
 - Каталог тестов: `deploy/tests`
 
@@ -147,47 +150,44 @@
 - Проверка:
   1. Проверить значение в production env-конфиге frontend.
   2. Проверить успешные запросы frontend к `/api/v1/*`.
-- Ожидаемый результат:
-  frontend работает через same-origin API-префикс `/api/v1`.
+- Ожидаемый результат: frontend работает через same-origin API-префикс
+  `/api/v1`.
 - Тип: automated
 - Каталог тестов: `system-tests`
 
 ### TC-DEPLOY-013
 
-- Утверждение: writable runtime paths Laravel:
-  `backend/database`, `backend/storage`, `backend/bootstrap/cache`.
+- Утверждение: writable runtime paths Laravel: `backend/database`,
+  `backend/storage`, `backend/bootstrap/cache`.
 - Проверка:
   1. Проверить права на host и внутри контейнера `php`.
   2. Запустить проверку записи SQLite/session/cache.
-- Ожидаемый результат:
-  каталоги доступны для записи Laravel runtime.
+- Ожидаемый результат: каталоги доступны для записи Laravel runtime.
 - Тип: automated
 - Каталог тестов: `deploy/tests` + `backend/tests`
 
 ### TC-DEPLOY-014
 
 - Утверждение: `/metrics/data.json` формируется из
-  `/var/log/server-metrics.log` и содержит `timestamp`, `load`,
-  `ram`, `health`.
+  `/var/log/server-metrics.log` и содержит `timestamp`, `load`, `ram`,
+  `health`.
 - Проверка:
   1. Запустить `server-watchdog.sh` + `metrics-export.sh`.
   2. Проверить файл `deploy/metrics/data.json`.
   3. Проверить доступность `GET /metrics/data.json`.
-- Ожидаемый результат:
-  JSON обновляется и содержит обязательные поля.
+- Ожидаемый результат: JSON обновляется и содержит обязательные поля.
 - Тип: automated
 - Каталог тестов: `deploy/tests` + `system-tests`
 
 ### TC-DEPLOY-015
 
-- Утверждение: public media `/storage/*` должны отдаваться как статика,
-  а не через SPA fallback.
+- Утверждение: public media `/storage/*` должны отдаваться как
+  статика, а не через SPA fallback.
 - Проверка:
   1. Запросить существующий файл `/storage/...`.
   2. Проверить `content-type` и тело ответа.
   3. Убедиться, что не возвращается `index.html`.
-- Ожидаемый результат:
-  `/storage/*` отдаётся как статический контент.
+- Ожидаемый результат: `/storage/*` отдаётся как статический контент.
 - Тип: automated
 - Каталог тестов: `system-tests`
 
@@ -200,20 +200,18 @@
   1. Смоделировать повторяющуюся ошибку с одинаковым code.
   2. Проверить создание lock-файла через `touch`.
   3. Проверить, что второе сообщение не отправляется.
-- Ожидаемый результат:
-  антиспам работает согласно описанию.
+- Ожидаемый результат: антиспам работает согласно описанию.
 - Тип: automated
 - Каталог тестов: `deploy/tests`
 
 ### TC-DEPLOY-017
 
-- Утверждение: success deploy (`DEPLOY_SUCCESS`)
-  отправляет сообщение с hash и `subject` раскатанного commit.
+- Утверждение: success deploy (`DEPLOY_SUCCESS`) отправляет сообщение
+  с hash и `subject` раскатанного commit.
 - Проверка:
   1. Выполнить успешный deploy.
   2. Проверить payload сообщения и записи в telegram log.
-- Ожидаемый результат:
-  success-уведомление содержит hash и `subject`.
+- Ожидаемый результат: success-уведомление содержит hash и `subject`.
 - Тип: automated
 - Каталог тестов: `deploy/tests`
 
@@ -224,67 +222,67 @@
 - Проверка:
   1. Сопоставить перечень кодов в документации и в скриптах.
   2. Для выборки кодов смоделировать ошибочные сценарии.
-- Ожидаемый результат:
-  коды из документа реально используются и логируются.
+- Ожидаемый результат: коды из документа реально используются и
+  логируются.
 - Тип: automated
 - Каталог тестов: `deploy/tests`
 
 ### TC-DEPLOY-019
 
-- Утверждение: `server-maintenance.sh` выполняет:
-  `apt clean`, `journal vacuum`, docker prune, cleanup `/tmp`,
-  фиксацию прав `/var/lib/logrotate/status`.
+- Утверждение: `server-maintenance.sh` выполняет: `apt clean`,
+  `journal vacuum`, docker prune, cleanup `/tmp`, фиксацию прав
+  `/var/lib/logrotate/status`.
 - Проверка:
   1. Проверить команды в `deploy/server-maintenance.sh`.
   2. Выполнить скрипт и проверить следы выполнения в логах.
-- Ожидаемый результат:
-  maintenance-шаги выполняются в заявленном составе.
+- Ожидаемый результат: maintenance-шаги выполняются в заявленном
+  составе.
 - Тип: automated
 - Каталог тестов: `deploy/tests`
 
 ### TC-DEPLOY-020
 
-- Утверждение: `autoteka deploy` раскатывает текущий `HEAD`
-  без `git fetch` и `git reset`, а `autoteka watch-changes`
-  проверяет remote и подтягивает новые commit.
+- Утверждение: `autoteka deploy` раскатывает текущий `HEAD` без
+  `git fetch` и `git reset`, а `autoteka watch-changes` проверяет
+  remote и подтягивает новые commit.
 - Проверка:
   1. Выполнить оба сценария на тестовом стенде.
   2. Проверить git-состояние и deploy log.
-- Ожидаемый результат:
-  поведение `deploy` и `watch-changes` соответствует описанию.
+- Ожидаемый результат: поведение `deploy` и `watch-changes`
+  соответствует описанию.
 - Тип: automated
 - Каталог тестов: `deploy/tests`
 
 ### TC-DEPLOY-021
 
-- Утверждение: команда импорта
-  `php artisan autoteka:data:import` поддерживает scope
-  `city|category|feature|shop`, режимы `dry-run|refresh|append`,
-  транзакционность и обязательный `--generated-root` для `shop`.
+- Утверждение: команда импорта `php artisan autoteka:data:import`
+  поддерживает scope `city|category|feature|shop`, режимы
+  `dry-run|refresh|append`, транзакционность и обязательный
+  `--generated-root` для `shop`.
 - Проверка:
   1. Проверить сигнатуру команды и валидации.
   2. Выполнить прогоны для всех scope и режимов.
   3. Проверить rollback для `dry-run` и очистку+запись для `refresh`.
-- Ожидаемый результат:
-  команда работает по заявленным правилам.
+- Ожидаемый результат: команда работает по заявленным правилам.
 - Тип: automated
 - Каталог тестов: `backend/tests` + `deploy/tests`
 
 ### TC-DEPLOY-022
 
-- Утверждение: `uninstall.sh` поддерживает режимы `soft`, `purge`, `nuke`
-  и флаги `--force`, `--rm-etc`, `--rm-root` с указанными границами
-  безопасности.
+- Утверждение: `uninstall.sh` поддерживает режимы `soft`, `purge`,
+  `nuke` и флаги `--force`, `--rm-etc`, `--rm-root` с указанными
+  границами безопасности.
 - Проверка:
-  1. Проверить парсинг аргументов и ветки режима в `deploy/uninstall.sh`.
+  1. Проверить парсинг аргументов и ветки режима в
+     `deploy/uninstall.sh`.
   2. На стенде проверить side effects для каждого режима.
-- Ожидаемый результат:
-  режимы и флаги соответствуют документированной логике удаления.
+- Ожидаемый результат: режимы и флаги соответствуют документированной
+  логике удаления.
 - Тип: automated
 - Каталог тестов: `deploy/tests`
 
 ## Условно проверяемые утверждения
 
 - Дата актуализации (`2026-03-07`) не проверяется runtime-тестом.
-- Для неё нужен process-check: соответствие дате последней ревизии
-  и артефактам Э3/Э4.
+- Для неё нужен process-check: соответствие дате последней ревизии и
+  артефактам Э3/Э4.

@@ -49,8 +49,8 @@ load_autoteka_env
 
 UNITS=(
   autoteka.service
-  autoteka-deploy.service
-  autoteka-deploy.timer
+  watch-changes.service
+  watch-changes.timer
   server-watchdog.service
   server-watchdog.timer
   server-maintenance.service
@@ -125,10 +125,10 @@ soft() {
   say "AUTOTEKA_ROOT=$AUTOTEKA_ROOT"
   say "Stopping timers/services (soft)..."
 
-  safe_systemctl stop autoteka-deploy.timer server-watchdog.timer server-maintenance.timer
-  safe_systemctl disable autoteka-deploy.timer server-watchdog.timer server-maintenance.timer
+  safe_systemctl stop watch-changes.timer server-watchdog.timer server-maintenance.timer
+  safe_systemctl disable watch-changes.timer server-watchdog.timer server-maintenance.timer
 
-  safe_systemctl stop autoteka-deploy.service server-watchdog.service server-maintenance.service autoteka.service
+  safe_systemctl stop watch-changes.service server-watchdog.service server-maintenance.service autoteka.service
   safe_systemctl disable autoteka.service || true
 
   if command -v docker >/dev/null 2>&1; then

@@ -195,8 +195,8 @@ public media.
 
 - `php artisan autoteka:media:fix-shops-paths`
 
-Переносит медиа в `shops/thumbs/` и `shops/gallery/`, обновляет пути
-в БД. Используйте при путях `generated/*` или `shops/*/generated/*`.
+Переносит медиа в `shops/thumbs/` и `shops/gallery/`, обновляет пути в
+БД. Используйте при путях `generated/*` или `shops/*/generated/*`.
 
 ## 6. Важные настройки окружения
 
@@ -224,19 +224,22 @@ public media.
 ### 6.3. Серверные env-файлы
 
 - `/etc/autoteka/deploy.env` — `AUTOTEKA_ROOT`, `BRANCH`, `REMOTE`,
-  `HTTP_PORT` (см. [DEPLOY §5.1](../deploy/DEPLOY.md#51-etcautotekadeployenv))
+  `HTTP_PORT` (см.
+  [DEPLOY §5.1](../deploy/DEPLOY.md#51-etcautotekadeployenv))
 - `/etc/autoteka/telegram.env` — Telegram-уведомления watchdog (см.
   [DEPLOY §5.2](../deploy/DEPLOY.md#52-etcautotekatelegramenv))
 
 **Шаблоны в репозитории:**
 
-- `deploy/config/deploy.example.env` — шаблон для `/etc/autoteka/deploy.env`.
-  Устанавливается `install.sh` при первом запуске, если файл отсутствует.
-  Содержит параметры `AUTOTEKA_ROOT`, `BRANCH`, `REMOTE`, `HTTP_PORT`. Подробности
-  см. [DEPLOY §5.5](../deploy/DEPLOY.md#55-deployconfigdeployexampleenv).
-- `deploy/config/telegram.env.example` — шаблон для `/etc/autoteka/telegram.env`.
-  Устанавливается `install.sh` опционально, если файл отсутствует. Содержит
-  `TELEGRAM_TOKEN` и `TELEGRAM_CHAT`. Подробности см.
+- `deploy/config/deploy.example.env` — шаблон для
+  `/etc/autoteka/deploy.env`. Устанавливается `install.sh` при первом
+  запуске, если файл отсутствует. Содержит параметры `AUTOTEKA_ROOT`,
+  `BRANCH`, `REMOTE`, `HTTP_PORT`. Подробности см.
+  [DEPLOY §5.5](../deploy/DEPLOY.md#55-deployconfigdeployexampleenv).
+- `deploy/config/telegram.env.example` — шаблон для
+  `/etc/autoteka/telegram.env`. Устанавливается `install.sh`
+  опционально, если файл отсутствует. Содержит `TELEGRAM_TOKEN` и
+  `TELEGRAM_CHAT`. Подробности см.
   [DEPLOY §5.6](../deploy/DEPLOY.md#56-deployconfigtelegramenvexample).
 
 ## 7. Серверные скрипты deploy
@@ -244,16 +247,17 @@ public media.
 В каталоге `deploy/` находятся:
 
 - `install.sh` — bootstrap новой установки;
-- `watch-changes.sh` — git polling, update рабочей копии и запуск rollout;
+- `watch-changes.sh` — git polling, update рабочей копии и запуск
+  rollout;
 - `deploy.sh` — ручной rollout текущего `HEAD`;
 - `repair-runtime.sh` — восстановление PHP runtime и smoke-check;
 - `repair-infra.sh` — восстановление таймеров и счётчика watchdog;
 - `server-watchdog.sh` — self-healing и экспорт метрик;
 - `metrics-export.sh` — преобразование логов метрик в JSON;
 - `server-maintenance.sh` — ежедневное безопасное техобслуживание;
-- `backup-deploy.sh` — резервное копирование deploy-настроек (env, systemd,
+- `backup.sh` — резервное копирование deploy-настроек (env, systemd,
   docker, fail2ban, logrotate);
-- `restore-deploy.sh` — восстановление из резервной копии;
+- `restore.sh` — восстановление из резервной копии;
 - `uninstall.sh` — удаление установленной системы.
 
 Развёртывание и эксплуатация подробно описаны в `deploy/DEPLOY.md`.
