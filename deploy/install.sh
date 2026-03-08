@@ -44,6 +44,8 @@ chmod +x \
   "$SCRIPT_DIR/deploy.sh" \
   "$SCRIPT_DIR/watch-changes.sh" \
   "$SCRIPT_DIR/repair-runtime.sh" \
+  "$SCRIPT_DIR/repair-health.sh" \
+  "$SCRIPT_DIR/health-reset.sh" \
   "$SCRIPT_DIR/server-watchdog.sh" \
   "$SCRIPT_DIR/server-maintenance.sh" \
   "$SCRIPT_DIR/metrics-export.sh" \
@@ -158,7 +160,7 @@ systemctl enable --now server-watchdog.timer
 systemctl enable --now server-maintenance.timer
 
 # Инициализация счётчика watchdog (сброс при установке)
-mkdir -p /var/lib
+mkdir -p /var/lib /var/lib/server-watchdog/health
 echo "0" > /var/lib/server-watchdog.state
 
 echo "=== autoteka bootstrap finished ==="
