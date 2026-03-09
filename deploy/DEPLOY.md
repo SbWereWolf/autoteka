@@ -1520,12 +1520,15 @@ sudo ./deploy/bootstrap/uninstall.sh <mode> [flags]
 
 - `--force`
 - `--rm-etc`
+- `--rm-storage-backups`
 - `--rm-root`
 
 Границы безопасности:
 
 - shared server packages не удаляются;
 - `/etc/autoteka/*` удаляется только по флагу;
+- каталог storage backup-архивов удаляется только по флагу
+  `--rm-storage-backups`;
 - репозиторий удаляется только по `--rm-root`.
 
 При `purge` удаляются также:

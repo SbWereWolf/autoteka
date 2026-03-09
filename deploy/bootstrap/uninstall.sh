@@ -7,13 +7,14 @@ shift || true
 FORCE="no"
 RM_ROOT_DIR="no"
 RM_ETC_VUE_APP="no"
+RM_STORAGE_BACKUPS="no"
 
 usage() {
   cat <<'USAGE'
 Usage:
   sudo ./deploy/bootstrap/uninstall.sh soft  [--force]
-  sudo ./deploy/bootstrap/uninstall.sh purge [--force] [--rm-etc]
-  sudo ./deploy/bootstrap/uninstall.sh nuke  [--force] [--rm-etc] [--rm-root]
+  sudo ./deploy/bootstrap/uninstall.sh purge [--force] [--rm-etc] [--rm-storage-backups]
+  sudo ./deploy/bootstrap/uninstall.sh nuke  [--force] [--rm-etc] [--rm-root] [--rm-storage-backups]
 
 Modes:
   soft  - stop/disable timers+services + docker compose down. No file removal.
@@ -23,6 +24,7 @@ Modes:
 Flags:
   --force     Skip interactive confirmation for destructive actions
   --rm-etc    Also remove /etc/autoteka/* (secrets!)
+  --rm-storage-backups  Also remove directory from STORAGE_BACKUP_DIR
   --rm-root   Also remove $AUTOTEKA_ROOT directory (DANGEROUS)
 USAGE
 }
@@ -32,6 +34,7 @@ while [ "${1:-}" != "" ]; do
     --force) FORCE="yes"; shift;;
     --rm-root) RM_ROOT_DIR="yes"; shift;;
     --rm-etc) RM_ETC_VUE_APP="yes"; shift;;
+    --rm-storage-backups) RM_STORAGE_BACKUPS="yes"; shift;;
     -h|--help) usage; exit 0;;
     *) echo "Unknown arg: $1"; usage; exit 2;;
   esac
@@ -83,6 +86,8 @@ APP_STATE=(
   /var/lock/autoteka-deploy.lock
   /var/lock/autoteka-server-watchdog.lock
 )
+
+STORAGE_BACKUP_DIR_PATH="${STORAGE_BACKUP_DIR:-/root/autoteka-storage-backups}"
 
 SYSTEM_FILES=(
   /etc/docker/daemon.json
@@ -170,6 +175,12 @@ purge() {
     confirm_or_exit "REMOVE /etc/autoteka/* (secrets)"
     rm -f /etc/autoteka/deploy.env /etc/autoteka/telegram.env 2>/dev/null || true
     rmdir /etc/autoteka 2>/dev/null || true
+  fi
+
+  if [ "$RM_STORAGE_BACKUPS" = "yes" ]; then
+    confirm_or_exit "REMOVE storage backups directory: $STORAGE_BACKUP_DIR_PATH"
+    rm -rf "$STORAGE_BACKUP_DIR_PATH"
+    say "removed storage backups directory: $STORAGE_BACKUP_DIR_PATH"
   fi
 }
 

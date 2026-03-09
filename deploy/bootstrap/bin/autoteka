@@ -314,7 +314,7 @@ USAGE
 print_uninstall_usage() {
   cat <<'USAGE'
 Usage:
-  autoteka uninstall <mode> [--force] [--rm-etc] [--rm-root]
+  autoteka uninstall <mode> [--force] [--rm-etc] [--rm-storage-backups] [--rm-root]
 
 Purpose:
   Remove installed autoteka services/configuration with a chosen destruction
@@ -325,6 +325,9 @@ Arguments:
                     Allowed values: soft | purge | nuke
   --force           Skip interactive confirmation.
   --rm-etc          Also remove /etc/autoteka/* secrets.
+                    Meaningful for purge and nuke.
+  --rm-storage-backups
+                    Also remove directory from STORAGE_BACKUP_DIR.
                     Meaningful for purge and nuke.
   --rm-root         Also remove AUTOTEKA_ROOT recursively.
                     Meaningful for nuke.
