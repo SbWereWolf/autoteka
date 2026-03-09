@@ -14,8 +14,7 @@ RUN npm run build
 FROM nginx:1.27-alpine AS runtime
 RUN apk add --no-cache bash gettext  && rm -rf /usr/share/nginx/html/*
 COPY --from=frontend-build /app/frontend/dist /usr/share/nginx/html
-COPY backend/public/vendor/moonshine /usr/share/nginx/backend-public/vendor/moonshine
-COPY deploy/runtime/docker/prod/nginx/nginx.conf.template /etc/nginx/templates/default.conf.template
-COPY deploy/runtime/docker/prod/nginx/entrypoint.sh /docker-entrypoint.d/40-render-config.sh
-RUN chmod +x /docker-entrypoint.d/40-render-config.sh
+COPY deploy/runtime/docker/docker/prod/nginx/nginx.conf.template /etc/nginx/templates/default.conf.template
+COPY deploy/runtime/docker/docker/prod/nginx/entrypoint.sh /docker-entrypoint.d/40-render-config.sh
+RUN mkdir -p /usr/share/nginx/backend-public/vendor/moonshine  && chmod +x /docker-entrypoint.d/40-render-config.sh
 EXPOSE 80

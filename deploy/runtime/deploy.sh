@@ -50,16 +50,17 @@ flock -n 9 || exit 0
   prepare_laravel_runtime
 
   DEPLOY_STAGE="artisan_check"
-  compose exec -T php sh -lc 'set -eu; cd /var/www/backend; php artisan --version >/dev/null'
+  api_artisan_in_php '--version >/dev/null'
+  admin_artisan_in_php '--version >/dev/null'
 
   DEPLOY_STAGE="artisan_keygen"
-  compose exec -T php sh -lc 'set -eu; cd /var/www/backend; if ! grep -q "^APP_KEY=base64:" .env; then php artisan key:generate --force; fi'
+  ensure_app_key
 
   DEPLOY_STAGE="artisan_migrate"
-  compose exec -T php sh -lc 'set -eu; cd /var/www/backend; php artisan migrate --force'
+  admin_artisan_in_php 'migrate --force'
 
   DEPLOY_STAGE="artisan_seed"
-  compose exec -T php sh -lc 'set -eu; cd /var/www/backend; php artisan db:seed --class=AdminUserSeeder --force'
+  admin_artisan_in_php 'db:seed --class=AdminUserSeeder --force'
 
   DEPLOY_STAGE="sqlite_write_check"
   check_sqlite_write_access

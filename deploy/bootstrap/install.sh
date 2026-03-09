@@ -31,13 +31,6 @@ mkdir -p "$REPO_ROOT/deploy/observability/application/metrics"
 touch "$REPO_ROOT/deploy/observability/application/metrics/data.json" || true
 
 mkdir -p /etc/systemd/journald.conf.d /etc/fail2ban/jail.d /etc/systemd/system/docker.service.d /etc/autoteka
-[ -f "$DEPLOY_DIR/bootstrap/config/docker-daemon.json" ] && install -m 0644 "$DEPLOY_DIR/bootstrap/config/docker-daemon.json" /etc/docker/daemon.json || true
-[ -f "$DEPLOY_DIR/bootstrap/config/journald-limits.conf" ] && install -m 0644 "$DEPLOY_DIR/bootstrap/config/journald-limits.conf" /etc/systemd/journald.conf.d/limits.conf || true
-[ -f "$DEPLOY_DIR/bootstrap/config/fail2ban-jail.local" ] && install -m 0644 "$DEPLOY_DIR/bootstrap/config/fail2ban-jail.local" /etc/fail2ban/jail.d/sshd.local || true
-[ -f "$DEPLOY_DIR/bootstrap/systemd/docker.override.conf" ] && install -m 0644 "$DEPLOY_DIR/bootstrap/systemd/docker.override.conf" /etc/systemd/system/docker.service.d/override.conf || true
-[ -f "$DEPLOY_DIR/bootstrap/bootstrap/config/telegram.example.env" ] && [ ! -f /etc/autoteka/telegram.env ] && install -m 0600 "$DEPLOY_DIR/bootstrap/bootstrap/config/telegram.example.env" /etc/autoteka/telegram.env || true
-[ -f "$DEPLOY_DIR/bootstrap/bootstrap/config/deploy.example.env" ] && [ ! -f /etc/autoteka/deploy.env ] && install -m 0600 "$DEPLOY_DIR/bootstrap/bootstrap/config/deploy.example.env" /etc/autoteka/deploy.env || true
-
 if [ -f /etc/autoteka/deploy.env ]; then
   if grep -qE '^AUTOTEKA_ROOT=' /etc/autoteka/deploy.env; then
     sed -i -E "s|^AUTOTEKA_ROOT=.*$|AUTOTEKA_ROOT=$REPO_ROOT|" /etc/autoteka/deploy.env
@@ -57,9 +50,6 @@ install -m 0644 "$DEPLOY_DIR/observability/infrastructure/systemd/server-watchdo
 install -m 0644 "$DEPLOY_DIR/observability/infrastructure/systemd/server-watchdog.timer" /etc/systemd/system/server-watchdog.timer
 install -m 0644 "$DEPLOY_DIR/maintenance/systemd/server-maintenance.service" /etc/systemd/system/server-maintenance.service
 install -m 0644 "$DEPLOY_DIR/maintenance/systemd/server-maintenance.timer" /etc/systemd/system/server-maintenance.timer
-[ -f "$DEPLOY_DIR/maintenance/config/logrotate-vue-app-deploy.conf" ] && install -m 0644 "$DEPLOY_DIR/maintenance/config/logrotate-vue-app-deploy.conf" /etc/logrotate.d/vue-app-deploy || true
-[ -f "$DEPLOY_DIR/maintenance/config/logrotate-server-watchdog.conf" ] && install -m 0644 "$DEPLOY_DIR/maintenance/config/logrotate-server-watchdog.conf" /etc/logrotate.d/server-watchdog || true
-[ -f "$DEPLOY_DIR/maintenance/config/logrotate-autoteka-telegram.conf" ] && install -m 0644 "$DEPLOY_DIR/maintenance/config/logrotate-autoteka-telegram.conf" /etc/logrotate.d/autoteka-telegram || true
 systemctl daemon-reload
 systemctl enable --now fail2ban >/dev/null 2>&1 || true
 systemctl restart docker || true
@@ -69,7 +59,8 @@ systemctl restart fail2ban >/dev/null 2>&1 || true
 compose up -d --build --remove-orphans php
 wait_for_php_exec_ready "${PHP_READY_TIMEOUT:-60}"
 prepare_laravel_runtime
-compose exec -T php sh -lc 'set -eu; cd /var/www/backend; php artisan migrate --force; php artisan db:seed --class=AdminUserSeeder --force'
+admin_artisan_in_php 'migrate --force'
+admin_artisan_in_php 'db:seed --class=AdminUserSeeder --force'
 compose up -d --build --remove-orphans web
 systemctl enable --now autoteka.service
 systemctl enable --now watch-changes.timer

@@ -4,11 +4,9 @@
  */
 import { describe, it, expect } from "vitest";
 import { existsSync, readFileSync } from "node:fs";
-import { join, dirname } from "node:path";
-import { fileURLToPath } from "node:url";
+import { join } from "node:path";
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const DEPLOY_ROOT = join(__dirname, "..");
+const DEPLOY_ROOT = join(process.cwd(), "deploy");
 
 function read(relPath: string): string {
   return readFileSync(join(DEPLOY_ROOT, relPath), "utf-8");

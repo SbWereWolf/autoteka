@@ -3,11 +3,9 @@
  */
 import { describe, it, expect } from "vitest";
 import { readFileSync, existsSync } from "node:fs";
-import { join, dirname } from "node:path";
-import { fileURLToPath } from "node:url";
+import { join } from "node:path";
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const DEPLOY_ROOT = join(__dirname, "..");
+const DEPLOY_ROOT = join(process.cwd(), "deploy");
 
 const EXPECTED_VARS = [
   "AUTOTEKA_ROOT",

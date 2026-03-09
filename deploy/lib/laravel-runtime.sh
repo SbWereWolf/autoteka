@@ -12,46 +12,122 @@ if [ -z "${AUTOTEKA_LIB_LARAVEL_RUNTIME_SH:-}" ]; then
     /usr/bin/docker compose -f "$AUTOTEKA_ROOT/deploy/runtime/docker-compose.yml" "$@"
   }
 
+  sync_shared_envs() {
+    compose exec -T php sh -lc '
+      set -eu
+      cd /var/www/backend
+      [ -f .env ] || cp example.env .env
+      [ -f apps/API/.env ] || cp apps/API/example.env apps/API/.env
+      [ -f apps/DatabaseOperator/.env ] || cp apps/DatabaseOperator/example.env apps/DatabaseOperator/.env
+      cp .env apps/API/.env
+      cp .env apps/DatabaseOperator/.env
+    '
+  }
+
+  ensure_module_dependencies() {
+    compose exec -T php sh -lc '
+      set -eu
+      cd /var/www/backend
+      for module_dir in apps/API apps/DatabaseOperator; do
+        case "$module_dir" in
+          */packages/SchemaDefinition|packages/SchemaDefinition)
+            continue
+            ;;
+        esac
+        if [ -f "$module_dir/composer.json" ] && [ ! -f "$module_dir/vendor/autoload.php" ]; then
+          (
+            cd "$module_dir"
+            composer install --prefer-dist --no-interaction --optimize-autoloader
+          )
+        fi
+      done
+    '
+  }
+
+  ensure_app_key() {
+    compose exec -T php sh -lc '
+      set -eu
+      cd /var/www/backend
+      if ! grep -qE "^APP_KEY=base64:" .env; then
+        if [ -f apps/API/.env ]; then
+          (cd apps/API && php artisan key:generate --force --ansi)
+        elif [ -f apps/DatabaseOperator/.env ]; then
+          (cd apps/DatabaseOperator && php artisan key:generate --force --ansi)
+        fi
+        if [ -f apps/API/.env ]; then
+          cp apps/API/.env .env
+          cp .env apps/DatabaseOperator/.env
+        fi
+      fi
+    '
+  }
+
   prepare_laravel_runtime() {
     compose exec -T php sh -lc '
       set -eu
       cd /var/www/backend
       [ -f .env ] || cp example.env .env
-      mkdir -p \
-        database \
-        storage/app/public \
-        storage/app/private \
-        storage/framework/cache \
-        storage/framework/cache/data \
-        storage/framework/sessions \
-        storage/framework/views \
-        storage/framework/testing \
-        storage/logs \
-        bootstrap/cache \
-        public/storage
+      [ -f apps/API/.env ] || cp apps/API/example.env apps/API/.env
+      [ -f apps/DatabaseOperator/.env ] || cp apps/DatabaseOperator/example.env apps/DatabaseOperator/.env
+      mkdir -p         database         storage/app/public         storage/app/private         storage/framework/cache         storage/framework/cache/data         storage/framework/sessions         storage/framework/views         storage/framework/testing         storage/logs         bootstrap/cache
       [ -f database/database.sqlite ] || touch database/database.sqlite
-      chown -R www-data:www-data database storage bootstrap/cache public/storage
-      find database storage bootstrap/cache -type d -exec chmod 775 {} \;
-      find database storage bootstrap/cache -type f -exec chmod 664 {} \;
+      for module_dir in apps/API apps/DatabaseOperator; do
+        case "$module_dir" in
+          */packages/SchemaDefinition|packages/SchemaDefinition)
+            continue
+            ;;
+        esac
+        if [ -f "$module_dir/composer.json" ] && [ ! -f "$module_dir/vendor/autoload.php" ]; then
+          (
+            cd "$module_dir"
+            composer install --prefer-dist --no-interaction --optimize-autoloader
+          )
+        fi
+      done
+      cp .env apps/API/.env
+      cp .env apps/DatabaseOperator/.env
+      mkdir -p apps/API/bootstrap/cache apps/DatabaseOperator/bootstrap/cache
+      mkdir -p apps/API/public apps/DatabaseOperator/public
+      rm -rf apps/API/public/storage apps/DatabaseOperator/public/storage
+      ln -sfn ../../../storage/app/public apps/API/public/storage
+      ln -sfn ../../../storage/app/public apps/DatabaseOperator/public/storage
+      if ! grep -qE "^APP_KEY=base64:" .env; then
+        if [ -f apps/API/artisan ]; then
+          (cd apps/API && php artisan key:generate --force --ansi)
+        elif [ -f apps/DatabaseOperator/artisan ]; then
+          (cd apps/DatabaseOperator && php artisan key:generate --force --ansi)
+        fi
+        cp apps/API/.env .env
+        cp .env apps/DatabaseOperator/.env
+      fi
+      chown -R www-data:www-data database storage bootstrap/cache apps/API/bootstrap/cache apps/DatabaseOperator/bootstrap/cache
+      find database storage bootstrap/cache apps/API/bootstrap/cache apps/DatabaseOperator/bootstrap/cache -type d -exec chmod 775 {} \;
+      find database storage bootstrap/cache apps/API/bootstrap/cache apps/DatabaseOperator/bootstrap/cache -type f -exec chmod 664 {} \;
     '
   }
 
-  ensure_public_storage_link() {
-    compose exec -T php sh -lc '
-      set -eu
-      cd /var/www/backend
-      php artisan storage:link >/dev/null || true
-    '
-  }
-
-  artisan_in_php() {
+  api_artisan_in_php() {
     local command="$1"
 
     compose exec -T php sh -lc "
       set -eu
-      cd /var/www/backend
+      cd /var/www/backend/apps/API
       php artisan $command
     "
+  }
+
+  admin_artisan_in_php() {
+    local command="$1"
+
+    compose exec -T php sh -lc "
+      set -eu
+      cd /var/www/backend/apps/DatabaseOperator
+      php artisan $command
+    "
+  }
+
+  artisan_in_php() {
+    api_artisan_in_php "$1"
   }
 
   wait_for_php_exec_ready() {
@@ -61,7 +137,7 @@ if [ -z "${AUTOTEKA_LIB_LARAVEL_RUNTIME_SH:-}" ]; then
     started_at="$(date +%s)"
 
     while true; do
-      if compose exec -T php sh -lc 'cd /var/www/backend && pwd >/dev/null' >/dev/null 2>&1; then
+      if compose exec -T php sh -lc 'cd /var/www/backend/apps/API && pwd >/dev/null && cd /var/www/backend/apps/DatabaseOperator && pwd >/dev/null' >/dev/null 2>&1; then
         return 0
       fi
 
@@ -75,17 +151,17 @@ if [ -z "${AUTOTEKA_LIB_LARAVEL_RUNTIME_SH:-}" ]; then
   }
 
   clear_laravel_optimizations() {
-    artisan_in_php "optimize:clear"
+    api_artisan_in_php "optimize:clear"
+    admin_artisan_in_php "optimize:clear"
   }
 
   prepare_laravel_runtime_and_clear() {
     prepare_laravel_runtime
-    ensure_public_storage_link
     clear_laravel_optimizations
   }
 
   check_sqlite_write_access() {
-    artisan_in_php "tinker --execute=\"session(['deploy_runtime_check' => 'ok']); DB::table('sessions')->count(); cache()->put('deploy_runtime_check', 'ok', 60);\""
+    api_artisan_in_php "tinker --execute='session([\"deploy_runtime_check\" => \"ok\"]); DB::table(\"sessions\")->count(); cache()->put(\"deploy_runtime_check\", \"ok\", 60);'"
   }
 
   http_smoke_check() {

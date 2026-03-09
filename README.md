@@ -86,6 +86,30 @@ php artisan serve
 - Локальные значения учётки берутся из `backend/.env` (создаётся из
   `backend/example.env`) -> `MOONSHINE_ADMIN_*`
 
+### Dev runtime с выбором php target (override)
+
+Запуск dev-runtime c `php` target = `dev`:
+
+```powershell
+docker compose -f .\deploy\runtime\docker-compose.dev.yml -f .\deploy\runtime\docker-compose.dev.target-dev.yml up --build -d
+```
+
+Запуск dev-runtime c `php` target = `prod` (локальный smoke-тест
+prod-сборки backend):
+
+```powershell
+docker compose -f .\deploy\runtime\docker-compose.dev.yml -f .\deploy\runtime\docker-compose.dev.target-prod.yml up --build -d
+```
+
+Остановка контейнеров (пример для dev target):
+
+```powershell
+docker compose -f .\deploy\runtime\docker-compose.dev.yml -f .\deploy\runtime\docker-compose.dev.target-dev.yml down
+```
+
+Важно: при явном использовании `-f` override-файлы не подхватываются
+автоматически, их нужно перечислять в команде явно.
+
 ## Шаблоны env и рабочие env-файлы
 
 - `frontend/example.env` — шаблон frontend-конфига. Локально:
