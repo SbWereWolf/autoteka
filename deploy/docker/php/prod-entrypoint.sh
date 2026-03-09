@@ -10,7 +10,20 @@ if [ -n "${APP_KEY:-}" ]; then
 APP_KEY=%s
 ' "$APP_KEY" >> .env; fi
 fi
-mkdir -p database storage/framework/cache storage/framework/sessions storage/framework/views storage/logs bootstrap/cache public/storage
+mkdir -p database storage/framework/cache storage/framework/sessions storage/framework/views storage/logs bootstrap/cache
+mkdir -p storage/app/public
+if [ ! -d public ] || [ -L public ]; then
+  rm -rf public
+fi
+mkdir -p public
+if [ -L public/storage ] || [ ! -d public/storage ] || [ -f public/storage ]; then
+  rm -rf public/storage
+fi
+if [ -d storage/app/public ]; then
+  ln -sfn ../storage/app/public public/storage
+else
+  mkdir -p public/storage
+fi
 [ -f database/database.sqlite ] || touch database/database.sqlite
 chown -R www-data:www-data /var/www/backend
 php artisan package:discover --ansi >/dev/null 2>&1 || true

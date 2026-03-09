@@ -69,6 +69,8 @@ services:
       CORS_ALLOW_CREDENTIALS: ${CORS_ALLOW_CREDENTIALS:-false}
       CORS_MAX_AGE: ${CORS_MAX_AGE:-86400}
       API_CACHE_TTL: ${API_CACHE_TTL:-3600}
+      API_CACHE_CONTROL_GET: ${API_CACHE_CONTROL_GET:-public, max-age=${API_CACHE_TTL:-3600}}
+      API_CACHE_CONTROL_MUTATION: ${API_CACHE_CONTROL_MUTATION:-no-store, no-cache, must-revalidate, max-age=0}
     volumes:
       - ${AUTOTEKA_ROOT:-..}/frontend:/workspace/frontend:ro
       - autoteka_frontend_dist:/workspace/frontend/dist:ro
