@@ -31,7 +31,7 @@ describe("TC-DEPLOY-007", () => {
     const path = existsSync(examplePath) ? examplePath : altPath;
     expect(existsSync(path)).toBe(true);
     const content = readFileSync(path, "utf-8");
-    for (const v of ["BRANCH", "REMOTE"]) {
+    for (const v of EXPECTED_VARS) {
       expect(content).toMatch(new RegExp(v));
     }
   });
@@ -41,8 +41,26 @@ describe("TC-DEPLOY-007", () => {
       join(DEPLOY_ROOT, "runtime/deploy.sh"),
       "utf-8",
     );
-    expect(deployContent).toMatch(
-      /AUTOTEKA_ROOT|PHP_READY_TIMEOUT|ADMIN_SMOKE/,
+    for (const v of [
+      "AUTOTEKA_ROOT",
+      "PHP_READY_TIMEOUT",
+      "ADMIN_SMOKE_URL",
+    ]) {
+      expect(deployContent).toMatch(new RegExp(v));
+    }
+
+    const watchChangesContent = readFileSync(
+      join(DEPLOY_ROOT, "runtime/watch-changes.sh"),
+      "utf-8",
     );
+    for (const v of ["AUTOTEKA_ROOT", "BRANCH", "REMOTE"]) {
+      expect(watchChangesContent).toMatch(new RegExp(v));
+    }
+
+    const composeContent = readFileSync(
+      join(DEPLOY_ROOT, "runtime/docker-compose.yml"),
+      "utf-8",
+    );
+    expect(composeContent).toMatch(/HTTP_PORT/);
   });
 });
