@@ -1,0 +1,85 @@
+server {
+    listen 80;
+    server_name _;
+    root /usr/share/nginx/html;
+    index index.html;
+
+    location = /healthcheck { access_log off; return 204; }
+    location = /metrics { return 302 /metrics/; }
+    location = /metrics/data.json {
+        add_header Cache-Control "no-cache, no-store, must-revalidate" always;
+        add_header Pragma "no-cache" always;
+        add_header Expires "0" always;
+        try_files $uri =404;
+    }
+    location = /metrics/index.html { expires 1y; add_header Cache-Control "public, immutable"; try_files $uri =404; }
+    location /metrics/ { expires 1y; add_header Cache-Control "public, immutable"; try_files $uri $uri/ /metrics/index.html; }
+    location ^~ /vendor/moonshine/ {
+        alias /usr/share/nginx/backend-public/vendor/moonshine/;
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+        try_files $uri =404;
+    }
+    location ^~ /storage/ {
+        alias /var/www/backend/storage/app/public/;
+        expires -1;
+        add_header Cache-Control "no-cache";
+        try_files $uri =404;
+    }
+    location /assets/ { expires 1y; add_header Cache-Control "public, immutable"; try_files $uri =404; }
+    location = /index.html {
+        add_header Cache-Control "no-cache, no-store, must-revalidate" always;
+        add_header Pragma "no-cache" always;
+        add_header Expires "0" always;
+        try_files $uri =404;
+    }
+    location ~ ^/api(/|$) {
+        if ($request_method = OPTIONS) {
+            add_header Access-Control-Allow-Origin "${CORS_ALLOW_ORIGIN}" always;
+            add_header Access-Control-Allow-Methods "${CORS_ALLOW_METHODS}" always;
+            add_header Access-Control-Allow-Headers "${CORS_ALLOW_HEADERS}" always;
+            add_header Access-Control-Expose-Headers "${CORS_EXPOSE_HEADERS}" always;
+            add_header Access-Control-Allow-Credentials "${CORS_ALLOW_CREDENTIALS}" always;
+            add_header Access-Control-Max-Age "${CORS_MAX_AGE}" always;
+            add_header Cache-Control "${API_CACHE_CONTROL_MUTATION}" always;
+            add_header Pragma "no-cache" always;
+            add_header Expires "0" always;
+            add_header Content-Length 0;
+            add_header Content-Type text/plain;
+            return 204;
+        }
+        add_header Access-Control-Allow-Origin "${CORS_ALLOW_ORIGIN}" always;
+        add_header Access-Control-Allow-Methods "${CORS_ALLOW_METHODS}" always;
+        add_header Access-Control-Allow-Headers "${CORS_ALLOW_HEADERS}" always;
+        add_header Access-Control-Expose-Headers "${CORS_EXPOSE_HEADERS}" always;
+        add_header Access-Control-Allow-Credentials "${CORS_ALLOW_CREDENTIALS}" always;
+        set $api_cache_control "${API_CACHE_CONTROL_GET}";
+        if ($request_method !~ ^(GET|HEAD)$) {
+            set $api_cache_control "${API_CACHE_CONTROL_MUTATION}";
+        }
+        add_header Cache-Control $api_cache_control always;
+        include fastcgi_params;
+        fastcgi_param SCRIPT_FILENAME /var/www/backend/public/index.php;
+        fastcgi_param DOCUMENT_ROOT /var/www/backend/public;
+        fastcgi_param SCRIPT_NAME /index.php;
+        fastcgi_pass php:9000;
+    }
+    location = /up {
+        add_header Cache-Control "${API_CACHE_CONTROL_MUTATION}" always;
+        add_header Pragma "no-cache" always;
+        add_header Expires "0" always;
+        include fastcgi_params;
+        fastcgi_param SCRIPT_FILENAME /var/www/backend/public/index.php;
+        fastcgi_param DOCUMENT_ROOT /var/www/backend/public;
+        fastcgi_param SCRIPT_NAME /index.php;
+        fastcgi_pass php:9000;
+    }
+    location ~ ^/admin(/|$) {
+        include fastcgi_params;
+        fastcgi_param SCRIPT_FILENAME /var/www/backend/public/index.php;
+        fastcgi_param DOCUMENT_ROOT /var/www/backend/public;
+        fastcgi_param SCRIPT_NAME /index.php;
+        fastcgi_pass php:9000;
+    }
+    location / { try_files $uri $uri/ /index.html; }
+}

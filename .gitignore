@@ -12,3 +12,4 @@ scripts/.env
 !backup/README.md
 /frontend/test-results/
 /operational/
+/deploy/.env

@@ -1,12 +1,13 @@
 # Руководство администратора
 
-**Дата актуализации: 2026-03-07.**
+**Дата актуализации: 2026-03-09.**
 
 Документ описывает:
 
 - работу с front office в части редактора темы оформления;
 - работу с back office на MoonShine;
-- серверные настройки, служебные скрипты и проверки.
+- как запускать рабочие контуры и выполнять повседневные операции;
+- как чинить, обслуживать и диагностировать систему.
 
 ## 1. Зоны ответственности
 
@@ -208,8 +209,8 @@ public media.
 Для production и deploy-контра используйте same-origin значение
 `/api/v1`.
 
-Если `frontend/.env` отсутствует при сборке web-контейнера, deploy
-создаст его из `frontend/example.env`.
+Если `frontend/.env` отсутствует при сборке production web-контейнера,
+deploy создаст его из `frontend/example.env`.
 
 ### 6.2. Backend
 
@@ -225,9 +226,9 @@ public media.
 
 - `/etc/autoteka/deploy.env` — `AUTOTEKA_ROOT`, `BRANCH`, `REMOTE`,
   `HTTP_PORT` (см.
-  [DEPLOY §5.1](../deploy/DEPLOY.md#51-etcautotekadeployenv))
+  [DEPLOY §5.1](../../deploy/DEPLOY.md#51-etcautotekadeployenv))
 - `/etc/autoteka/telegram.env` — Telegram-уведомления watchdog (см.
-  [DEPLOY §5.2](../deploy/DEPLOY.md#52-etcautotekatelegramenv))
+  [DEPLOY §5.2](../../deploy/DEPLOY.md#52-etcautotekatelegramenv))
 
 **Шаблоны в репозитории:**
 
@@ -235,14 +236,175 @@ public media.
   `/etc/autoteka/deploy.env`. Устанавливается `install.sh` при первом
   запуске, если файл отсутствует. Содержит параметры `AUTOTEKA_ROOT`,
   `BRANCH`, `REMOTE`, `HTTP_PORT`. Подробности см.
-  [DEPLOY §5.5](../deploy/DEPLOY.md#55-deployconfigdeployexampleenv).
-- `deploy/config/telegram.env.example` — шаблон для
+  [DEPLOY §5.5](../../deploy/DEPLOY.md#55-deployconfigdeployexampleenv).
+- `deploy/config/telegram.example.env` — шаблон для
   `/etc/autoteka/telegram.env`. Устанавливается `install.sh`
   опционально, если файл отсутствует. Содержит `TELEGRAM_TOKEN` и
   `TELEGRAM_CHAT`. Подробности см.
-  [DEPLOY §5.6](../deploy/DEPLOY.md#56-deployconfigtelegramenvexample).
+  [DEPLOY §5.6](../../deploy/DEPLOY.md#56-deployconfigtelegramenvexample).
 
-## 7. Серверные скрипты deploy
+## 7. Запуск и рабочие инструкции администратора
+
+### 7.1. Политика env-файлов
+
+В git хранятся только шаблоны:
+
+- `backend/example.env`;
+- `frontend/example.env`;
+- `deploy/config/deploy.example.env`;
+- `deploy/config/dev.example.env`;
+- `deploy/config/telegram.example.env`.
+
+Рабочие env-файлы:
+
+- называются `.env`;
+- не хранятся в git;
+- создаются копированием соответствующего `example.env`.
+
+### 7.2. Как запустить production-процедуру
+
+Первичный bootstrap и первая раскатка на сервере:
+
+```bash
+apt update && apt install -y git
+mkdir -p /opt/vue-app
+cd /opt/vue-app
+git clone <YOUR_REPO_URL> .
+chmod +x ./deploy/install.sh
+sudo ./deploy/install.sh
+autoteka deploy
+```
+
+Повторная ручная раскатка текущего `HEAD`:
+
+```bash
+autoteka deploy
+```
+
+Проверка состояния production-контура:
+
+```bash
+systemctl status autoteka.service
+systemctl status watch-changes.timer
+systemctl status server-watchdog.timer
+systemctl status server-maintenance.timer
+docker compose -f deploy/docker-compose.yml ps
+```
+
+### 7.3. Как запустить local dev / debug
+
+Из корня репозитория:
+
+```bash
+cd deploy
+cp config/dev.example.env .env
+docker compose -f docker-compose.dev.yml up --build
+```
+
+Запуск в фоне:
+
+```bash
+docker compose -f docker-compose.dev.yml up --build -d
+```
+
+Остановить dev/debug-контур:
+
+```bash
+docker compose -f docker-compose.dev.yml down
+```
+
+Переcобрать контейнеры:
+
+```bash
+docker compose -f docker-compose.dev.yml build
+```
+
+Открыть shell в backend-контейнере:
+
+```bash
+docker compose -f docker-compose.dev.yml exec php sh
+```
+
+По умолчанию приложение доступно по адресу `http://127.0.0.1:8081`.
+Адрес и порты управляются через `deploy/.env`.
+
+### 7.4. Режимы frontend в dev/debug
+
+#### `FRONTEND_MODE=source`
+
+Используйте для обычной разработки UI:
+
+- работает Vite dev server;
+- изменения в исходниках отражаются сразу;
+- доступен hot reload.
+
+#### `FRONTEND_MODE=bundle-watch`
+
+Используйте, когда нужна отладка собранного frontend:
+
+- работает `vite build --watch`;
+- nginx отдаёт `frontend/dist`;
+- при `VITE_BUILD_SOURCEMAP=true` доступен mapping bundle на
+  исходники.
+
+### 7.5. Как чинить и диагностировать контейнерный контур
+
+Проверить контейнеры production:
+
+```bash
+docker compose -f deploy/docker-compose.yml ps
+```
+
+Проверить контейнеры local dev/debug:
+
+```bash
+cd deploy
+docker compose -f docker-compose.dev.yml ps
+```
+
+Посмотреть логи web:
+
+```bash
+docker compose -f deploy/docker-compose.dev.yml logs -f web
+```
+
+Посмотреть логи php:
+
+```bash
+docker compose -f deploy/docker-compose.dev.yml logs -f php
+```
+
+Сделать dry-run проверки и ремонта production:
+
+```bash
+autoteka watchdog --dry-run
+autoteka repair-runtime --dry-run
+```
+
+### 7.6. Как обслуживать систему
+
+Запустить backup:
+
+```bash
+autoteka backup
+```
+
+Запустить restore:
+
+```bash
+autoteka restore <backup-path>
+```
+
+Запустить maintenance вручную:
+
+```bash
+sudo systemctl start server-maintenance.service
+```
+
+Подробности по смыслу и ограничениям deploy-скриптов см. в
+`deploy/DEPLOY.md`.
+
+## 8. Серверные скрипты deploy
 
 В каталоге `deploy/` находятся:
 
@@ -269,7 +431,7 @@ public media.
 
 Развёртывание и эксплуатация подробно описаны в `deploy/DEPLOY.md`.
 
-## 8. Что делает uninstall.sh
+## 9. Что делает uninstall.sh
 
 `deploy/uninstall.sh` предназначен для удаления deployment-инсталляции
 системы.
@@ -290,7 +452,7 @@ public media.
 - репозиторий удаляется только при явном `--rm-root`;
 - `/etc/autoteka/*` удаляется только при явном `--rm-etc`.
 
-## 9. Минимальный регламент администратора
+## 10. Минимальный регламент администратора
 
 После изменений в данных:
 
@@ -306,7 +468,7 @@ public media.
 3. проверить логи deploy/watchdog/maintenance;
 4. проверить `/metrics`.
 
-## 10. Healthcheck и диагностика
+## 11. Healthcheck и диагностика
 
 ### 10.1. Набор проверок
 

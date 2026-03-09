@@ -40,134 +40,25 @@ compose() {
   /usr/bin/docker compose -f "$AUTOTEKA_ROOT/deploy/docker-compose.yml" "$@"
 }
 
-backend_dir() {
-  printf '%s\n' "$AUTOTEKA_ROOT/backend"
-}
-
-detect_php_fpm_runtime_identity() {
-  compose exec -T php sh <<'EOF'
-set -eu
-
-resolve_field() {
-  field="$1"
-  value=""
-
-  value="$(awk -F= -v key="$field" "
-    \$1 ~ /^[[:space:]]*[;#]/ { next }
-    \$1 ~ \"^[[:space:]]*\" key \"[[:space:]]*$\" {
-      gsub(/^[[:space:]]+|[[:space:]]+$/, \"\", \$2)
-      print \$2
-      exit
-    }
-  " /usr/local/etc/php-fpm.d/www.conf 2>/dev/null || true)"
-
-  if [ -z "$value" ]; then
-    value="www-data"
-  fi
-
-  printf "%s\n" "$value"
-}
-
-runtime_user="$(resolve_field user)"
-runtime_group="$(resolve_field group)"
-runtime_gid="$(awk -F: -v key="$runtime_group" '$1 == key { print $3; exit }' /etc/group)"
-
-if [ -z "$runtime_gid" ]; then
-  runtime_gid="$(id -g "$runtime_user")"
-fi
-
-printf "%s:%s:%s:%s\n" \
-  "$runtime_user" \
-  "$runtime_group" \
-  "$(id -u "$runtime_user")" \
-  "$runtime_gid"
-EOF
-}
-
-laravel_runtime_paths() {
-  cat <<EOF
-$(backend_dir)/database
-$(backend_dir)/storage
-$(backend_dir)/storage/app
-$(backend_dir)/storage/app/public
-$(backend_dir)/storage/app/private
-$(backend_dir)/storage/framework
-$(backend_dir)/storage/framework/cache
-$(backend_dir)/storage/framework/cache/data
-$(backend_dir)/storage/framework/sessions
-$(backend_dir)/storage/framework/views
-$(backend_dir)/storage/framework/testing
-$(backend_dir)/storage/logs
-$(backend_dir)/bootstrap/cache
-EOF
-}
 
 prepare_laravel_runtime() {
-  local backend
-  local runtime_identity
-  local runtime_user
-  local runtime_group
-  local runtime_uid
-  local runtime_gid
-  local path
-
-  backend="$(backend_dir)"
-
-  mkdir -p "$backend"
-  if [ ! -f "$backend/.env" ] && [ -f "$backend/example.env" ]; then
-    cp "$backend/example.env" "$backend/.env"
-  fi
-  mkdir -p "$backend/database"
-  touch "$backend/database/database.sqlite"
-
-  while IFS= read -r path; do
-    [ -n "$path" ] || continue
-    mkdir -p "$path"
-  done <<EOF
-$(laravel_runtime_paths)
-EOF
-
-  runtime_identity="$(detect_php_fpm_runtime_identity)"
-  IFS=':' read -r runtime_user runtime_group runtime_uid runtime_gid <<EOF
-$runtime_identity
-EOF
-
-  while IFS= read -r path; do
-    [ -n "$path" ] || continue
-    chown -R "$runtime_uid:$runtime_gid" "$path"
-  done <<EOF
-$(laravel_runtime_paths)
-EOF
-
-  chown "$runtime_uid:$runtime_gid" "$backend/database/database.sqlite"
-
-  while IFS= read -r path; do
-    [ -n "$path" ] || continue
-    find "$path" -type d -exec chmod 775 {} \;
-    find "$path" -type f -exec chmod 664 {} \;
-  done <<EOF
-$(laravel_runtime_paths)
-EOF
-
-  chmod 664 "$backend/database/database.sqlite"
-  rm -f "$backend/database/database.sqlite-wal" "$backend/database/database.sqlite-shm"
-
-  echo "laravel runtime prepared for ${runtime_user}:${runtime_group} (${runtime_uid}:${runtime_gid})"
-}
-
-ensure_public_storage_link() {
-  local backend
-
-  backend="$(backend_dir)"
-
-  if [ -L "$backend/public/storage" ] || [ -d "$backend/public/storage" ]; then
-    return 0
-  fi
-
   compose exec -T php sh -lc '
     set -eu
     cd /var/www/backend
-    php artisan storage:link >/dev/null
+    [ -f .env ] || cp example.env .env
+    mkdir -p       database       storage/app/public       storage/app/private       storage/framework/cache       storage/framework/cache/data       storage/framework/sessions       storage/framework/views       storage/framework/testing       storage/logs       bootstrap/cache       public/storage
+    [ -f database/database.sqlite ] || touch database/database.sqlite
+    chown -R www-data:www-data database storage bootstrap/cache public/storage
+    find database storage bootstrap/cache -type d -exec chmod 775 {} \;
+    find database storage bootstrap/cache -type f -exec chmod 664 {} \;
+  '
+}
+
+ensure_public_storage_link() {
+  compose exec -T php sh -lc '
+    set -eu
+    cd /var/www/backend
+    php artisan storage:link >/dev/null || true
   '
 }
 
