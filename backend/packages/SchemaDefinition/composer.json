@@ -1,0 +1,24 @@
+{
+  "name": "autoteka/schema-definition",
+  "description": "Schema and column enums plus migrations for Autoteka shared SQLite database.",
+  "version": "1.0.0",
+  "type": "library",
+  "license": "proprietary",
+  "autoload": {
+    "psr-4": {
+      "Autoteka\\SchemaDefinition\\": "src/"
+    }
+  },
+  "require-dev": {
+    "phpstan/phpstan": "2.1.22"
+  },
+  "extra": {
+    "laravel": {
+      "providers": [
+        "Autoteka\\SchemaDefinition\\SchemaDefinitionServiceProvider"
+      ]
+    }
+  },
+  "minimum-stability": "stable",
+  "prefer-stable": true
+}

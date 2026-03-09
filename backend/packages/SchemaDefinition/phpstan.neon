@@ -1,0 +1,6 @@
+parameters:
+  level: 7
+  paths:
+    - src
+    - database/migrations
+  tmpDir: .phpstan

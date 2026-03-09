@@ -165,18 +165,18 @@ function Invoke-ExternalCommand {
   if ($expansion.MissingVars.Count -gt 0) {
     $missing = ($expansion.MissingVars -join ", ")
     Write-Log "SKIP (empty env): $CommandLine | missing: $missing"
-    return
+    return $false
   }
 
   $Expanded = $expansion.Expanded.Trim()
   if ([string]::IsNullOrWhiteSpace($Expanded)) {
     Write-Log "SKIP (empty command after env expansion): $CommandLine"
-    return
+    return $false
   }
 
   if ($Mode -eq "DryRun") {
     Write-Log "DRYRUN: $Expanded `"$File`""
-    return
+    return $true
   }
 
   $FullCommand = "$Expanded `"$File`""
@@ -203,7 +203,10 @@ function Invoke-ExternalCommand {
     }
 
     Write-Log "WARN: $msg"
+    return $false
   }
+
+  return $true
 }
 
 function Get-RuleForFile {
@@ -247,28 +250,44 @@ function Invoke-FileLint {
     return
   }
 
+  $hadFailure = $false
+
   try {
     # FORMAT
     if ($Rule.ContainsKey("format")) {
       $formatRule = $Rule["format"]
       if ($formatRule -is [System.Collections.IEnumerable] -and -not ($formatRule -is [string])) {
         foreach ($fmtCmd in $formatRule) {
-          Invoke-ExternalCommand $fmtCmd $Resolved
+          $ok = Invoke-ExternalCommand $fmtCmd $Resolved
+          if (-not $ok) {
+            $hadFailure = $true
+          }
         }
       }
       else {
-        Invoke-ExternalCommand $formatRule $Resolved
+        $ok = Invoke-ExternalCommand $formatRule $Resolved
+        if (-not $ok) {
+          $hadFailure = $true
+        }
       }
     }
 
     # LINT
     if ($Rule.ContainsKey("lint")) {
       foreach ($cmd in $Rule["lint"]) {
-        Invoke-ExternalCommand $cmd $Resolved
+        $ok = Invoke-ExternalCommand $cmd $Resolved
+        if (-not $ok) {
+          $hadFailure = $true
+        }
       }
     }
 
-    Write-Log "OK: $Resolved"
+    if ($hadFailure) {
+      Write-Log "WARN: completed with issues: $Resolved"
+    }
+    else {
+      Write-Log "OK: $Resolved"
+    }
   }
   catch {
     Write-Log "ERROR: $($_.Exception.Message)"
