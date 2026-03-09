@@ -16,14 +16,40 @@ param (
     )
 )
 
+Set-StrictMode -Version Latest
+$ErrorActionPreference = 'Stop'
+
 foreach ($file in $Files) {
-    $parent = Split-Path -Path $file -Parent
-    if (-not [string]::IsNullOrWhiteSpace($parent) -and -not (Test-Path -Path $parent)) {
-        New-Item -ItemType Directory -Path $parent -Force | Out-Null
+    if ([string]::IsNullOrWhiteSpace($file)) {
+        throw 'Параметр -Files содержит пустое значение.'
     }
 
-    if ($PSCmdlet.ShouldProcess($file, 'Truncate file')) {
-        [System.IO.File]::Create($file).Dispose()
-        Write-Output "Очистка выполнена: $file"
+    $targetPath = if ([System.IO.Path]::IsPathRooted($file)) {
+        $file
+    }
+    else {
+        Join-Path -Path $PSScriptRoot -ChildPath $file
+    }
+
+    try {
+        $parent = Split-Path -Path $targetPath -Parent
+        if (-not [string]::IsNullOrWhiteSpace($parent) -and -not (Test-Path -LiteralPath $parent)) {
+            New-Item -ItemType Directory -Path $parent -Force | Out-Null
+        }
+
+        if (Test-Path -LiteralPath $targetPath -PathType Container) {
+            throw "Ожидался путь к файлу, но получена директория: $targetPath"
+        }
+
+        if ($PSCmdlet.ShouldProcess($targetPath, 'Truncate file')) {
+            if (-not (Test-Path -LiteralPath $targetPath -PathType Leaf)) {
+                New-Item -ItemType File -Path $targetPath -Force | Out-Null
+            }
+            Set-Content -LiteralPath $targetPath -Value $null -NoNewline -Encoding utf8
+            Write-Output "Очистка выполнена: $targetPath"
+        }
+    }
+    catch {
+        throw "Ошибка очистки '$file': $($_.Exception.Message)"
     }
 }
