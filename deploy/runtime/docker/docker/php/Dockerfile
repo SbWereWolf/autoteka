@@ -13,20 +13,20 @@ RUN --mount=type=cache,target=/tmp/composer-cache     composer install       --n
 FROM php-base AS prod
 COPY --from=composer-deps /app/backend/vendor ./vendor
 COPY backend .
-COPY deploy/runtime/docker/php/php.ini.prod.template /usr/local/share/php/zz-app.ini.template
-COPY deploy/runtime/docker/php/php-fpm-www.prod.template /usr/local/share/php-fpm/zz-www.conf.template
-COPY deploy/runtime/docker/php/prod-entrypoint.sh /usr/local/bin/backend-entrypoint
+COPY deploy/runtime/docker/docker/php/php.ini.prod.template /usr/local/share/php/zz-app.ini.template
+COPY deploy/runtime/docker/docker/php/php-fpm-www.prod.template /usr/local/share/php-fpm/zz-www.conf.template
+COPY deploy/runtime/docker/docker/php/prod-entrypoint.sh /usr/local/bin/backend-entrypoint
 RUN chmod +x /usr/local/bin/backend-entrypoint  && mkdir -p database storage/framework/cache storage/framework/sessions storage/framework/views storage/logs bootstrap/cache public/storage  && chown -R www-data:www-data /var/www/backend
 EXPOSE 9000
 ENTRYPOINT ["/usr/local/bin/backend-entrypoint"]
 CMD ["php-fpm", "-F"]
 
 FROM php-base AS dev
-RUN pecl install xdebug  && docker-php-ext-enable xdebug  && rm -rf /tmp/pear
-COPY deploy/runtime/docker/php/php.ini.dev /usr/local/etc/php/conf.d/zz-app.ini
-COPY deploy/runtime/docker/php/xdebug.ini.template /usr/local/share/php/zz-xdebug.ini.template
-COPY deploy/runtime/docker/php/php-fpm-www.dev.conf /usr/local/etc/php-fpm.d/zz-www.conf
-COPY deploy/runtime/docker/php/dev-entrypoint.sh /usr/local/bin/backend-entrypoint
+RUN apk add --no-cache autoconf gcc g++ make     && pecl install xdebug     && docker-php-ext-enable xdebug     && rm -rf /tmp/pear     && apk del autoconf gcc g++ make
+COPY deploy/runtime/docker/docker/php/php.ini.dev /usr/local/etc/php/conf.d/zz-app.ini
+COPY deploy/runtime/docker/docker/php/xdebug.ini.template /usr/local/share/php/zz-xdebug.ini.template
+COPY deploy/runtime/docker/docker/php/php-fpm-www.dev.conf /usr/local/etc/php-fpm.d/zz-www.conf
+COPY deploy/runtime/docker/docker/php/dev-entrypoint.sh /usr/local/bin/backend-entrypoint
 RUN chmod +x /usr/local/bin/backend-entrypoint
 WORKDIR /workspace/backend
 EXPOSE 9000

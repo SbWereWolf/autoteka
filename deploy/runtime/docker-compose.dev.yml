@@ -4,7 +4,7 @@ services:
   php:
     build:
       context: ${AUTOTEKA_ROOT:-../..}
-      dockerfile: deploy/runtime/docker/php/Dockerfile
+      dockerfile: deploy/runtime/docker/docker/php/Dockerfile
       target: dev
     container_name: autoteka-dev-php
     working_dir: /workspace/backend
@@ -34,7 +34,7 @@ services:
   frontend:
     build:
       context: ${AUTOTEKA_ROOT:-../..}
-      dockerfile: deploy/runtime/docker/dev/frontend/Dockerfile
+      dockerfile: deploy/runtime/docker/docker/dev/frontend/Dockerfile
     container_name: autoteka-dev-frontend
     working_dir: /workspace/frontend
     environment:
@@ -54,7 +54,7 @@ services:
   web:
     build:
       context: ${AUTOTEKA_ROOT:-../..}
-      dockerfile: deploy/runtime/docker/dev/nginx/Dockerfile
+      dockerfile: deploy/runtime/docker/docker/dev/nginx/Dockerfile
     container_name: autoteka-dev-web
     depends_on:
       - php
@@ -69,6 +69,8 @@ services:
       CORS_ALLOW_CREDENTIALS: ${CORS_ALLOW_CREDENTIALS:-false}
       CORS_MAX_AGE: ${CORS_MAX_AGE:-86400}
       API_CACHE_TTL: ${API_CACHE_TTL:-3600}
+      API_CACHE_CONTROL_GET: ${API_CACHE_CONTROL_GET:-public, max-age=${API_CACHE_TTL:-3600}}
+      API_CACHE_CONTROL_MUTATION: ${API_CACHE_CONTROL_MUTATION:-no-store, no-cache, must-revalidate, max-age=0}
     volumes:
       - ${AUTOTEKA_ROOT:-../..}/frontend:/workspace/frontend:ro
       - autoteka_frontend_dist:/workspace/frontend/dist:ro
