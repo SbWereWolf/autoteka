@@ -50,6 +50,10 @@ install -m 0644 "$DEPLOY_DIR/observability/infrastructure/systemd/server-watchdo
 install -m 0644 "$DEPLOY_DIR/observability/infrastructure/systemd/server-watchdog.timer" /etc/systemd/system/server-watchdog.timer
 install -m 0644 "$DEPLOY_DIR/maintenance/systemd/server-maintenance.service" /etc/systemd/system/server-maintenance.service
 install -m 0644 "$DEPLOY_DIR/maintenance/systemd/server-maintenance.timer" /etc/systemd/system/server-maintenance.timer
+install -m 0644 "$DEPLOY_DIR/maintenance/config/logrotate-vue-app-deploy.conf" /etc/logrotate.d/vue-app-deploy
+install -m 0644 "$DEPLOY_DIR/maintenance/config/logrotate-server-watchdog.conf" /etc/logrotate.d/server-watchdog
+install -m 0644 "$DEPLOY_DIR/maintenance/config/logrotate-autoteka-telegram.conf" /etc/logrotate.d/autoteka-telegram
+install -m 0644 "$DEPLOY_DIR/maintenance/config/logrotate-autoteka-backend.conf" /etc/logrotate.d/autoteka-backend
 systemctl daemon-reload
 systemctl enable --now fail2ban >/dev/null 2>&1 || true
 systemctl restart docker || true

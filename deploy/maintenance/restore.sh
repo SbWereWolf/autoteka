@@ -280,6 +280,7 @@ say "Restoring logrotate..."
 restore_file "$BACKUP_ROOT/etc/logrotate.d/vue-app-deploy" /etc/logrotate.d/vue-app-deploy
 restore_file "$BACKUP_ROOT/etc/logrotate.d/server-watchdog" /etc/logrotate.d/server-watchdog
 restore_file "$BACKUP_ROOT/etc/logrotate.d/autoteka-telegram" /etc/logrotate.d/autoteka-telegram
+restore_file "$BACKUP_ROOT/etc/logrotate.d/autoteka-backend" /etc/logrotate.d/autoteka-backend
 
 reset_runtime_health_state
 

@@ -63,6 +63,7 @@ LOGROTATE_FILES=(
   /etc/logrotate.d/vue-app-deploy
   /etc/logrotate.d/server-watchdog
   /etc/logrotate.d/autoteka-telegram
+  /etc/logrotate.d/autoteka-backend
 )
 
 APP_LOGS=(

@@ -46,9 +46,9 @@
   - [TODO.md](operational/TODO.md),
   - [DECISIONS.md](operational/DECISIONS.md),
   - [EVIDENCE.md](operational/EVIDENCE.md)
-- После каждого завершенного шага обнови соответствующий файл
-  (файлы PLAN.md, TODO.md, DECISIONS.md, EVIDENCE.md запрещено 
-  форматировать и записывать в историю версий)
+- После каждого завершенного шага обнови соответствующий файл (файлы
+  PLAN.md, TODO.md, DECISIONS.md, EVIDENCE.md запрещено форматировать
+  и записывать в историю версий)
 - В ответе возвращай только:
   - что сделал
   - что узнал

@@ -136,6 +136,8 @@ copy_if_exists /etc/logrotate.d/server-watchdog \
   "$BACKUP_ROOT/etc/logrotate.d/server-watchdog" || true
 copy_if_exists /etc/logrotate.d/autoteka-telegram \
   "$BACKUP_ROOT/etc/logrotate.d/autoteka-telegram" || true
+copy_if_exists /etc/logrotate.d/autoteka-backend \
+  "$BACKUP_ROOT/etc/logrotate.d/autoteka-backend" || true
 
 Path="$BACKUP_ROOT/BACKUP_NOTES.txt"
 cat > "$Path" <<NOTES

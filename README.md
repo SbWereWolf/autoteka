@@ -86,6 +86,15 @@ php artisan serve
 - Локальные значения учётки берутся из `backend/.env` (создаётся из
   `backend/example.env`) -> `MOONSHINE_ADMIN_*`
 
+Архитектурный инвариант backend:
+
+- backend разделён на 2 отдельных модуля:
+  - `backend/apps/API` — API;
+  - `backend/apps/DatabaseOperator` — админка (MoonShine).
+- логи пишутся в 2 отдельных файла:
+  - `backend/apps/API/storage/logs/laravel.log`;
+  - `backend/apps/DatabaseOperator/storage/logs/laravel.log`.
+
 ### Dev runtime с выбором php target (override)
 
 Запуск dev-runtime c `php` target = `dev`:

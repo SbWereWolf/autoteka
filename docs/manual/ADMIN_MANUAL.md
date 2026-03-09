@@ -9,6 +9,22 @@
 - как запускать рабочие контуры и выполнять повседневные операции;
 - как чинить, обслуживать и диагностировать систему.
 
+## 0. Навигация По Документам
+
+- `docs/foundations/IMPLEMENTATION.md` — архитектура и кодовая
+  реализация для разработчиков.
+- `deploy/DEPLOY.md` — deploy-процессы, install/backup/restore,
+  systemd/compose и эксплуатационный контур для админов.
+- `docs/manual/ADMIN_MANUAL.md` (этот документ) — практические
+  инструкции по развёртыванию установки, регулярному обслуживанию и
+  устранению аварий.
+
+Система разделена на 3 backend-модуля:
+
+- `backend/apps/API` — API;
+- `backend/apps/DatabaseOperator` — back office (MoonShine);
+- `backend/packages/SchemaDefinition` — общий schema/package модуль.
+
 ## 1. Зоны ответственности
 
 ### Контент-администратор
@@ -188,9 +204,10 @@ public media.
 
 Примеры backend-операций:
 
-- `php artisan migrate`
-- `php artisan db:seed --class=AdminUserSeeder`
-- `php artisan test`
+- `cd backend/apps/DatabaseOperator && php artisan migrate`
+- `cd backend/apps/DatabaseOperator && php artisan db:seed --class=AdminUserSeeder`
+- `cd backend/apps/API && php artisan test`
+- `cd backend/apps/DatabaseOperator && php artisan test`
 
 Специальная команда:
 
@@ -365,13 +382,13 @@ docker compose -f runtime/docker-compose.dev.yml ps
 Посмотреть логи web:
 
 ```bash
-docker compose -f deploy/runtime/runtime/docker-compose.dev.yml logs -f web
+docker compose -f deploy/runtime/docker-compose.dev.yml logs -f web
 ```
 
 Посмотреть логи php:
 
 ```bash
-docker compose -f deploy/runtime/runtime/docker-compose.dev.yml logs -f php
+docker compose -f deploy/runtime/docker-compose.dev.yml logs -f php
 ```
 
 Сделать dry-run проверки и ремонта production:
@@ -402,7 +419,8 @@ sudo systemctl start server-maintenance.service
 ```
 
 Подробности по смыслу и ограничениям deploy-скриптов см. в
-`deploy/DEPLOY.md`.
+[DEPLOY](../../deploy/DEPLOY.md). Архитектурный контекст модулей см. в
+[IMPLEMENTATION](../foundations/IMPLEMENTATION.md).
 
 ## 8. Серверные скрипты deploy
 
