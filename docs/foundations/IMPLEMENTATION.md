@@ -210,6 +210,12 @@ storage symlink).
 - `/var/www/backend/apps/API/storage/logs/laravel.log`
 - `/var/www/backend/apps/DatabaseOperator/storage/logs/laravel.log`
 
+MoonShine media и shop-изображения фактически читаются из корня
+`backend/storage/app/public` (runtime:
+`/var/www/backend/storage/app/public`). Поэтому для инфраструктурного
+backup покрывается весь корень `backend/storage` (ops-механика описана
+в [DEPLOY](../../deploy/DEPLOY.md)).
+
 ## 5. Deploy и operations (границы документа)
 
 Низкоуровневые сценарии развёртывания, systemd/timers, backup/restore,

@@ -249,13 +249,14 @@ deploy создаст его из `frontend/example.env`.
 
 **Шаблоны в репозитории:**
 
-- `deploy/bootstrap/bootstrap/config/deploy.example.env` — шаблон для
+- `deploy/bootstrap/config/deploy.example.env` — шаблон для
   `/etc/autoteka/deploy.env`. Устанавливается `install.sh` при первом
   запуске, если файл отсутствует. Содержит параметры `AUTOTEKA_ROOT`,
-  `BRANCH`, `REMOTE`, `HTTP_PORT`. Подробности см.
+  `BRANCH`, `REMOTE`, `HTTP_PORT`, `STORAGE_BACKUP_DIR`,
+  `STORAGE_BACKUP_RETENTION_DAYS`. Подробности см.
   [DEPLOY §5.5](../../deploy/DEPLOY.md#55-deployconfigdeployexampleenv).
-- `deploy/bootstrap/bootstrap/config/telegram.example.env` — шаблон
-  для `/etc/autoteka/telegram.env`. Устанавливается `install.sh`
+- `deploy/bootstrap/config/telegram.example.env` — шаблон для
+  `/etc/autoteka/telegram.env`. Устанавливается `install.sh`
   опционально, если файл отсутствует. Содержит `TELEGRAM_TOKEN` и
   `TELEGRAM_CHAT`. Подробности см.
   [DEPLOY §5.6](../../deploy/DEPLOY.md#56-deployconfigtelegramenvexample).
@@ -268,9 +269,9 @@ deploy создаст его из `frontend/example.env`.
 
 - `backend/example.env`;
 - `frontend/example.env`;
-- `deploy/bootstrap/bootstrap/config/deploy.example.env`;
-- `deploy/bootstrap/bootstrap/config/dev.example.env`;
-- `deploy/bootstrap/bootstrap/config/telegram.example.env`.
+- `deploy/bootstrap/config/deploy.example.env`;
+- `deploy/bootstrap/config/dev.example.env`;
+- `deploy/bootstrap/config/telegram.example.env`.
 
 Рабочие env-файлы:
 
@@ -412,6 +413,12 @@ autoteka backup
 autoteka restore <backup-path>
 ```
 
+Запустить storage+database backup вручную:
+
+```bash
+autoteka backup-storage
+```
+
 Запустить maintenance вручную:
 
 ```bash
@@ -442,6 +449,8 @@ sudo systemctl start server-maintenance.service
   и экспорт метрик;
 - `metrics-export.sh` — преобразование логов метрик в JSON;
 - `server-maintenance.sh` — ежедневное безопасное техобслуживание;
+- `storage-backup.sh` — backup `backend/storage` +
+  `database/database.sqlite` с ротацией старых архивов;
 - `backup.sh` — резервное копирование deploy-настроек (env, systemd,
   docker, fail2ban, logrotate);
 - `restore.sh` — восстановление из резервной копии;

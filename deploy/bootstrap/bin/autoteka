@@ -43,6 +43,7 @@ Commands:
   repair-infra      Re-enable timers and reset watchdog counters.
   maintenance       Run periodic maintenance tasks.
   backup            Create a deploy-configuration backup archive.
+  backup-storage    Create storage+database backup archive.
   restore           Restore deploy configuration from a backup archive.
   uninstall         Remove installed services/configuration by mode.
 
@@ -292,6 +293,24 @@ Accepted values:
 USAGE
 }
 
+print_backup_storage_usage() {
+  cat <<'USAGE'
+Usage:
+  autoteka backup-storage [--dry-run]
+
+Purpose:
+  Create an archive with backend storage and SQLite database, then rotate
+  old archives according to retention policy from /etc/autoteka/deploy.env.
+
+Arguments:
+  --dry-run, -n      Print planned actions without creating archive.
+  --help, -h         Show this help.
+
+Accepted values:
+  --dry-run          Boolean flag. No value.
+USAGE
+}
+
 print_uninstall_usage() {
   cat <<'USAGE'
 Usage:
@@ -331,6 +350,7 @@ print_command_usage() {
     repair-infra) print_repair_infra_usage ;;
     maintenance) print_maintenance_usage ;;
     backup) print_backup_usage ;;
+    backup-storage) print_backup_storage_usage ;;
     restore) print_restore_usage ;;
     uninstall) print_uninstall_usage ;;
     ""|-h|--help|help) print_global_usage ;;
@@ -453,6 +473,14 @@ case "$CMD" in
     fi
     ensure_autoteka_root
     exec "$AUTOTEKA_ROOT/deploy/maintenance/backup.sh" "$@"
+    ;;
+  backup-storage)
+    if [ "${1:-}" = "-h" ] || [ "${1:-}" = "--help" ]; then
+      print_backup_storage_usage
+      exit 0
+    fi
+    ensure_autoteka_root
+    exec bash "$AUTOTEKA_ROOT/deploy/maintenance/storage-backup.sh" "$@"
     ;;
   restore)
     if [ "${1:-}" = "-h" ] || [ "${1:-}" = "--help" ]; then

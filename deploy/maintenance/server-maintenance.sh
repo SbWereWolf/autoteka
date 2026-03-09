@@ -88,6 +88,13 @@ if [ -f /var/lib/logrotate/status ]; then
   fi
 fi
 
+log "storage+database backup"
+if ! bash "$DEPLOY_DIR/maintenance/storage-backup.sh"; then
+  log "ERROR storage backup failed"
+  notify_maintenance_error "MAINTENANCE_STORAGE_BACKUP_FAILED" \
+    "не удалось создать storage+database backup или очистить старые архивы"
+fi
+
 log "Maintenance end"
 if [ "$MAINTENANCE_HAS_ERRORS" -eq 0 ]; then
   clear_script_notification_locks "$SCRIPT_ID"
