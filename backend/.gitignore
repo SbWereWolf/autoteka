@@ -1,12 +1,7 @@
 /.env
-/vendor
 /apps/*/vendor
 /storage/logs/*
-/storage/framework/cache/*
-/storage/framework/sessions/*
-/storage/framework/views/*
-!/storage/logs/.gitignore
-!/storage/framework/cache/.gitignore
-!/storage/framework/sessions/.gitignore
-!/storage/framework/views/.gitignore
 /database/*.sqlite
+/packages/SchemaDefinition/.phpstan/cache/
+/packages/SchemaDefinition/.phpstan/resultCache.php
+/packages/SchemaDefinition/vendor/
