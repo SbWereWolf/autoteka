@@ -5,11 +5,12 @@ node_modules
 /inbox/
 scripts/.env
 /frontend/dist/
-/deploy/metrics/data.json
+/deploy/observability/application/metrics/data.json
 /frontend/.env
 /tasks/
 /backup/
 !backup/README.md
 /frontend/test-results/
 /operational/
+!/operational/.gitkeep
 /deploy/.env

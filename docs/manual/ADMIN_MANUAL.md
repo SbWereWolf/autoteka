@@ -232,13 +232,13 @@ deploy создаст его из `frontend/example.env`.
 
 **Шаблоны в репозитории:**
 
-- `deploy/config/deploy.example.env` — шаблон для
+- `deploy/bootstrap/bootstrap/config/deploy.example.env` — шаблон для
   `/etc/autoteka/deploy.env`. Устанавливается `install.sh` при первом
   запуске, если файл отсутствует. Содержит параметры `AUTOTEKA_ROOT`,
   `BRANCH`, `REMOTE`, `HTTP_PORT`. Подробности см.
   [DEPLOY §5.5](../../deploy/DEPLOY.md#55-deployconfigdeployexampleenv).
-- `deploy/config/telegram.example.env` — шаблон для
-  `/etc/autoteka/telegram.env`. Устанавливается `install.sh`
+- `deploy/bootstrap/bootstrap/config/telegram.example.env` — шаблон
+  для `/etc/autoteka/telegram.env`. Устанавливается `install.sh`
   опционально, если файл отсутствует. Содержит `TELEGRAM_TOKEN` и
   `TELEGRAM_CHAT`. Подробности см.
   [DEPLOY §5.6](../../deploy/DEPLOY.md#56-deployconfigtelegramenvexample).
@@ -251,9 +251,9 @@ deploy создаст его из `frontend/example.env`.
 
 - `backend/example.env`;
 - `frontend/example.env`;
-- `deploy/config/deploy.example.env`;
-- `deploy/config/dev.example.env`;
-- `deploy/config/telegram.example.env`.
+- `deploy/bootstrap/bootstrap/config/deploy.example.env`;
+- `deploy/bootstrap/bootstrap/config/dev.example.env`;
+- `deploy/bootstrap/bootstrap/config/telegram.example.env`.
 
 Рабочие env-файлы:
 
@@ -270,8 +270,8 @@ apt update && apt install -y git
 mkdir -p /opt/vue-app
 cd /opt/vue-app
 git clone <YOUR_REPO_URL> .
-chmod +x ./deploy/install.sh
-sudo ./deploy/install.sh
+chmod +x ./deploy/bootstrap/install.sh
+sudo ./deploy/bootstrap/install.sh
 autoteka deploy
 ```
 
@@ -288,7 +288,7 @@ systemctl status autoteka.service
 systemctl status watch-changes.timer
 systemctl status server-watchdog.timer
 systemctl status server-maintenance.timer
-docker compose -f deploy/docker-compose.yml ps
+docker compose -f deploy/runtime/docker-compose.yml ps
 ```
 
 ### 7.3. Как запустить local dev / debug
@@ -297,32 +297,32 @@ docker compose -f deploy/docker-compose.yml ps
 
 ```bash
 cd deploy
-cp config/dev.example.env .env
-docker compose -f docker-compose.dev.yml up --build
+cp bootstrap/config/dev.example.env .env
+docker compose -f runtime/docker-compose.dev.yml up --build
 ```
 
 Запуск в фоне:
 
 ```bash
-docker compose -f docker-compose.dev.yml up --build -d
+docker compose -f runtime/docker-compose.dev.yml up --build -d
 ```
 
 Остановить dev/debug-контур:
 
 ```bash
-docker compose -f docker-compose.dev.yml down
+docker compose -f runtime/docker-compose.dev.yml down
 ```
 
 Переcобрать контейнеры:
 
 ```bash
-docker compose -f docker-compose.dev.yml build
+docker compose -f runtime/docker-compose.dev.yml build
 ```
 
 Открыть shell в backend-контейнере:
 
 ```bash
-docker compose -f docker-compose.dev.yml exec php sh
+docker compose -f runtime/docker-compose.dev.yml exec php sh
 ```
 
 По умолчанию приложение доступно по адресу `http://127.0.0.1:8081`.
@@ -352,26 +352,26 @@ docker compose -f docker-compose.dev.yml exec php sh
 Проверить контейнеры production:
 
 ```bash
-docker compose -f deploy/docker-compose.yml ps
+docker compose -f deploy/runtime/docker-compose.yml ps
 ```
 
 Проверить контейнеры local dev/debug:
 
 ```bash
 cd deploy
-docker compose -f docker-compose.dev.yml ps
+docker compose -f runtime/docker-compose.dev.yml ps
 ```
 
 Посмотреть логи web:
 
 ```bash
-docker compose -f deploy/docker-compose.dev.yml logs -f web
+docker compose -f deploy/runtime/runtime/docker-compose.dev.yml logs -f web
 ```
 
 Посмотреть логи php:
 
 ```bash
-docker compose -f deploy/docker-compose.dev.yml logs -f php
+docker compose -f deploy/runtime/runtime/docker-compose.dev.yml logs -f php
 ```
 
 Сделать dry-run проверки и ремонта production:
@@ -433,8 +433,8 @@ sudo systemctl start server-maintenance.service
 
 ## 9. Что делает uninstall.sh
 
-`deploy/uninstall.sh` предназначен для удаления deployment-инсталляции
-системы.
+`deploy/bootstrap/uninstall.sh` предназначен для удаления
+deployment-инсталляции системы.
 
 Режимы:
 

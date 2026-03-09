@@ -11,7 +11,10 @@ const DEPLOY_ROOT = join(__dirname, "..");
 
 describe("TC-DEPLOY-005", () => {
   it("deploy.sh содержит упоминания composer, migrate, seed, admin/login", () => {
-    const content = readFileSync(join(DEPLOY_ROOT, "deploy.sh"), "utf-8");
+    const content = readFileSync(
+      join(DEPLOY_ROOT, "runtime/deploy.sh"),
+      "utf-8",
+    );
     expect(content).toMatch(/composer/);
     expect(content).toMatch(/migrate/);
     expect(content).toMatch(/seed/);

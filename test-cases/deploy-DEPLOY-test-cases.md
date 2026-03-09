@@ -14,7 +14,7 @@
 - Утверждение: deployment-контур использует `docker compose`,
   контейнеры `web` и `php`.
 - Проверка:
-  1. Проверить `deploy/docker-compose.yml`.
+  1. Проверить `deploy/runtime/docker-compose.yml`.
   2. Убедиться, что сервисы `web` и `php` объявлены.
 - Ожидаемый результат: compose-файл содержит оба сервиса.
 - Тип: automated
@@ -25,7 +25,7 @@
 - Утверждение: `watch-changes.sh` выполняет `git fetch`, сравнивает
   `HEAD` и `REMOTE/BRANCH`, при необходимости запускает раскатку.
 - Проверка:
-  1. Проверить шаги в `deploy/watch-changes.sh`.
+  1. Проверить шаги в `deploy/runtime/watch-changes.sh`.
   2. Запустить сценарий "без изменений" и "с изменениями".
 - Ожидаемый результат:
   - при совпадении commit фиксируется `no changes`;
@@ -52,7 +52,7 @@
 - Утверждение: `deploy.sh` работает с текущим `HEAD` без повторного
   `git fetch` и `git reset`.
 - Проверка:
-  1. Проанализировать `deploy/deploy.sh`.
+  1. Проанализировать `deploy/runtime/deploy.sh`.
   2. Проверить отсутствие `git fetch` и `git reset` в скрипте.
 - Ожидаемый результат: `deploy.sh` не делает повторную
   git-синхронизацию.
@@ -65,7 +65,7 @@
   выполняет `composer install`, `artisan`, `migrate`, `seed`,
   smoke-check `/admin/login`, затем запускает/перезапускает `web`.
 - Проверка:
-  1. Проверить последовательность шагов в `deploy/deploy.sh`.
+  1. Проверить последовательность шагов в `deploy/runtime/deploy.sh`.
   2. Выполнить dry-run интеграционный прогон deploy.
 - Ожидаемый результат: шаги выполняются в описанном порядке.
 - Тип: automated
@@ -101,7 +101,9 @@
 - Утверждение: wrapper `/usr/local/bin/autoteka` используется systemd
   unit'ами вместо захардкоженного пути к репозиторию.
 - Проверка:
-  1. Проверить unit-файлы в `deploy/systemd/`.
+  1. Проверить unit-файлы в `deploy/runtime/systemd/`,
+     `deploy/observability/infrastructure/systemd/` и
+     `deploy/maintenance/systemd/`.
   2. Убедиться, что они вызывают `/usr/local/bin/autoteka`.
 - Ожидаемый результат: unit'ы используют wrapper.
 - Тип: automated
@@ -112,7 +114,7 @@
 - Утверждение: `install.sh` устанавливает пакеты, Docker, unit'ы,
   timer'ы, logrotate и готовит `/etc/autoteka/*.env`.
 - Проверка:
-  1. Проверить шаги в `deploy/install.sh`.
+  1. Проверить шаги в `deploy/bootstrap/install.sh`.
   2. Выполнить установку в чистом стенде.
   3. Проверить наличие заявленных артефактов.
 - Ожидаемый результат: после install присутствуют пакеты,
@@ -173,7 +175,8 @@
   `health`.
 - Проверка:
   1. Запустить `server-watchdog.sh` + `metrics-export.sh`.
-  2. Проверить файл `deploy/metrics/data.json`.
+  2. Проверить файл
+     `deploy/observability/application/metrics/data.json`.
   3. Проверить доступность `GET /metrics/data.json`.
 - Ожидаемый результат: JSON обновляется и содержит обязательные поля.
 - Тип: automated
@@ -233,7 +236,7 @@
   `journal vacuum`, docker prune, cleanup `/tmp`, фиксацию прав
   `/var/lib/logrotate/status`.
 - Проверка:
-  1. Проверить команды в `deploy/server-maintenance.sh`.
+  1. Проверить команды в `deploy/maintenance/server-maintenance.sh`.
   2. Выполнить скрипт и проверить следы выполнения в логах.
 - Ожидаемый результат: maintenance-шаги выполняются в заявленном
   составе.
@@ -274,7 +277,7 @@
   границами безопасности.
 - Проверка:
   1. Проверить парсинг аргументов и ветки режима в
-     `deploy/uninstall.sh`.
+     `deploy/bootstrap/uninstall.sh`.
   2. На стенде проверить side effects для каждого режима.
 - Ожидаемый результат: режимы и флаги соответствуют документированной
   логике удаления.

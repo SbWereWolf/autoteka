@@ -12,14 +12,20 @@ const DEPLOY_ROOT = join(__dirname, "..");
 
 describe("TC-DEPLOY-022", () => {
   it("uninstall.sh содержит ветки режимов soft, purge, nuke", () => {
-    const content = readFileSync(join(DEPLOY_ROOT, "uninstall.sh"), "utf-8");
+    const content = readFileSync(
+      join(DEPLOY_ROOT, "bootstrap/uninstall.sh"),
+      "utf-8",
+    );
     expect(content).toMatch(/\bsoft\b/);
     expect(content).toMatch(/\bpurge\b/);
     expect(content).toMatch(/\bnuke\b/);
   });
 
   it("uninstall.sh содержит флаги --force, --rm-etc, --rm-root", () => {
-    const content = readFileSync(join(DEPLOY_ROOT, "uninstall.sh"), "utf-8");
+    const content = readFileSync(
+      join(DEPLOY_ROOT, "bootstrap/uninstall.sh"),
+      "utf-8",
+    );
     expect(content).toMatch(/--force/);
     expect(content).toMatch(/--rm-etc/);
     expect(content).toMatch(/--rm-root/);

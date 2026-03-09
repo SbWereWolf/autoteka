@@ -20,8 +20,14 @@ const EXPECTED_VARS = [
 
 describe("TC-DEPLOY-007", () => {
   it("deploy.env.example или config содержит переменные", () => {
-    const examplePath = join(DEPLOY_ROOT, "config/deploy.env.example");
-    const altPath = join(DEPLOY_ROOT, "config/deploy.example.env");
+    const examplePath = join(
+      DEPLOY_ROOT,
+      "bootstrap/config/deploy.env.example",
+    );
+    const altPath = join(
+      DEPLOY_ROOT,
+      "bootstrap/config/deploy.example.env",
+    );
     const path = existsSync(examplePath) ? examplePath : altPath;
     expect(existsSync(path)).toBe(true);
     const content = readFileSync(path, "utf-8");
@@ -31,7 +37,12 @@ describe("TC-DEPLOY-007", () => {
   });
 
   it("deploy скрипты используют переменные из env", () => {
-    const deployContent = readFileSync(join(DEPLOY_ROOT, "deploy.sh"), "utf-8");
-    expect(deployContent).toMatch(/AUTOTEKA_ROOT|PHP_READY_TIMEOUT|ADMIN_SMOKE/);
+    const deployContent = readFileSync(
+      join(DEPLOY_ROOT, "runtime/deploy.sh"),
+      "utf-8",
+    );
+    expect(deployContent).toMatch(
+      /AUTOTEKA_ROOT|PHP_READY_TIMEOUT|ADMIN_SMOKE/,
+    );
   });
 });

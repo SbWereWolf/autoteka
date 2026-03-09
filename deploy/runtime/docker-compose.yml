@@ -1,0 +1,73 @@
+---
+# yamllint disable rule:line-length
+services:
+  php:
+    build:
+      context: ${AUTOTEKA_ROOT:-../..}
+      dockerfile: deploy/runtime/docker/php/Dockerfile
+      target: prod
+    container_name: autoteka-php
+    restart: unless-stopped
+    working_dir: /var/www/backend
+    environment:
+      APP_ENV: ${APP_ENV:-production}
+      APP_DEBUG: ${APP_DEBUG:-false}
+      APP_URL: ${APP_URL:-http://127.0.0.1}
+      APP_KEY: ${APP_KEY:-}
+      LOG_CHANNEL: ${LOG_CHANNEL:-stderr}
+      DB_CONNECTION: ${DB_CONNECTION:-sqlite}
+      DB_DATABASE: ${DB_DATABASE:-database/database.sqlite}
+      SESSION_DRIVER: ${SESSION_DRIVER:-database}
+      CACHE_STORE: ${CACHE_STORE:-database}
+      QUEUE_CONNECTION: ${QUEUE_CONNECTION:-database}
+      PHP_FPM_PM_MAX_CHILDREN: ${PHP_FPM_PM_MAX_CHILDREN:-20}
+      PHP_FPM_PM_START_SERVERS: ${PHP_FPM_PM_START_SERVERS:-4}
+      PHP_FPM_PM_MIN_SPARE_SERVERS: ${PHP_FPM_PM_MIN_SPARE_SERVERS:-2}
+      PHP_FPM_PM_MAX_SPARE_SERVERS: ${PHP_FPM_PM_MAX_SPARE_SERVERS:-6}
+      PHP_OPCACHE_VALIDATE_TIMESTAMPS: ${PHP_OPCACHE_VALIDATE_TIMESTAMPS:-0}
+      PHP_OPCACHE_REVALIDATE_FREQ: ${PHP_OPCACHE_REVALIDATE_FREQ:-0}
+      RUN_LARAVEL_OPTIMIZE: ${RUN_LARAVEL_OPTIMIZE:-true}
+    healthcheck:
+      test: ["CMD-SHELL", "SCRIPT_NAME=/fpm-ping SCRIPT_FILENAME=/fpm-ping REQUEST_METHOD=GET cgi-fcgi -bind -connect 127.0.0.1:9000 | grep -q 'pong'"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    volumes:
+      - autoteka_backend_database:/var/www/backend/database
+      - autoteka_backend_storage:/var/www/backend/storage/app/public
+
+  web:
+    build:
+      context: ${AUTOTEKA_ROOT:-../..}
+      dockerfile: deploy/runtime/docker/prod/nginx/Dockerfile
+      args:
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-/api/v1}
+        FRONTEND_BUILD_SOURCEMAP: ${FRONTEND_BUILD_SOURCEMAP:-false}
+    container_name: vue-app
+    restart: unless-stopped
+    depends_on:
+      - php
+    environment:
+      CORS_ALLOW_ORIGIN: ${CORS_ALLOW_ORIGIN:-*}
+      CORS_ALLOW_METHODS: ${CORS_ALLOW_METHODS:-GET,POST,PUT,PATCH,DELETE,OPTIONS}
+      CORS_ALLOW_HEADERS: ${CORS_ALLOW_HEADERS:-Authorization,Content-Type,Accept,Origin,X-Requested-With}
+      CORS_EXPOSE_HEADERS: ${CORS_EXPOSE_HEADERS:-Content-Length,Content-Range}
+      CORS_ALLOW_CREDENTIALS: ${CORS_ALLOW_CREDENTIALS:-false}
+      CORS_MAX_AGE: ${CORS_MAX_AGE:-86400}
+      API_CACHE_TTL: ${API_CACHE_TTL:-3600}
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O- http://127.0.0.1/healthcheck >/dev/null 2>&1 || exit 1"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+    ports:
+      - "${HTTP_BIND_HOST:-0.0.0.0}:${HTTP_PORT:-80}:80"
+    volumes:
+      - "${AUTOTEKA_ROOT:-../..}/deploy/observability/application/metrics:/usr/share/nginx/html/metrics:ro"
+      - autoteka_backend_storage:/var/www/backend/storage/app/public:ro
+
+volumes:
+  autoteka_backend_database:
+  autoteka_backend_storage:

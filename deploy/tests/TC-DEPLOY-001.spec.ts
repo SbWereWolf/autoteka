@@ -13,7 +13,7 @@ const DEPLOY_ROOT = join(__dirname, "..");
 describe("TC-DEPLOY-001", () => {
   it("docker-compose.yml содержит сервисы web и php", () => {
     const content = readFileSync(
-      join(DEPLOY_ROOT, "docker-compose.yml"),
+      join(DEPLOY_ROOT, "runtime/docker-compose.yml"),
       "utf-8",
     );
     expect(content).toMatch(/\bweb\s*:/);

@@ -17,17 +17,18 @@
   1. Установить `true`, перезагрузить страницу.
   2. Установить `false`, перезагрузить страницу.
   3. Проверить видимость кнопки `CSS переменные`.
-- Ожидаемый результат: поведение соответствует значению в localStorage.
+- Ожидаемый результат: поведение соответствует значению в
+  localStorage.
 - Тип: automated
 - Каталог тестов: `frontend/tests`
 
 ### TC-ADMIN-MANUAL-002
 
-- Утверждение: кнопка `CSS переменные` в `TopBar`,
-  редактор доступен на `/` и `/shop/:code`, скрыт на mobile breakpoint.
+- Утверждение: кнопка `CSS переменные` в `TopBar`, редактор доступен
+  на `/` и `/shop/:code`, скрыт на mobile breakpoint.
 - Проверка: e2e-проход по маршрутам и брейкпоинтам desktop/mobile.
-- Ожидаемый результат:
-  на desktop редактор доступен на двух страницах, на mobile скрыт.
+- Ожидаемый результат: на desktop редактор доступен на двух страницах,
+  на mobile скрыт.
 - Тип: automated
 - Каталог тестов: `frontend/tests`
 
@@ -45,21 +46,21 @@
 
 ### TC-ADMIN-MANUAL-004
 
-- Утверждение: значения CSS применяются в `.app` как inline properties,
-  валидация возможна через `CSS.supports`.
+- Утверждение: значения CSS применяются в `.app` как inline
+  properties, валидация возможна через `CSS.supports`.
 - Проверка:
   1. Установить валидное значение и проверить применение стиля.
   2. Установить невалидное значение и проверить отказ применения.
-- Ожидаемый результат:
-  валидные значения применяются, невалидные отбрасываются.
+- Ожидаемый результат: валидные значения применяются, невалидные
+  отбрасываются.
 - Тип: automated
 - Каталог тестов: `frontend/tests`
 
 ### TC-ADMIN-MANUAL-005
 
 - Утверждение: MoonShine login по умолчанию:
-  `http://127.0.0.1:8000/admin/login`,
-  `admin@example.com` / `admin12345`.
+  `http://127.0.0.1:8000/admin/login`, `admin@example.com` /
+  `admin12345`.
 - Проверка:
   1. Выполнить `db:seed --class=AdminUserSeeder`.
   2. Проверить вход на `/admin/login` дефолтной учёткой.
@@ -81,9 +82,9 @@
 
 ### TC-ADMIN-MANUAL-007
 
-- Утверждение: в MoonShine зарегистрированы ресурсы
-  `MoonShineUser`, `MoonShineUserRole`, `City`, `Category`, `Feature`,
-  `ContactType`, `Shop`.
+- Утверждение: в MoonShine зарегистрированы ресурсы `MoonShineUser`,
+  `MoonShineUserRole`, `City`, `Category`, `Feature`, `ContactType`,
+  `Shop`.
 - Проверка:
   1. Проверить регистрацию ресурсов в backend-коде.
   2. Проверить отображение сущностей в меню админки.
@@ -93,8 +94,9 @@
 
 ### TC-ADMIN-MANUAL-008
 
-- Утверждение: после правок в back office магазин корректно отображается
-  во front office, включая контакты, preview/gallery и `siteUrl`.
+- Утверждение: после правок в back office магазин корректно
+  отображается во front office, включая контакты, preview/gallery и
+  `siteUrl`.
 - Проверка: e2e-сценарий "создать/обновить магазин в админке ->
   проверить карточку во frontend".
 - Ожидаемый результат: данные и медиа отображаются корректно.
@@ -103,9 +105,9 @@
 
 ### TC-ADMIN-MANUAL-009
 
-- Утверждение: команды frontend-скриптов доступны в `frontend/package.json`
-  (`validate:mocks`, `check:unused-assets`, `check:data`,
-  `images:regen`, `images:moonshine`, `enrich:mocks`,
+- Утверждение: команды frontend-скриптов доступны в
+  `frontend/package.json` (`validate:mocks`, `check:unused-assets`,
+  `check:data`, `images:regen`, `images:moonshine`, `enrich:mocks`,
   `materialize:shop-media`, `sync:backend-media`).
 - Проверка:
   1. Проверить наличие всех скриптов.
@@ -118,7 +120,8 @@
 
 - Утверждение: backend-команда
   `autoteka:media:update-generated-paths-to-png` обновляет пути
-  `generated/*.svg` -> `generated/*.png` и подготавливает mirror-файлы.
+  `generated/*.svg` -> `generated/*.png` и подготавливает
+  mirror-файлы.
 - Проверка:
   1. Подготовить тестовые данные с `.svg` путями.
   2. Запустить artisan-команду.
@@ -142,8 +145,8 @@
 
 ### TC-ADMIN-MANUAL-012
 
-- Утверждение: в `deploy/` присутствуют скрипты
-  `install.sh`, `watch-changes.sh`, `deploy.sh`, `server-watchdog.sh`,
+- Утверждение: в `deploy/` присутствуют скрипты `install.sh`,
+  `watch-changes.sh`, `deploy.sh`, `server-watchdog.sh`,
   `metrics-export.sh`, `server-maintenance.sh`, `uninstall.sh`.
 - Проверка: проверить наличие всех перечисленных файлов.
 - Ожидаемый результат: набор серверных скриптов полный.
@@ -152,32 +155,31 @@
 
 ### TC-ADMIN-MANUAL-013
 
-- Утверждение: `uninstall.sh` поддерживает режимы
-  `soft`, `purge`, `nuke` и safety-границы для `--rm-root`/`--rm-etc`.
+- Утверждение: `uninstall.sh` поддерживает режимы `soft`, `purge`,
+  `nuke` и safety-границы для `--rm-root`/`--rm-etc`.
 - Проверка:
-  1. Проверить ветки режима и флаги в `deploy/uninstall.sh`.
+  1. Проверить ветки режима и флаги в `deploy/bootstrap/uninstall.sh`.
   2. На стенде проверить side effects по каждому режиму.
-- Ожидаемый результат:
-  логика удаления соответствует документу.
+- Ожидаемый результат: логика удаления соответствует документу.
 - Тип: automated
 - Каталог тестов: `deploy/tests`
 
 ### TC-ADMIN-MANUAL-014
 
-- Утверждение: минимальный регламент после изменений включает
-  проверки front/back office, `npm run check:data`, `systemctl`,
+- Утверждение: минимальный регламент после изменений включает проверки
+  front/back office, `npm run check:data`, `systemctl`,
   `docker compose ps`, логи и `/metrics`.
-- Проверка: сформировать integration checklist test,
-  который последовательно выполняет описанные шаги.
-- Ожидаемый результат:
-  регламент выполняется полностью и без пропусков.
+- Проверка: сформировать integration checklist test, который
+  последовательно выполняет описанные шаги.
+- Ожидаемый результат: регламент выполняется полностью и без
+  пропусков.
 - Тип: automated
 - Каталог тестов: `system-tests`
 
 ## Условно проверяемые утверждения
 
-- Роли "контент-администратор" и "технический администратор"
-  как организационные зоны ответственности проверяются process-check,
-  а не runtime-тестами.
-- Дата актуализации (`2026-03-07`) требует process-check
-  по артефактам Э3/Э4.
+- Роли "контент-администратор" и "технический администратор" как
+  организационные зоны ответственности проверяются process-check, а не
+  runtime-тестами.
+- Дата актуализации (`2026-03-07`) требует process-check по артефактам
+  Э3/Э4.

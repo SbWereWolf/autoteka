@@ -135,9 +135,9 @@
 
 - Утверждение: compose-контур поднимает `php` (`autoteka-php`) и `web`
   (`vue-app`), а `web` публикует порт, имеет healthcheck, монтирует
-  `deploy/metrics` и раздаёт `/storage/*`.
+  `deploy/observability/application/metrics` и раздаёт `/storage/*`.
 - Проверка:
-  1. Проверить `deploy/docker-compose.yml` и nginx-конфиг.
+  1. Проверить `deploy/runtime/docker-compose.yml` и nginx-конфиг.
   2. Поднять контур и проверить `docker compose ps` +
      `GET /storage/*`.
 - Ожидаемый результат: compose и web-конфигурация соответствуют

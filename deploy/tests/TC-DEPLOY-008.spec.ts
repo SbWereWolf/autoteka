@@ -8,14 +8,24 @@ import { fileURLToPath } from "node:url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const DEPLOY_ROOT = join(__dirname, "..");
-const SYSTEMD_DIR = join(DEPLOY_ROOT, "systemd");
+const SYSTEMD_DIRS = [
+  join(DEPLOY_ROOT, "runtime/systemd"),
+  join(DEPLOY_ROOT, "maintenance/systemd"),
+  join(DEPLOY_ROOT, "observability/infrastructure/systemd"),
+];
 
 describe("TC-DEPLOY-008", () => {
   it("service unit-файлы вызывают /usr/local/bin/autoteka", () => {
-    const files = readdirSync(SYSTEMD_DIR).filter((f) => f.endsWith(".service"));
+    const files = SYSTEMD_DIRS.flatMap((dir) =>
+      readdirSync(dir)
+        .filter((f) => f.endsWith(".service"))
+        .map((f) => join(dir, f)),
+    );
+
     expect(files.length).toBeGreaterThan(0);
-    for (const f of files) {
-      const content = readFileSync(join(SYSTEMD_DIR, f), "utf-8");
+
+    for (const path of files) {
+      const content = readFileSync(path, "utf-8");
       expect(content).toMatch(/\/usr\/local\/bin\/autoteka/);
     }
   });

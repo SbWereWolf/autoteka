@@ -12,7 +12,7 @@ const DEPLOY_ROOT = join(__dirname, "..");
 describe("TC-DEPLOY-002", () => {
   it("watch-changes.sh содержит git fetch", () => {
     const content = readFileSync(
-      join(DEPLOY_ROOT, "watch-changes.sh"),
+      join(DEPLOY_ROOT, "runtime/watch-changes.sh"),
       "utf-8",
     );
     expect(content).toMatch(/git\s+fetch/);
@@ -20,7 +20,7 @@ describe("TC-DEPLOY-002", () => {
 
   it("watch-changes.sh вызывает deploy.sh при расхождении", () => {
     const content = readFileSync(
-      join(DEPLOY_ROOT, "watch-changes.sh"),
+      join(DEPLOY_ROOT, "runtime/watch-changes.sh"),
       "utf-8",
     );
     expect(content).toMatch(/deploy\.sh|deploy\b/);

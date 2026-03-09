@@ -1,0 +1,470 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ENV_FILE="/etc/autoteka/deploy.env"
+
+load_env_if_present() {
+  if [ -f "$ENV_FILE" ]; then
+    # shellcheck disable=SC1090
+    set -a
+    source "$ENV_FILE" || true
+    set +a
+  fi
+}
+
+ensure_autoteka_root() {
+  load_env_if_present
+  if [ -z "${AUTOTEKA_ROOT:-}" ]; then
+    echo "AUTOTEKA_ROOT is not set. Set it in $ENV_FILE or export AUTOTEKA_ROOT." >&2
+    exit 1
+  fi
+}
+
+print_global_usage() {
+  cat <<'USAGE'
+Usage:
+  autoteka <command> [arguments] [options]
+  autoteka help [command]
+  autoteka --help
+
+Purpose:
+  Unified entrypoint for deployment, monitoring, repair, backup, restore and
+  uninstall operations for autoteka.
+
+Commands:
+  up                Bring up the Docker Compose stack.
+  down              Stop the Docker Compose stack.
+  deploy            Roll out the current git HEAD in the existing working copy.
+  watch-changes     Poll git remote and deploy when new commits appear.
+  watchdog          Run health checks and bounded auto-remediation.
+  repair-runtime    Heavy Laravel runtime repair with smoke checks.
+  repair-health     Targeted auto-repair for one health domain.
+  health-reset      Clear incident state and Telegram dedup locks.
+  repair-infra      Re-enable timers and reset watchdog counters.
+  maintenance       Run periodic maintenance tasks.
+  backup            Create a deploy-configuration backup archive.
+  restore           Restore deploy configuration from a backup archive.
+  uninstall         Remove installed services/configuration by mode.
+
+Get command-specific help:
+  autoteka <command> --help
+  autoteka help <command>
+USAGE
+}
+
+print_up_usage() {
+  cat <<'USAGE'
+Usage:
+  autoteka up
+
+Purpose:
+  Start or recreate the deployment Docker Compose stack defined in
+  deploy/runtime/docker-compose.yml.
+
+Arguments:
+  none
+
+Accepted values:
+  none
+USAGE
+}
+
+print_down_usage() {
+  cat <<'USAGE'
+Usage:
+  autoteka down
+
+Purpose:
+  Stop the deployment Docker Compose stack defined in deploy/runtime/docker-compose.yml.
+
+Arguments:
+  none
+
+Accepted values:
+  none
+USAGE
+}
+
+print_deploy_usage() {
+  cat <<'USAGE'
+Usage:
+  autoteka deploy
+
+Purpose:
+  Roll out the current local git HEAD from AUTOTEKA_ROOT without fetching or
+  resetting the repository. Intended for manual re-run of deployment steps for
+  the current working copy.
+
+Arguments:
+  none
+
+Accepted values:
+  none
+USAGE
+}
+
+print_watch_changes_usage() {
+  cat <<'USAGE'
+Usage:
+  autoteka watch-changes
+
+Purpose:
+  Fetch REMOTE/BRANCH, compare it with the current HEAD, and if new commits are
+  detected then stash local changes, reset the worktree, and run autoteka deploy.
+
+Arguments:
+  none
+
+Accepted values:
+  none
+
+Important environment values used by the script:
+  BRANCH   Git branch to watch. Default: master
+  REMOTE   Git remote to watch. Default: origin
+USAGE
+}
+
+print_watchdog_usage() {
+  cat <<'USAGE'
+Usage:
+  autoteka watchdog [--dry-run]
+
+Purpose:
+  Run docker liveness checks for nginx/php, run software checks for /up,
+  /api/v1/category-list and /admin/login, then apply bounded auto-remediation
+  with thresholds, cooldowns and Telegram dedup locks.
+
+Arguments:
+  --dry-run, -n   Print actions and decisions without changing state, restarting
+                  containers or sending Telegram messages.
+  --help, -h      Show this help.
+
+Accepted values:
+  --dry-run       Boolean flag. No value.
+  --help          Boolean flag. No value.
+USAGE
+}
+
+print_repair_runtime_usage() {
+  cat <<'USAGE'
+Usage:
+  autoteka repair-runtime [--dry-run] [--preserve-health-state]
+
+Purpose:
+  Heavy Laravel runtime repair: start/rebuild php, prepare writable paths,
+  clear optimization caches, verify sqlite/session/cache writes, start/rebuild
+  web, then run smoke checks for /up, /api/v1/category-list and /admin/login.
+
+Arguments:
+  --dry-run, -n              Print the commands without executing them.
+  --preserve-health-state    Do not reset watchdog health incident state after a
+                             successful repair.
+  --help, -h                 Show this help.
+
+Accepted values:
+  --dry-run                  Boolean flag. No value.
+  --preserve-health-state    Boolean flag. No value.
+  --help                     Boolean flag. No value.
+USAGE
+}
+
+print_repair_health_usage() {
+  cat <<'USAGE'
+Usage:
+  autoteka repair-health <domain> [--dry-run]
+
+Purpose:
+  Run targeted remediation for a single health domain.
+
+Arguments:
+  <domain>           Health domain to repair.
+                     Allowed values: nginx | php | backend | admin
+  --dry-run, -n      Print the commands without executing them.
+  --help, -h         Show this help.
+
+Accepted values:
+  <domain>=nginx     Restart or recreate the web container.
+  <domain>=php       Restart or recreate the php-fpm container.
+  <domain>=backend   Run Laravel runtime repair for backend failures.
+  <domain>=admin     Run Laravel runtime repair for admin-area failures.
+USAGE
+}
+
+print_health_reset_usage() {
+  cat <<'USAGE'
+Usage:
+  autoteka health-reset <target> [--dry-run]
+
+Purpose:
+  Clear active watchdog incident state and Telegram dedup locks for one health
+  domain or for all health domains.
+
+Arguments:
+  <target>           Incident target to reset.
+                     Allowed values: nginx | php | backend | admin | api | all
+  --dry-run, -n      Print what would be removed without changing anything.
+  --help, -h         Show this help.
+
+Accepted values:
+  <target>=nginx     Reset only nginx health incident state.
+  <target>=php       Reset only php health incident state.
+  <target>=backend   Reset only backend (/up) incident state.
+  <target>=admin     Reset only admin (/admin/login) incident state.
+  <target>=api       Reset only API incident state.
+  <target>=all       Reset every health domain.
+USAGE
+}
+
+print_repair_infra_usage() {
+  cat <<'USAGE'
+Usage:
+  autoteka repair-infra
+
+Purpose:
+  Re-enable core timers, reset watchdog counters and verify docker.service after
+  reboot or after infrastructure-level drift.
+
+Arguments:
+  none
+
+Accepted values:
+  none
+USAGE
+}
+
+print_maintenance_usage() {
+  cat <<'USAGE'
+Usage:
+  autoteka maintenance
+
+Purpose:
+  Run periodic maintenance tasks defined by deploy/maintenance/server-maintenance.sh.
+
+Arguments:
+  none
+
+Accepted values:
+  none
+USAGE
+}
+
+print_backup_usage() {
+  cat <<'USAGE'
+Usage:
+  autoteka backup [--output-dir=PATH]
+
+Purpose:
+  Create a backup archive with deploy configuration, secrets, project .env files,
+  installed units and system configs managed by this project.
+
+Arguments:
+  --output-dir=PATH   Directory where the backup archive will be created.
+                      Default: /root
+  --help, -h          Show this help.
+
+Accepted values:
+  PATH                Any writable directory path.
+USAGE
+}
+
+print_restore_usage() {
+  cat <<'USAGE'
+Usage:
+  autoteka restore <archive> [--dry-run] [--force] [--target-root=PATH]
+
+Purpose:
+  Restore deploy configuration from a backup archive, then clear runtime health
+  incident state so monitoring starts from a clean baseline.
+
+Arguments:
+  <archive>            Backup archive created by autoteka backup.
+  --dry-run            Print planned actions without writing files or state.
+  --force              Skip interactive confirmation.
+  --target-root=PATH   Restore backend/.env and frontend/.env into PATH and set
+                       AUTOTEKA_ROOT in deploy.env to PATH.
+  --help, -h           Show this help.
+
+Accepted values:
+  <archive>            Path to autoteka-backup-*.tar.gz
+  --dry-run            Boolean flag. No value.
+  --force              Boolean flag. No value.
+  PATH                 Any target project root path.
+USAGE
+}
+
+print_uninstall_usage() {
+  cat <<'USAGE'
+Usage:
+  autoteka uninstall <mode> [--force] [--rm-etc] [--rm-root]
+
+Purpose:
+  Remove installed autoteka services/configuration with a chosen destruction
+  level.
+
+Arguments:
+  <mode>            Removal mode.
+                    Allowed values: soft | purge | nuke
+  --force           Skip interactive confirmation.
+  --rm-etc          Also remove /etc/autoteka/* secrets.
+                    Meaningful for purge and nuke.
+  --rm-root         Also remove AUTOTEKA_ROOT recursively.
+                    Meaningful for nuke.
+  --help, -h        Show this help.
+
+Accepted values:
+  <mode>=soft       Stop/disable timers and services, compose down, no file removal.
+  <mode>=purge      soft + remove app units, logrotate rules, app logs and state.
+  <mode>=nuke       purge + remove system configs installed by install.sh.
+USAGE
+}
+
+print_command_usage() {
+  case "$1" in
+    up) print_up_usage ;;
+    down) print_down_usage ;;
+    deploy) print_deploy_usage ;;
+    watch-changes) print_watch_changes_usage ;;
+    watchdog) print_watchdog_usage ;;
+    repair-runtime) print_repair_runtime_usage ;;
+    repair-health) print_repair_health_usage ;;
+    health-reset) print_health_reset_usage ;;
+    repair-infra) print_repair_infra_usage ;;
+    maintenance) print_maintenance_usage ;;
+    backup) print_backup_usage ;;
+    restore) print_restore_usage ;;
+    uninstall) print_uninstall_usage ;;
+    ""|-h|--help|help) print_global_usage ;;
+    *)
+      echo "Unknown command: $1" >&2
+      print_global_usage >&2
+      return 2
+      ;;
+  esac
+}
+
+CMD="${1:-}"
+if [ "$CMD" = "help" ]; then
+  shift || true
+  print_command_usage "${1:-}"
+  exit $?
+fi
+
+if [ $# -gt 0 ]; then
+  shift
+fi
+
+case "$CMD" in
+  ""|-h|--help)
+    print_global_usage
+    exit 0
+    ;;
+  up)
+    if [ "${1:-}" = "-h" ] || [ "${1:-}" = "--help" ]; then
+      print_up_usage
+      exit 0
+    fi
+    ensure_autoteka_root
+    exec /usr/bin/docker compose -f "$AUTOTEKA_ROOT/deploy/runtime/docker-compose.yml" up -d --remove-orphans
+    ;;
+  down)
+    if [ "${1:-}" = "-h" ] || [ "${1:-}" = "--help" ]; then
+      print_down_usage
+      exit 0
+    fi
+    ensure_autoteka_root
+    exec /usr/bin/docker compose -f "$AUTOTEKA_ROOT/deploy/runtime/docker-compose.yml" down
+    ;;
+  watch-changes)
+    if [ "${1:-}" = "-h" ] || [ "${1:-}" = "--help" ]; then
+      print_watch_changes_usage
+      exit 0
+    fi
+    ensure_autoteka_root
+    exec "$AUTOTEKA_ROOT/deploy/runtime/watch-changes.sh" "$@"
+    ;;
+  deploy)
+    if [ "${1:-}" = "-h" ] || [ "${1:-}" = "--help" ]; then
+      print_deploy_usage
+      exit 0
+    fi
+    ensure_autoteka_root
+    exec "$AUTOTEKA_ROOT/deploy/runtime/deploy.sh" "$@"
+    ;;
+  repair-runtime)
+    if [ "${1:-}" = "-h" ] || [ "${1:-}" = "--help" ]; then
+      print_repair_runtime_usage
+      exit 0
+    fi
+    ensure_autoteka_root
+    exec "$AUTOTEKA_ROOT/deploy/repair/repair-runtime.sh" "$@"
+    ;;
+  repair-health)
+    if [ "${1:-}" = "-h" ] || [ "${1:-}" = "--help" ]; then
+      print_repair_health_usage
+      exit 0
+    fi
+    ensure_autoteka_root
+    exec "$AUTOTEKA_ROOT/deploy/repair/repair-health.sh" "$@"
+    ;;
+  health-reset)
+    if [ "${1:-}" = "-h" ] || [ "${1:-}" = "--help" ]; then
+      print_health_reset_usage
+      exit 0
+    fi
+    ensure_autoteka_root
+    exec "$AUTOTEKA_ROOT/deploy/repair/health-reset.sh" "$@"
+    ;;
+  repair-infra)
+    if [ "${1:-}" = "-h" ] || [ "${1:-}" = "--help" ]; then
+      print_repair_infra_usage
+      exit 0
+    fi
+    ensure_autoteka_root
+    exec "$AUTOTEKA_ROOT/deploy/repair/repair-infra.sh" "$@"
+    ;;
+  watchdog)
+    if [ "${1:-}" = "-h" ] || [ "${1:-}" = "--help" ]; then
+      print_watchdog_usage
+      exit 0
+    fi
+    ensure_autoteka_root
+    exec "$AUTOTEKA_ROOT/deploy/observability/infrastructure/server-watchdog.sh" "$@"
+    ;;
+  maintenance)
+    if [ "${1:-}" = "-h" ] || [ "${1:-}" = "--help" ]; then
+      print_maintenance_usage
+      exit 0
+    fi
+    ensure_autoteka_root
+    exec "$AUTOTEKA_ROOT/deploy/maintenance/server-maintenance.sh" "$@"
+    ;;
+  uninstall)
+    if [ "${1:-}" = "-h" ] || [ "${1:-}" = "--help" ]; then
+      print_uninstall_usage
+      exit 0
+    fi
+    ensure_autoteka_root
+    exec "$AUTOTEKA_ROOT/deploy/bootstrap/uninstall.sh" "$@"
+    ;;
+  backup)
+    if [ "${1:-}" = "-h" ] || [ "${1:-}" = "--help" ]; then
+      print_backup_usage
+      exit 0
+    fi
+    ensure_autoteka_root
+    exec "$AUTOTEKA_ROOT/deploy/maintenance/backup.sh" "$@"
+    ;;
+  restore)
+    if [ "${1:-}" = "-h" ] || [ "${1:-}" = "--help" ]; then
+      print_restore_usage
+      exit 0
+    fi
+    ensure_autoteka_root
+    exec "$AUTOTEKA_ROOT/deploy/maintenance/restore.sh" "$@"
+    ;;
+  *)
+    echo "Unknown command: $CMD" >&2
+    print_global_usage >&2
+    exit 2
+    ;;
+esac

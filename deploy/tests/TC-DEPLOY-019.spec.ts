@@ -12,7 +12,7 @@ const DEPLOY_ROOT = join(__dirname, "..");
 describe("TC-DEPLOY-019", () => {
   it("server-maintenance.sh содержит заявленные команды", () => {
     const content = readFileSync(
-      join(DEPLOY_ROOT, "server-maintenance.sh"),
+      join(DEPLOY_ROOT, "maintenance/server-maintenance.sh"),
       "utf-8",
     );
     expect(content).toMatch(/apt\s+clean|apt-get\s+clean/);

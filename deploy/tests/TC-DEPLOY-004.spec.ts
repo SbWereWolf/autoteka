@@ -11,12 +11,18 @@ const DEPLOY_ROOT = join(__dirname, "..");
 
 describe("TC-DEPLOY-004", () => {
   it("deploy.sh не содержит git fetch", () => {
-    const content = readFileSync(join(DEPLOY_ROOT, "deploy.sh"), "utf-8");
+    const content = readFileSync(
+      join(DEPLOY_ROOT, "runtime/deploy.sh"),
+      "utf-8",
+    );
     expect(content).not.toMatch(/git\s+fetch/);
   });
 
   it("deploy.sh не содержит git reset", () => {
-    const content = readFileSync(join(DEPLOY_ROOT, "deploy.sh"), "utf-8");
+    const content = readFileSync(
+      join(DEPLOY_ROOT, "runtime/deploy.sh"),
+      "utf-8",
+    );
     expect(content).not.toMatch(/git\s+reset/);
   });
 });
