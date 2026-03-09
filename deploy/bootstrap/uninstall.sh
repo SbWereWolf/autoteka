@@ -46,7 +46,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DEPLOY_DIR="$(cd "$SCRIPT_DIR" && while [ ! -f "DEPLOY.md" ] && [ "$PWD" != "/" ]; do cd ..; done; pwd)"
 REPO_ROOT="$(cd "$DEPLOY_DIR/.." && pwd)"
 # shellcheck disable=SC1090
-source "$DEPLOY_DIR/lib/_common.sh"
+source "$DEPLOY_DIR/lib/laravel-runtime.sh"
 load_autoteka_env
 
 UNITS=(
