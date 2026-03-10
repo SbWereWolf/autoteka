@@ -468,7 +468,7 @@ scripts/log-entry.ps1
 
 Скрипт обязан получать:
 
-- `-Type` — один из: `UserRequest`, `ProposedPlan`, `ResultReport`;
+- `-Type` — один из: `UserMessage`, `ProposedPlan`, `FinalAnswer`;
 - `-Message` — полный текст записи в Markdown;
 - `-AISystemName`;
 - `-LLMName`;

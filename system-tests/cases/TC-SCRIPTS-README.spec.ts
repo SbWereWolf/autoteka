@@ -67,7 +67,7 @@ describe("TC-SCRIPTS-README-007", () => {
       join(SCRIPTS_DIR, "log-entry.ps1"),
       "utf-8",
     );
-    expect(content).toMatch(/UserRequest|ProposedPlan|ResultReport/);
+    expect(content).toMatch(/UserMessage|ProposedPlan|FinalAnswer/);
     expect(content).toMatch(/logs/);
   });
 });

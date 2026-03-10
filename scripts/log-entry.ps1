@@ -1,6 +1,6 @@
 param(
   [Parameter(Mandatory = $true)]
-  [ValidateSet("UserRequest", "ProposedPlan", "ResultReport")]
+  [ValidateSet("UserMessage", "ProposedPlan", "FinalAnswer")]
   [string]$Type,
 
   [Parameter(Mandatory = $true)]
@@ -27,9 +27,9 @@ function Get-SectionTitleByType {
   param([Parameter(Mandatory = $true)][string]$EntryType)
 
   switch ($EntryType) {
-    "UserRequest" { return "Запрос пользователя" }
+    "UserMessage" { return "Запрос пользователя" }
     "ProposedPlan" { return "Предложенный план" }
-    "ResultReport" { return "Доклад" }
+    "FinalAnswer" { return "Доклад" }
     default { return "Запись" }
   }
 }
