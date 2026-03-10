@@ -18,6 +18,7 @@ class ShopGalleryImage extends Model
     protected $fillable = [
         'shop_id',
         'file_path',
+        'original_name',
         'sort',
         'is_published',
     ];

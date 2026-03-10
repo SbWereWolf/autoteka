@@ -9,6 +9,7 @@ use App\Models\ShopContact;
 use App\Models\ShopGalleryImage;
 use App\Models\ShopSchedule;
 use App\Models\ShopScheduleNote;
+use App\Support\Media\UploadOriginalNameStore;
 use App\Support\Shop\ShopContactUniqueness;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -17,7 +18,9 @@ final class SaveShopResourceHandler
 {
     public function __invoke(Shop $shop, array $data): Shop
     {
-        return DB::transaction(function () use ($shop, $data): Shop {
+        $uploadOriginalNames = app(UploadOriginalNameStore::class);
+
+        return DB::transaction(function () use ($shop, $data, $uploadOriginalNames): Shop {
             $shop->fill([
                 'code' => $data['code'] ?? '',
                 'title' => $data['title'] ?? '',
@@ -26,6 +29,9 @@ final class SaveShopResourceHandler
                 'description' => (string) ($data['description'] ?? ''),
                 'site_url' => (string) ($data['site_url'] ?? ''),
                 'thumb_path' => $this->nullableString($data['thumb_path'] ?? null),
+                'thumb_original_name' => $uploadOriginalNames->pullByPath(
+                    $this->nullableString($data['thumb_path'] ?? null)
+                ) ?? $shop->thumb_original_name,
                 'is_published' => (bool) ($data['is_published'] ?? false),
             ]);
 
@@ -39,7 +45,7 @@ final class SaveShopResourceHandler
             $this->syncCategoryLinks($shop, $data['category_links'] ?? []);
             $this->syncFeatureLinks($shop, $data['feature_links'] ?? []);
             $this->syncContacts($shop, $data['contact_entries'] ?? []);
-            $this->syncGallery($shop, $data['gallery_entries'] ?? []);
+            $this->syncGallery($shop, $data['gallery_entries'] ?? [], $uploadOriginalNames);
             $this->syncSchedules($shop, $data['schedule_entries'] ?? []);
             $this->syncScheduleNote($shop, $data['schedule_note_text'] ?? '');
 
@@ -137,10 +143,10 @@ final class SaveShopResourceHandler
         $shop->contacts()->whereNotIn('id', $keptIds)->delete();
     }
 
-    private function syncGallery(Shop $shop, mixed $rows): void
+    private function syncGallery(Shop $shop, mixed $rows, UploadOriginalNameStore $uploadOriginalNames): void
     {
         $desired = collect(is_iterable($rows) ? $rows : [])
-            ->map(static function (mixed $row): ?array {
+            ->map(function (mixed $row) use ($uploadOriginalNames): ?array {
                 if (! is_array($row)) {
                     return null;
                 }
@@ -153,6 +159,7 @@ final class SaveShopResourceHandler
                 return [
                     'id' => isset($row['id']) ? (int) $row['id'] : null,
                     'file_path' => $filePath,
+                    'original_name' => $uploadOriginalNames->pullByPath($filePath),
                     'sort' => (int) ($row['sort'] ?? 0),
                     'is_published' => (bool) ($row['is_published'] ?? true),
                 ];
@@ -174,6 +181,7 @@ final class SaveShopResourceHandler
 
             $image->fill([
                 'file_path' => $item['file_path'],
+                'original_name' => $item['original_name'] ?? $image->original_name,
                 'sort' => $item['sort'],
                 'is_published' => $item['is_published'],
             ]);

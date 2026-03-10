@@ -9,6 +9,7 @@ enum ShopGalleryImageColumns: string
     case ID = 'id';
     case SHOP_ID = 'shop_id';
     case FILE_PATH = 'file_path';
+    case ORIGINAL_NAME = 'original_name';
     case SORT = 'sort';
     case IS_PUBLISHED = 'is_published';
     case CREATED_AT = 'created_at';

@@ -29,6 +29,7 @@ class Shop extends Model
         'description',
         'site_url',
         'thumb_path',
+        'thumb_original_name',
         'is_published',
     ];
 

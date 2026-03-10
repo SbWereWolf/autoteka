@@ -14,6 +14,7 @@ enum ShopColumns: string
     case DESCRIPTION = 'description';
     case SITE_URL = 'site_url';
     case THUMB_PATH = 'thumb_path';
+    case THUMB_ORIGINAL_NAME = 'thumb_original_name';
     case IS_PUBLISHED = 'is_published';
     case CREATED_AT = 'created_at';
     case UPDATED_AT = 'updated_at';
