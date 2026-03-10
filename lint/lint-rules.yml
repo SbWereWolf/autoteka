@@ -3,9 +3,9 @@ version: 1
 rules:
 
   ".php":
-    format: "vendor/bin/php-cs-fixer fix"
+    format: "${PHP_CS_FIXER_PATH} fix"
     lint:
-      - "vendor/bin/phpcs"
+      - "${PHP_CS_PATH}"
 
   ".vue":
     format: "${NPX_PATH} ${PRETTIER_PATH} --write"

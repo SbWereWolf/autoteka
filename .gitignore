@@ -14,3 +14,7 @@ scripts/.env
 /operational/
 !/operational/.gitkeep
 /deploy/.env
+/backend/apps/API/storage/
+/vendor/
+/.php-cs-fixer.cache
+/.php-cs-fixer.dist.php
