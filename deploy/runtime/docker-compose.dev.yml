@@ -14,8 +14,8 @@ services:
       APP_URL: ${APP_URL:-http://127.0.0.1:8081}
       DB_CONNECTION: ${DB_CONNECTION:-sqlite}
       DB_DATABASE: ${DB_DATABASE:-/workspace/backend/database/database.sqlite}
-      SESSION_DRIVER: ${SESSION_DRIVER:-database}
-      CACHE_STORE: ${CACHE_STORE:-database}
+      SESSION_DRIVER: ${SESSION_DRIVER:-file}
+      CACHE_STORE: ${CACHE_STORE:-file}
       QUEUE_CONNECTION: ${QUEUE_CONNECTION:-database}
       RUN_MIGRATIONS: ${RUN_MIGRATIONS:-false}
       XDEBUG_MODE: ${BACKEND_XDEBUG_MODE:-debug,develop}
@@ -27,8 +27,8 @@ services:
       - "host.docker.internal:host-gateway"
     volumes:
       - ${AUTOTEKA_ROOT:-../..}/backend:/workspace/backend
-      - autoteka_api_vendor:/workspace/backend/apps/API/vendor
-      - autoteka_admin_vendor:/workspace/backend/apps/DatabaseOperator/vendor
+      - autoteka_api_vendor:/workspace/backend/apps/ShopAPI/vendor
+      - autoteka_admin_vendor:/workspace/backend/apps/ShopOperator/vendor
     restart: unless-stopped
 
   frontend:

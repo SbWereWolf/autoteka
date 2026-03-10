@@ -17,9 +17,9 @@ backend, back office и deployment-контур.
 Система разделена на 3 backend-модуля (плюс frontend и
 deploy-обвязка):
 
-- `backend/apps/API` — Laravel 12 приложение, обслуживает публичный
+- `backend/apps/ShopAPI` — Laravel 12 приложение, обслуживает публичный
   API;
-- `backend/apps/DatabaseOperator` — Laravel 12 + MoonShine 4 для back
+- `backend/apps/ShopOperator` — Laravel 12 + MoonShine 4 для back
   office;
 - `backend/packages/SchemaDefinition` — composer path-package со
   схемой/enum/миграционной базой, которую используют оба приложения.
@@ -102,7 +102,7 @@ Theme editor применяет CSS overrides runtime через inline properti
 
 ## 3. Backend
 
-### 3.1. Модуль API (`apps/API`)
+### 3.1. Модуль API (`apps/ShopAPI`)
 
 Модуль API публикует маршруты с префиксом `/api/v1`:
 
@@ -125,9 +125,9 @@ Theme editor применяет CSS overrides runtime через inline properti
 
 Frontend нормализует `number|string` идентификаторы к `string`.
 
-### 3.3. Модуль админки (`apps/DatabaseOperator`)
+### 3.3. Модуль админки (`apps/ShopOperator`)
 
-`apps/DatabaseOperator` содержит MoonShine-панель и админские CRUD
+`apps/ShopOperator` содержит MoonShine-панель и админские CRUD
 ресурсы (`City/Category/Feature/ContactType/Shop`, пользователи и
 роли).
 
@@ -197,7 +197,7 @@ Dev (`deploy/runtime/docker-compose.dev.yml`):
   - `deploy/runtime/docker/docker/php/prod-entrypoint.sh`
 
 Оба PHP-entrypoint подготавливают окружение для двух приложений
-`apps/API` и `apps/DatabaseOperator` (env, cache/bootstrap каталоги,
+`apps/ShopAPI` и `apps/ShopOperator` (env, cache/bootstrap каталоги,
 storage symlink).
 
 Для `prod-docker` исходники и конфигурация baked-in в образах, поэтому
@@ -206,13 +206,13 @@ storage symlink).
 
 ### 4.3. Лог-файлы backend модулей
 
-- `backend/apps/API/storage/logs/laravel.log`
-- `backend/apps/DatabaseOperator/storage/logs/laravel.log`
+- `backend/apps/ShopAPI/storage/logs/laravel.log`
+- `backend/apps/ShopOperator/storage/logs/laravel.log`
 
 В deploy/runtime эти пути соответствуют:
 
-- `/var/www/backend/apps/API/storage/logs/laravel.log`
-- `/var/www/backend/apps/DatabaseOperator/storage/logs/laravel.log`
+- `/var/www/backend/apps/ShopAPI/storage/logs/laravel.log`
+- `/var/www/backend/apps/ShopOperator/storage/logs/laravel.log`
 
 MoonShine media и shop-изображения фактически читаются из корня
 `backend/storage/app/public` (runtime:
@@ -280,9 +280,9 @@ watchdog/maintenance и серверные runbook-процедуры описа
 
 ### Backend (модульно)
 
-- `cd backend/apps/API && php artisan test`
-- `cd backend/apps/DatabaseOperator && php artisan test`
-- миграции/seed: `backend/apps/DatabaseOperator`
+- `cd backend/apps/ShopAPI && php artisan test`
+- `cd backend/apps/ShopOperator && php artisan test`
+- миграции/seed: `backend/apps/ShopOperator`
 
 ### Monorepo
 

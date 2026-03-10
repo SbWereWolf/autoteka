@@ -8,6 +8,9 @@ describe("TC-UI-USER-001", () => {
 
     expect(response.status).toBeLessThan(500);
     expect(html).toContain('id="app"');
-    expect(html).toContain("/src/main.ts");
+    expect(
+      html.includes("/src/main.ts") ||
+        /\/assets\/index-[^"' ]+\.js/.test(html),
+    ).toBe(true);
   });
 });

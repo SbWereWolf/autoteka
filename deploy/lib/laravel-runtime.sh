@@ -17,10 +17,10 @@ if [ -z "${AUTOTEKA_LIB_LARAVEL_RUNTIME_SH:-}" ]; then
       set -eu
       cd /var/www/backend
       [ -f .env ] || cp example.env .env
-      [ -f apps/API/.env ] || cp apps/API/example.env apps/API/.env
-      [ -f apps/DatabaseOperator/.env ] || cp apps/DatabaseOperator/example.env apps/DatabaseOperator/.env
-      cp .env apps/API/.env
-      cp .env apps/DatabaseOperator/.env
+      [ -f apps/ShopAPI/.env ] || cp apps/ShopAPI/example.env apps/ShopAPI/.env
+      [ -f apps/ShopOperator/.env ] || cp apps/ShopOperator/example.env apps/ShopOperator/.env
+      cp .env apps/ShopAPI/.env
+      cp .env apps/ShopOperator/.env
     '
   }
 
@@ -28,7 +28,7 @@ if [ -z "${AUTOTEKA_LIB_LARAVEL_RUNTIME_SH:-}" ]; then
     compose exec -T php sh -lc '
       set -eu
       cd /var/www/backend
-      for module_dir in apps/API apps/DatabaseOperator; do
+      for module_dir in apps/ShopAPI apps/ShopOperator; do
         case "$module_dir" in
           */packages/SchemaDefinition|packages/SchemaDefinition)
             continue
@@ -49,14 +49,14 @@ if [ -z "${AUTOTEKA_LIB_LARAVEL_RUNTIME_SH:-}" ]; then
       set -eu
       cd /var/www/backend
       if ! grep -qE "^APP_KEY=base64:" .env; then
-        if [ -f apps/API/.env ]; then
-          (cd apps/API && php artisan key:generate --force --ansi)
-        elif [ -f apps/DatabaseOperator/.env ]; then
-          (cd apps/DatabaseOperator && php artisan key:generate --force --ansi)
+        if [ -f apps/ShopAPI/.env ]; then
+          (cd apps/ShopAPI && php artisan key:generate --force --ansi)
+        elif [ -f apps/ShopOperator/.env ]; then
+          (cd apps/ShopOperator && php artisan key:generate --force --ansi)
         fi
-        if [ -f apps/API/.env ]; then
-          cp apps/API/.env .env
-          cp .env apps/DatabaseOperator/.env
+        if [ -f apps/ShopAPI/.env ]; then
+          cp apps/ShopAPI/.env .env
+          cp .env apps/ShopOperator/.env
         fi
       fi
     '
@@ -67,11 +67,13 @@ if [ -z "${AUTOTEKA_LIB_LARAVEL_RUNTIME_SH:-}" ]; then
       set -eu
       cd /var/www/backend
       [ -f .env ] || cp example.env .env
-      [ -f apps/API/.env ] || cp apps/API/example.env apps/API/.env
-      [ -f apps/DatabaseOperator/.env ] || cp apps/DatabaseOperator/example.env apps/DatabaseOperator/.env
+      [ -f apps/ShopAPI/.env ] || cp apps/ShopAPI/example.env apps/ShopAPI/.env
+      [ -f apps/ShopOperator/.env ] || cp apps/ShopOperator/example.env apps/ShopOperator/.env
       mkdir -p         database         storage/app/public         storage/app/private         storage/framework/cache         storage/framework/cache/data         storage/framework/sessions         storage/framework/views         storage/framework/testing         storage/logs         bootstrap/cache
       [ -f database/database.sqlite ] || touch database/database.sqlite
-      for module_dir in apps/API apps/DatabaseOperator; do
+      mkdir -p         apps/ShopAPI/storage/framework/cache         apps/ShopAPI/storage/framework/cache/data         apps/ShopAPI/storage/framework/sessions         apps/ShopAPI/storage/framework/views         apps/ShopAPI/storage/framework/testing         apps/ShopAPI/storage/logs         apps/ShopAPI/bootstrap/cache
+      mkdir -p         apps/ShopOperator/storage/framework/cache         apps/ShopOperator/storage/framework/cache/data         apps/ShopOperator/storage/framework/sessions         apps/ShopOperator/storage/framework/views         apps/ShopOperator/storage/framework/testing         apps/ShopOperator/storage/logs         apps/ShopOperator/bootstrap/cache
+      for module_dir in apps/ShopAPI apps/ShopOperator; do
         case "$module_dir" in
           */packages/SchemaDefinition|packages/SchemaDefinition)
             continue
@@ -84,25 +86,24 @@ if [ -z "${AUTOTEKA_LIB_LARAVEL_RUNTIME_SH:-}" ]; then
           )
         fi
       done
-      cp .env apps/API/.env
-      cp .env apps/DatabaseOperator/.env
-      mkdir -p apps/API/bootstrap/cache apps/DatabaseOperator/bootstrap/cache
-      mkdir -p apps/API/public apps/DatabaseOperator/public
-      rm -rf apps/API/public/storage apps/DatabaseOperator/public/storage
-      ln -sfn ../../../storage/app/public apps/API/public/storage
-      ln -sfn ../../../storage/app/public apps/DatabaseOperator/public/storage
+      cp .env apps/ShopAPI/.env
+      cp .env apps/ShopOperator/.env
+      mkdir -p apps/ShopAPI/public apps/ShopOperator/public
+      rm -rf apps/ShopAPI/public/storage apps/ShopOperator/public/storage
+      ln -sfn ../../../storage/app/public apps/ShopAPI/public/storage
+      ln -sfn ../../../storage/app/public apps/ShopOperator/public/storage
       if ! grep -qE "^APP_KEY=base64:" .env; then
-        if [ -f apps/API/artisan ]; then
-          (cd apps/API && php artisan key:generate --force --ansi)
-        elif [ -f apps/DatabaseOperator/artisan ]; then
-          (cd apps/DatabaseOperator && php artisan key:generate --force --ansi)
+        if [ -f apps/ShopAPI/artisan ]; then
+          (cd apps/ShopAPI && php artisan key:generate --force --ansi)
+        elif [ -f apps/ShopOperator/artisan ]; then
+          (cd apps/ShopOperator && php artisan key:generate --force --ansi)
         fi
-        cp apps/API/.env .env
-        cp .env apps/DatabaseOperator/.env
+        cp apps/ShopAPI/.env .env
+        cp .env apps/ShopOperator/.env
       fi
-      chown -R www-data:www-data database storage bootstrap/cache apps/API/bootstrap/cache apps/DatabaseOperator/bootstrap/cache
-      find database storage bootstrap/cache apps/API/bootstrap/cache apps/DatabaseOperator/bootstrap/cache -type d -exec chmod 775 {} \;
-      find database storage bootstrap/cache apps/API/bootstrap/cache apps/DatabaseOperator/bootstrap/cache -type f -exec chmod 664 {} \;
+      chown -R www-data:www-data database storage bootstrap/cache apps/ShopAPI/storage apps/ShopAPI/bootstrap/cache apps/ShopOperator/storage apps/ShopOperator/bootstrap/cache
+      find database storage bootstrap/cache apps/ShopAPI/storage apps/ShopAPI/bootstrap/cache apps/ShopOperator/storage apps/ShopOperator/bootstrap/cache -type d -exec chmod 775 {} \;
+      find database storage bootstrap/cache apps/ShopAPI/storage apps/ShopAPI/bootstrap/cache apps/ShopOperator/storage apps/ShopOperator/bootstrap/cache -type f -exec chmod 664 {} \;
     '
   }
 
@@ -111,7 +112,7 @@ if [ -z "${AUTOTEKA_LIB_LARAVEL_RUNTIME_SH:-}" ]; then
 
     compose exec -T php sh -lc "
       set -eu
-      cd /var/www/backend/apps/API
+      cd /var/www/backend/apps/ShopAPI
       php artisan $command
     "
   }
@@ -121,7 +122,7 @@ if [ -z "${AUTOTEKA_LIB_LARAVEL_RUNTIME_SH:-}" ]; then
 
     compose exec -T php sh -lc "
       set -eu
-      cd /var/www/backend/apps/DatabaseOperator
+      cd /var/www/backend/apps/ShopOperator
       php artisan $command
     "
   }
@@ -137,7 +138,7 @@ if [ -z "${AUTOTEKA_LIB_LARAVEL_RUNTIME_SH:-}" ]; then
     started_at="$(date +%s)"
 
     while true; do
-      if compose exec -T php sh -lc 'cd /var/www/backend/apps/API && pwd >/dev/null && cd /var/www/backend/apps/DatabaseOperator && pwd >/dev/null' >/dev/null 2>&1; then
+      if compose exec -T php sh -lc 'cd /var/www/backend/apps/ShopAPI && pwd >/dev/null && cd /var/www/backend/apps/ShopOperator && pwd >/dev/null' >/dev/null 2>&1; then
         return 0
       fi
 

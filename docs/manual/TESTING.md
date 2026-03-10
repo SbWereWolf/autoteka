@@ -17,9 +17,9 @@
 ### 2.1 Backend (phpunit)
 
 - Основной конфиг тестов:
-  `backend/apps/DatabaseOperator/phpunit.xml`.
+  `backend/apps/ShopOperator/phpunit.xml`.
 - Локальный файл переменных для тестового окружения:
-  `backend/apps/DatabaseOperator/testing.env`.
+  `backend/apps/ShopOperator/testing.env`.
 - Файл `testing.env` предназначен только для тестового контура.
 
 ### 2.2 System tests (Vitest + Playwright)

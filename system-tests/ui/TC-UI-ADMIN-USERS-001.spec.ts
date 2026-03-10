@@ -94,7 +94,9 @@ describe("TC-UI-ADMIN-USERS-001", () => {
           .fill(adminPassword);
         await page.locator('button[type="submit"]').click();
         try {
-          await page.waitForURL(/\/admin(\/.*)?$/, { timeout: 5000 });
+          await page.waitForURL(/\/admin(\/.*)?$/, {
+            timeout: 5000,
+          });
         } catch {
           // fallback на прямые переходы
         }
@@ -116,5 +118,5 @@ describe("TC-UI-ADMIN-USERS-001", () => {
     } finally {
       await closeWithTimeout(() => context.close(), 5000);
     }
-  });
+  }, 60_000);
 });

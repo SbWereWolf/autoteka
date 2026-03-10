@@ -1,7 +1,7 @@
 param(
   [string[]]$Modules = @(
-    "backend/apps/API",
-    "backend/apps/DatabaseOperator",
+    "backend/apps/ShopAPI",
+    "backend/apps/ShopOperator",
     "backend/packages/SchemaDefinition"
   )
 )

@@ -39,7 +39,7 @@ services:
     volumes:
       - autoteka_backend_database:/var/www/backend/database
       - autoteka_backend_storage:/var/www/backend/storage
-      - autoteka_backend_admin_vendor:/var/www/backend/apps/DatabaseOperator/public/vendor
+      - autoteka_backend_admin_vendor:/var/www/backend/apps/ShopOperator/public/vendor
 
   web:
     image: autoteka/runtime-web:prod

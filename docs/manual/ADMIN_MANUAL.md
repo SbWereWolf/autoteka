@@ -21,8 +21,8 @@
 
 Система разделена на 3 backend-модуля:
 
-- `backend/apps/API` — API;
-- `backend/apps/DatabaseOperator` — back office (MoonShine);
+- `backend/apps/ShopAPI` — API;
+- `backend/apps/ShopOperator` — back office (MoonShine);
 - `backend/packages/SchemaDefinition` — общий schema/package модуль.
 
 ## 1. Зоны ответственности
@@ -204,10 +204,10 @@ public media.
 
 Примеры backend-операций:
 
-- `cd backend/apps/DatabaseOperator && php artisan migrate`
-- `cd backend/apps/DatabaseOperator && php artisan db:seed --class=AdminUserSeeder`
-- `cd backend/apps/API && php artisan test`
-- `cd backend/apps/DatabaseOperator && php artisan test`
+- `cd backend/apps/ShopOperator && php artisan migrate`
+- `cd backend/apps/ShopOperator && php artisan db:seed --class=AdminUserSeeder`
+- `cd backend/apps/ShopAPI && php artisan test`
+- `cd backend/apps/ShopOperator && php artisan test`
 
 Специальная команда:
 

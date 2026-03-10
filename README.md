@@ -7,6 +7,24 @@
 - `frontend/` — клиентское приложение на Vue3/Vite;
 - `backend/` — серверные модули на Laravel 12;
 
+## Каталоги первого уровня
+
+- `backend/` — серверные Laravel-модули и связанные PHP-пакеты (тесты).
+- `backup/` — локальные временные резервные копии.
+- `deploy/` — install/deploy/uninstall, docker compose, systemd, watchdog и maintenance.
+- `docs/` — постоянная документация по эксплуатации, использованию и разработке.
+- `frontend/` — клиентское приложение, его сборка и frontend-тесты.
+- `inbox/` — вложения для текущего диалога с LLM-агентом.
+- `lint/` — скрипт линтинга и конфиги.
+- `logs/` — временные локальные журналы работ.
+- `node_modules/` — корневые JS-зависимости для линтинга.
+- `operational/` — журнал текущей работы для LLM-агентов.
+- `scripts/` — корневые вспомогательные скрипты разработки и quality-проверок.
+- `system-tests/` — системные quick/ui тесты, включая `USER-UI` и `CLERC-UI`.
+- `tasks/` — одноразовые рабочие инструкции, миграционные заметки и task-артефакты, не являющиеся постоянной архитектурной документацией.
+- `test-cases/` — трассировка документации и требований в тест-кейсы и checklists.
+- `vendor/` — PHP-зависимости корневого Composer-пакета.
+
 ## Терминология системы
 
 - Приложений в системе три:
@@ -17,8 +35,8 @@
   - модуль каталога (front office);
   - редактор тем оформления.
 - Серверные модули:
-  - `ShopAPI` (путь в репозитории: `backend/apps/API`);
-  - `DatabaseOperator` (путь: `backend/apps/DatabaseOperator`);
+  - `ShopAPI` (путь в репозитории: `backend/apps/ShopAPI`);
+  - `DatabaseOperator` (путь: `backend/apps/ShopOperator`);
   - `SchemaDefinition` (путь: `backend/packages/SchemaDefinition`).
 
 ## Временные оперативные файлы
@@ -106,14 +124,14 @@ php artisan serve
 Архитектурный инвариант backend:
 
 - backend разделён на 2 runtime-модуля:
-  - `backend/apps/API` — модуль `ShopAPI`;
-  - `backend/apps/DatabaseOperator` — модуль `DatabaseOperator`
+  - `backend/apps/ShopAPI` — модуль `ShopAPI`;
+  - `backend/apps/ShopOperator` — модуль `DatabaseOperator`
     (админка/MoonShine).
 - общий пакет схемы данных:
   - `backend/packages/SchemaDefinition` — модуль `SchemaDefinition`.
 - логи пишутся в 2 отдельных файла:
-  - `backend/apps/API/storage/logs/laravel.log`;
-  - `backend/apps/DatabaseOperator/storage/logs/laravel.log`.
+  - `backend/apps/ShopAPI/storage/logs/laravel.log`;
+  - `backend/apps/ShopOperator/storage/logs/laravel.log`.
 
 ### Dev runtime с выбором php target (override)
 
@@ -147,7 +165,7 @@ docker compose -f .\deploy\runtime\docker-compose.dev.yml -f .\deploy\runtime\do
 (`no such table`), выполните миграции/seed в DatabaseOperator:
 
 ```powershell
-docker exec autoteka-dev-php sh -lc "cd /workspace/backend/apps/DatabaseOperator && php artisan migrate --force && php artisan db:seed --class=AdminUserSeeder --force"
+docker exec autoteka-dev-php sh -lc "cd /workspace/backend/apps/ShopOperator && php artisan migrate --force && php artisan db:seed --class=AdminUserSeeder --force"
 ```
 
 ## Шаблоны env и рабочие env-файлы

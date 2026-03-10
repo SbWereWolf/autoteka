@@ -2,8 +2,8 @@
 set -u
 
 modules=(
-  "backend/apps/API"
-  "backend/apps/DatabaseOperator"
+  "backend/apps/ShopAPI"
+  "backend/apps/ShopOperator"
   "backend/packages/SchemaDefinition"
 )
 

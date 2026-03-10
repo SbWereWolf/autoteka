@@ -59,8 +59,8 @@ server {
         }
         add_header Cache-Control $api_cache_control always;
         include fastcgi_params;
-        fastcgi_param SCRIPT_FILENAME /var/www/backend/apps/API/public/index.php;
-        fastcgi_param DOCUMENT_ROOT /var/www/backend/apps/API/public;
+        fastcgi_param SCRIPT_FILENAME /var/www/backend/apps/ShopAPI/public/index.php;
+        fastcgi_param DOCUMENT_ROOT /var/www/backend/apps/ShopAPI/public;
         fastcgi_param SCRIPT_NAME /index.php;
         fastcgi_pass php:9000;
     }
@@ -69,15 +69,15 @@ server {
         add_header Pragma "no-cache" always;
         add_header Expires "0" always;
         include fastcgi_params;
-        fastcgi_param SCRIPT_FILENAME /var/www/backend/apps/API/public/index.php;
-        fastcgi_param DOCUMENT_ROOT /var/www/backend/apps/API/public;
+        fastcgi_param SCRIPT_FILENAME /var/www/backend/apps/ShopAPI/public/index.php;
+        fastcgi_param DOCUMENT_ROOT /var/www/backend/apps/ShopAPI/public;
         fastcgi_param SCRIPT_NAME /index.php;
         fastcgi_pass php:9000;
     }
     location ~ ^/admin(/|$) {
         include fastcgi_params;
-        fastcgi_param SCRIPT_FILENAME /var/www/backend/apps/DatabaseOperator/public/index.php;
-        fastcgi_param DOCUMENT_ROOT /var/www/backend/apps/DatabaseOperator/public;
+        fastcgi_param SCRIPT_FILENAME /var/www/backend/apps/ShopOperator/public/index.php;
+        fastcgi_param DOCUMENT_ROOT /var/www/backend/apps/ShopOperator/public;
         fastcgi_param SCRIPT_NAME /index.php;
         fastcgi_pass php:9000;
     }
