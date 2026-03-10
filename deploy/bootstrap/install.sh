@@ -27,6 +27,10 @@ if ! docker compose version >/dev/null 2>&1; then
 fi
 
 chmod +x "$SCRIPT_DIR"/*.sh 2>/dev/null || true
+chmod +x "$DEPLOY_DIR/runtime"/*.sh 2>/dev/null || true
+chmod +x "$DEPLOY_DIR/repair"/*.sh 2>/dev/null || true
+chmod +x "$DEPLOY_DIR/maintenance"/*.sh 2>/dev/null || true
+chmod +x "$DEPLOY_DIR/observability/infrastructure"/*.sh 2>/dev/null || true
 mkdir -p "$REPO_ROOT/deploy/observability/application/metrics"
 touch "$REPO_ROOT/deploy/observability/application/metrics/data.json" || true
 
