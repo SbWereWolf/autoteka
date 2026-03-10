@@ -200,6 +200,10 @@ Dev (`deploy/runtime/docker-compose.dev.yml`):
 `apps/API` и `apps/DatabaseOperator` (env, cache/bootstrap каталоги,
 storage symlink).
 
+Для `prod-docker` исходники и конфигурация baked-in в образах, поэтому
+после любого изменения в исходниках или конфигурации требуется
+пересборка production-образов и rollout новых контейнеров.
+
 ### 4.3. Лог-файлы backend модулей
 
 - `backend/apps/API/storage/logs/laravel.log`

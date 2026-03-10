@@ -4,8 +4,22 @@
 
 - `deploy/` — инфраструктура развёртывания, автодеплоя, наблюдаемости
   и техобслуживания;
-- `frontend/` — frontend на Vue3/Vite для front office;
-- `backend/` — backend на Laravel 12 с MoonShine 4 для back office;
+- `frontend/` — клиентское приложение на Vue3/Vite;
+- `backend/` — серверные модули на Laravel 12;
+
+## Терминология системы
+
+- Приложений в системе три:
+  - клиентское приложение;
+  - серверное приложение;
+  - приложение для развёртывания и обслуживания (скрипты/infra).
+- Клиентское приложение состоит из двух модулей:
+  - модуль каталога (front office);
+  - редактор тем оформления.
+- Серверные модули:
+  - `ShopAPI` (путь в репозитории: `backend/apps/API`);
+  - `DatabaseOperator` (путь: `backend/apps/DatabaseOperator`);
+  - `SchemaDefinition` (путь: `backend/packages/SchemaDefinition`).
 
 ## Временные оперативные файлы
 
@@ -37,6 +51,9 @@
 
 - [IMPLEMENTATION](docs/foundations/IMPLEMENTATION.md) — техническое
   устройство системы as-is.
+- [TESTING](docs/manual/TESTING.md) — режимы и правила запуска тестов
+  (изолированные env/config, quick/ui профили, локальные и docker
+  сценарии).
 - [backend/README](backend/README.md) — быстрый вход в backend-зону;
 - [frontend/README.md](frontend/README.md) - вход во frontend-зону;
 
@@ -88,9 +105,12 @@ php artisan serve
 
 Архитектурный инвариант backend:
 
-- backend разделён на 2 отдельных модуля:
-  - `backend/apps/API` — API;
-  - `backend/apps/DatabaseOperator` — админка (MoonShine).
+- backend разделён на 2 runtime-модуля:
+  - `backend/apps/API` — модуль `ShopAPI`;
+  - `backend/apps/DatabaseOperator` — модуль `DatabaseOperator`
+    (админка/MoonShine).
+- общий пакет схемы данных:
+  - `backend/packages/SchemaDefinition` — модуль `SchemaDefinition`.
 - логи пишутся в 2 отдельных файла:
   - `backend/apps/API/storage/logs/laravel.log`;
   - `backend/apps/DatabaseOperator/storage/logs/laravel.log`.
@@ -118,6 +138,17 @@ docker compose -f .\deploy\runtime\docker-compose.dev.yml -f .\deploy\runtime\do
 
 Важно: при явном использовании `-f` override-файлы не подхватываются
 автоматически, их нужно перечислять в команде явно.
+
+Важно: dev/prod рантаймы используют разные теги образов
+(`autoteka/runtime-php:dev|prod`, `autoteka/runtime-web:dev|prod`),
+чтобы сборка одного профиля не перетирала другой профиль.
+
+После пересборки dev-runtime, если API отвечает `500` из-за пустой БД
+(`no such table`), выполните миграции/seed в DatabaseOperator:
+
+```powershell
+docker exec autoteka-dev-php sh -lc "cd /workspace/backend/apps/DatabaseOperator && php artisan migrate --force && php artisan db:seed --class=AdminUserSeeder --force"
+```
 
 ## Шаблоны env и рабочие env-файлы
 
