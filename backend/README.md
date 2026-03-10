@@ -2,12 +2,12 @@
 
 Структура backend после разделения:
 
-- `apps/API` — Laravel 12 приложение, обслуживает только API.
-- `apps/DatabaseOperator` — Laravel 12 + MoonShine 4, обслуживает
+- `apps/ShopAPI` — Laravel 12 приложение, обслуживает только API.
+- `apps/ShopOperator` — Laravel 12 + MoonShine 4, обслуживает
   только админку.
 - `packages/SchemaDefinition` — composer path-package с миграциями и
   enum схемы.
 - `database/database.sqlite` — общий SQLite-файл для обоих приложений.
 
-Миграции выполняются из `apps/DatabaseOperator`, seed MoonShine-админа
-— из `apps/DatabaseOperator`.
+Миграции выполняются из `apps/ShopOperator`, seed MoonShine-админа
+— из `apps/ShopOperator`.
