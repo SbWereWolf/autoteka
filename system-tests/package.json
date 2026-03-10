@@ -3,13 +3,20 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "description": "Э4: интеграционные тесты проверки документации",
+  "description": "System tests: quick + UI профили",
   "scripts": {
-    "test": "vitest run",
-    "test:watch": "vitest"
+    "test": "node ./scripts/run-vitest.mjs --profile quick-local",
+    "test:watch": "vitest",
+    "test:quick-local": "node ./scripts/run-vitest.mjs --profile quick-local",
+    "test:quick-dev": "node ./scripts/run-vitest.mjs --profile quick-dev",
+    "test:ui-headless-dev": "node ./scripts/run-vitest.mjs --profile ui-headless-dev",
+    "test:ui-headless-prod": "node ./scripts/run-vitest.mjs --profile ui-headless-prod",
+    "test:ui-headed-local": "node ./scripts/run-vitest.mjs --profile ui-headed-local",
+    "test:ui-headed-prod": "node ./scripts/run-vitest.mjs --profile ui-headed-prod"
   },
   "devDependencies": {
     "@types/node": "^25.3.5",
+    "playwright": "^1.54.2",
     "vitest": "^3.2.4"
   }
 }
