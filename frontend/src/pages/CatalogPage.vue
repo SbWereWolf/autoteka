@@ -64,17 +64,11 @@
           </div>
         </div>
       </div>
-      <div v-else-if="loadError" class="mt-4 text-panel space-y-4">
-        <p class="text-sm" :style="{ color: 'var(--muted)' }">
-          Не удалось загрузить каталог.
-        </p>
-        <button
-          type="button"
-          class="ui-transition ui-interactive ui-bounce rounded-2xl min-h-12 px-4 py-3 text-sm font-semibold"
-          @click="loadCityShops"
-        >
-          Повторить
-        </button>
+      <div v-else-if="loadError" class="mt-4">
+        <ErrorStatePanel
+          message="Не удалось загрузить каталог. Проверьте соединение и попробуйте снова."
+          @retry="loadCityShops"
+        />
       </div>
       <div
         v-else
@@ -100,6 +94,7 @@ import ShopTile from "../components/ShopTile.vue";
 import CssVarsEditor from "../components/CssVarsEditor.vue";
 import type { Shop } from "../types";
 import { ApiError } from "../api/ApiClient";
+import ErrorStatePanel from "../components/ErrorStatePanel.vue";
 
 const router = useRouter();
 const cityShops = ref<Shop[]>([]);

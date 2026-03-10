@@ -143,7 +143,37 @@ function notFound(route: Route, message: string) {
   return json(route, { message }, 404);
 }
 
-export async function installApiMocks(page: Page) {
+type ErrorScenario = {
+  cityCatalogByCode?: Record<string, 404 | 422 | 500>;
+  shopByCode?: Record<string, 404 | 422 | 500>;
+  contactsByCode?: Record<string, 404 | 422 | 500>;
+};
+
+function errorPayload(status: number, message: string) {
+  if (status === 422) {
+    return {
+      message,
+      errors: {
+        code: [message],
+      },
+    };
+  }
+
+  return { message };
+}
+
+function byStatus(
+  route: Route,
+  status: 404 | 422 | 500,
+  message: string,
+) {
+  return json(route, errorPayload(status, message), status);
+}
+
+export async function installApiMocks(
+  page: Page,
+  scenario: ErrorScenario = {},
+) {
   await page.route("**/api/v1/**", async (route) => {
     const request = route.request();
     const url = new URL(request.url());
@@ -165,6 +195,17 @@ export async function installApiMocks(page: Page) {
     const cityMatch = path.match(/\/api\/v1\/city\/([^/]+)$/);
     if (method === "GET" && cityMatch) {
       const cityCode = decodeURIComponent(cityMatch[1]);
+      const forcedStatus = scenario.cityCatalogByCode?.[cityCode];
+      if (forcedStatus) {
+        return byStatus(
+          route,
+          forcedStatus,
+          forcedStatus === 500
+            ? "Temporary backend failure"
+            : "City Not Found",
+        );
+      }
+
       const city = cities.find((item) => item.code === cityCode);
       if (!city) {
         return notFound(route, "City Not Found");
@@ -178,6 +219,17 @@ export async function installApiMocks(page: Page) {
     const shopMatch = path.match(/\/api\/v1\/shop\/([^/]+)$/);
     if (method === "GET" && shopMatch) {
       const shopCode = decodeURIComponent(shopMatch[1]);
+      const forcedStatus = scenario.shopByCode?.[shopCode];
+      if (forcedStatus) {
+        return byStatus(
+          route,
+          forcedStatus,
+          forcedStatus === 500
+            ? "Temporary backend failure"
+            : "Shop Not Found",
+        );
+      }
+
       const shop = shops[shopCode];
       if (!shop) {
         return notFound(route, "Shop Not Found");
@@ -190,6 +242,17 @@ export async function installApiMocks(page: Page) {
     );
     if (method === "POST" && contactsMatch) {
       const shopCode = decodeURIComponent(contactsMatch[1]);
+      const forcedStatus = scenario.contactsByCode?.[shopCode];
+      if (forcedStatus) {
+        return byStatus(
+          route,
+          forcedStatus,
+          forcedStatus === 500
+            ? "Temporary backend failure"
+            : "Shop Not Found",
+        );
+      }
+
       if (!shops[shopCode]) {
         return notFound(route, "Shop Not Found");
       }

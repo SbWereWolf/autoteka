@@ -1,5 +1,14 @@
 import { expect, test } from "@playwright/test";
 
+test.beforeEach(async ({ request }) => {
+  try {
+    const response = await request.get("/");
+    test.skip(!response.ok(), "Online contour is unavailable");
+  } catch {
+    test.skip(true, "Online contour is unavailable");
+  }
+});
+
 test("online e2e: карточка магазина открывается из каталога", async ({
   page,
 }) => {
@@ -18,7 +27,7 @@ test("online e2e: страница неизвестного магазина о�
   page,
 }) => {
   await page.goto("/shop/nonexistent");
-  await expect(page.getByText("Магазин не найден.")).toBeVisible();
+  await expect(page.getByText("Магазин не найден")).toBeVisible();
   await expect(
     page.getByRole("button", { name: "← Назад" }),
   ).toBeVisible();

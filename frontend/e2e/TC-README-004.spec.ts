@@ -5,6 +5,15 @@
  */
 import { expect, test } from "@playwright/test";
 
+test.beforeEach(async ({ request }) => {
+  try {
+    const response = await request.get("/");
+    test.skip(!response.ok(), "Online contour is unavailable");
+  } catch {
+    test.skip(true, "Online contour is unavailable");
+  }
+});
+
 test("TC-README-004: запросы к /api/v1 не ломаются, каталог загружается", async ({
   page,
 }) => {

@@ -65,25 +65,18 @@
         </div>
       </div>
 
-      <div
-        v-else-if="notFound"
-        class="mt-8 text-sm"
-        :style="{ color: 'var(--muted)' }"
-      >
-        Магазин не найден.
+      <div v-else-if="notFound" class="mt-8">
+        <ErrorStatePanel
+          message="Магазин не найден. Возможно, ссылка устарела или код магазина неверный."
+          retry-label=""
+        />
       </div>
 
-      <div v-else-if="loadError" class="mt-8 text-panel space-y-4">
-        <p class="text-sm" :style="{ color: 'var(--muted)' }">
-          Ошибка загрузки магазина.
-        </p>
-        <button
-          type="button"
-          class="ui-transition ui-interactive ui-bounce rounded-2xl min-h-12 px-4 py-3 text-sm font-semibold"
-          @click="loadShop"
-        >
-          Повторить
-        </button>
+      <div v-else-if="loadError" class="mt-8">
+        <ErrorStatePanel
+          message="Не удалось загрузить магазин. Попробуйте ещё раз."
+          @retry="loadShop"
+        />
       </div>
 
       <div v-else-if="shop" class="mt-3">
@@ -95,13 +88,11 @@
         </div>
 
         <div class="mt-4 space-y-4 3xl:space-y-6">
-          <section class="relative" aria-labelledby="shop-gallery-heading">
-            <h2
-              id="shop-gallery-heading"
-              class="sr-only"
-            >
-              Фото
-            </h2>
+          <section
+            class="relative"
+            aria-labelledby="shop-gallery-heading"
+          >
+            <h2 id="shop-gallery-heading" class="sr-only">Фото</h2>
             <GalleryCarousel
               :items="galleryImages"
               empty-title=""
@@ -117,7 +108,10 @@
             </div>
           </section>
 
-          <section class="text-panel" aria-labelledby="shop-desc-heading">
+          <section
+            class="text-panel"
+            aria-labelledby="shop-desc-heading"
+          >
             <h2
               id="shop-desc-heading"
               class="text-xs uppercase tracking-wide font-normal m-0"
@@ -133,7 +127,10 @@
             </div>
           </section>
 
-          <section class="text-panel" aria-labelledby="shop-contacts-heading">
+          <section
+            class="text-panel"
+            aria-labelledby="shop-contacts-heading"
+          >
             <h2
               id="shop-contacts-heading"
               class="text-xs uppercase tracking-wide font-normal m-0"
@@ -141,6 +138,13 @@
             >
               Контакты
             </h2>
+            <p
+              v-if="contactsLoadError"
+              class="mt-2 text-xs"
+              :style="{ color: 'var(--muted)' }"
+            >
+              Часть контактов сейчас недоступна.
+            </p>
             <ul class="mt-2 space-y-2">
               <li v-for="item in contactRows" :key="item.key">
                 <a
@@ -227,6 +231,7 @@ import { apiClient } from "../api/HttpApiClient";
 import { ApiError } from "../api/ApiClient";
 import { state } from "../state";
 import { mapIdsToTitles } from "../utils/mapCodesToNames";
+import ErrorStatePanel from "../components/ErrorStatePanel.vue";
 
 const route = useRoute();
 const router = useRouter();
@@ -245,6 +250,7 @@ const contacts = ref<ContactsResponse>({});
 const isLoading = ref(false);
 const loadError = ref(false);
 const notFound = ref(false);
+const contactsLoadError = ref(false);
 
 const titleText = computed(() => {
   if (isLoading.value) return "Загрузка...";
@@ -341,14 +347,21 @@ async function loadShop() {
   notFound.value = false;
   shop.value = null;
   contacts.value = {};
+  contactsLoadError.value = false;
   try {
     const loadedShop = await apiClient.getShop(shopCode.value);
-    const loadedContacts = await apiClient.postAcceptableContactTypes(
-      shopCode.value,
-      ACCEPTABLE_TYPES,
-    );
     shop.value = loadedShop;
-    contacts.value = loadedContacts;
+    try {
+      const loadedContacts =
+        await apiClient.postAcceptableContactTypes(
+          shopCode.value,
+          ACCEPTABLE_TYPES,
+        );
+      contacts.value = loadedContacts;
+    } catch {
+      contacts.value = {};
+      contactsLoadError.value = true;
+    }
   } catch (err) {
     if (err instanceof ApiError && err.status === 404) {
       notFound.value = true;

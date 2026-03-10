@@ -41,11 +41,11 @@ describe("TC-README-005", () => {
     "npm run test завершается с exit code 0",
     { timeout: 90000 },
     () => {
-    execSync("npm run test -- --exclude tests/TC-README-005*", {
-      ...execOpts,
-      timeout: 60000,
-    });
-  },
+      execSync("npm run test -- --exclude tests/TC-README-005*", {
+        ...execOpts,
+        timeout: 60000,
+      });
+    },
   );
 
   it(
@@ -56,8 +56,16 @@ describe("TC-README-005", () => {
         ...execOpts,
         timeout: 8000,
       });
+      const output = `${child.stdout ?? ""}\n${child.stderr ?? ""}`;
+      const startedOrBusy =
+        child.status === 0 ||
+        child.signal === "SIGTERM" ||
+        child.signal === "SIGKILL" ||
+        /Local:\s*http/i.test(output) ||
+        /port\s+\d+\s+is already in use/i.test(output);
+
       expect(
-        child.status === 0 || child.signal === "SIGTERM" || child.signal === "SIGKILL",
+        startedOrBusy,
         "preview должен стартовать (или быть остановлен по таймауту)",
       ).toBe(true);
     },

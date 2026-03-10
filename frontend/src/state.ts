@@ -133,6 +133,11 @@ export function setTheme(themeId: ThemeId) {
 }
 
 export function toggleCategory(categoryId: string) {
+  const allowed = new Set(state.categories.map((item) => item.id));
+  if (!allowed.has(categoryId)) {
+    return;
+  }
+
   const i = state.selectedCategoryIds.indexOf(categoryId);
   if (i >= 0) state.selectedCategoryIds.splice(i, 1);
   else state.selectedCategoryIds.push(categoryId);
@@ -140,11 +145,21 @@ export function toggleCategory(categoryId: string) {
 }
 
 export function setCity(cityCode: string) {
+  const allowed = new Set(state.cities.map((item) => item.code));
+  if (!allowed.has(cityCode)) {
+    return;
+  }
+
   state.cityCode = cityCode;
   saveLocal(CITY_KEY, cityCode);
 }
 
 export function setFeature(featureId: string) {
+  const allowed = new Set(state.features.map((item) => item.id));
+  if (!allowed.has(featureId)) {
+    return;
+  }
+
   state.selectedFeatureId = featureId;
   saveLocal(FEATURE_KEY, featureId);
 }
