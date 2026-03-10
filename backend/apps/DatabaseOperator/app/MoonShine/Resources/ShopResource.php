@@ -10,7 +10,10 @@ use App\Models\ContactType;
 use App\Models\Feature;
 use App\Models\Shop;
 use App\MoonShine\Handlers\SaveShopResourceHandler;
+use App\Support\Media\UploadFileNameGenerator;
+use App\Support\Media\UploadOriginalNameStore;
 use Illuminate\Contracts\Database\Eloquent\Builder;
+use Illuminate\Http\UploadedFile;
 use MoonShine\Crud\Attributes\SaveHandler;
 use MoonShine\Laravel\Pages\Crud\FormPage;
 use MoonShine\Laravel\Pages\Crud\IndexPage;
@@ -72,7 +75,7 @@ class ShopResource extends ModelResource
 
     protected function search(): array
     {
-        return ['id', 'code', 'title', 'description', 'site_url'];
+        return ['id', 'title', 'description', 'site_url'];
     }
 
     protected function modifyItemQueryBuilder(Builder $builder): Builder
@@ -84,7 +87,6 @@ class ShopResource extends ModelResource
     {
         return [
             ID::make()->sortable(),
-            Text::make('Code', 'code'),
             Text::make('Название', 'title')->sortable(),
             Text::make('Город', 'city.title'),
             Number::make('Sort', 'sort')->sortable(),
@@ -98,8 +100,6 @@ class ShopResource extends ModelResource
     {
         return [
             ID::make(),
-            Text::make('Code', 'code')
-                ->placeholder('Автогенерация из title'),
             Text::make('Название', 'title')
                 ->required(),
             Number::make('Sort', 'sort')
@@ -119,6 +119,16 @@ class ShopResource extends ModelResource
                 ->disk((string) config('autoteka.media.disk'))
                 ->dir((string) config('autoteka.media.shop_thumb_dir'))
                 ->allowedExtensions(['jpg', 'jpeg', 'png', 'webp'])
+                ->customName(static function (mixed $file): string {
+                    if (! $file instanceof UploadedFile) {
+                        return UploadFileNameGenerator::generateFromName((string) $file);
+                    }
+
+                    $stored = UploadFileNameGenerator::generateFromName($file->getClientOriginalName());
+                    app(UploadOriginalNameStore::class)->register($stored, $file->getClientOriginalName());
+
+                    return $stored;
+                })
                 ->removable(),
             Json::make('Категории', 'category_links')
                 ->fields([
@@ -164,6 +174,16 @@ class ShopResource extends ModelResource
                         ->disk((string) config('autoteka.media.disk'))
                         ->dir((string) config('autoteka.media.shop_gallery_dir'))
                         ->allowedExtensions(['jpg', 'jpeg', 'png', 'webp'])
+                        ->customName(static function (mixed $file): string {
+                            if (! $file instanceof UploadedFile) {
+                                return UploadFileNameGenerator::generateFromName((string) $file);
+                            }
+
+                            $stored = UploadFileNameGenerator::generateFromName($file->getClientOriginalName());
+                            app(UploadOriginalNameStore::class)->register($stored, $file->getClientOriginalName());
+
+                            return $stored;
+                        })
                         ->removable(),
                     Number::make('Sort', 'sort')
                         ->default(0)

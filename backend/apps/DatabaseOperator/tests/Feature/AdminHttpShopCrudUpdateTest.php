@@ -74,7 +74,7 @@ final class AdminHttpShopCrudUpdateTest extends TestCase
             'is_published' => true,
         ]);
 
-        $thumb = UploadedFile::fake()->image('thumb.jpg', 1200, 800);
+        $thumb = UploadedFile::fake()->create('thumb.jpg', 32, 'image/jpeg');
         $galleryDisk = (string) config('autoteka.media.disk', 'public');
         $existingGalleryPath = 'shops/gallery/existing-gallery.jpg';
         Storage::disk($galleryDisk)->put($existingGalleryPath, 'fake-image-content');
@@ -147,6 +147,11 @@ final class AdminHttpShopCrudUpdateTest extends TestCase
         $shop->refresh();
         self::assertNotNull($shop->thumb_path);
         self::assertStringContainsString('shops/thumbs', (string) $shop->thumb_path);
+        self::assertMatchesRegularExpression(
+            '/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\.jpg$/',
+            basename((string) $shop->thumb_path)
+        );
+        self::assertSame('thumb.jpg', $shop->thumb_original_name);
         $this->assertDatabaseHas('shop_category', [
             'shop_id' => $shop->getKey(),
             'category_id' => $category->getKey(),
@@ -182,6 +187,66 @@ final class AdminHttpShopCrudUpdateTest extends TestCase
             'sort' => 0,
             'is_published' => 1,
         ]);
+    }
+
+    public function test_admin_uploads_gallery_file_with_uuid_path_and_original_name_saved(): void
+    {
+        $this->withoutMiddleware(VerifyCsrfToken::class);
+        Storage::fake((string) config('autoteka.media.disk', 'public'));
+
+        $admin = $this->createAdminUser();
+        $this->actingAs($admin, 'moonshine');
+
+        $city = City::query()->create([
+            'code' => 'city-upload',
+            'title' => 'City Upload',
+            'sort' => 1,
+            'is_published' => true,
+        ]);
+
+        $shop = Shop::query()->create([
+            'code' => 'shop-upload',
+            'title' => 'Shop Upload',
+            'sort' => 1,
+            'city_id' => $city->getKey(),
+            'is_published' => true,
+        ]);
+
+        $galleryUpload = UploadedFile::fake()->create('gallery-original.PNG', 32, 'image/png');
+
+        $response = $this->post(
+            route('moonshine.crud.update', [
+                'resourceUri' => 'shop-resource',
+                'resourceItem' => $shop->getKey(),
+            ]),
+            [
+                '_method' => 'PATCH',
+                'code' => 'shop-upload',
+                'title' => 'Shop Upload',
+                'sort' => 1,
+                'city_id' => $city->getKey(),
+                'is_published' => '1',
+                'contact_entries' => [],
+                'gallery_entries' => [
+                    [
+                        'file_path' => $galleryUpload,
+                        'sort' => 1,
+                        'is_published' => true,
+                    ],
+                ],
+                'schedule_entries' => [],
+                'schedule_note_text' => '',
+            ]
+        );
+
+        $response->assertStatus(302);
+
+        $image = ShopGalleryImage::query()->where('shop_id', $shop->getKey())->firstOrFail();
+        self::assertMatchesRegularExpression(
+            '/^shops\/gallery\/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\.png$/',
+            $image->file_path
+        );
+        self::assertSame('gallery-original.PNG', $image->original_name);
     }
 
     public function test_admin_can_update_existing_nested_shop_rows_by_id_over_http(): void
@@ -352,6 +417,8 @@ final class AdminHttpShopCrudUpdateTest extends TestCase
             'sort' => 1,
             'is_published' => true,
         ]);
+        Storage::disk((string) config('autoteka.media.disk', 'public'))
+            ->put('shops/gallery/delete-image.jpg', 'to-delete');
         $schedule = ShopSchedule::query()->create([
             'shop_id' => $shop->getKey(),
             'weekday' => 1,
@@ -400,6 +467,8 @@ final class AdminHttpShopCrudUpdateTest extends TestCase
         $this->assertDatabaseMissing('shop_gallery_image', [
             'id' => $gallery->getKey(),
         ]);
+        Storage::disk((string) config('autoteka.media.disk', 'public'))
+            ->assertMissing('shops/gallery/delete-image.jpg');
         $this->assertDatabaseMissing('shop_schedule', [
             'id' => $schedule->getKey(),
         ]);

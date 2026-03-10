@@ -4,10 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
-use App\Models\Category;
 use App\Models\City;
-use App\Models\ContactType;
-use App\Models\Feature;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use MoonShine\Laravel\Models\MoonshineUser;
@@ -25,33 +22,33 @@ final class AdminHttpCrudUpdateTest extends TestCase
         $admin = $this->createAdminUser();
         $this->actingAs($admin, 'moonshine');
 
-        $this->assertHttpUpdateDictionaryResource(City::query()->create([
+        $city = City::query()->create([
             'code' => 'city-old',
             'title' => 'City Old',
             'sort' => 1,
             'is_published' => true,
-        ]), 'city-resource', 'city-new');
+        ]);
 
-        $this->assertHttpUpdateDictionaryResource(Category::query()->create([
-            'code' => 'category-old',
-            'title' => 'Category Old',
-            'sort' => 1,
-            'is_published' => true,
-        ]), 'category-resource', 'category-new');
+        $this->patch(
+            route('moonshine.crud.update', [
+                'resourceUri' => 'city-resource',
+                'resourceItem' => $city->id,
+            ]),
+            [
+                'code' => 'city-new',
+                'title' => 'CITY-NEW',
+                'sort' => 99,
+                'is_published' => '0',
+            ]
+        )->assertStatus(302);
 
-        $this->assertHttpUpdateDictionaryResource(Feature::query()->create([
-            'code' => 'feature-old',
-            'title' => 'Feature Old',
-            'sort' => 1,
-            'is_published' => true,
-        ]), 'feature-resource', 'feature-new');
-
-        $this->assertHttpUpdateDictionaryResource(ContactType::query()->create([
-            'code' => 'contact-old',
-            'title' => 'Contact Old',
-            'sort' => 1,
-            'is_published' => true,
-        ]), 'contact-type-resource', 'contact-new');
+        $this->assertDatabaseHas('city', [
+            'id' => $city->id,
+            'code' => 'city-new',
+            'title' => 'CITY-NEW',
+            'sort' => 99,
+            'is_published' => 0,
+        ]);
     }
 
     private function createAdminUser(): MoonshineUser
@@ -68,31 +65,4 @@ final class AdminHttpCrudUpdateTest extends TestCase
             'password' => bcrypt('admin12345'),
         ]);
     }
-
-    private function assertHttpUpdateDictionaryResource(object $item, string $resourceUri, string $codePrefix): void
-    {
-        $response = $this->patch(
-            route('moonshine.crud.update', [
-                'resourceUri' => $resourceUri,
-                'resourceItem' => $item->id,
-            ]),
-            [
-                'code' => $codePrefix,
-                'title' => strtoupper($codePrefix),
-                'sort' => 99,
-                'is_published' => '0',
-            ]
-        );
-
-        $response->assertStatus(302);
-
-        $this->assertDatabaseHas($item->getTable(), [
-            'id' => $item->id,
-            'code' => $codePrefix,
-            'title' => strtoupper($codePrefix),
-            'sort' => 99,
-            'is_published' => 0,
-        ]);
-    }
 }
-

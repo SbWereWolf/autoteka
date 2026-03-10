@@ -49,14 +49,13 @@ class ContactTypeResource extends ModelResource
 
     protected function search(): array
     {
-        return ['id', 'code', 'title'];
+        return ['id', 'title'];
     }
 
     protected function indexFields(): iterable
     {
         return [
             ID::make()->sortable(),
-            Text::make('Code', 'code'),
             Text::make('Название', 'title')->sortable(),
             Number::make('Sort', 'sort')->sortable(),
             Switcher::make('Опубликован', 'is_published'),
@@ -69,8 +68,6 @@ class ContactTypeResource extends ModelResource
     {
         return [
             ID::make(),
-            Text::make('Code', 'code')
-                ->placeholder('Автогенерация из title'),
             Text::make('Название', 'title')
                 ->required(),
             Number::make('Sort', 'sort')
