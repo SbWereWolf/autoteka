@@ -11,7 +11,9 @@ COPY deploy/runtime/docker/docker/php/php.ini.prod.template /usr/local/share/php
 COPY deploy/runtime/docker/docker/php/php-fpm-www.prod.template /usr/local/share/php-fpm/zz-www.conf.template
 COPY deploy/runtime/docker/docker/php/prod-entrypoint.sh /usr/local/bin/backend-entrypoint
 RUN chmod +x /usr/local/bin/backend-entrypoint && \
+  mkdir -p /workspace && ln -snf /var/www/backend /workspace/backend && \
   mkdir -p /var/www/backend/database /var/www/backend/storage/framework/cache /var/www/backend/storage/framework/sessions /var/www/backend/storage/framework/views /var/www/backend/storage/logs /var/www/backend/bootstrap/cache && \
+  touch /workspace/backend/database/database.sqlite && \
   for module in API DatabaseOperator; do \
     if [ -f /var/www/backend/apps/"$module"/composer.json ]; then \
       cd /var/www/backend/apps/"$module" && composer install --prefer-dist --no-interaction --optimize-autoloader; \

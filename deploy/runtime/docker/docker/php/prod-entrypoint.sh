@@ -11,10 +11,18 @@ mkdir -p database storage/framework/cache storage/framework/sessions storage/fra
 [ -f database/database.sqlite ] || touch database/database.sqlite
 cp .env apps/API/.env
 cp .env apps/DatabaseOperator/.env
+if [ "${APP_KEY:-}" = "" ]; then
+  unset APP_KEY
+fi
 rm -rf apps/API/public/storage apps/DatabaseOperator/public/storage
 ln -sfn ../../../storage/app/public apps/API/public/storage
 ln -sfn ../../../storage/app/public apps/DatabaseOperator/public/storage
-chown -R www-data:www-data /var/www/backend
+chown -R www-data:www-data \
+  /var/www/backend/database \
+  /var/www/backend/storage \
+  /var/www/backend/bootstrap/cache \
+  /var/www/backend/apps/API/bootstrap/cache \
+  /var/www/backend/apps/DatabaseOperator/bootstrap/cache
 (cd apps/API && php artisan package:discover --ansi >/dev/null 2>&1 || true)
 (cd apps/DatabaseOperator && php artisan package:discover --ansi >/dev/null 2>&1 || true)
 if ! grep -qE '^APP_KEY=base64:' .env; then

@@ -9,6 +9,9 @@ mkdir -p database storage/framework/cache storage/framework/sessions storage/fra
 [ -f database/database.sqlite ] || touch database/database.sqlite
 cp .env apps/API/.env
 cp .env apps/DatabaseOperator/.env
+if [ "${APP_KEY:-}" = "" ]; then
+  unset APP_KEY
+fi
 if [ -f apps/API/composer.json ] && [ ! -f apps/API/vendor/autoload.php ]; then
   (cd apps/API && composer install --prefer-dist --no-interaction)
 fi
