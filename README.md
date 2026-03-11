@@ -2,12 +2,17 @@
 
 ## Что в репозитории
 
-- `docs/` — постоянная документация по эксплуатации, использованию и разработке.
-- `deploy/` — install/deploy/uninstall, docker compose, systemd, watchdog и maintenance.
+- `docs/` — постоянная документация по эксплуатации, использованию и
+  разработке.
+- `deploy/` — install/deploy/uninstall, docker compose, systemd,
+  watchdog и maintenance.
 - `frontend/` — клиентское приложение, его сборка и frontend-тесты.
-- `backend/` — серверные Laravel-модули и связанные PHP-пакеты (тесты).
-- `test-cases/` — трассировка документации и требований в тест-кейсы и checklists.
-- `system-tests/` — системные quick/ui тесты, включая `USER-UI` и `CLERC-UI`.
+- `backend/` — серверные Laravel-модули и связанные PHP-пакеты
+  (тесты).
+- `test-cases/` — трассировка документации и требований в тест-кейсы и
+  checklists.
+- `system-tests/` — системные quick/ui тесты, включая `USER-UI` и
+  `CLERC-UI`.
 - `operational/` — журнал текущей работы для LLM-агентов.
 - `backup/` — временные локальные резервные копии.
 - `inbox/` — временные файлы вложений для диалога с LLM-агентом.
@@ -25,7 +30,7 @@
   - редактор тем оформления;
   - модуль каталога (front office).
 - Серверные модули:
-  - `ShopAPI` (путь в репозитории: `backend/apps/ShopAPI`) - API для 
+  - `ShopAPI` (путь в репозитории: `backend/apps/ShopAPI`) - API для
     клиентского приложения;
   - `ShopOperator` (путь: `backend/apps/ShopOperator`) - GUI для
     работы с картотекой магазинов (back oficce);
@@ -45,7 +50,8 @@
 
 ### Обслуживание
 
-- [ADMIN_MANUAL](docs/manual/ADMIN_MANUAL.md) —  серверные настройки и служебные скрипты;
+- [ADMIN_MANUAL](docs/manual/ADMIN_MANUAL.md) — серверные настройки и
+  служебные скрипты;
 - [DEPLOY](deploy/DEPLOY.md) — развёртывание, наблюдаемость,
   диагностика поломок и техническое обслуживание;
 
@@ -63,7 +69,7 @@
 - [TESTING](docs/manual/TESTING.md) — режимы и правила запуска тестов
   (изолированные env/config, quick/ui профили, локальные и docker
   сценарии).
-- [backend/README](backend/README.md) —  вход в backend-зону;
+- [backend/README](backend/README.md) — вход в backend-зону;
 - [frontend/README.md](frontend/README.md) — вход во frontend-зону;
 
 ## Локальный запуск
@@ -115,9 +121,10 @@ php artisan serve
 Архитектурный инвариант backend:
 
 - backend разделён на 2 runtime-модуля:
-  - `backend/apps/ShopAPI` — модуль `ShopAPI` (выдаёт данные по запросу);
-  - `backend/apps/ShopOperator` — модуль `DatabaseOperator`
-    редактор для базы данных.
+  - `backend/apps/ShopAPI` — модуль `ShopAPI` (выдаёт данные по
+    запросу);
+  - `backend/apps/ShopOperator` — модуль `DatabaseOperator` редактор
+    для базы данных.
 - общий пакет схемы данных:
   - `backend/packages/SchemaDefinition` — модуль `SchemaDefinition`.
 - логи пишутся в 2 отдельных файла:
@@ -156,6 +163,7 @@ docker compose -f .\deploy\runtime\docker-compose.dev.yml -f .\deploy\runtime\do
 (`no such table`), выполните миграции/seed в DatabaseOperator:
 
 Создать учётную запись админа
+
 ```powershell
 docker exec autoteka-dev-php sh -lc "cd /workspace/backend/apps/ShopOperator && php artisan migrate --force && php artisan db:seed --class=AdminUserSeeder --force"
 ```
