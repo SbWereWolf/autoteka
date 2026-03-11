@@ -26,7 +26,7 @@ describe("TC-FRONTEND-README-003", () => {
 });
 
 describe("TC-FRONTEND-README-004", () => {
-  it("скрипты dev, build, preview, test, api/e2e/ui-mock, check:data", () => {
+  it("скрипты dev, build, preview, test, api/e2e/ui-mock", () => {
     const pkg = JSON.parse(
       readFileSync(join(FRONTEND_ROOT, "package.json"), "utf-8"),
     );
@@ -38,7 +38,6 @@ describe("TC-FRONTEND-README-004", () => {
     expect(scripts["test:api:online"]).toBeDefined();
     expect(scripts["test:e2e"]).toBeDefined();
     expect(scripts["test:ui:mock"]).toBeDefined();
-    expect(scripts["check:data"]).toBeDefined();
   });
 });
 
@@ -48,8 +47,9 @@ describe("TC-FRONTEND-README-005", () => {
       readFileSync(join(FRONTEND_ROOT, "package.json"), "utf-8"),
     );
     const scripts = pkg.scripts || {};
-    expect(scripts["check:unused-assets"]).toBeDefined();
-    expect(scripts["images:regen"]).toBeDefined();
+    expect(scripts["images:regen"]).toBeUndefined();
+    expect(scripts["images:moonshine"]).toBeUndefined();
+    expect(scripts["materialize:shop-media"]).toBeUndefined();
   });
 });
 

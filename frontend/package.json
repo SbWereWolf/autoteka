@@ -14,10 +14,7 @@
     "test:e2e": "playwright test --config playwright.e2e.config.ts",
     "test:e2e:headed": "playwright test --config playwright.e2e.config.ts --headed",
     "test:ui:mock": "playwright test --config playwright.ui-mock.config.ts",
-    "test:ui:mock:headed": "playwright test --config playwright.ui-mock.config.ts --headed",
-    "images:regen": "node scripts/generate-shop-images.mjs",
-    "check:unused-assets": "node scripts/check-unused-assets.mjs",
-    "check:data": "npm run check:unused-assets"
+    "test:ui:mock:headed": "playwright test --config playwright.ui-mock.config.ts --headed"
   },
   "dependencies": {
     "vue": "^3.5.0",

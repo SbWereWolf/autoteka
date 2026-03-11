@@ -19,10 +19,10 @@ describe("TC-SCRIPTS-README-001", () => {
     expect(mjs).toHaveLength(0);
   });
 
-  it("frontend/scripts содержит .mjs", () => {
+  it("frontend/scripts не содержит устаревшие .mjs генераторы", () => {
     const files = readdirSync(FRONTEND_SCRIPTS);
     const mjs = files.filter((f) => f.endsWith(".mjs"));
-    expect(mjs.length).toBeGreaterThan(0);
+    expect(mjs).toHaveLength(0);
   });
 });
 

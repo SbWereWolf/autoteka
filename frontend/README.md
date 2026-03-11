@@ -28,7 +28,6 @@ npm run test
 npm run test:api:online
 npm run test:e2e
 npm run test:ui:mock
-npm run check:data
 ```
 
 Где:
@@ -47,11 +46,6 @@ API_BASE_URL=http://127.0.0.1/api/v1 npm run test:api:online
 # online e2e (Playwright)
 PLAYWRIGHT_BASE_URL=http://127.0.0.1 npm run test:e2e
 ```
-
-Дополнительные data/media команды:
-
-- `npm run check:unused-assets`
-- `npm run images:regen`
 
 ## Основные маршруты
 
