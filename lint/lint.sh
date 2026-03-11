@@ -29,6 +29,7 @@ is_wsl() {
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CONFIG_PATH="$SCRIPT_DIR/lint-rules.yml"
 WIN_ENV_PATH="$SCRIPT_DIR/win.env"
+WSL_ENV_PATH="$SCRIPT_DIR/wsl.env"
 NIX_ENV_PATH="$SCRIPT_DIR/nix.env"
 
 while [[ $# -gt 0 ]]; do
@@ -76,14 +77,16 @@ fi
 
 ENV_PATH=""
 if [[ "$(uname -s)" == "Linux" ]] && is_wsl; then
-  [[ -f "$WIN_ENV_PATH" ]] && ENV_PATH="$WIN_ENV_PATH"
-else
+  [[ -f "$WSL_ENV_PATH" ]] && ENV_PATH="$WSL_ENV_PATH"
+elif [[ "$(uname -s)" == "Linux" ]]; then
   [[ -f "$NIX_ENV_PATH" ]] && ENV_PATH="$NIX_ENV_PATH"
+else
+  [[ -f "$WIN_ENV_PATH" ]] && ENV_PATH="$WIN_ENV_PATH"
 fi
 
 if [[ -n "$ENV_PATH" ]]; then
   log "Loading env: $ENV_PATH"
-  # shellcheck disable=SC1090
+  # shellcheck disable=SC1090,SC1091
   set -a
   source "$ENV_PATH"
   set +a

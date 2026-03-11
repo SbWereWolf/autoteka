@@ -4,16 +4,18 @@
 
 ## Состав
 
-- `commit-with-message.ps1` — helper для создания commit с сообщением 
+- `commit-with-message.ps1` — helper для создания commit с сообщением
   (PowerShell).
-- `commit-with-message.sh` — helper для создания commit с сообщением (bash).
+- `commit-with-message.sh` — helper для создания commit с сообщением
+  (bash).
 - `read-scripts-env.ps1` — чтение локального `scripts/.env` в
   key/value-словарь.
 - `resolve-bash-runtime.ps1` — выбор bash-интерпретатора через
   `scripts/.env` и PATH.
 - `check-bash-runtime.ps1` — проверка запуска bash и синтаксиса
   `commit-with-message.sh`.
-- `log-entry.ps1` — запись журнала работ в `logs/` по правилам из `rules/logging-rules.md`.
+- `log-entry.ps1` — запись журнала работ в `logs/` по правилам из
+  `rules/logging-rules.md`.
 - `example.env` — пример формата `scripts/.env`.
 
 Фронтовые `.mjs` утилиты переехали в `frontend/scripts/`.
@@ -28,3 +30,29 @@
 - `SCRIPT_BASH_PATH` — путь к интерпретатору `bash`.
 - `SCRIPT_NODE_PATH` — путь к исполняемому файлу `node`.
 - `SCRIPT_NPX_PATH` — путь к исполняемому файлу `npx`.
+
+## Примеры helper-коммита
+
+PowerShell:
+
+```powershell
+pwsh ./scripts/commit-with-message.ps1 `
+  -Subject "Configure metrics caching and routing" `
+  -Body @(
+    "Add explicit nginx rules for metrics routes and caching.",
+    "Keep metrics page cacheable while data.json stays no-cache."
+  ) `
+  -AISystemName "codex" `
+  -LLMName "gpt-5"
+```
+
+bash:
+
+```bash
+bash ./scripts/commit-with-message.sh \
+  --subject "Configure metrics caching and routing" \
+  --body "Add explicit nginx rules for metrics routes and caching." \
+  --body "Keep metrics page cacheable while data.json stays no-cache." \
+  --ai-system-name "codex" \
+  --llm-name "gpt-5"
+```

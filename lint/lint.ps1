@@ -16,6 +16,7 @@ $ErrorActionPreference = "Stop"
 $ScriptDir  = Split-Path -Parent $MyInvocation.MyCommand.Path
 $ConfigPath = Join-Path $ScriptDir "lint-rules.yml"
 $WinEnvPath = Join-Path $ScriptDir "win.env"
+$WslEnvPath = Join-Path $ScriptDir "wsl.env"
 $NixEnvPath = Join-Path $ScriptDir "nix.env"
 
 if (-not (Test-Path $ConfigPath)) {
@@ -54,7 +55,12 @@ $IsWsl = Test-IsWsl
 $EnvPath = $null
 
 if ($IsWindows -or $IsWsl) {
-  if (Test-Path $WinEnvPath) {
+  if ($IsWsl) {
+    if (Test-Path $WslEnvPath) {
+      $EnvPath = $WslEnvPath
+    }
+  }
+  elseif (Test-Path $WinEnvPath) {
     $EnvPath = $WinEnvPath
   }
 }
