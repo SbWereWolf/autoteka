@@ -2,46 +2,39 @@
 
 ## Что в репозитории
 
-- `deploy/` — инфраструктура развёртывания, автодеплоя, наблюдаемости
-  и техобслуживания;
-- `frontend/` — клиентское приложение на Vue3/Vite;
-- `backend/` — серверные модули на Laravel 12;
-
-## Каталоги первого уровня
-
-- `backend/` — серверные Laravel-модули и связанные PHP-пакеты (тесты).
-- `backup/` — локальные временные резервные копии.
-- `deploy/` — install/deploy/uninstall, docker compose, systemd, watchdog и maintenance.
 - `docs/` — постоянная документация по эксплуатации, использованию и разработке.
+- `deploy/` — install/deploy/uninstall, docker compose, systemd, watchdog и maintenance.
 - `frontend/` — клиентское приложение, его сборка и frontend-тесты.
-- `inbox/` — вложения для текущего диалога с LLM-агентом.
-- `lint/` — скрипт линтинга и конфиги.
-- `logs/` — временные локальные журналы работ.
-- `node_modules/` — корневые JS-зависимости для линтинга.
-- `operational/` — журнал текущей работы для LLM-агентов.
-- `scripts/` — корневые вспомогательные скрипты разработки и quality-проверок.
-- `system-tests/` — системные quick/ui тесты, включая `USER-UI` и `CLERC-UI`.
-- `tasks/` — одноразовые рабочие инструкции, миграционные заметки и task-артефакты, не являющиеся постоянной архитектурной документацией.
+- `backend/` — серверные Laravel-модули и связанные PHP-пакеты (тесты).
 - `test-cases/` — трассировка документации и требований в тест-кейсы и checklists.
-- `vendor/` — PHP-зависимости корневого Composer-пакета.
+- `system-tests/` — системные quick/ui тесты, включая `USER-UI` и `CLERC-UI`.
+- `operational/` — журнал текущей работы для LLM-агентов.
+- `backup/` — временные локальные резервные копии.
+- `inbox/` — временные  файлы вложений для диалога с LLM-агентом.
+- `logs/` — временные локальные журналы работ.
+- `tasks/` — временные одноразовые рабочие инструкции.
 
 ## Терминология системы
 
 - Приложений в системе три:
   - клиентское приложение;
   - серверное приложение;
-  - приложение для развёртывания и обслуживания (скрипты/infra).
+  - приложение для развёртывания и обслуживания установленной Системы
+    (скрипты/infra в `deploy/`).
 - Клиентское приложение состоит из двух модулей:
-  - модуль каталога (front office);
-  - редактор тем оформления.
+  - редактор тем оформления;
+  - модуль каталога (front office).
 - Серверные модули:
-  - `ShopAPI` (путь в репозитории: `backend/apps/ShopAPI`);
-  - `DatabaseOperator` (путь: `backend/apps/ShopOperator`);
-  - `SchemaDefinition` (путь: `backend/packages/SchemaDefinition`).
+  - `ShopAPI` (путь в репозитории: `backend/apps/ShopAPI`) - API для 
+    клиентского приложения;
+  - `ShopOperator` (путь: `backend/apps/ShopOperator`) - GUI для
+    работы с картотекой магазинов (back oficce);
+  - `SchemaDefinition` (путь: `backend/packages/SchemaDefinition`) -
+    модуль источник истины о схеме БД.
 
 ## Временные оперативные файлы
 
-Каталоги `tasks/` и `logs/` используются только как временные
+Каталоги `tasks/`, `logs/`, `inbox/` используются только как временные
 оперативные файлы для текущих работ и диагностики.
 
 Для длительного использования этой кодовой базы они не являются
@@ -52,9 +45,7 @@
 
 ### Обслуживание
 
-- [ADMIN_MANUAL](docs/manual/ADMIN_MANUAL.md) — редактор для тем
-  оформления, организация работы back office, серверные настройки и
-  служебные скрипты;
+- [ADMIN_MANUAL](docs/manual/ADMIN_MANUAL.md) —  серверные настройки и служебные скрипты;
 - [DEPLOY](deploy/DEPLOY.md) — развёртывание, наблюдаемость,
   диагностика поломок и техническое обслуживание;
 
@@ -72,8 +63,8 @@
 - [TESTING](docs/manual/TESTING.md) — режимы и правила запуска тестов
   (изолированные env/config, quick/ui профили, локальные и docker
   сценарии).
-- [backend/README](backend/README.md) — быстрый вход в backend-зону;
-- [frontend/README.md](frontend/README.md) - вход во frontend-зону;
+- [backend/README](backend/README.md) —  вход в backend-зону;
+- [frontend/README.md](frontend/README.md) — вход во frontend-зону;
 
 ## Локальный запуск
 
@@ -124,9 +115,9 @@ php artisan serve
 Архитектурный инвариант backend:
 
 - backend разделён на 2 runtime-модуля:
-  - `backend/apps/ShopAPI` — модуль `ShopAPI`;
+  - `backend/apps/ShopAPI` — модуль `ShopAPI` (выдаёт данные по запросу);
   - `backend/apps/ShopOperator` — модуль `DatabaseOperator`
-    (админка/MoonShine).
+    редактор для базы данных.
 - общий пакет схемы данных:
   - `backend/packages/SchemaDefinition` — модуль `SchemaDefinition`.
 - логи пишутся в 2 отдельных файла:
@@ -164,6 +155,7 @@ docker compose -f .\deploy\runtime\docker-compose.dev.yml -f .\deploy\runtime\do
 После пересборки dev-runtime, если API отвечает `500` из-за пустой БД
 (`no such table`), выполните миграции/seed в DatabaseOperator:
 
+Создать учётную запись админа
 ```powershell
 docker exec autoteka-dev-php sh -lc "cd /workspace/backend/apps/ShopOperator && php artisan migrate --force && php artisan db:seed --class=AdminUserSeeder --force"
 ```

@@ -1,11 +1,9 @@
 # Руководство администратора
 
-**Дата актуализации: 2026-03-09.**
+**Дата актуализации: 2026-03-10.**
 
 Документ описывает:
 
-- работу с front office в части редактора темы оформления;
-- работу с back office на MoonShine;
 - как запускать рабочие контуры и выполнять повседневные операции;
 - как чинить, обслуживать и диагностировать систему.
 
@@ -36,21 +34,16 @@
 - фишки;
 - типы контактов;
 - магазины;
-- административные пользователи и роли.
+- theme editor.
 
 ### Технический администратор
 
 Работает с:
 
-- theme editor;
+- административные пользователи и роли;
 - переменными окружения;
 - генерацией и валидацией данных и медиа;
 - автодеплоем, watchdog, metrics и техобслуживанием.
-
-## 2. Front office: редактор темы оформления
-
-Редактор темы предназначен для runtime-настройки CSS-переменных
-активной темы без правки исходных CSS-файлов.
 
 ### 2.1. Как включить
 
@@ -111,7 +104,8 @@ location.reload();
 
 По умолчанию:
 
-- URL: `http://127.0.0.1:8000/admin/login`
+- URL в local dev/runtime: `http://127.0.0.1:8081/admin/login`
+- URL в production: `/admin/login`
 - login: `admin@example.com`
 - password: `admin12345`
 
@@ -309,42 +303,55 @@ systemctl status server-maintenance.timer
 docker compose -f deploy/runtime/docker-compose.yml ps
 ```
 
+Подробности:
+
+- первичная установка —
+  [DEPLOY §4](../../deploy/DEPLOY.md#4-развёртывание-с-нуля);
+- переменные окружения —
+  [DEPLOY §5](../../deploy/DEPLOY.md#5-настройки-окружения);
+- что именно делает `install.sh` —
+  [DEPLOY §3](../../deploy/DEPLOY.md#3-что-делает-installsh).
+
 ### 7.3. Как запустить local dev / debug
 
-Из корня репозитория:
+Базовый dev-runtime с `php` target = `dev`:
 
-```bash
-cd deploy
-cp bootstrap/config/dev.example.env .env
-docker compose -f runtime/docker-compose.dev.yml up --build
+```powershell
+docker compose -f .\deploy\runtime\docker-compose.dev.yml -f .\deploy\runtime\docker-compose.dev.target-dev.yml up --build -d
 ```
 
-Запуск в фоне:
+Локальный smoke runtime с `php` target = `prod`:
 
-```bash
-docker compose -f runtime/docker-compose.dev.yml up --build -d
+```powershell
+docker compose -f .\deploy\runtime\docker-compose.dev.yml -f .\deploy\runtime\docker-compose.dev.target-prod.yml up --build -d
 ```
 
 Остановить dev/debug-контур:
 
-```bash
-docker compose -f runtime/docker-compose.dev.yml down
+```powershell
+docker compose -f .\deploy\runtime\docker-compose.dev.yml -f .\deploy\runtime\docker-compose.dev.target-dev.yml down
 ```
 
 Переcобрать контейнеры:
 
-```bash
-docker compose -f runtime/docker-compose.dev.yml build
+```powershell
+docker compose -f .\deploy\runtime\docker-compose.dev.yml -f .\deploy\runtime\docker-compose.dev.target-dev.yml build
 ```
 
 Открыть shell в backend-контейнере:
 
-```bash
-docker compose -f runtime/docker-compose.dev.yml exec php sh
+```powershell
+docker exec autoteka-dev-php sh
 ```
 
 По умолчанию приложение доступно по адресу `http://127.0.0.1:8081`.
-Адрес и порты управляются через `deploy/.env`.
+Адрес и порты управляются через
+`deploy/bootstrap/config/dev.example.env` и локальный `deploy/.env`.
+
+Подробности по локальным runtime-командам и env:
+
+- [README: Dev runtime с выбором php target](../../README.md#dev-runtime-с-выбором-php-target-override);
+- [DEPLOY §5](../../deploy/DEPLOY.md#5-настройки-окружения).
 
 ### 7.4. Режимы frontend в dev/debug
 
@@ -383,13 +390,15 @@ docker compose -f runtime/docker-compose.dev.yml ps
 Посмотреть логи web:
 
 ```bash
-docker compose -f deploy/runtime/docker-compose.dev.yml logs -f web
+cd deploy
+docker compose -f runtime/docker-compose.dev.yml logs -f web
 ```
 
 Посмотреть логи php:
 
 ```bash
-docker compose -f deploy/runtime/docker-compose.dev.yml logs -f php
+cd deploy
+docker compose -f runtime/docker-compose.dev.yml logs -f php
 ```
 
 Сделать dry-run проверки и ремонта production:
@@ -398,6 +407,25 @@ docker compose -f deploy/runtime/docker-compose.dev.yml logs -f php
 autoteka watchdog --dry-run
 autoteka repair-runtime --dry-run
 ```
+
+Точечные команды ремонта:
+
+```bash
+autoteka repair-health nginx
+autoteka repair-health php
+autoteka repair-health backend
+autoteka repair-health admin
+autoteka repair-infra
+autoteka health-reset all
+```
+
+Подробные сценарии диагностики и починки:
+
+- [DEPLOY §7.1](../../deploy/DEPLOY.md#71-сайт-недоступен);
+- [DEPLOY §7.2](../../deploy/DEPLOY.md#72-backendapi-не-отвечает);
+- [DEPLOY §7.3](../../deploy/DEPLOY.md#73-контейнер-unhealthy-или-missing);
+- [DEPLOY §7.5](../../deploy/DEPLOY.md#75-не-обновляется-metrics);
+- [DEPLOY §7.6](../../deploy/DEPLOY.md#76-не-приходят-telegram-уведомления).
 
 ### 7.6. Как обслуживать систему
 
@@ -426,60 +454,87 @@ sudo systemctl start server-maintenance.service
 ```
 
 Подробности по смыслу и ограничениям deploy-скриптов см. в
-[DEPLOY](../../deploy/DEPLOY.md). Архитектурный контекст модулей см. в
+[DEPLOY §8](../../deploy/DEPLOY.md#8-техническое-обслуживание),
+[DEPLOY §9](../../deploy/DEPLOY.md#9-удаление-установленной-системы) и
+[DEPLOY §10](../../deploy/DEPLOY.md#10-резервное-копирование-и-восстановление-deploy-настроек).
+Архитектурный контекст модулей см. в
 [IMPLEMENTATION](../foundations/IMPLEMENTATION.md).
 
 ## 8. Серверные скрипты deploy
 
-В каталоге `deploy/` находятся:
+Ниже перечислены скрипты и основной способ запуска. Полное поведение,
+диагностика, аварийные сценарии и ограничения описаны в
+`deploy/DEPLOY.md`.
 
-- `install.sh` — bootstrap новой установки;
-- `watch-changes.sh` — git polling, update рабочей копии и запуск
-  rollout;
-- `deploy.sh` — ручной rollout текущего `HEAD`;
-- `repair-runtime.sh` — ручное восстановление runtime и smoke-check
-  `/up`, `/api/v1/category-list`, `/admin/login`;
-- `repair-health.sh` — точечная автопочинка health-domain (`nginx`,
-  `php`, `backend`, `admin`);
-- `health-reset.sh` — ручной сброс active incident state и Telegram
-  dedup lock'ов по домену;
-- `repair-infra.sh` — восстановление таймеров и базового состояния
-  watchdog;
-- `server-watchdog.sh` — healthcheck системы, bounded auto-remediation
-  и экспорт метрик;
-- `metrics-export.sh` — преобразование логов метрик в JSON;
-- `server-maintenance.sh` — ежедневное безопасное техобслуживание;
-- `storage-backup.sh` — backup `backend/storage` +
-  `database/database.sqlite` с ротацией старых архивов;
-- `backup.sh` — резервное копирование deploy-настроек (env, systemd,
-  docker, fail2ban, logrotate);
-- `restore.sh` — восстановление из резервной копии;
-- `uninstall.sh` — удаление установленной системы.
+- `deploy/bootstrap/install.sh` или `autoteka up`/`autoteka deploy`
+  после установки — начальная установка и подготовка сервера.
+- `deploy/runtime/watch-changes.sh` или `autoteka watch-changes` —
+  ручной запуск проверки remote и автодеплоя.
+- `deploy/runtime/deploy.sh` или `autoteka deploy` — ручная раскатка
+  текущего локального `HEAD`.
+- `deploy/repair/repair-runtime.sh` или `autoteka repair-runtime` —
+  тяжёлая починка runtime и smoke-check backend/admin/API.
+- `deploy/repair/repair-health.sh` или
+  `autoteka repair-health <domain>` — точечная починка одного
+  health-домена.
+- `deploy/repair/health-reset.sh` или `autoteka health-reset <target>`
+  — сброс incident state и Telegram dedup lock'ов.
+- `deploy/repair/repair-infra.sh` или `autoteka repair-infra` —
+  восстановление таймеров и инфраструктурного состояния watchdog.
+- `deploy/observability/infrastructure/server-watchdog.sh` или
+  `autoteka watchdog` — проверка здоровья и bounded auto-remediation.
+- `deploy/observability/application/metrics-export.sh` — экспорт
+  метрик из логов в `/metrics/data.json`.
+- `deploy/maintenance/server-maintenance.sh` или
+  `autoteka maintenance` — периодическое техобслуживание.
+- `deploy/maintenance/storage-backup.sh` или `autoteka backup-storage`
+  — backup `backend/storage` и `database.sqlite`.
+- `deploy/maintenance/backup.sh` или `autoteka backup` — backup
+  deploy-конфигурации и секретов.
+- `deploy/maintenance/restore.sh` или `autoteka restore <archive>` —
+  восстановление deploy-конфига и сброс runtime health-state.
+- `deploy/bootstrap/uninstall.sh` или `autoteka uninstall <mode>` —
+  удаление установленной системы.
 
-Развёртывание и эксплуатация подробно описаны в `deploy/DEPLOY.md`.
+Куда смотреть за подробностями:
 
-## 9. Что делает uninstall.sh
+- install/bootstrap —
+  [DEPLOY §3](../../deploy/DEPLOY.md#3-что-делает-installsh) и
+  [DEPLOY §4](../../deploy/DEPLOY.md#4-развёртывание-с-нуля);
+- диагностика и repair —
+  [DEPLOY §7](../../deploy/DEPLOY.md#7-диагностика-поломок);
+- maintenance —
+  [DEPLOY §8](../../deploy/DEPLOY.md#8-техническое-обслуживание);
+- uninstall —
+  [DEPLOY §9](../../deploy/DEPLOY.md#9-удаление-установленной-системы);
+- backup/restore —
+  [DEPLOY §10](../../deploy/DEPLOY.md#10-резервное-копирование-и-восстановление-deploy-настроек).
 
-`deploy/bootstrap/uninstall.sh` предназначен для удаления
-deployment-инсталляции системы.
+## 9. Backup, restore и uninstall
 
-Режимы:
+Основные команды администратора:
 
-- `soft` — остановить и отключить сервисы/таймеры, выполнить
-  `docker compose down`;
-- `purge` — дополнительно удалить app-unit'ы, logrotate, app logs и
-  runtime-state;
-- `nuke` — дополнительно удалить системные конфиги, установленные
-  `install.sh`, с backup в `/root/uninstall-backup-*`.
+- `autoteka backup` — backup deploy-настроек и секретов;
+- `autoteka backup-storage` — backup `backend/storage` и
+  `database/database.sqlite`;
+- `autoteka restore <archive>` — restore deploy-настроек;
+- `autoteka uninstall <mode>` — удаление установленной системы.
 
-Границы безопасности:
+Быстрые примеры:
 
-- shared server packages вроде `docker`, `git`, `fail2ban` не
-  удаляются;
-- репозиторий удаляется только при явном `--rm-root`;
-- каталог storage backup-архивов удаляется только при явном
-  `--rm-storage-backups`;
-- `/etc/autoteka/*` удаляется только при явном `--rm-etc`.
+```bash
+sudo autoteka backup
+sudo autoteka backup-storage
+sudo autoteka restore /root/autoteka-backup-YYYYMMDD-HHMMSS.tar.gz
+sudo autoteka uninstall soft
+```
+
+Подробности:
+
+- backup/restore —
+  [DEPLOY §10](../../deploy/DEPLOY.md#10-резервное-копирование-и-восстановление-deploy-настроек);
+- uninstall —
+  [DEPLOY §9](../../deploy/DEPLOY.md#9-удаление-установленной-системы).
 
 ## 10. Минимальный регламент администратора
 
@@ -497,9 +552,20 @@ deployment-инсталляции системы.
 3. проверить логи deploy/watchdog/maintenance;
 4. проверить `/metrics`.
 
+Если выполнялись backup/restore/uninstall/repair-сценарии,
+дополнительно:
+
+1. проверить `autoteka watchdog --dry-run`;
+2. проверить `curl -i http://127.0.0.1/healthcheck`;
+3. проверить `curl -i http://127.0.0.1/admin/login`.
+
 ## 11. Healthcheck и диагностика
 
-### 10.1. Набор проверок
+Полная матрица healthcheck, incident phases, repair-команд и кодов
+ошибок вынесена в
+[DEPLOY §7](../../deploy/DEPLOY.md#7-диагностика-поломок).
+
+### 11.1. Набор проверок
 
 Система использует пять health-domain:
 
@@ -519,7 +585,7 @@ deployment-инсталляции системы.
 4. `admin` и `api` (независимо друг от друга, только если `backend`
    healthy)
 
-### 10.2. Как реагирует watchdog
+### 11.2. Как реагирует watchdog
 
 Для `nginx`, `php`, `backend`, `admin`:
 
@@ -533,7 +599,7 @@ deployment-инсталляции системы.
 Для `api` автопочинка не выполняется: после повторного сбоя watchdog
 только фиксирует `MANUAL_REQUIRED`.
 
-### 10.3. Что делать руками
+### 11.3. Что делать руками
 
 Проверить текущее состояние:
 
@@ -558,7 +624,16 @@ autoteka health-reset all
 снова стала green, `server-watchdog` сам удалит state и lock-файлы
 этого домена и отправит сообщение `...RECOVERED`.
 
-### 10.4. Локальные файлы состояния
+Подробности:
+
+- ручные команды —
+  [DEPLOY §7.3.3](../../deploy/DEPLOY.md#733-ручные-команды);
+- repair-infra —
+  [DEPLOY §7.5.2](../../deploy/DEPLOY.md#752-repair-infra--починка-инфраструктуры);
+- коды ошибок —
+  [DEPLOY §7.7](../../deploy/DEPLOY.md#77-коды-сообщений-причины-и-способы-исправления).
+
+### 11.4. Локальные файлы состояния
 
 Watchdog хранит active incident state в каталоге:
 
