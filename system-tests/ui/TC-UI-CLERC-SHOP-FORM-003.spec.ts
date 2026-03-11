@@ -56,8 +56,8 @@ const closeWithTimeout = async (
 
 describe("TC-UI-CLERC-SHOP-FORM-003", () => {
   beforeAll(async () => {
-    const { chromium } = await import("playwright");
-    browser = await chromium.launch({ headless: !headed });
+    const { firefox } = await import("playwright");
+    browser = await firefox.launch({ headless: !headed });
   });
 
   afterAll(async () => {

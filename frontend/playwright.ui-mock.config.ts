@@ -11,6 +11,7 @@ export default defineConfig({
   workers: 1,
   retries: 0,
   use: {
+    browserName: "firefox",
     baseURL:
       process.env.PLAYWRIGHT_UI_MOCK_BASE_URL ??
       "http://127.0.0.1:4173",

@@ -43,8 +43,8 @@ const closeWithTimeout = async (
 
 describe("TC-UI-SMOKE-001", () => {
   beforeAll(async () => {
-    const { chromium } = await import("playwright");
-    browser = await chromium.launch({ headless: !headed });
+    const { firefox } = await import("playwright");
+    browser = await firefox.launch({ headless: !headed });
   });
 
   afterAll(async () => {

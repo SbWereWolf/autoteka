@@ -10,8 +10,8 @@ let browser: BrowserLike | undefined;
 
 describe("TC-UI-USER-002", () => {
   beforeAll(async () => {
-    const { chromium } = await import("playwright");
-    browser = await chromium.launch({ headless: !headed });
+    const { firefox } = await import("playwright");
+    browser = await firefox.launch({ headless: !headed });
   });
 
   afterAll(async () => {

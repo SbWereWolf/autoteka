@@ -9,34 +9,32 @@
 - У тестов свои env-файлы и свои конфиги.
 - Тестовые раннеры не должны зависеть от runtime `.env` рабочих
   приложений.
-- Линтинг использует отдельные root env:
-  `lint/win.env` и `lint/nix.env`.
+- Линтинг использует отдельные root env: `lint/win.env` и
+  `lint/nix.env`.
 
 ## 2. Где какие env и конфиги
 
 ### 2.1 Backend (phpunit)
 
-- Основной конфиг тестов:
-  `backend/apps/ShopOperator/phpunit.xml`.
+- Основной конфиг тестов: `backend/apps/ShopOperator/phpunit.xml`.
 - Локальный файл переменных для тестового окружения:
   `backend/apps/ShopOperator/testing.env`.
 - Файл `testing.env` предназначен только для тестового контура.
 
 ### 2.2 System tests (Vitest + Playwright)
 
-- Конфиг раннера:
-  `system-tests/scripts/run-vitest.mjs`.
-- Конфиг Vitest:
-  `system-tests/vitest.config.ts`.
+- Конфиг раннера: `system-tests/scripts/run-vitest.mjs`.
+- Конфиг Vitest: `system-tests/vitest.config.ts`.
 - Базовый URL задаётся:
   - через `BASE_URL` в окружении;
-  - или через CLI-override:
-    `--base-url=http://127.0.0.1:8081` (приоритетнее env).
+  - или через CLI-override: `--base-url=http://127.0.0.1:8081`
+    (приоритетнее env).
 
 ### 2.3 Frontend независимые тесты
 
-- Unit/UI mock режимы во frontend запускаются из `frontend` и используют
-  свои test-конфиги frontend без обязательного поднятия backend.
+- Unit/UI mock режимы во frontend запускаются из `frontend` и
+  используют свои test-конфиги frontend без обязательного поднятия
+  backend.
 
 ## 3. Матрица режимов запуска
 
@@ -84,6 +82,8 @@ npm run test:ui-headless-dev
 
 - Назначение: предрелизная проверка prod-runtime.
 - Стек: Docker PROD, Playwright headless.
+- Важно: если изменялись исходники приложения/инфраструктуры, перед
+  прогоном обязателен rebuild prod-образов.
 - Команда:
 
 ```bash
@@ -106,6 +106,8 @@ npm run test:ui-headed-local
 
 - Назначение: UX-контроль на prod-сборке в контейнерах.
 - Стек: Docker PROD, видимый браузер.
+- Важно: если изменялись исходники приложения/инфраструктуры, перед
+  прогоном обязателен rebuild prod-образов.
 - Команда:
 
 ```bash
@@ -147,8 +149,8 @@ npm run test:quick-local -- --base-url=http://127.0.0.1:8081
 
 1. Поднять backend локально (`php artisan serve`).
 2. Поднять frontend (`npm run dev` в `frontend`).
-3. Запустить UI-сценарии:
-   `npm run test:ui-headed-local` в `system-tests`.
+3. Запустить UI-сценарии: `npm run test:ui-headed-local` в
+   `system-tests`.
 4. Отлаживать параллельно:
    - JS/Vue в frontend;
    - PHP/Laravel в backend.
