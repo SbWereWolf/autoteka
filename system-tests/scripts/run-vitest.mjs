@@ -16,6 +16,7 @@ const getArgValue = (name) => {
 
 const profile = getArgValue("--profile") ?? "quick-local";
 const cliBaseUrl = getArgValue("--base-url");
+const waitProfile = (process.env.TEST_WAIT_PROFILE ?? "normal").toLowerCase();
 
 const profileMap = {
   "quick-local": { mode: "quick", stack: "local", headed: "0" },
@@ -134,14 +135,123 @@ const preflightRuntime = (baseUrl) => {
     process.exit(ps.status ?? 1);
   }
 
-  const smoke = spawnSync("curl", ["-fsS", "--max-time", "10", new URL("/healthcheck", baseUrl).toString()], {
-    stdio: "inherit",
-    cwd: repoRoot,
-    env: process.env,
-  });
+  const waitProfiles = {
+    short: { startupTimeoutSec: 45, intervalSec: 2, smokeTimeoutSec: 8 },
+    normal: { startupTimeoutSec: 120, intervalSec: 2, smokeTimeoutSec: 10 },
+    long: { startupTimeoutSec: 240, intervalSec: 3, smokeTimeoutSec: 15 },
+  };
+  const effectiveWait = waitProfiles[waitProfile] ?? waitProfiles.normal;
+
+  const listContainers = spawnSync(
+    "docker",
+    ["compose", "-f", composeFile, "ps", "-q"],
+    { stdio: "pipe", encoding: "utf8", cwd: repoRoot, env: process.env },
+  );
+  if (listContainers.status !== 0) {
+    console.error("[run-vitest] Не удалось получить id контейнеров для ожидания health");
+    process.exit(listContainers.status ?? 1);
+  }
+  const containerIds = listContainers.stdout
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+  if (containerIds.length === 0) {
+    console.error("[run-vitest] После docker compose up не найдено контейнеров");
+    process.exit(1);
+  }
+
+  const startedAt = Date.now();
+  let allReady = false;
+  while (!allReady) {
+    allReady = true;
+    for (const containerId of containerIds) {
+      const inspect = spawnSync(
+        "docker",
+        [
+          "inspect",
+          "--format",
+          "{{if .State.Health}}{{.State.Health.Status}}{{else}}{{.State.Status}}{{end}}",
+          containerId,
+        ],
+        { stdio: "pipe", encoding: "utf8", cwd: repoRoot, env: process.env },
+      );
+      if (inspect.status !== 0) {
+        console.error(`[run-vitest] Не удалось проверить состояние контейнера ${containerId}`);
+        process.exit(inspect.status ?? 1);
+      }
+      const status = inspect.stdout.trim();
+      const isReady = status === "healthy" || status === "running";
+      if (!isReady) {
+        allReady = false;
+        break;
+      }
+    }
+
+    if (allReady) break;
+
+    const elapsedSec = Math.floor((Date.now() - startedAt) / 1000);
+    if (elapsedSec >= effectiveWait.startupTimeoutSec) {
+      console.error(
+        `[run-vitest] Контейнеры не перешли в healthy/running за ${effectiveWait.startupTimeoutSec}s (profile=${waitProfile})`,
+      );
+      const psAfterTimeout = spawnSync("docker", ["compose", "-f", composeFile, "ps"], {
+        stdio: "inherit",
+        cwd: repoRoot,
+        env: process.env,
+      });
+      process.exit(psAfterTimeout.status ?? 1);
+    }
+
+    spawnSync("sleep", [String(effectiveWait.intervalSec)], {
+      stdio: "inherit",
+      cwd: repoRoot,
+      env: process.env,
+    });
+  }
+
+  const smoke = spawnSync(
+    "curl",
+    [
+      "-fsS",
+      "--max-time",
+      String(effectiveWait.smokeTimeoutSec),
+      new URL("/healthcheck", baseUrl).toString(),
+    ],
+    {
+      stdio: "inherit",
+      cwd: repoRoot,
+      env: process.env,
+    },
+  );
   if (smoke.status !== 0) {
     console.error("[run-vitest] Healthcheck не отвечает для целевого BASE_URL");
     process.exit(smoke.status ?? 1);
+  }
+
+  if (profileInfo.mode === "ui") {
+    const adminSmoke = spawnSync(
+      "curl",
+      [
+        "-fsS",
+        "--max-time",
+        String(effectiveWait.smokeTimeoutSec),
+        "-o",
+        "/dev/null",
+        "-w",
+        "%{http_code}",
+        new URL("/admin/login", baseUrl).toString(),
+      ],
+      {
+        stdio: "pipe",
+        encoding: "utf8",
+        cwd: repoRoot,
+        env: process.env,
+      },
+    );
+    if (adminSmoke.status !== 0 || adminSmoke.stdout.trim() !== "200") {
+      console.error("[run-vitest] /admin/login не готов для UI-профиля");
+      process.exit(1);
+    }
   }
 };
 
