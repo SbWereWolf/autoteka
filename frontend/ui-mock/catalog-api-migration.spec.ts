@@ -14,12 +14,12 @@ test("UI-MOCK-01: старт приложения и дефолты", async ({ p
   await installApiMocks(page);
   await page.goto("/");
 
-  await expect(page.getByText("Каталог магазинов")).toBeVisible();
-  await expect(page.getByText("2 шт.")).toBeVisible();
+  await expect(page.getByText("Каталог магазинов")).toHaveCount(0);
   await expect(
     page.getByTestId("catalog-feature-select"),
   ).toHaveValue("credit");
   await expect(page.getByLabel("Город")).toHaveCount(0);
+  await expect(page.locator("button.ui-tile")).toHaveCount(2);
 });
 
 test("UI-MOCK-02: смена города обновляет каталог", async ({
@@ -32,7 +32,7 @@ test("UI-MOCK-02: смена города обновляет каталог", as
   const citySelect = page.getByTestId("menu-city-select");
   await expect(citySelect).toHaveValue("barnaul");
   await citySelect.selectOption("nizhny");
-  await expect(page.getByText("3 шт.")).toBeVisible();
+  await expect(page.locator("button.ui-tile")).toHaveCount(3);
 });
 
 test("UI-MOCK-03: карточка магазина показывает порядок блоков и контакты", async ({
@@ -114,4 +114,14 @@ test("UI-MOCK-06: ошибка контактов не ломает страни
   await expect(
     page.getByText("Часть контактов сейчас недоступна."),
   ).toBeVisible();
+});
+
+test("UI-MOCK-07: клик по заголовку возвращает в каталог", async ({
+  page,
+}) => {
+  await installApiMocks(page);
+  await page.goto("/shop/barnaul-01");
+  await page.getByTestId("topbar-title").click();
+  await expect(page).toHaveURL("/");
+  await expect(page.locator("button.ui-tile")).toHaveCount(2);
 });

@@ -1,28 +1,10 @@
 <template>
   <div class="app-container pb-10 3xl:pb-16">
     <div class="pt-4">
-      <div class="text-panel">
-        <div class="flex items-end justify-between gap-3">
-          <div>
-            <h1
-              class="text-xs uppercase tracking-wide font-normal m-0"
-              :style="{ color: 'var(--muted)' }"
-            >
-              Каталог магазинов
-            </h1>
-          </div>
-          <div class="text-xs" :style="{ color: 'var(--muted)' }">
-            {{ countText }}
-          </div>
-        </div>
-      </div>
-
       <div
-        class="catalog-grid-shell mt-4"
+        class="catalog-grid-shell"
         data-testid="catalog-grid-shell"
       >
-        <CatalogFeatureStickySelect v-if="!loadError" />
-
         <div
           v-if="!isLoading && !loadError && sorted.length > 0"
           class="catalog-grid"
@@ -71,11 +53,13 @@
 
         <div
           v-else
-          class="mt-4 text-sm"
+          class="text-sm"
           :style="{ color: 'var(--muted)' }"
         >
           В этом городе пока нет магазинов.
         </div>
+
+        <CatalogFeatureStickySelect v-if="!loadError" />
       </div>
 
       <CssVarsEditor />
@@ -128,11 +112,6 @@ const sorted = computed(() =>
 );
 
 const seedBase = computed(() => state.cityCode.length * 17);
-
-const countText = computed(() => {
-  if (isLoading.value) return "—";
-  return `${sorted.value.length} шт.`;
-});
 
 function go(code: string) {
   router.push({ name: "shop", params: { code } });

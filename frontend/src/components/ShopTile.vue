@@ -2,8 +2,8 @@
   <button
     class="ui-transition ui-bounce ui-tile w-full aspect-square rounded-[var(--radius)] p-3 text-left relative overflow-hidden"
     :style="tileStyle"
-    @click="$emit('open')"
     type="button"
+    @click="$emit('open')"
   >
     <div
       class="absolute inset-0 overflow-hidden rounded-[var(--radius)]"
@@ -32,7 +32,7 @@
         loading="lazy"
         decoding="async"
         spinner
-        img-class="w-full h-full object-contain"
+        img-class="w-full h-full object-contain object-center"
       />
     </div>
 

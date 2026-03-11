@@ -27,7 +27,7 @@
   --catalog-grid-columns-mobile: 2;
   --catalog-grid-columns-3xl: 3;
   --catalog-grid-columns-7xl: 4;
-  --catalog-grid-bottom-padding: 7rem;
+  --catalog-grid-bottom-padding: 6rem;
   --catalog-feature-sticky-top: 0rem;
   --catalog-feature-sticky-bottom: 1rem;
   --catalog-feature-max-width: 24rem;
@@ -38,14 +38,14 @@
   --tile-title-font-ratio: 0.2;
   --tile-title-font-min: 1rem;
   --tile-title-font-max: 2.5rem;
-  --tile-title-color: oklch(0.99 0 0);
+  --tile-title-color: var(--text);
   --tile-title-stroke-color: var(--tile-stroke);
-  --tile-title-stroke-width: 0.0625rem;
+  --tile-title-stroke-width: 0;
   --tile-title-shadow: 0 0.125rem 0.625rem
     color-mix(in oklch, var(--tile-shadow) 40%, transparent);
   --tile-title-line-clamp: 2;
 
-  --shop-gallery-height: 66.666dvh;
+  --shop-gallery-height: 66.666svh;
   --shop-gallery-max-height: 56rem;
   --shop-hours-bottom: 1rem;
   --shop-hours-max-width: 34rem;
@@ -54,7 +54,7 @@
   --shop-hours-font-max: 1rem;
   --shop-hours-line-height: 1.2;
   --shop-hours-letter-spacing: 0;
-  --shop-hours-color: oklch(0.99 0 0);
+  --shop-hours-color: var(--text);
   --shop-hours-shadow: 0 0.125rem 0.75rem oklch(0 0 0 / 0.5);
   --shop-hours-stroke-color: var(--tile-stroke);
   --shop-hours-stroke-width: 0.02rem;
