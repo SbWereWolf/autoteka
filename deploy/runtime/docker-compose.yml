@@ -16,7 +16,6 @@ services:
       APP_KEY: ${APP_KEY:-}
       LOG_CHANNEL: ${LOG_CHANNEL:-stderr}
       DB_CONNECTION: ${DB_CONNECTION:-sqlite}
-      DB_DATABASE: ${DB_DATABASE:-/var/www/backend/database/database.sqlite}
       SESSION_DRIVER: ${SESSION_DRIVER:-database}
       CACHE_STORE: ${CACHE_STORE:-database}
       QUEUE_CONNECTION: ${QUEUE_CONNECTION:-database}
