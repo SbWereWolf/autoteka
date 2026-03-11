@@ -106,13 +106,10 @@
 ### TC-ADMIN-MANUAL-009
 
 - Утверждение: команды frontend-скриптов доступны в
-  `frontend/package.json` (`validate:mocks`, `check:unused-assets`,
-  `check:data`, `images:regen`, `images:moonshine`, `enrich:mocks`,
-  `materialize:shop-media`, `sync:backend-media`).
+  `frontend/package.json` (без удалённых мок/data-media команд).
 - Проверка:
-  1. Проверить наличие всех скриптов.
-  2. Выполнить smoke-прогон команд.
-- Ожидаемый результат: команды присутствуют и запускаются.
+  1. Проверить отсутствие удалённых команд.
+- Ожидаемый результат: удалённые команды отсутствуют.
 - Тип: automated
 - Каталог тестов: `frontend/tests`
 
@@ -167,8 +164,8 @@
 ### TC-ADMIN-MANUAL-014
 
 - Утверждение: минимальный регламент после изменений включает проверки
-  front/back office, `npm run check:data`, `systemctl`,
-  `docker compose ps`, логи и `/metrics`.
+  front/back office, `systemctl`, `docker compose ps`, логи и
+  `/metrics`.
 - Проверка: сформировать integration checklist test, который
   последовательно выполняет описанные шаги.
 - Ожидаемый результат: регламент выполняется полностью и без

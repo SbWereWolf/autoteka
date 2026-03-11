@@ -48,7 +48,7 @@
 ### TC-FRONTEND-README-004
 
 - Утверждение: доступны команды `dev`, `build`, `preview`, `test`,
-  `test:api:online`, `test:e2e`, `test:ui:mock`, `check:data`.
+  `test:api:online`, `test:e2e`, `test:ui:mock`.
 - Проверка:
   1. Проверить наличие скриптов в `frontend/package.json`.
   2. Выполнить каждую команду и проверить exit code 0.
@@ -58,16 +58,11 @@
 
 ### TC-FRONTEND-README-005
 
-- Утверждение: доступны дополнительные data/media команды:
-  `validate:mocks`, `check:unused-assets`, `enrich:mocks`,
-  `images:regen`, `images:moonshine`, `materialize:shop-media`,
-  `sync:backend-media`.
+- Утверждение: доступны дополнительные data/media команды: в
+  актуальном контуре отсутствуют.
 - Проверка:
-  1. Проверить наличие скриптов в `frontend/package.json`.
-  2. Выполнить smoke-прогон каждой команды (без разрушительных
-     изменений).
-- Ожидаемый результат: все перечисленные команды присутствуют и
-  запускаются.
+  1. Проверить отсутствие команд в `frontend/package.json`.
+- Ожидаемый результат: команды удалены.
 - Тип: automated
 - Каталог тестов: `frontend/tests`
 

@@ -183,8 +183,7 @@
 
 ### TC-IMPLEMENTATION-016
 
-- Утверждение: список проверок раздела 7 исполним: frontend
-  (`validate:mocks`, `check:unused-assets`, `check:data`, `test`,
+- Утверждение: список проверок раздела 7 исполним: frontend (`test`,
   `test:ui:mock`, `test:api:online`, `test:e2e`), backend
   (`artisan test`, `migrate`, `db:seed --class=AdminUserSeeder`),
   monorepo (`npm run lint`).
