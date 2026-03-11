@@ -8,15 +8,15 @@ Usage:
     --subject "Subject" \
     --body "Body explanation 1" \
     [--body "Body explanation 2"] \
-    --platform "codex" \
-    [--model-name "gpt-5"] \
+    --ai-system-name "codex" \
+    [--llm-name "gpt-5"] \
     [--dry-run]
 USAGE
 }
 
 SUBJECT=""
-PLATFORM=""
-MODEL_NAME="gpt-5"
+AI_SYSTEM_NAME=""
+LLM_NAME="gpt-5"
 DRY_RUN="false"
 BODY_PARTS=()
 
@@ -26,7 +26,7 @@ ensure_node_runtime() {
   fi
 
   if [[ -f "$HOME/.bashrc" ]]; then
-    # shellcheck disable=SC1090
+    # shellcheck disable=SC1090,SC1091
     source "$HOME/.bashrc" >/dev/null 2>&1 || true
   fi
 
@@ -35,7 +35,7 @@ ensure_node_runtime() {
   fi
 
   if [[ -f "$HOME/.nvm/nvm.sh" ]]; then
-    # shellcheck disable=SC1090
+    # shellcheck disable=SC1090,SC1091
     source "$HOME/.nvm/nvm.sh" >/dev/null 2>&1 || true
     if command -v nvm >/dev/null 2>&1; then
       nvm use default >/dev/null 2>&1 || true
@@ -98,15 +98,15 @@ while [[ $# -gt 0 ]]; do
       [[ $# -gt 0 ]] || { echo "ERROR: --body requires value"; exit 1; }
       BODY_PARTS+=("$1")
       ;;
-    --platform)
+    --ai-system-name)
       shift
-      [[ $# -gt 0 ]] || { echo "ERROR: --platform requires value"; exit 1; }
-      PLATFORM="$1"
+      [[ $# -gt 0 ]] || { echo "ERROR: --ai-system-name requires value"; exit 1; }
+      AI_SYSTEM_NAME="$1"
       ;;
-    --model-name)
+    --llm-name)
       shift
-      [[ $# -gt 0 ]] || { echo "ERROR: --model-name requires value"; exit 1; }
-      MODEL_NAME="$1"
+      [[ $# -gt 0 ]] || { echo "ERROR: --llm-name requires value"; exit 1; }
+      LLM_NAME="$1"
       ;;
     --dry-run)
       DRY_RUN="true"
@@ -131,11 +131,11 @@ done
 }
 [[ ${#BODY_PARTS[@]} -gt 0 ]] || { echo "ERROR: at least one --body required"; exit 1; }
 
-assert_slug_part "$PLATFORM" "platform"
-assert_slug_part "$MODEL_NAME" "model-name"
+assert_slug_part "$AI_SYSTEM_NAME" "ai-system-name"
+assert_slug_part "$LLM_NAME" "llm-name"
 ensure_node_runtime
 
-IDENTITY_NAME="${PLATFORM}-${MODEL_NAME}"
+IDENTITY_NAME="${AI_SYSTEM_NAME}-${LLM_NAME}"
 IDENTITY_EMAIL="${IDENTITY_NAME}@local"
 TMP_DIR="$(resolve_temp_dir)"
 TMP_FILE="$(mktemp "$TMP_DIR/commit-message-XXXXXX.md")"
@@ -151,7 +151,7 @@ build_message() {
     for i in "${!BODY_PARTS[@]}"; do
       item_number=$((i + 1))
       part="${BODY_PARTS[$i]}"
-      normalized_part="$(printf '%s' "$part" | tr '\r\n' '  ' | tr -s '[:space:]' ' ' | sed 's/^ //; s/ $//')"
+      normalized_part="$(printf '%s' "$part" | tr '\n' '  ' | tr -s '[:space:]' ' ' | sed 's/^ //; s/ $//')"
       [[ -n "$normalized_part" ]] || {
         echo "ERROR: body item #$item_number is empty after normalization"
         exit 1
