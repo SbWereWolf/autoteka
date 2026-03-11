@@ -10,6 +10,7 @@ scripts/.env
 /tasks/
 /backup/
 !backup/README.md
+/.runtime/
 /frontend/test-results/
 /operational/
 !/operational/.gitkeep

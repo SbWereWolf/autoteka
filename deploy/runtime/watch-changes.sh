@@ -21,11 +21,21 @@ BRANCH="${BRANCH:-master}"
 REMOTE="${REMOTE:-origin}"
 LOG="/var/log/autoteka-deploy.log"
 LOCK="/var/lock/autoteka-watch-changes.lock"
+STATE_DIR="/var/lib"
 SCRIPT_ID="watch_changes"
 WATCH_ACTION="проверка изменений для раскатки"
 WATCH_STAGE="инициализация"
 
-mkdir -p /var/lock /var/log /var/lib
+if ! mkdir -p /var/lock /var/log /var/lib 2>/dev/null || \
+   [ ! -w /var/lock ] || \
+   [ ! -w /var/log ] || \
+   [ ! -w /var/lib ]; then
+  RUNTIME_DIR="${AUTOTEKA_ROOT}/.runtime"
+  mkdir -p "$RUNTIME_DIR/lock" "$RUNTIME_DIR/log" "$RUNTIME_DIR/lib"
+  LOG="$RUNTIME_DIR/log/autoteka-deploy.log"
+  LOCK="$RUNTIME_DIR/lock/autoteka-watch-changes.lock"
+  STATE_DIR="$RUNTIME_DIR/lib"
+fi
 
 log() {
   echo "$(date -Is) watch: $*"
@@ -123,7 +133,7 @@ fi
     log "worktree already clean; stash not required"
   fi
 
-  printf '%s\n' "$LOCAL" > /var/lib/vue-app-prev-commit || true
+  printf '%s\n' "$LOCAL" > "$STATE_DIR/vue-app-prev-commit" || true
 
   WATCH_STAGE="git_reset"
   git reset --hard "$REMOTE/$BRANCH"
