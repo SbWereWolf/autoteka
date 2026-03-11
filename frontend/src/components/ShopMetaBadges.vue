@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-wrap gap-2">
+  <div class="shop-meta-badges" data-testid="shop-meta-badges">
     <span
       v-for="category in categories"
       :key="`category-${category}`"

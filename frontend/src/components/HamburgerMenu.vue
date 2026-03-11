@@ -5,7 +5,6 @@
       class="fixed inset-0 z-50"
       @keydown.esc.prevent.stop="closeMenu"
     >
-      <!-- overlay closes the menu on click/tap -->
       <button
         class="absolute inset-0 w-full h-full"
         :style="overlayStyle"
@@ -36,6 +35,7 @@
             class="ui-transition ui-interactive ui-bounce rounded-xl h-12 w-12 inline-flex items-center justify-center"
             @click="closeMenu"
             aria-label="Закрыть"
+            type="button"
           >
             ✕
           </button>
@@ -51,7 +51,10 @@
             >
               Город
             </div>
-            <CitySelect />
+            <CitySelect
+              aria-label="Город"
+              test-id="menu-city-select"
+            />
           </section>
 
           <section class="space-y-2">
@@ -62,16 +65,6 @@
               Категории
             </div>
             <CategoryChips />
-          </section>
-
-          <section class="space-y-2">
-            <div
-              class="text-xs uppercase tracking-wide"
-              :style="{ color: 'var(--muted)' }"
-            >
-              Фишка
-            </div>
-            <FeatureSelect />
           </section>
         </div>
       </aside>
@@ -91,7 +84,6 @@ import {
 import { state } from "../state";
 import CitySelect from "./CitySelect.vue";
 import CategoryChips from "./CategoryChips.vue";
-import FeatureSelect from "./FeatureSelect.vue";
 
 const closeBtnEl = ref<HTMLButtonElement | null>(null);
 let prevFocused: HTMLElement | null = null;
@@ -122,7 +114,6 @@ watch(
       closeBtnEl.value?.focus();
     } else {
       document.body.style.overflow = "";
-      // Restore focus to the menu button (or previous focused element if available)
       if (prevFocused && prevFocused.isConnected) prevFocused.focus();
       else focusMenuButton();
     }

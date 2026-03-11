@@ -4,6 +4,7 @@
       <button
         class="ui-transition ui-interactive ui-bounce rounded-xl min-h-12 px-4 py-3 text-sm"
         @click="router.back()"
+        type="button"
       >
         ← Назад
       </button>
@@ -40,12 +41,7 @@
           </div>
         </div>
         <div
-          class="aspect-[3/2] 3xl:aspect-[9/4] 7xl:aspect-[9/4] rounded-[var(--radius)] overflow-hidden"
-          :style="{
-            background: 'var(--surface-strong)',
-            border: '0.0625rem solid var(--border)',
-            boxShadow: 'var(--shadow)',
-          }"
+          class="shop-gallery-shell rounded-[var(--radius)] overflow-hidden"
         >
           <div class="h-full w-full ui-skeleton" aria-hidden="true" />
         </div>
@@ -79,134 +75,132 @@
         />
       </div>
 
-      <div v-else-if="shop" class="mt-3">
-        <div class="text-panel">
+      <div v-else-if="shop" class="mt-3 space-y-4 3xl:space-y-6">
+        <section
+          class="relative"
+          aria-labelledby="shop-gallery-heading"
+        >
+          <h2 id="shop-gallery-heading" class="sr-only">Фото</h2>
+          <GalleryCarousel
+            :items="galleryImages"
+            empty-title=""
+            empty-text="Для этого магазина фото ещё не загружены"
+            test-id="shop-gallery"
+          />
+          <div v-if="shop.workHours" class="shop-hours-overlay">
+            <div class="shop-hours-text" :style="hoursStyle">
+              {{ shop.workHours }}
+            </div>
+          </div>
+        </section>
+
+        <section
+          class="text-panel"
+          aria-labelledby="shop-desc-heading"
+          data-testid="shop-description"
+        >
+          <h2
+            id="shop-desc-heading"
+            class="text-xs uppercase tracking-wide font-normal m-0"
+            :style="{ color: 'var(--muted)' }"
+          >
+            Описание
+          </h2>
+          <div
+            class="mt-2 text-sm leading-relaxed"
+            :style="{ color: 'var(--text)' }"
+          >
+            {{ shop.description }}
+          </div>
+        </section>
+
+        <section class="text-panel" data-testid="shop-meta-section">
           <ShopMetaBadges
             :categories="categoryNames"
             :features="featureNames"
           />
-        </div>
+        </section>
 
-        <div class="mt-4 space-y-4 3xl:space-y-6">
-          <section
-            class="relative"
-            aria-labelledby="shop-gallery-heading"
+        <section
+          class="text-panel"
+          aria-labelledby="shop-contacts-heading"
+          data-testid="shop-contacts"
+        >
+          <h2
+            id="shop-contacts-heading"
+            class="text-xs uppercase tracking-wide font-normal m-0"
+            :style="{ color: 'var(--muted)' }"
           >
-            <h2 id="shop-gallery-heading" class="sr-only">Фото</h2>
-            <GalleryCarousel
-              :items="galleryImages"
-              empty-title=""
-              empty-text="Для этого магазина фото ещё не загружены"
-            />
-            <div
-              class="absolute left-3 top-3 rounded-2xl px-3 py-2 text-xs ui-transition"
-              :style="hoursStyle"
-            >
-              <div class="whitespace-pre-line">
-                {{ shop.workHours }}
+            Контакты
+          </h2>
+          <p
+            v-if="contactsLoadError"
+            class="mt-2 text-xs"
+            :style="{ color: 'var(--muted)' }"
+          >
+            Часть контактов сейчас недоступна.
+          </p>
+          <ul class="mt-2 space-y-2">
+            <li v-for="item in contactRows" :key="item.key">
+              <a
+                v-if="item.href"
+                class="ui-transition shop-contact-link text-sm underline"
+                :style="{ color: 'var(--text)' }"
+                :href="item.href"
+                :target="item.target"
+                rel="noreferrer"
+              >
+                {{ item.label }}
+              </a>
+              <div
+                v-else
+                class="text-sm"
+                :style="{ color: 'var(--text)' }"
+              >
+                {{ item.label }}
               </div>
-            </div>
-          </section>
+            </li>
+          </ul>
+        </section>
 
-          <section
-            class="text-panel"
-            aria-labelledby="shop-desc-heading"
+        <section class="flex gap-3 3xl:gap-6">
+          <a
+            v-if="hasSiteUrl"
+            class="ui-transition ui-primary ui-bounce inline-flex items-center justify-center rounded-2xl min-h-12 px-4 py-3 text-sm font-semibold"
+            :style="{ boxShadow: 'var(--shadow)' }"
+            :href="siteUrl"
+            target="_self"
           >
-            <h2
-              id="shop-desc-heading"
-              class="text-xs uppercase tracking-wide font-normal m-0"
-              :style="{ color: 'var(--muted)' }"
-            >
-              Описание
-            </h2>
-            <div
-              class="mt-2 text-sm leading-relaxed"
-              :style="{ color: 'var(--text)' }"
-            >
-              {{ shop.description }}
-            </div>
-          </section>
+            Перейти на сайт ↗
+          </a>
 
-          <section
-            class="text-panel"
-            aria-labelledby="shop-contacts-heading"
+          <button
+            v-else
+            class="ui-transition ui-interactive rounded-2xl min-h-12 px-4 py-3 text-sm font-semibold opacity-60 cursor-not-allowed"
+            type="button"
+            disabled
+            aria-disabled="true"
+            title="У магазина нет ссылки на сайт"
           >
-            <h2
-              id="shop-contacts-heading"
-              class="text-xs uppercase tracking-wide font-normal m-0"
-              :style="{ color: 'var(--muted)' }"
-            >
-              Контакты
-            </h2>
-            <p
-              v-if="contactsLoadError"
-              class="mt-2 text-xs"
-              :style="{ color: 'var(--muted)' }"
-            >
-              Часть контактов сейчас недоступна.
-            </p>
-            <ul class="mt-2 space-y-2">
-              <li v-for="item in contactRows" :key="item.key">
-                <a
-                  v-if="item.href"
-                  class="ui-transition shop-contact-link text-sm underline"
-                  :style="{ color: 'var(--text)' }"
-                  :href="item.href"
-                  :target="item.target"
-                  rel="noreferrer"
-                >
-                  {{ item.label }}
-                </a>
-                <div
-                  v-else
-                  class="text-sm"
-                  :style="{ color: 'var(--text)' }"
-                >
-                  {{ item.label }}
-                </div>
-              </li>
-            </ul>
-          </section>
+            Сайт недоступен
+          </button>
 
-          <section class="flex gap-3 3xl:gap-6">
-            <a
-              v-if="hasSiteUrl"
-              class="ui-transition ui-primary ui-bounce inline-flex items-center justify-center rounded-2xl min-h-12 px-4 py-3 text-sm font-semibold"
-              :style="{ boxShadow: 'var(--shadow)' }"
-              :href="siteUrl"
-              target="_self"
+          <div
+            class="flex-1 rounded-2xl px-4 py-3 text-xs ui-transition"
+            :style="hintStyle"
+          >
+            <template v-if="hasSiteUrl"
+              >Или дотяните вниз в конце страницы</template
             >
-              Перейти на сайт ↗
-            </a>
-
-            <button
-              v-else
-              class="ui-transition ui-interactive rounded-2xl min-h-12 px-4 py-3 text-sm font-semibold opacity-60 cursor-not-allowed"
-              type="button"
-              disabled
-              aria-disabled="true"
-              title="У магазина нет ссылки на сайт"
+            <template v-else
+              >Ссылка на сайт не указана в моках</template
             >
-              Сайт недоступен
-            </button>
+          </div>
+        </section>
 
-            <div
-              class="flex-1 rounded-2xl px-4 py-3 text-xs ui-transition"
-              :style="hintStyle"
-            >
-              <template v-if="hasSiteUrl"
-                >Или дотяните вниз в конце страницы</template
-              >
-              <template v-else
-                >Ссылка на сайт не указана в моках</template
-              >
-            </div>
-          </section>
+        <CssVarsEditor />
 
-          <CssVarsEditor />
-
-          <div class="h-24 3xl:h-56 7xl:h-64"></div>
-        </div>
+        <div class="h-24 3xl:h-56 7xl:h-64"></div>
       </div>
     </div>
 
@@ -287,11 +281,11 @@ const siteUrl = computed(() =>
 const hasSiteUrl = computed(() => siteUrl.value.length > 0);
 
 const hoursStyle = computed(() => ({
-  background:
-    "color-mix(in oklch, var(--surface-strong) 88%, transparent)",
-  color: "var(--text)",
-  border: "0.0625rem solid var(--border)",
-  boxShadow: "var(--shadow)",
+  color: "var(--shop-hours-color)",
+  maxInlineSize: "min(88cqw, var(--shop-hours-max-width))",
+  textShadow: "var(--shop-hours-shadow)",
+  WebkitTextStroke:
+    "var(--shop-hours-stroke-width) var(--shop-hours-stroke-color)",
 }));
 
 const hintStyle = computed(() => ({

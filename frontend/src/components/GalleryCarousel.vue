@@ -1,16 +1,15 @@
 <template>
   <div
-    class="relative overflow-hidden rounded-[var(--radius)] ui-transition ui-surface-strong"
-    :style="{ boxShadow: 'var(--shadow)' }"
+    class="shop-gallery-shell ui-transition ui-surface-strong"
+    :data-testid="testId"
   >
     <div
-      class="aspect-[3/2] 3xl:aspect-[9/4] 7xl:aspect-[9/4]"
+      class="shop-gallery-frame"
       @pointerdown="onDown"
       @pointermove="onMove"
       @pointerup="onUp"
       @pointercancel="onCancel"
     >
-      <!-- Empty state (no images yet) -->
       <div
         v-if="items.length === 0"
         class="h-full w-full grid place-items-center"
@@ -23,7 +22,6 @@
         </div>
       </div>
 
-      <!-- Slides -->
       <div
         v-else
         class="h-full flex ui-transition"
@@ -34,7 +32,6 @@
           :key="i"
           class="min-w-full h-full"
         >
-          <!-- string URL support (mocks may provide galleryImages as string[]) -->
           <UiImage
             v-if="typeof g === 'string'"
             class="w-full h-full"
@@ -79,6 +76,7 @@
       class="absolute left-2 top-1/2 -translate-y-1/2 rounded-xl h-12 w-12 grid place-items-center ui-transition ui-interactive ui-bounce"
       @click="prev"
       aria-label="Предыдущий"
+      type="button"
     >
       ‹
     </button>
@@ -87,6 +85,7 @@
       class="absolute right-2 top-1/2 -translate-y-1/2 rounded-xl h-12 w-12 grid place-items-center ui-transition ui-interactive ui-bounce"
       @click="next"
       aria-label="Следующий"
+      type="button"
     >
       ›
     </button>
@@ -130,10 +129,12 @@ const props = withDefaults(
     items: Array<GalleryItem | string>;
     emptyTitle?: string;
     emptyText?: string;
+    testId?: string;
   }>(),
   {
     emptyTitle: "",
     emptyText: "",
+    testId: undefined,
   },
 );
 
@@ -158,7 +159,6 @@ const trackStyle = computed(() => ({
   transitionDuration: `${uiConfig.gallery.transitionMs}ms`,
 }));
 
-// Swipe support (touch/mouse). Keep it simple and avoid fighting the page scroll.
 let startX = 0;
 let startY = 0;
 let dragging = false;
@@ -175,7 +175,6 @@ function onMove(e: PointerEvent) {
   if (!dragging) return;
   const dx = e.clientX - startX;
   const dy = e.clientY - startY;
-  // If vertical gesture dominates, let the page scroll.
   if (Math.abs(dy) > Math.abs(dx) * 1.3) {
     dragging = false;
   }

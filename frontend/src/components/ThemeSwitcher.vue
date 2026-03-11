@@ -1,7 +1,9 @@
 <template>
-  <div class="flex items-center">
-    <!-- Smartphones: dropdown (icons don't fit) -->
-    <div class="3xl:hidden w-full">
+  <div
+    class="flex items-center shrink-0"
+    data-testid="theme-switcher"
+  >
+    <div class="3xl:hidden min-w-[9.5rem] xs:min-w-[10.5rem]">
       <select
         class="ui-transition ui-interactive ui-bounce w-full min-h-12 rounded-2xl px-3 py-3 text-sm outline-none"
         :value="state.theme"
@@ -19,8 +21,7 @@
       </select>
     </div>
 
-    <!-- Tablet/Desktop: 6 icon buttons -->
-    <div class="hidden 3xl:flex items-center gap-2">
+    <div class="hidden 3xl:flex items-center gap-2 shrink-0">
       <button
         v-for="t in themes"
         :key="t.id"
@@ -30,6 +31,7 @@
         @click="setTheme(t.id)"
         :aria-label="`Тема ${t.label}`"
         :title="t.label"
+        type="button"
       >
         <span class="text-lg">{{ t.icon }}</span>
       </button>

@@ -3,10 +3,16 @@
     <div class="text-panel">
       <div class="flex items-start justify-between gap-3">
         <div class="min-w-0">
-          <div class="text-xs uppercase tracking-wide" :style="{ color: 'var(--muted)' }">
+          <div
+            class="text-xs uppercase tracking-wide"
+            :style="{ color: 'var(--muted)' }"
+          >
             CSS variables (runtime)
           </div>
-          <div class="mt-1 text-sm font-semibold truncate" :style="{ color: 'var(--text)' }">
+          <div
+            class="mt-1 text-sm font-semibold truncate"
+            :style="{ color: 'var(--text)' }"
+          >
             theme-{{ state.theme }}
           </div>
         </div>
@@ -27,7 +33,11 @@
             @click="resetTheme"
             :disabled="Object.keys(overrides).length === 0"
             :aria-disabled="Object.keys(overrides).length === 0"
-            :class="Object.keys(overrides).length === 0 ? 'opacity-60 cursor-not-allowed' : ''"
+            :class="
+              Object.keys(overrides).length === 0
+                ? 'opacity-60 cursor-not-allowed'
+                : ''
+            "
             title="Удалить все overrides для текущей темы"
           >
             Сбросить тему
@@ -36,27 +46,16 @@
       </div>
 
       <div class="mt-4 grid gap-6 7xl:grid-cols-2">
-        <section>
-          <div class="text-xs uppercase tracking-wide" :style="{ color: 'var(--muted)' }">Палитра</div>
-          <div class="mt-3 space-y-2">
-            <VarRow
-              v-for="v in EDITOR_GROUPS.palette"
-              :key="`${state.theme}:${v}`"
-              :var-name="v"
-              :app-el="appEl"
-              :theme="state.theme"
-              :overrides="overrides"
-              @set="setVar"
-              @reset="resetVar"
-            />
+        <section v-for="section in sections" :key="section.key">
+          <div
+            class="text-xs uppercase tracking-wide"
+            :style="{ color: 'var(--muted)' }"
+          >
+            {{ section.title }}
           </div>
-        </section>
-
-        <section>
-          <div class="text-xs uppercase tracking-wide" :style="{ color: 'var(--muted)' }">Интерактив</div>
           <div class="mt-3 space-y-2">
             <VarRow
-              v-for="v in EDITOR_GROUPS.interactive"
+              v-for="v in section.vars"
               :key="`${state.theme}:${v}`"
               :var-name="v"
               :app-el="appEl"
@@ -91,11 +90,32 @@ import VarRow from "./CssVarsEditorVarRow.vue";
 const appEl = ref<HTMLElement | null>(null);
 const overrides = reactive<Record<string, string>>({});
 
-const shouldShow = computed(() => state.themeEditorEnabled && state.themeEditorOpen);
+const shouldShow = computed(
+  () => state.themeEditorEnabled && state.themeEditorOpen,
+);
+const sections = [
+  { key: "palette", title: "Палитра", vars: EDITOR_GROUPS.palette },
+  {
+    key: "interactive",
+    title: "Интерактив",
+    vars: EDITOR_GROUPS.interactive,
+  },
+  {
+    key: "typography",
+    title: "Типографика",
+    vars: EDITOR_GROUPS.typography,
+  },
+  { key: "layout", title: "Разметка", vars: EDITOR_GROUPS.layout },
+  { key: "catalog", title: "Каталог", vars: EDITOR_GROUPS.catalog },
+  {
+    key: "shop",
+    title: "Карточка магазина",
+    vars: EDITOR_GROUPS.shop,
+  },
+] as const;
 
 function syncOverrides() {
   const next = loadThemeOverrides(state.theme);
-  // keep reactive reference stable
   for (const k of Object.keys(overrides)) delete overrides[k];
   for (const [k, v] of Object.entries(next)) overrides[k] = v;
 }
@@ -103,9 +123,7 @@ function syncOverrides() {
 function setVar(varName: string, value: string) {
   if (!appEl.value) return;
   const next = setThemeOverride(state.theme, varName, value);
-  // apply instantly
   appEl.value.style.setProperty(varName, value);
-  // refresh local reactive map
   for (const k of Object.keys(overrides)) delete overrides[k];
   for (const [k, v] of Object.entries(next)) overrides[k] = v;
 }
@@ -120,23 +138,28 @@ function resetVar(varName: string) {
 
 function resetTheme() {
   if (!appEl.value) return;
-  // remove currently known overrides from the DOM first
-  for (const k of Object.keys(overrides)) appEl.value.style.removeProperty(k);
+  for (const k of Object.keys(overrides))
+    appEl.value.style.removeProperty(k);
   clearThemeOverrides(state.theme);
   syncOverrides();
 }
 
 const copied = ref(false);
-const copyHint = computed(() => "Скопировать overrides для активной темы");
+const copyHint = computed(
+  () => "Скопировать overrides для активной темы",
+);
 
 async function copyJson() {
-  const payload = JSON.stringify({ theme: state.theme, overrides: { ...overrides } }, null, 2);
+  const payload = JSON.stringify(
+    { theme: state.theme, overrides: { ...overrides } },
+    null,
+    2,
+  );
   try {
     await navigator.clipboard.writeText(payload);
     copied.value = true;
     window.setTimeout(() => (copied.value = false), 900);
   } catch {
-    // fallback: best-effort
     const ta = document.createElement("textarea");
     ta.value = payload;
     ta.style.display = "none";
@@ -162,7 +185,6 @@ watch(
   () => syncOverrides(),
 );
 
-// If the editor is toggled open, re-sync (handy if localStorage was edited externally).
 watch(
   () => state.themeEditorOpen,
   (open) => {

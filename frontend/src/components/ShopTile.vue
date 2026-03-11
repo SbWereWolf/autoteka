@@ -1,14 +1,13 @@
 <template>
   <button
-    class="ui-transition ui-bounce ui-tile w-full aspect-square rounded-[var(--radius)] p-3 text-left relative"
+    class="ui-transition ui-bounce ui-tile w-full aspect-square rounded-[var(--radius)] p-3 text-left relative overflow-hidden"
     :style="tileStyle"
     @click="$emit('open')"
+    type="button"
   >
-    <!-- background/artwork frame (keeps overflow hidden without clipping text) -->
     <div
       class="absolute inset-0 overflow-hidden rounded-[var(--radius)]"
     >
-      <!-- monotone tinted background (opaque) -->
       <div
         v-if="!shop.thumbUrl"
         class="absolute inset-0"
@@ -20,7 +19,6 @@
         :style="patternLayer"
       ></div>
 
-      <!-- optional thumbnail: full-tile artwork (no distortion; letterbox allowed) -->
       <div
         v-if="shop.thumbUrl"
         class="absolute inset-0"
@@ -38,14 +36,9 @@
       />
     </div>
 
-    <div class="relative z-10 h-full flex items-end">
-      <div
-        class="rounded-2xl px-3 py-2 max-w-full"
-        :style="titlePlateStyle"
-      >
-        <div class="leading-tight tile-title" :style="titleStyle">
-          {{ shop.title }}
-        </div>
+    <div class="tile-title-overlay">
+      <div class="tile-title-text" :style="titleStyle">
+        {{ shop.title }}
       </div>
     </div>
   </button>
@@ -62,7 +55,6 @@ const props = defineProps<{
 defineEmits<{ open: [] }>();
 
 function seeded(n: number) {
-  // deterministic pseudo-random in [0..1)
   const x = Math.sin(n) * 10000;
   return x - Math.floor(x);
 }
@@ -74,12 +66,12 @@ const tileStyle = computed(() => ({
   background: "var(--surface)",
   border: "0.0625rem solid var(--border)",
   boxShadow: "var(--shadow)",
+  containerType: "size",
 }));
 
 const bgLayer = computed(() => {
-  // More saturated but still calm (no rainbow): accent tint into surface.
-  const a = Math.round(18 + r1.value * 14); // 18..32
-  const b = Math.round(14 + r2.value * 12); // 14..26
+  const a = Math.round(18 + r1.value * 14);
+  const b = Math.round(14 + r2.value * 12);
   return {
     background: `linear-gradient(135deg,
       color-mix(in oklch, var(--accent) ${a}%, var(--surface)),
@@ -94,21 +86,11 @@ const patternLayer = computed(() => ({
   opacity: "var(--tile-pattern-opacity)",
 }));
 
-const titlePlateStyle = computed(() => ({
-  background: "var(--surface-strong)",
-  border: "0.0625rem solid var(--border)",
-  boxShadow: "0 10px 18px oklch(0 0 0 / 0.10)",
-}));
-
 const titleStyle = computed(() => ({
   fontFamily: "var(--font-display)",
-  color: "var(--text)",
-  fontSize: "clamp(0.875rem, 3.6vw, 1.125rem)",
-  fontWeight: 800,
 }));
 
 const thumbBgStyle = computed(() => ({
-  // letterboxing color for contain-mode thumbnails
   background: "var(--surface)",
 }));
 </script>

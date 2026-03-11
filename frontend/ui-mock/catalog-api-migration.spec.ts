@@ -13,10 +13,13 @@ test.beforeEach(async ({ request }) => {
 test("UI-MOCK-01: старт приложения и дефолты", async ({ page }) => {
   await installApiMocks(page);
   await page.goto("/");
-  const citySelect = page.getByRole("combobox").first();
-  await expect(citySelect).toHaveValue("barnaul");
+
   await expect(page.getByText("Каталог магазинов")).toBeVisible();
   await expect(page.getByText("2 шт.")).toBeVisible();
+  await expect(
+    page.getByTestId("catalog-feature-select"),
+  ).toHaveValue("credit");
+  await expect(page.getByLabel("Город")).toHaveCount(0);
 });
 
 test("UI-MOCK-02: смена города обновляет каталог", async ({
@@ -24,12 +27,15 @@ test("UI-MOCK-02: смена города обновляет каталог", as
 }) => {
   await installApiMocks(page);
   await page.goto("/");
-  const citySelect = page.getByRole("combobox").first();
+
+  await page.getByRole("button", { name: "Открыть меню" }).click();
+  const citySelect = page.getByTestId("menu-city-select");
+  await expect(citySelect).toHaveValue("barnaul");
   await citySelect.selectOption("nizhny");
   await expect(page.getByText("3 шт.")).toBeVisible();
 });
 
-test("UI-MOCK-03: карточка магазина показывает категории/фичи и контакты", async ({
+test("UI-MOCK-03: карточка магазина показывает порядок блоков и контакты", async ({
   page,
 }) => {
   await installApiMocks(page);
@@ -42,9 +48,20 @@ test("UI-MOCK-03: карточка магазина показывает кат�
   await expect(
     page.getByRole("heading", { name: "Контакты" }),
   ).toBeVisible();
-  await expect(
-    page.locator(".shop-meta-badge").first(),
-  ).toBeVisible();
+  await expect(page.getByTestId("shop-meta-badges")).toBeVisible();
+
+  const order = await page
+    .locator(
+      '[data-testid="shop-description"], [data-testid="shop-meta-section"], [data-testid="shop-contacts"]',
+    )
+    .evaluateAll((nodes) =>
+      nodes.map((node) => (node as HTMLElement).dataset.testid ?? ""),
+    );
+  expect(order).toEqual([
+    "shop-description",
+    "shop-meta-section",
+    "shop-contacts",
+  ]);
 });
 
 test("UI-MOCK-04: 404 магазин", async ({ page }) => {
