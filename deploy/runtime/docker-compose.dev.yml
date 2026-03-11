@@ -29,6 +29,10 @@ services:
       - ${AUTOTEKA_ROOT:-../..}/backend:/workspace/backend
       - autoteka_api_vendor:/workspace/backend/apps/ShopAPI/vendor
       - autoteka_admin_vendor:/workspace/backend/apps/ShopOperator/vendor
+      - autoteka_shopapi_bootstrap_cache:/workspace/backend/apps/ShopAPI/bootstrap/cache
+      - autoteka_shopoperator_bootstrap_cache:/workspace/backend/apps/ShopOperator/bootstrap/cache
+      - autoteka_shopapi_storage_framework:/workspace/backend/apps/ShopAPI/storage/framework
+      - autoteka_shopoperator_storage_framework:/workspace/backend/apps/ShopOperator/storage/framework
     restart: unless-stopped
 
   frontend:
@@ -89,5 +93,9 @@ services:
 volumes:
   autoteka_api_vendor:
   autoteka_admin_vendor:
+  autoteka_shopapi_bootstrap_cache:
+  autoteka_shopoperator_bootstrap_cache:
+  autoteka_shopapi_storage_framework:
+  autoteka_shopoperator_storage_framework:
   autoteka_frontend_node_modules:
   autoteka_frontend_dist:
