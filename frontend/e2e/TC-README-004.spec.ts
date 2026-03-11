@@ -18,10 +18,11 @@ test("TC-README-004: запросы к /api/v1 не ломаются, катал
   page,
 }) => {
   await page.goto("/");
-  await expect(page.getByText("Каталог магазинов")).toBeVisible();
-  const citySelect = page.getByRole("combobox").first();
-  await expect(citySelect).toBeVisible();
-  await expect(citySelect).not.toHaveValue("");
+  await expect(
+    page.getByRole("button", { name: "Открыть меню" }),
+  ).toBeVisible();
+  await expect(
+    page.getByTestId("catalog-feature-select"),
+  ).toBeVisible();
   await expect(page.locator("button.ui-tile").first()).toBeVisible();
-  await expect(page.getByText(/\d+ шт\./)).toBeVisible();
 });

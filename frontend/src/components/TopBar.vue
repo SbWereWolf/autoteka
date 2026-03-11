@@ -9,21 +9,23 @@
           <button
             data-menu-button
             class="ui-transition ui-interactive ui-bounce inline-flex items-center justify-center rounded-xl h-12 w-12"
-            @click="state.menuOpen = true"
             aria-label="Открыть меню"
             type="button"
+            @click="state.menuOpen = true"
           >
             <span class="text-lg leading-none">≡</span>
           </button>
 
           <div class="min-w-0">
-            <div
+            <button
               data-testid="topbar-title"
               class="topbar-title truncate"
               :style="{ color: 'var(--text)' }"
+              type="button"
+              @click="goHome"
             >
               Автотека
-            </div>
+            </button>
           </div>
 
           <div
@@ -35,10 +37,10 @@
               v-if="showThemeEditorButton"
               class="ui-transition ui-interactive ui-bounce hidden 3xl:inline-flex items-center justify-center rounded-xl h-12 w-12"
               type="button"
-              @click="state.themeEditorOpen = !state.themeEditorOpen"
               :aria-pressed="state.themeEditorOpen"
               aria-label="CSS переменные"
               title="CSS переменные"
+              @click="state.themeEditorOpen = !state.themeEditorOpen"
             >
               <span class="text-lg leading-none">≡</span>
             </button>
@@ -51,11 +53,12 @@
 
 <script setup lang="ts">
 import { computed, watch } from "vue";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import { state } from "../state";
 import ThemeSwitcher from "./ThemeSwitcher.vue";
 
 const route = useRoute();
+const router = useRouter();
 
 const showThemeEditorButton = computed(() => {
   if (!state.themeEditorEnabled) return false;
@@ -69,4 +72,8 @@ watch(
       state.themeEditorOpen = false;
   },
 );
+
+function goHome() {
+  router.push({ name: "catalog" });
+}
 </script>
