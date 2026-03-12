@@ -42,7 +42,8 @@
 @layer components {
   /* Container used by TopBar and pages so left edges line up across breakpoints */
   .app-container {
-    @apply mx-auto max-w-6xl px-3 xs:px-3 sm:px-4 3xl:px-10 7xl:px-14;
+    @apply mx-auto px-3 xs:px-3 sm:px-4 3xl:px-10 7xl:px-14;
+    max-width: var(--content-max-width);
   }
 
   .ui-transition {
@@ -167,6 +168,18 @@
     font-family: var(--font-display);
   }
 
+  @media (min-width: 48rem) {
+    .topbar-title {
+      font-size: 2.3rem;
+    }
+  }
+
+  @media (min-width: 80rem) {
+    .topbar-title {
+      font-size: 2.3rem;
+    }
+  }
+
   .catalog-grid-shell {
     position: relative;
     container-type: inline-size;
@@ -201,19 +214,20 @@
   }
 
   .catalog-feature-sticky-shell {
-    position: sticky;
-    top: calc(
-      100svh - var(--catalog-feature-min-height) -
-        var(--catalog-feature-sticky-bottom)
-    );
+    position: fixed;
+    left: 50%;
+    transform: translateX(-50%);
     bottom: max(
-      var(--catalog-feature-sticky-bottom),
+      calc(var(--catalog-feature-sticky-bottom) + 3.5rem),
       env(safe-area-inset-bottom)
     );
     z-index: 20;
     display: flex;
     justify-content: center;
-    margin-top: 1rem;
+    width: min(
+      calc(100% - 1rem),
+      calc(var(--content-max-width) - 1rem)
+    );
     pointer-events: none;
   }
 
