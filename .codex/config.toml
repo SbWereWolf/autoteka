@@ -1,0 +1,17 @@
+multi_agent = true
+
+[agents.explorer]
+description = "Repository structure explorer"
+config_file = "agents/explorer.toml"
+
+[agents.scribe]
+description = "Implements code changes"
+config_file = "agents/scribe.toml"
+
+[agents.verifier]
+description = "Runs verify gates"
+config_file = "agents/verifier.toml"
+
+[agents.commit_curator]
+description = "Finalizes commit and enforces message rules"
+config_file = "agents/commit_curator.toml"

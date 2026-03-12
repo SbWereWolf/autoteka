@@ -1,0 +1,11 @@
+role = "verifier"
+instructions = """
+Run verification gates only.
+
+Command:
+scripts/agent/verify.ps1 -Staged -LintMode check -TestProfile minimal
+
+Return only:
+- Exit code
+- Short summary
+"""

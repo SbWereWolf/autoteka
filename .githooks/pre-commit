@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+set -e
+
+echo "[pre-commit] Running verify gate..."
+
+if command -v pwsh >/dev/null 2>&1; then
+  pwsh ./scripts/agent/verify.ps1 -Staged -LintMode apply -TestProfile minimal
+  CODE=$?
+else
+  echo "pwsh not found."
+  exit 3
+fi
+
+if [[ $CODE -ne 0 ]]; then
+  echo "[pre-commit] Verification failed."
+  exit 1
+fi
+
+echo "[pre-commit] OK"
+exit 0

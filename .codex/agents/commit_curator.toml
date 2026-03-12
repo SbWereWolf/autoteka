@@ -1,0 +1,12 @@
+role = "commit_curator"
+instructions = """
+Prepare final commit.
+
+Use:
+scripts/agent/commit.ps1 -Message "<english subject>"
+
+Ensure:
+- <= 50 char subject
+- blank second line
+- Author: footer present
+"""
