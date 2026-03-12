@@ -5,6 +5,9 @@
       <list>
         <option value="$PROJECT_DIR$/backend/tests/Unit" />
         <option value="$PROJECT_DIR$/backend/tests/Feature" />
+        <option value="$PROJECT_DIR$/backend/apps/ShopAPI/tests/Feature" />
+        <option value="$PROJECT_DIR$/backend/apps/ShopOperator/tests/Unit" />
+        <option value="$PROJECT_DIR$/backend/apps/ShopOperator/tests/Feature" />
       </list>
     </option>
   </component>

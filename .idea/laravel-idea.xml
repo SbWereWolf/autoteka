@@ -16,8 +16,7 @@
         </option>
       </LaravelCodeGeneration>
     </option>
-    <option name="frameworkFound" value="true" />
-    <option name="laravelBasePath" value="backend" />
+    <option name="laravelBasePath" value="apps/ShopAPI" />
     <option name="translation">
       <LaravelTranslation>
         <option name="defaultPath" value="lang" />
