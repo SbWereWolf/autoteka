@@ -17,15 +17,14 @@
           </button>
 
           <div class="min-w-0">
-            <button
+            <RouterLink
               data-testid="topbar-title"
-              class="topbar-title truncate"
+              class="topbar-title block w-full truncate text-center"
               :style="{ color: 'var(--text)' }"
-              type="button"
-              @click="goHome"
+              :to="{ name: 'catalog' }"
             >
               Автотека
-            </button>
+            </RouterLink>
           </div>
 
           <div
@@ -53,12 +52,11 @@
 
 <script setup lang="ts">
 import { computed, watch } from "vue";
-import { useRoute, useRouter } from "vue-router";
+import { RouterLink, useRoute } from "vue-router";
 import { state } from "../state";
 import ThemeSwitcher from "./ThemeSwitcher.vue";
 
 const route = useRoute();
-const router = useRouter();
 
 const showThemeEditorButton = computed(() => {
   if (!state.themeEditorEnabled) return false;
@@ -72,8 +70,4 @@ watch(
       state.themeEditorOpen = false;
   },
 );
-
-function goHome() {
-  router.push({ name: "catalog" });
-}
 </script>

@@ -33,9 +33,9 @@
           <button
             ref="closeBtnEl"
             class="ui-transition ui-interactive ui-bounce rounded-xl h-12 w-12 inline-flex items-center justify-center"
-            @click="closeMenu"
             aria-label="Закрыть"
             type="button"
+            @click="closeMenu"
           >
             ✕
           </button>
@@ -54,6 +54,7 @@
             <CitySelect
               aria-label="Город"
               test-id="menu-city-select"
+              @changed="closeMenu"
             />
           </section>
 

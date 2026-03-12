@@ -18,6 +18,10 @@
 import { computed } from "vue";
 import { state, setCity } from "../state";
 
+const emit = defineEmits<{
+  changed: [cityCode: string];
+}>();
+
 withDefaults(
   defineProps<{
     id?: string;
@@ -35,6 +39,12 @@ const cities = computed(() => state.cities);
 
 const city = computed({
   get: () => state.cityCode,
-  set: (v: string) => setCity(v),
+  set: (v: string) => {
+    const prev = state.cityCode;
+    setCity(v);
+    if (state.cityCode !== prev) {
+      emit("changed", state.cityCode);
+    }
+  },
 });
 </script>
