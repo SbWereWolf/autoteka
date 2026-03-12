@@ -24,15 +24,13 @@
         class="absolute inset-0"
         :style="thumbBgStyle"
       ></div>
-      <UiImage
+      <img
         v-if="shop.thumbUrl"
-        class="absolute inset-0"
+        class="absolute left-1/2 top-1/2 h-auto w-auto max-h-full max-w-full -translate-x-1/2 -translate-y-1/2 object-contain"
         :src="shop.thumbUrl"
         :alt="`${shop.title} — изображение`"
         loading="lazy"
         decoding="async"
-        spinner
-        img-class="w-full h-full object-contain object-center"
       />
     </div>
 
@@ -46,8 +44,6 @@
 
 <script setup lang="ts">
 import { computed } from "vue";
-import UiImage from "./UiImage.vue";
-
 const props = defineProps<{
   shop: { title: string; thumbUrl?: string };
   seed: number;
