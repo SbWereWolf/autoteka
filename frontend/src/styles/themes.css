@@ -19,17 +19,18 @@
   --radius: 1.125rem;
   --shadow: 0 0.75rem 1.75rem oklch(0 0 0 / 0.18);
 
-  --topbar-title-font-size: 1.25rem;
+  --topbar-title-font-size: 1.3rem;
   --topbar-title-font-weight: 500;
   --topbar-title-letter-spacing: 0;
+  --content-max-width: 72rem;
 
   --catalog-grid-gap: 0.5rem;
   --catalog-grid-columns-mobile: 2;
   --catalog-grid-columns-3xl: 3;
   --catalog-grid-columns-7xl: 4;
-  --catalog-grid-bottom-padding: 6rem;
+  --catalog-grid-bottom-padding: 9rem;
   --catalog-feature-sticky-top: 0rem;
-  --catalog-feature-sticky-bottom: 1rem;
+  --catalog-feature-sticky-bottom: 0.25rem;
   --catalog-feature-max-width: 24rem;
   --catalog-feature-min-height: 3.5rem;
   --catalog-feature-font-ratio: 0.2;
@@ -38,7 +39,7 @@
   --tile-title-font-ratio: 0.2;
   --tile-title-font-min: 1rem;
   --tile-title-font-max: 2.5rem;
-  --tile-title-color: var(--text);
+  --tile-title-color: oklch(0 0 0);
   --tile-title-stroke-color: var(--tile-stroke);
   --tile-title-stroke-width: 0;
   --tile-title-shadow: 0 0.125rem 0.625rem
@@ -47,14 +48,14 @@
 
   --shop-gallery-height: 66.666svh;
   --shop-gallery-max-height: 56rem;
-  --shop-hours-bottom: 1rem;
+  --shop-hours-bottom: 1.875rem;
   --shop-hours-max-width: 34rem;
   --shop-hours-font-min: 0.75rem;
   --shop-hours-font-fluid: 3cqh;
   --shop-hours-font-max: 1rem;
   --shop-hours-line-height: 1.2;
   --shop-hours-letter-spacing: 0;
-  --shop-hours-color: var(--text);
+  --shop-hours-color: oklch(0 0 0);
   --shop-hours-shadow: 0 0.125rem 0.75rem oklch(0 0 0 / 0.5);
   --shop-hours-stroke-color: var(--tile-stroke);
   --shop-hours-stroke-width: 0.02rem;
