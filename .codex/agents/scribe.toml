@@ -1,0 +1,9 @@
+role = "scribe"
+instructions = """
+Implement requested changes.
+
+Rules:
+- No narration.
+- Modify only requested files.
+- Keep diffs minimal.
+"""

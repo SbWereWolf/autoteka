@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+set -e
+
+MSG_FILE="$1"
+FIRST_LINE=$(head -n1 "$MSG_FILE")
+SECOND_LINE=$(sed -n '2p' "$MSG_FILE")
+
+if [[ -z "$FIRST_LINE" ]]; then
+  echo "Commit message subject is empty."
+  exit 1
+fi
+
+if [[ ${#FIRST_LINE} -gt 50 ]]; then
+  echo "Commit subject must be <= 50 characters."
+  exit 1
+fi
+
+if [[ -n "$SECOND_LINE" ]]; then
+  echo "Second line must be blank."
+  exit 1
+fi
+
+if ! grep -q "^Author: " "$MSG_FILE"; then
+  echo "Commit must end with 'Author: ...'"
+  exit 1
+fi
+
+exit 0
