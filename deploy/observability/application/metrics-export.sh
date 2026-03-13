@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Convert /var/log/server-metrics.log -> $AUTOTEKA_ROOT/deploy/observability/application/metrics/data.json
+# Convert /var/log/server-metrics.log -> $INFRA_ROOT/observability/application/metrics/data.json
 # Input format (single line):
 #   2026-03-04T03:10:00+03:00 load=0.25 ram=32 health=healthy
 
@@ -13,7 +13,7 @@ source "$DEPLOY_DIR/lib/bootstrap.sh"
 load_autoteka_env
 
 INPUT="/var/log/server-metrics.log"
-OUTPUT="$AUTOTEKA_ROOT/deploy/observability/application/metrics/data.json"
+OUTPUT="$INFRA_ROOT/observability/application/metrics/data.json"
 
 mkdir -p "$(dirname "$OUTPUT")"
 

@@ -142,7 +142,7 @@ fi
 
   WATCH_STAGE="deploy_start"
   log "starting rollout for $REMOTE_HASH"
-  "$AUTOTEKA_ROOT/deploy/runtime/deploy.sh"
+  "$INFRA_ROOT/runtime/deploy.sh"
 
   log "rollout process finished for $REMOTE_HASH"
   log "=== end ==="

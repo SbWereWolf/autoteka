@@ -4,9 +4,15 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DEPLOY_DIR="$(cd "$SCRIPT_DIR" && while [ ! -f "DEPLOY.md" ] && [ "$PWD" != "/" ]; do cd ..; done; pwd)"
 REPO_ROOT="$(cd "$DEPLOY_DIR/.." && pwd)"
+DEFAULT_INFRA_ROOT="$REPO_ROOT/infrastructure"
 # shellcheck disable=SC1090
 source "$DEPLOY_DIR/lib/laravel-runtime.sh"
 export AUTOTEKA_ROOT="$REPO_ROOT"
+if [ -d "$DEFAULT_INFRA_ROOT" ]; then
+  export INFRA_ROOT="$DEFAULT_INFRA_ROOT"
+else
+  export INFRA_ROOT="$DEPLOY_DIR"
+fi
 export DOCKER_BUILDKIT="${DOCKER_BUILDKIT:-1}"
 export COMPOSE_DOCKER_CLI_BUILD="${COMPOSE_DOCKER_CLI_BUILD:-1}"
 export DEBIAN_FRONTEND=noninteractive
@@ -31,8 +37,8 @@ chmod +x "$DEPLOY_DIR/runtime"/*.sh 2>/dev/null || true
 chmod +x "$DEPLOY_DIR/repair"/*.sh 2>/dev/null || true
 chmod +x "$DEPLOY_DIR/maintenance"/*.sh 2>/dev/null || true
 chmod +x "$DEPLOY_DIR/observability/infrastructure"/*.sh 2>/dev/null || true
-mkdir -p "$REPO_ROOT/deploy/observability/application/metrics"
-touch "$REPO_ROOT/deploy/observability/application/metrics/data.json" || true
+mkdir -p "$INFRA_ROOT/observability/application/metrics"
+touch "$INFRA_ROOT/observability/application/metrics/data.json" || true
 
 mkdir -p /etc/systemd/journald.conf.d /etc/fail2ban/jail.d /etc/systemd/system/docker.service.d /etc/autoteka
 if [ -f /etc/autoteka/deploy.env ]; then
@@ -41,8 +47,14 @@ if [ -f /etc/autoteka/deploy.env ]; then
   else
     echo "AUTOTEKA_ROOT=$REPO_ROOT" >> /etc/autoteka/deploy.env
   fi
+  if grep -qE '^INFRA_ROOT=' /etc/autoteka/deploy.env; then
+    sed -i -E "s|^INFRA_ROOT=.*$|INFRA_ROOT=$INFRA_ROOT|" /etc/autoteka/deploy.env
+  else
+    echo "INFRA_ROOT=$INFRA_ROOT" >> /etc/autoteka/deploy.env
+  fi
 else
   echo "AUTOTEKA_ROOT=$REPO_ROOT" > /etc/autoteka/deploy.env
+  echo "INFRA_ROOT=$INFRA_ROOT" >> /etc/autoteka/deploy.env
   chmod 600 /etc/autoteka/deploy.env
 fi
 

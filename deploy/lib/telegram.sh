@@ -11,6 +11,23 @@ if [ -z "${AUTOTEKA_LIB_TELEGRAM_SH:-}" ]; then
   TELEGRAM_ENV_FILE_DEFAULT="/etc/autoteka/telegram.env"
   TELEGRAM_LOCK_DIR_DEFAULT="${TMPDIR:-/tmp}/autoteka-telegram-locks"
   TELEGRAM_LOG_DEFAULT="/var/log/autoteka-telegram.log"
+  TELEGRAM_APP_VERSION_CACHE=""
+
+  app_version_short() {
+    if [ -n "$TELEGRAM_APP_VERSION_CACHE" ]; then
+      printf '%s\n' "$TELEGRAM_APP_VERSION_CACHE"
+      return 0
+    fi
+
+    if [ -n "${AUTOTEKA_ROOT:-}" ] && [ -d "$AUTOTEKA_ROOT/.git" ]; then
+      TELEGRAM_APP_VERSION_CACHE="$(git -C "$AUTOTEKA_ROOT" rev-parse --short=12 HEAD 2>/dev/null || true)"
+    fi
+    if [ -z "$TELEGRAM_APP_VERSION_CACHE" ]; then
+      TELEGRAM_APP_VERSION_CACHE="unknown"
+    fi
+
+    printf '%s\n' "$TELEGRAM_APP_VERSION_CACHE"
+  }
 
   load_telegram_env() {
     local env_file="${1:-$TELEGRAM_ENV_FILE_DEFAULT}"
@@ -76,8 +93,8 @@ if [ -z "${AUTOTEKA_LIB_TELEGRAM_SH:-}" ]; then
     local kind="$4"
     local detail="$5"
 
-    printf '[autoteka][%s][%s] %s. %s: %s.' \
-      "$script_id" "$reason_code" "$action" "$kind" "$detail"
+    printf '[autoteka][%s][%s][version:%s] %s. %s: %s.' \
+      "$script_id" "$reason_code" "$(app_version_short)" "$action" "$kind" "$detail"
   }
 
   notify_error_once() {

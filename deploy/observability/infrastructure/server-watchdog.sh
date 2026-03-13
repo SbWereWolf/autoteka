@@ -539,7 +539,7 @@ if [ -n "$HOST_REASON" ]; then
   if [ -x "$DEPLOY_DIR/observability/application/metrics-export.sh" ]; then
     if ! "$DEPLOY_DIR/observability/application/metrics-export.sh" >/dev/null 2>&1; then
       log_action "notify metrics export failed"
-      notify_info "$SCRIPT_ID" "$WATCHDOG_ACTION" "WATCHDOG_METRICS_EXPORT_FAILED" "не удалось обновить deploy/observability/application/metrics/data.json"
+      notify_info "$SCRIPT_ID" "$WATCHDOG_ACTION" "WATCHDOG_METRICS_EXPORT_FAILED" "не удалось обновить infrastructure/observability/application/metrics/data.json"
     fi
   fi
   handle_host_failure "$LOAD" "$RAM" "$HOST_REASON"
@@ -561,7 +561,7 @@ if [ "$NGINX_STATUS" != "healthy" ]; then
   if [ -x "$DEPLOY_DIR/observability/application/metrics-export.sh" ]; then
     if ! "$DEPLOY_DIR/observability/application/metrics-export.sh" >/dev/null 2>&1; then
       log_action "notify metrics export failed"
-      notify_info "$SCRIPT_ID" "$WATCHDOG_ACTION" "WATCHDOG_METRICS_EXPORT_FAILED" "не удалось обновить deploy/observability/application/metrics/data.json"
+      notify_info "$SCRIPT_ID" "$WATCHDOG_ACTION" "WATCHDOG_METRICS_EXPORT_FAILED" "не удалось обновить infrastructure/observability/application/metrics/data.json"
     fi
   fi
   exit 0
@@ -580,7 +580,7 @@ if [ "$PHP_STATUS" != "healthy" ]; then
   if [ -x "$DEPLOY_DIR/observability/application/metrics-export.sh" ]; then
     if ! "$DEPLOY_DIR/observability/application/metrics-export.sh" >/dev/null 2>&1; then
       log_action "notify metrics export failed"
-      notify_info "$SCRIPT_ID" "$WATCHDOG_ACTION" "WATCHDOG_METRICS_EXPORT_FAILED" "не удалось обновить deploy/observability/application/metrics/data.json"
+      notify_info "$SCRIPT_ID" "$WATCHDOG_ACTION" "WATCHDOG_METRICS_EXPORT_FAILED" "не удалось обновить infrastructure/observability/application/metrics/data.json"
     fi
   fi
   exit 0
@@ -599,7 +599,7 @@ if [ "$BACKEND_STATUS" != "healthy" ]; then
   if [ -x "$DEPLOY_DIR/observability/application/metrics-export.sh" ]; then
     if ! "$DEPLOY_DIR/observability/application/metrics-export.sh" >/dev/null 2>&1; then
       log_action "notify metrics export failed"
-      notify_info "$SCRIPT_ID" "$WATCHDOG_ACTION" "WATCHDOG_METRICS_EXPORT_FAILED" "не удалось обновить deploy/observability/application/metrics/data.json"
+      notify_info "$SCRIPT_ID" "$WATCHDOG_ACTION" "WATCHDOG_METRICS_EXPORT_FAILED" "не удалось обновить infrastructure/observability/application/metrics/data.json"
     fi
   fi
   exit 0
@@ -625,7 +625,7 @@ append_metrics "$(now_iso) load=$LOAD ram=$RAM health=$OVERALL_HEALTH nginx=$NGI
 if [ -x "$DEPLOY_DIR/observability/application/metrics-export.sh" ]; then
   if ! "$DEPLOY_DIR/observability/application/metrics-export.sh" >/dev/null 2>&1; then
     log_action "notify metrics export failed"
-    notify_info "$SCRIPT_ID" "$WATCHDOG_ACTION" "WATCHDOG_METRICS_EXPORT_FAILED" "не удалось обновить deploy/observability/application/metrics/data.json"
+    notify_info "$SCRIPT_ID" "$WATCHDOG_ACTION" "WATCHDOG_METRICS_EXPORT_FAILED" "не удалось обновить infrastructure/observability/application/metrics/data.json"
   fi
 fi
 

@@ -9,7 +9,7 @@ if [ -z "${AUTOTEKA_LIB_LARAVEL_RUNTIME_SH:-}" ]; then
   source "$AUTOTEKA_LIB_DIR/bootstrap.sh"
 
   compose() {
-    /usr/bin/docker compose -f "$AUTOTEKA_ROOT/deploy/runtime/docker-compose.yml" "$@"
+    /usr/bin/docker compose -f "$INFRA_ROOT/runtime/docker-compose.yml" "$@"
   }
 
   sync_shared_envs() {
