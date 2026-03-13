@@ -1,6 +1,15 @@
 param(
     [Parameter(Mandatory=$true)]
-    [string]$Message
+    [string]$Message,
+
+    [Parameter(Mandatory = $true)]
+    [string[]]$Body,
+
+    [Parameter(Mandatory = $true)]
+    [string]$AISystemName,
+
+    [Parameter(Mandatory = $true)]
+    [string]$LLMName = ""
 )
 
 $ErrorActionPreference = "Stop"
@@ -26,8 +35,8 @@ if (-not (Test-Path "scripts/commit-with-message.ps1")) {
 
 & "scripts/commit-with-message.ps1" `
     -Subject $Message `
-    -Body @("Apply one logical staged change via safe-commit.") `
-    -AISystemName "Codex" `
-    -LLMName "gpt-5"
+    -Body $Body `
+    -AISystemName $AISystemName `
+    -LLMName $LLMName
 
 exit $LASTEXITCODE
