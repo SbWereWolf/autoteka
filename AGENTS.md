@@ -30,7 +30,7 @@ A change is structural if it does at least one of the following:
 
 - adds, removes, splits, or moves modules or packages;
 - changes public contracts, schemas, routes, or integration boundaries;
-- changes build, deploy, runtime, or environment wiring;
+- changes build, runtime, operational, or environment wiring;
 - changes shared abstractions used by multiple areas of the system.
 
 ---
@@ -142,12 +142,12 @@ If multiple skills apply, choose one primary skill and use others only for narro
 - If the task changes markup semantics, accessibility, form UX, keyboard/focus behavior, use `layout-and-design`.
 - If the task changes Vue/Tailwind/client code, use `frontend`.
 - If the task changes PHP/Laravel/MoonShine/API/business logic/tests/migrations, use `backend`.
-- If the task changes Docker/Compose/Bash/deploy/runtime config/ops scripts, use `infrastructure`.
-- If the task changes documentation structure, manuals, runbooks, implementation docs, deploy docs, or test-case linking, use `tech-writer`.
+- If the task changes Docker/Compose/Bash/runtime config/ops scripts, use `infrastructure`.
+- If the task changes documentation structure, manuals, runbooks, implementation docs, infra docs, or test-case linking, use `tech-writer`.
 
 ### 6.3 Boundary rules
 
-- Do not use `frontend` for backend or deploy work.
+- Do not use `frontend` for backend or infrastructure work.
 - Do not use `layout-and-design` as a substitute for frontend component architecture.
 - Do not use `backend` for infrastructure-only tasks.
 - Do not use `tech-writer` for code implementation unless the task is explicitly documentation-first.
@@ -158,7 +158,7 @@ If multiple skills apply, choose one primary skill and use others only for narro
 Use this priority order to choose the primary skill:
 
 1. `tech-writer` for documentation deliverables
-2. `infrastructure` for deploy/runtime changes
+2. `infrastructure` for runtime and operational changes
 3. `backend` for server/business changes
 4. `frontend` for client implementation
 5. `layout-and-design` for semantic/a11y refinement

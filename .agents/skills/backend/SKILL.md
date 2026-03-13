@@ -1,6 +1,6 @@
 ---
 name: "backend"
-description: "Use for Laravel/PHP backend work in this repo: ShopAPI, ShopOperator, backend/packages, Eloquent, migrations usage, backend tests, and architecture decisions about where backend code belongs. Do not use for deploy Bash/systemd/docker work; use infrastructure for that."
+description: "Use for Laravel/PHP backend work in this repo: ShopAPI, ShopOperator, backend/packages, Eloquent, migrations usage, backend tests, and architecture decisions about where backend code belongs. Do not use for infrastructure Bash/systemd/docker work; use infrastructure for that."
 ---
 
 # Backend

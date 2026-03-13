@@ -14,7 +14,7 @@ Use docs for:
 Examples:
 
 - `docs/foundations/IMPLEMENTATION.md`
-- `deploy/DEPLOY.md` for physical deploy infrastructure and ops mechanics
+- `infrastructure/DEPLOY.md` for physical infrastructure and ops mechanics
 
 ### Runbooks / manuals
 
@@ -50,7 +50,7 @@ Do not hide verification only in prose when a test-case link can be added.
 ## See also
 
 - [ADMIN_MANUAL](../manual/ADMIN_MANUAL.md) — practical operator steps
-- [deploy-DEPLOY-test-cases](../../test-cases/deploy-DEPLOY-test-cases.md) — verification of deploy behavior
+- [infrastructure-DEPLOY-test-cases](../../test-cases/infrastructure-DEPLOY-test-cases.md) — verification of infrastructure behavior
 ```
 
 ## How not to do it

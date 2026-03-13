@@ -4,7 +4,7 @@
 
 This skill covers:
 
-- deploy scripts;
+- infrastructure scripts;
 - install/rollout/uninstall;
 - backup/restore;
 - watchdog;
@@ -21,11 +21,11 @@ This skill covers:
 
 ## Repo rules
 
-Deployment logic belongs in `deploy/`.
+Infrastructure logic belongs in `INFRA_ROOT`.
 
-- `deploy/DEPLOY.md` is the full deploy specification.
+- `infrastructure/DEPLOY.md` is the full infrastructure specification.
 - `docs/manual/ADMIN_MANUAL.md` is the operator-facing practical runbook.
-- `IMPLEMENTATION.md` should not become a deploy manual.
+- `IMPLEMENTATION.md` should not become an operations manual.
 
 ## How to do it
 
@@ -33,7 +33,7 @@ Deployment logic belongs in `deploy/`.
 #!/usr/bin/env bash
 set -euo pipefail
 
-docker compose -f deploy/runtime/docker-compose.dev.yml up --build -d
+docker compose -f "$INFRA_ROOT"/runtime/docker-compose.dev.yml up --build -d
 ```
 
 ## How not to do it
@@ -64,6 +64,6 @@ Prefer scripts that:
 After infra changes, specify the smallest relevant validation:
 
 - targeted script test;
-- deploy test;
+- infrastructure test;
 - service health check;
 - documented manual verification in the matching runbook.
