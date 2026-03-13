@@ -49,7 +49,7 @@ describe("TC-SCRIPTS-README-008", () => {
 });
 
 describe("TC-SCRIPTS-README-009", () => {
-  it("example.env содержит SCRIPT_BASH_PATH, SCRIPT_NODE_PATH, SCRIPT_NPX_PATH", () => {
+  it("example.env содержит SCRIPT_BASH_PATH, SCRIPT_NODE_PATH, SCRIPT_NPX_PATH, SCRIPT_PHP_PATH", () => {
     const content = readFileSync(
       join(SCRIPTS_DIR, "example.env"),
       "utf-8",
@@ -57,6 +57,7 @@ describe("TC-SCRIPTS-README-009", () => {
     expect(content).toMatch(/SCRIPT_BASH_PATH/);
     expect(content).toMatch(/SCRIPT_NODE_PATH/);
     expect(content).toMatch(/SCRIPT_NPX_PATH/);
+    expect(content).toMatch(/SCRIPT_PHP_PATH/);
   });
 });
 

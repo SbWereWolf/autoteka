@@ -116,11 +116,12 @@
 
 - Утверждение: локальная конфигурация включает шаг
   `scripts/example.env -> scripts/.env` и поддерживает переменные
-  `SCRIPT_BASH_PATH`, `SCRIPT_NODE_PATH`, `SCRIPT_NPX_PATH`.
+  `SCRIPT_BASH_PATH`, `SCRIPT_NODE_PATH`, `SCRIPT_NPX_PATH`,
+  `SCRIPT_PHP_PATH`.
 - Проверка:
-  1. Проверить наличие всех трёх переменных в `scripts/example.env`.
+  1. Проверить наличие всех четырёх переменных в `scripts/example.env`.
   2. Подставить значения в `scripts/.env`.
-  3. Выполнить smoke-команды, зависящие от bash/node/npx.
+  3. Выполнить smoke-команды, зависящие от bash/node/npx/php.
 - Ожидаемый результат:
   переменные читаются и используются соответствующими скриптами.
 - Тип: automated

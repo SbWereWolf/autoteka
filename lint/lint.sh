@@ -14,23 +14,9 @@ Usage: bash ./lint/lint.sh -Path <path> [-Path <path2> ...] [-Mode Warn|Strict|D
 USAGE
 }
 
-is_wsl() {
-  if [[ -n "${WSL_DISTRO_NAME:-}" ]]; then
-    return 0
-  fi
-
-  if [[ -r /proc/version ]] && grep -qi microsoft /proc/version; then
-    return 0
-  fi
-
-  return 1
-}
-
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CONFIG_PATH="$SCRIPT_DIR/lint-rules.yml"
-WIN_ENV_PATH="$SCRIPT_DIR/win.env"
-WSL_ENV_PATH="$SCRIPT_DIR/wsl.env"
-NIX_ENV_PATH="$SCRIPT_DIR/nix.env"
+ENV_PATH="$SCRIPT_DIR/.env"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -73,15 +59,6 @@ fi
 if [[ ! -f "$CONFIG_PATH" ]]; then
   log "ERROR: lint-rules.yml not found"
   exit 1
-fi
-
-ENV_PATH=""
-if [[ "$(uname -s)" == "Linux" ]] && is_wsl; then
-  [[ -f "$WSL_ENV_PATH" ]] && ENV_PATH="$WSL_ENV_PATH"
-elif [[ "$(uname -s)" == "Linux" ]]; then
-  [[ -f "$NIX_ENV_PATH" ]] && ENV_PATH="$NIX_ENV_PATH"
-else
-  [[ -f "$WIN_ENV_PATH" ]] && ENV_PATH="$WIN_ENV_PATH"
 fi
 
 if [[ -n "$ENV_PATH" ]]; then

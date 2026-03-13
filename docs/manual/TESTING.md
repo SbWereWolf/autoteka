@@ -9,8 +9,9 @@
 - У тестов свои env-файлы и свои конфиги.
 - Тестовые раннеры не должны зависеть от runtime `.env` рабочих
   приложений.
-- Линтинг использует отдельные root env по платформам: `lint/win.env`
-  (Windows), `lint/wsl.env` (WSL), `lint/nix.env` (Linux/macOS).
+- Линтинг использует активный `lint/.env`.
+- Нужное содержимое `lint/.env` подменяется заранее через
+  `scripts/swap-env.ps1` / `scripts/swap-env.sh`.
 
 ## 2. Где какие env и конфиги
 

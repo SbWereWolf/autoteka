@@ -15,9 +15,7 @@ $ErrorActionPreference = "Stop"
 
 $ScriptDir  = Split-Path -Parent $MyInvocation.MyCommand.Path
 $ConfigPath = Join-Path $ScriptDir "lint-rules.yml"
-$WinEnvPath = Join-Path $ScriptDir "win.env"
-$WslEnvPath = Join-Path $ScriptDir "wsl.env"
-$NixEnvPath = Join-Path $ScriptDir "nix.env"
+$EnvPath = Join-Path $ScriptDir ".env"
 
 if (-not (Test-Path $ConfigPath)) {
   Write-Error "lint-rules.yml not found"
@@ -29,46 +27,9 @@ function Write-Log {
   Write-Host "[lint] $Message"
 }
 
-function Test-IsWsl {
-  if (-not $IsLinux) {
-    return $false
-  }
-
-  if ($env:WSL_DISTRO_NAME) {
-    return $true
-  }
-
-  try {
-    return (Get-Content "/proc/version" -Raw) -match "(?i)microsoft"
-  }
-  catch {
-    return $false
-  }
-}
-
-$IsWsl = Test-IsWsl
-
 # --------------------------------------------------
 # LOAD ENV
 # --------------------------------------------------
-
-$EnvPath = $null
-
-if ($IsWindows -or $IsWsl) {
-  if ($IsWsl) {
-    if (Test-Path $WslEnvPath) {
-      $EnvPath = $WslEnvPath
-    }
-  }
-  elseif (Test-Path $WinEnvPath) {
-    $EnvPath = $WinEnvPath
-  }
-}
-else {
-  if (Test-Path $NixEnvPath) {
-    $EnvPath = $NixEnvPath
-  }
-}
 
 if ($EnvPath) {
   Write-Log "Loading env: $EnvPath"

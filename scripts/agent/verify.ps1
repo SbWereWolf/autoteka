@@ -38,9 +38,38 @@ function Start-VerifyProcess {
     )
 
     Write-Host "[verify] $Name (started)"
+    $resolvedCommand = Get-Command $FilePath -ErrorAction Stop | Select-Object -First 1
+    $resolvedPath = if ($resolvedCommand.Path) { $resolvedCommand.Path } else { $resolvedCommand.Source }
+    $startFilePath = $resolvedPath
+    $startArguments = $Arguments
+    $currentShellPath = (Get-Process -Id $PID).Path
+
+    $isWindowsHost = $env:OS -eq "Windows_NT"
+    if ($isWindowsHost -and $resolvedPath) {
+        $extension = [System.IO.Path]::GetExtension($resolvedPath)
+        switch ($extension.ToLowerInvariant()) {
+            ".ps1" {
+                $startFilePath = $currentShellPath
+                $startArguments = @(
+                    "-NoProfile",
+                    "-ExecutionPolicy", "Bypass",
+                    "-File", $resolvedPath
+                ) + $Arguments
+            }
+            ".cmd" {
+                $startFilePath = "cmd.exe"
+                $startArguments = @("/d", "/c", $resolvedPath) + $Arguments
+            }
+            ".bat" {
+                $startFilePath = "cmd.exe"
+                $startArguments = @("/d", "/c", $resolvedPath) + $Arguments
+            }
+        }
+    }
+
     return Start-Process `
-        -FilePath $FilePath `
-        -ArgumentList $Arguments `
+        -FilePath $startFilePath `
+        -ArgumentList $startArguments `
         -WorkingDirectory $WorkingDirectory `
         -NoNewWindow `
         -PassThru
@@ -60,15 +89,42 @@ $frontendDir = Join-Path $repoRoot "frontend"
 $shopApiDir = Join-Path $repoRoot "backend/apps/ShopAPI"
 $shopOperatorDir = Join-Path $repoRoot "backend/apps/ShopOperator"
 $scriptsEnvPath = Join-Path $repoRoot "scripts/.env"
+[int]$parallelWorkers = 2
+$phpCommand = "php"
+
+Invoke-Step -Name "activate node env" -Script {
+    & (Join-Path $repoRoot "scripts/swap-env.ps1")
+    if ($LASTEXITCODE -ne 0) {
+        exit $LASTEXITCODE
+    }
+}
+
 $scriptsEnv = Read-ScriptsEnv -Path $scriptsEnvPath
-$parallelWorkers = 2
 
 if ($scriptsEnv.ContainsKey("TEST_PARALLEL_WORKERS")) {
     $rawWorkers = $scriptsEnv["TEST_PARALLEL_WORKERS"]
-    if (-not [int]::TryParse($rawWorkers, [ref]$parallelWorkers) -or $parallelWorkers -lt 1) {
-        Write-Error "[verify] invalid TEST_PARALLEL_WORKERS='$rawWorkers' in scripts/.env. Expected integer >= 1."
+    $parsedParallelWorkers = 0
+    if (-not [int]::TryParse($rawWorkers, [ref]$parsedParallelWorkers) -or $parsedParallelWorkers -lt 1) {
+        Write-Error "[verify] invalid TEST_PARALLEL_WORKERS='$rawWorkers' in '$scriptsEnvPath'. Expected integer >= 1."
         exit 2
     }
+
+    $parallelWorkers = $parsedParallelWorkers
+}
+
+if ($scriptsEnv.ContainsKey("SCRIPT_PHP_PATH")) {
+    $configuredPhpPath = $scriptsEnv["SCRIPT_PHP_PATH"].Trim()
+    if ([string]::IsNullOrWhiteSpace($configuredPhpPath)) {
+        Write-Error "[verify] SCRIPT_PHP_PATH is empty in '$scriptsEnvPath'."
+        exit 2
+    }
+
+    if (-not (Test-Path -LiteralPath $configuredPhpPath -PathType Leaf)) {
+        Write-Error "[verify] SCRIPT_PHP_PATH '$configuredPhpPath' does not exist."
+        exit 3
+    }
+
+    $phpCommand = $configuredPhpPath
 }
 
 if (-not (Get-Command npm -ErrorAction SilentlyContinue)) {
@@ -76,8 +132,8 @@ if (-not (Get-Command npm -ErrorAction SilentlyContinue)) {
     exit 3
 }
 
-if (-not (Get-Command php -ErrorAction SilentlyContinue)) {
-    Write-Error "[verify] php not found."
+if (-not (Get-Command $phpCommand -ErrorAction SilentlyContinue)) {
+    Write-Error "[verify] php not found: $phpCommand"
     exit 3
 }
 
@@ -106,12 +162,12 @@ Invoke-Step -Name "minimal tests (parallel)" -Script {
         Start-VerifyProcess `
             -Name "backend quick tests (ShopAPI)" `
             -WorkingDirectory $shopApiDir `
-            -FilePath "php" `
+            -FilePath $phpCommand `
             -Arguments @("artisan", "test", "--parallel", "--processes=$parallelWorkers")
         Start-VerifyProcess `
             -Name "backend quick tests (ShopOperator)" `
             -WorkingDirectory $shopOperatorDir `
-            -FilePath "php" `
+            -FilePath $phpCommand `
             -Arguments @("artisan", "test", "--parallel", "--processes=$parallelWorkers")
     )
 
@@ -119,8 +175,13 @@ Invoke-Step -Name "minimal tests (parallel)" -Script {
     foreach ($process in $processes) {
         $process.WaitForExit()
         $process.Refresh()
-        if ($process.ExitCode -ne 0) {
-            Write-Error "[verify] failed: process id=$($process.Id), exit code=$($process.ExitCode)"
+        $exitCode = $process.ExitCode
+        if ($null -eq $exitCode -and $process.HasExited) {
+            $exitCode = 0
+        }
+
+        if ($exitCode -ne 0) {
+            Write-Error "[verify] failed: process id=$($process.Id), exit code=$exitCode"
             $hasFailures = $true
         }
     }
