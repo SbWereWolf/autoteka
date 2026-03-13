@@ -15,8 +15,8 @@ describe("TC-USER-MANUAL-012", () => {
       existsSync(join(REPO_ROOT, "docs/manual/ADMIN_MANUAL.md")),
     ).toBe(true);
   });
-  it("deploy/DEPLOY.md существует", () => {
-    expect(existsSync(join(REPO_ROOT, "deploy/DEPLOY.md"))).toBe(
+  it("infrastructure/DEPLOY.md существует", () => {
+    expect(existsSync(join(REPO_ROOT, "infrastructure/DEPLOY.md"))).toBe(
       true,
     );
   });

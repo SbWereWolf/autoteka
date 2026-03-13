@@ -1,5 +1,5 @@
 /**
- * TC-IMPLEMENTATION-001: зоны frontend/, backend/, deploy/.
+ * TC-IMPLEMENTATION-001: зоны frontend/, backend/, infrastructure/.
  */
 import { describe, it, expect } from "vitest";
 import { existsSync, statSync } from "node:fs";
@@ -10,7 +10,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = join(__dirname, "..", "..");
 
 describe("TC-IMPLEMENTATION-001", () => {
-  for (const zone of ["frontend", "backend", "deploy"]) {
+  for (const zone of ["frontend", "backend", "infrastructure"]) {
     it(`зона ${zone}/ существует`, () => {
       const p = join(REPO_ROOT, zone);
       expect(existsSync(p)).toBe(true);

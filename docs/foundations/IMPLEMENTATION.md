@@ -7,7 +7,7 @@ backend, back office и deployment-контур.
 
 Связанные документы:
 
-- [DEPLOY](../../deploy/DEPLOY.md) — эксплуатационный deploy-контур
+- [DEPLOY](../../infrastructure/DEPLOY.md) — эксплуатационный deploy-контур
   для админов.
 - [ADMIN_MANUAL](../manual/ADMIN_MANUAL.md) — практические runbook
   инструкции.
@@ -27,7 +27,7 @@ deploy-обвязка):
 Дополнительно:
 
 - `frontend/` — Vue 3 + Vite SPA для front office;
-- `deploy/` — docker/nginx/systemd-обвязка, автодеплой и
+- `INFRA_ROOT` — docker/nginx/systemd-обвязка, автодеплой и
   техобслуживание.
 
 ---
@@ -277,13 +277,13 @@ pivot/related таблицы (`shop_category`, `shop_feature`,
 
 ### 4.1. Compose
 
-Production (`deploy/runtime/docker-compose.yml`):
+Production (`$INFRA_ROOT/runtime/docker-compose.yml`):
 
 - `php` (`autoteka-php`) — backend runtime;
 - `web` (`vue-app`) — nginx + frontend build + proxy;
 - отдельные volume для `database`, `storage`, admin `public/vendor`.
 
-Dev (`deploy/runtime/docker-compose.dev.yml`):
+Dev (`$INFRA_ROOT/runtime/docker-compose.dev.yml`):
 
 - `php` (`autoteka-dev-php`) — backend в режиме разработки;
 - `frontend` (`autoteka-dev-frontend`) — Vite runtime;
@@ -291,13 +291,13 @@ Dev (`deploy/runtime/docker-compose.dev.yml`):
 
 ### 4.2. Dockerfile и entrypoint пути
 
-- PHP образ: `deploy/runtime/docker/docker/php/Dockerfile` (targets:
+- PHP образ: `$INFRA_ROOT/runtime/docker/docker/php/Dockerfile` (targets:
   `dev`, `prod`).
-- Dev nginx: `deploy/runtime/docker/docker/dev/nginx/Dockerfile`.
-- Prod nginx: `deploy/runtime/docker/docker/prod/nginx/Dockerfile`.
+- Dev nginx: `$INFRA_ROOT/runtime/docker/docker/dev/nginx/Dockerfile`.
+- Prod nginx: `$INFRA_ROOT/runtime/docker/docker/prod/nginx/Dockerfile`.
 - Entry points PHP:
-  - `deploy/runtime/docker/docker/php/dev-entrypoint.sh`
-  - `deploy/runtime/docker/docker/php/prod-entrypoint.sh`
+  - `$INFRA_ROOT/runtime/docker/docker/php/dev-entrypoint.sh`
+  - `$INFRA_ROOT/runtime/docker/docker/php/prod-entrypoint.sh`
 
 Оба PHP-entrypoint подготавливают окружение для двух приложений
 `apps/ShopAPI` и `apps/ShopOperator` (env, cache/bootstrap каталоги,
@@ -312,7 +312,7 @@ storage symlink).
 - `backend/apps/ShopAPI/storage/logs/laravel.log`
 - `backend/apps/ShopOperator/storage/logs/laravel.log`
 
-В deploy/runtime эти пути соответствуют:
+В runtime-контуре эти пути соответствуют:
 
 - `/var/www/backend/apps/ShopAPI/storage/logs/laravel.log`
 - `/var/www/backend/apps/ShopOperator/storage/logs/laravel.log`
@@ -321,13 +321,13 @@ MoonShine media и shop-изображения фактически читают
 `backend/storage/app/public` (runtime:
 `/var/www/backend/storage/app/public`). Поэтому для инфраструктурного
 backup покрывается весь корень `backend/storage` (ops-механика описана
-в [DEPLOY](../../deploy/DEPLOY.md)).
+в [DEPLOY](../../infrastructure/DEPLOY.md)).
 
 ## 5. Deploy и operations (границы документа)
 
 Низкоуровневые сценарии развёртывания, systemd/timers, backup/restore,
 watchdog/maintenance и серверные runbook-процедуры описаны в
-`deploy/DEPLOY.md` и `docs/manual/ADMIN_MANUAL.md`.
+`infrastructure/DEPLOY.md` и `docs/manual/ADMIN_MANUAL.md`.
 
 Здесь они упоминаются только как граница ответственности.
 
@@ -337,24 +337,24 @@ watchdog/maintenance и серверные runbook-процедуры описа
 `runtime`, `repair`, `maintenance`, `observability`, `lib`.
 
 Файлы systemd units и timers находятся в репозитории в
-`deploy/runtime/systemd/`,
-`deploy/observability/infrastructure/systemd/` и
-`deploy/maintenance/systemd/`; `install.sh` собирает их и
+`$INFRA_ROOT/runtime/systemd/`,
+`$INFRA_ROOT/observability/infrastructure/systemd/` и
+`$INFRA_ROOT/maintenance/systemd/`; `install.sh` собирает их и
 устанавливает в systemd:
 
-- `deploy/runtime/systemd/autoteka.service` — основной unit для
+- `$INFRA_ROOT/runtime/systemd/autoteka.service` — основной unit для
   запуска контейнеров через `docker compose up -d`
-- `deploy/runtime/systemd/watch-changes.service` — unit для
+- `$INFRA_ROOT/runtime/systemd/watch-changes.service` — unit для
   автодеплоя, запускает `watch-changes.sh`
-- `deploy/runtime/systemd/watch-changes.timer` — timer для автодеплоя
+- `$INFRA_ROOT/runtime/systemd/watch-changes.timer` — timer для автодеплоя
   (каждые 5 минут)
-- `deploy/observability/infrastructure/systemd/server-watchdog.service`
+- `$INFRA_ROOT/observability/infrastructure/systemd/server-watchdog.service`
   — unit для watchdog-проверок
-- `deploy/observability/infrastructure/systemd/server-watchdog.timer`
+- `$INFRA_ROOT/observability/infrastructure/systemd/server-watchdog.timer`
   — timer для watchdog (каждые 2 минуты)
-- `deploy/maintenance/systemd/server-maintenance.service` — unit для
+- `$INFRA_ROOT/maintenance/systemd/server-maintenance.service` — unit для
   maintenance-операций
-- `deploy/maintenance/systemd/server-maintenance.timer` — timer для
+- `$INFRA_ROOT/maintenance/systemd/server-maintenance.timer` — timer для
   maintenance (ежедневно в 03:15)
 
 `watch-changes.service` запускает `watch-changes.sh`, а не rollout
@@ -362,7 +362,7 @@ watchdog/maintenance и серверные runbook-процедуры описа
 `deploy.sh` для раскатки текущего `HEAD`.
 
 Подробности о параметрах units и timers см.
-[DEPLOY.md §6.1](../../deploy/DEPLOY.md#61-systemd).
+[DEPLOY.md §6.1](../../infrastructure/DEPLOY.md#61-systemd).
 
 ### 6.3. Env и source of truth
 

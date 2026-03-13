@@ -1,5 +1,5 @@
 /**
- * TC-README-001: в репозитории есть каталоги deploy/, frontend/, backend/.
+ * TC-README-001: в репозитории есть каталоги infrastructure/, frontend/, backend/.
  * Документ: README.md
  * Каталог тестов: system-tests
  */
@@ -12,7 +12,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = join(__dirname, "..", "..");
 
 describe("TC-README-001", () => {
-  const dirs = ["deploy", "frontend", "backend"] as const;
+  const dirs = ["infrastructure", "frontend", "backend"] as const;
 
   for (const dir of dirs) {
     it(`каталог ${dir}/ существует и является директорией`, () => {

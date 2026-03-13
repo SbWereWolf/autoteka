@@ -10,7 +10,7 @@
 
 1. `tasks/artifacts/README-test-cases.md`
 2. `tasks/artifacts/backend-README-test-cases.md`
-3. `tasks/artifacts/deploy-DEPLOY-test-cases.md`
+3. `tasks/artifacts/infrastructure-DEPLOY-test-cases.md`
 4. `tasks/artifacts/frontend-README-test-cases.md`
 5. `tasks/artifacts/frontend-scripts-README-test-cases.md`
 6. `tasks/artifacts/scripts-README-test-cases.md`
@@ -24,7 +24,7 @@
 - `system-tests`:
   интеграционные сценарии сквозной проверки документационных утверждений
   (маршруты, связка frontend/backend, media/storage, валидность ссылок).
-- `deploy/tests`:
+- `infrastructure/tests`:
   утверждения по deploy-контуру, systemd/timer, watchdog/metrics,
   Telegram notifications, maintenance и uninstall.
 - `frontend/tests`:

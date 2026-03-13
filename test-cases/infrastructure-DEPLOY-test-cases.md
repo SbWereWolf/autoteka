@@ -1,11 +1,11 @@
-# Э4 — тест-кейсы для deploy/DEPLOY.md
+# Э4 — тест-кейсы для infrastructure/DEPLOY.md
 
 ## Область
 
-- Документ-источник: `deploy/DEPLOY.md`
+- Документ-источник: `infrastructure/DEPLOY.md`
 - Цель: проверить тестами проверяемые утверждения документа
 - Формат трассировки:
-  `deploy/DEPLOY.md -> утверждение -> тест-кейс -> каталог тестов`
+  `infrastructure/DEPLOY.md -> утверждение -> тест-кейс -> каталог тестов`
 
 ## Тест-кейсы
 
@@ -14,24 +14,24 @@
 - Утверждение: deployment-контур использует `docker compose`,
   контейнеры `web` и `php`.
 - Проверка:
-  1. Проверить `deploy/runtime/docker-compose.yml`.
+  1. Проверить `$INFRA_ROOT/runtime/docker-compose.yml`.
   2. Убедиться, что сервисы `web` и `php` объявлены.
 - Ожидаемый результат: compose-файл содержит оба сервиса.
 - Тип: automated
-- Каталог тестов: `deploy/tests`
+- Каталог тестов: `infrastructure/tests`
 
 ### TC-DEPLOY-002
 
 - Утверждение: `watch-changes.sh` выполняет `git fetch`, сравнивает
   `HEAD` и `REMOTE/BRANCH`, при необходимости запускает раскатку.
 - Проверка:
-  1. Проверить шаги в `deploy/runtime/watch-changes.sh`.
+  1. Проверить шаги в `$INFRA_ROOT/runtime/watch-changes.sh`.
   2. Запустить сценарий "без изменений" и "с изменениями".
 - Ожидаемый результат:
   - при совпадении commit фиксируется `no changes`;
   - при расхождении запускается `deploy.sh`.
 - Тип: automated
-- Каталог тестов: `deploy/tests`
+- Каталог тестов: `infrastructure/tests`
 
 ### TC-DEPLOY-003
 
@@ -45,19 +45,19 @@
   - stash создаётся;
   - в deploy log есть статус `git stash` и идентификатор stash.
 - Тип: automated
-- Каталог тестов: `deploy/tests`
+- Каталог тестов: `infrastructure/tests`
 
 ### TC-DEPLOY-004
 
 - Утверждение: `deploy.sh` работает с текущим `HEAD` без повторного
   `git fetch` и `git reset`.
 - Проверка:
-  1. Проанализировать `deploy/runtime/deploy.sh`.
+  1. Проанализировать `$INFRA_ROOT/runtime/deploy.sh`.
   2. Проверить отсутствие `git fetch` и `git reset` в скрипте.
 - Ожидаемый результат: `deploy.sh` не делает повторную
   git-синхронизацию.
 - Тип: automated
-- Каталог тестов: `deploy/tests`
+- Каталог тестов: `infrastructure/tests`
 
 ### TC-DEPLOY-005
 
@@ -65,11 +65,11 @@
   выполняет `composer install`, `artisan`, `migrate`, `seed`,
   smoke-check `/admin/login`, затем запускает/перезапускает `web`.
 - Проверка:
-  1. Проверить последовательность шагов в `deploy/runtime/deploy.sh`.
+  1. Проверить последовательность шагов в `$INFRA_ROOT/runtime/deploy.sh`.
   2. Выполнить dry-run интеграционный прогон deploy.
 - Ожидаемый результат: шаги выполняются в описанном порядке.
 - Тип: automated
-- Каталог тестов: `deploy/tests` + `system-tests`
+- Каталог тестов: `infrastructure/tests` + `system-tests`
 
 ### TC-DEPLOY-006
 
@@ -81,7 +81,7 @@
   3. Проверить создание `frontend/.env`.
 - Ожидаемый результат: `frontend/.env` создаётся автоматически.
 - Тип: automated
-- Каталог тестов: `deploy/tests`
+- Каталог тестов: `infrastructure/tests`
 
 ### TC-DEPLOY-007
 
@@ -94,33 +94,33 @@
 - Ожидаемый результат: переменные подхватываются и влияют на поведение
   деплоя.
 - Тип: automated
-- Каталог тестов: `deploy/tests`
+- Каталог тестов: `infrastructure/tests`
 
 ### TC-DEPLOY-008
 
 - Утверждение: wrapper `/usr/local/bin/autoteka` используется systemd
   unit'ами вместо захардкоженного пути к репозиторию.
 - Проверка:
-  1. Проверить unit-файлы в `deploy/runtime/systemd/`,
-     `deploy/observability/infrastructure/systemd/` и
-     `deploy/maintenance/systemd/`.
+  1. Проверить unit-файлы в `$INFRA_ROOT/runtime/systemd/`,
+     `$INFRA_ROOT/observability/infrastructure/systemd/` и
+     `$INFRA_ROOT/maintenance/systemd/`.
   2. Убедиться, что они вызывают `/usr/local/bin/autoteka`.
 - Ожидаемый результат: unit'ы используют wrapper.
 - Тип: automated
-- Каталог тестов: `deploy/tests`
+- Каталог тестов: `infrastructure/tests`
 
 ### TC-DEPLOY-009
 
 - Утверждение: `install.sh` устанавливает пакеты, Docker, unit'ы,
   timer'ы, logrotate и готовит `/etc/autoteka/*.env`.
 - Проверка:
-  1. Проверить шаги в `deploy/bootstrap/install.sh`.
+  1. Проверить шаги в `$INFRA_ROOT/bootstrap/install.sh`.
   2. Выполнить установку в чистом стенде.
   3. Проверить наличие заявленных артефактов.
 - Ожидаемый результат: после install присутствуют пакеты,
   unit'ы/timer'ы, env и logrotate.
 - Тип: automated
-- Каталог тестов: `deploy/tests`
+- Каталог тестов: `infrastructure/tests`
 
 ### TC-DEPLOY-010
 
@@ -132,7 +132,7 @@
 - Ожидаемый результат: все сервисы и timer'ы активны, compose-контур в
   рабочем состоянии.
 - Тип: automated
-- Каталог тестов: `deploy/tests`
+- Каталог тестов: `infrastructure/tests`
 
 ### TC-DEPLOY-011
 
@@ -143,7 +143,7 @@
   2. Проверить, что все команды завершаются успешно.
 - Ожидаемый результат: миграции проходят полный цикл без ошибок.
 - Тип: automated
-- Каталог тестов: `backend/tests` + `deploy/tests`
+- Каталог тестов: `backend/tests` + `infrastructure/tests`
 
 ### TC-DEPLOY-012
 
@@ -166,7 +166,7 @@
   2. Запустить проверку записи SQLite/session/cache.
 - Ожидаемый результат: каталоги доступны для записи Laravel runtime.
 - Тип: automated
-- Каталог тестов: `deploy/tests` + `backend/tests`
+- Каталог тестов: `infrastructure/tests` + `backend/tests`
 
 ### TC-DEPLOY-014
 
@@ -176,11 +176,11 @@
 - Проверка:
   1. Запустить `server-watchdog.sh` + `metrics-export.sh`.
   2. Проверить файл
-     `deploy/observability/application/metrics/data.json`.
+     `$INFRA_ROOT/observability/application/metrics/data.json`.
   3. Проверить доступность `GET /metrics/data.json`.
 - Ожидаемый результат: JSON обновляется и содержит обязательные поля.
 - Тип: automated
-- Каталог тестов: `deploy/tests` + `system-tests`
+- Каталог тестов: `infrastructure/tests` + `system-tests`
 
 ### TC-DEPLOY-015
 
@@ -205,7 +205,7 @@
   3. Проверить, что второе сообщение не отправляется.
 - Ожидаемый результат: антиспам работает согласно описанию.
 - Тип: automated
-- Каталог тестов: `deploy/tests`
+- Каталог тестов: `infrastructure/tests`
 
 ### TC-DEPLOY-017
 
@@ -216,11 +216,11 @@
   2. Проверить payload сообщения и записи в telegram log.
 - Ожидаемый результат: success-уведомление содержит hash и `subject`.
 - Тип: automated
-- Каталог тестов: `deploy/tests`
+- Каталог тестов: `infrastructure/tests`
 
 ### TC-DEPLOY-018
 
-- Утверждение: для ключевых кодов ошибок deploy/watchdog/maintenance
+- Утверждение: для ключевых кодов ошибок rollout/watchdog/maintenance
   предусмотрены диагностические ветки.
 - Проверка:
   1. Сопоставить перечень кодов в документации и в скриптах.
@@ -228,7 +228,7 @@
 - Ожидаемый результат: коды из документа реально используются и
   логируются.
 - Тип: automated
-- Каталог тестов: `deploy/tests`
+- Каталог тестов: `infrastructure/tests`
 
 ### TC-DEPLOY-019
 
@@ -236,12 +236,12 @@
   `journal vacuum`, docker prune, cleanup `/tmp`, фиксацию прав
   `/var/lib/logrotate/status`.
 - Проверка:
-  1. Проверить команды в `deploy/maintenance/server-maintenance.sh`.
+  1. Проверить команды в `$INFRA_ROOT/maintenance/server-maintenance.sh`.
   2. Выполнить скрипт и проверить следы выполнения в логах.
 - Ожидаемый результат: maintenance-шаги выполняются в заявленном
   составе.
 - Тип: automated
-- Каталог тестов: `deploy/tests`
+- Каталог тестов: `infrastructure/tests`
 
 ### TC-DEPLOY-020
 
@@ -254,7 +254,7 @@
 - Ожидаемый результат: поведение `deploy` и `watch-changes`
   соответствует описанию.
 - Тип: automated
-- Каталог тестов: `deploy/tests`
+- Каталог тестов: `infrastructure/tests`
 
 ### TC-DEPLOY-021
 
@@ -268,7 +268,7 @@
   3. Проверить rollback для `dry-run` и очистку+запись для `refresh`.
 - Ожидаемый результат: команда работает по заявленным правилам.
 - Тип: automated
-- Каталог тестов: `backend/tests` + `deploy/tests`
+- Каталог тестов: `backend/tests` + `infrastructure/tests`
 
 ### TC-DEPLOY-022
 
@@ -277,12 +277,12 @@
   границами безопасности.
 - Проверка:
   1. Проверить парсинг аргументов и ветки режима в
-     `deploy/bootstrap/uninstall.sh`.
+     `$INFRA_ROOT/bootstrap/uninstall.sh`.
   2. На стенде проверить side effects для каждого режима.
 - Ожидаемый результат: режимы и флаги соответствуют документированной
   логике удаления.
 - Тип: automated
-- Каталог тестов: `deploy/tests`
+- Каталог тестов: `infrastructure/tests`
 
 ## Условно проверяемые утверждения
 
@@ -293,7 +293,7 @@
 ### TC-DEPLOY-023
 
 - Утверждение: общие helper'ы deploy-контура разделены на предметные
-  библиотеки `deploy/lib/*.sh`, монолитный `deploy/lib/_common.sh`
+  библиотеки `$INFRA_ROOT/lib/*.sh`, монолитный `$INFRA_ROOT/lib/_common.sh`
   удалён, а скрипты подключают только нужные зависимости.
 - Проверка:
   1. Проверить наличие `bootstrap.sh`, `laravel-runtime.sh`,
@@ -303,4 +303,4 @@
 - Ожидаемый результат: deploy-скрипты используют точечные библиотеки,
   монолитный helper не используется.
 - Тип: automated
-- Каталог тестов: `deploy/tests`
+- Каталог тестов: `infrastructure/tests`

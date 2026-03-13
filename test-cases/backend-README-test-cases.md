@@ -131,7 +131,7 @@
 - Утверждение: в разделе "Что читать дальше" указаны существующие файлы:
   `../docs/foundations/IMPLEMENTATION.md`,
   `../docs/foundations/ADMIN_MANUAL.md`,
-  `../deploy/DEPLOY.md`.
+  `../infrastructure/DEPLOY.md`.
 - Проверка: проверить наличие целевых файлов по относительным путям.
 - Ожидаемый результат: все ссылки ведут на существующие файлы.
 - Тип: automated

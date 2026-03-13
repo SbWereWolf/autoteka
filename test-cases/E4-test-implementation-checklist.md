@@ -26,23 +26,23 @@
 | TC-README-009                              | system-tests/TC-README-009.spec.ts                                       | `cd system-tests && npm test -- TC-README-009`                                                     |
 | TC-BACKEND-README-001..010                 | backend/tests/Feature/TcBackendReadmeTest.php                            | `cd backend && php artisan test --filter=TcBackendReadme`                                          |
 | TC-BACKEND-README-011                      | system-tests/TC-BACKEND-README-011.spec.ts                               | `cd system-tests && npm test -- TC-BACKEND`                                                        |
-| TC-DEPLOY-001                              | deploy/tests/TC-DEPLOY-001.spec.ts                                       | `cd deploy/tests && npm test -- TC-DEPLOY-001`                                                     |
-| TC-DEPLOY-002                              | deploy/tests/TC-DEPLOY-002.spec.ts                                       | `cd deploy/tests && npm test -- TC-DEPLOY-002`                                                     |
-| TC-DEPLOY-004                              | deploy/tests/TC-DEPLOY-004.spec.ts                                       | `cd deploy/tests && npm test -- TC-DEPLOY-004`                                                     |
-| TC-DEPLOY-005                              | deploy/tests/TC-DEPLOY-005.spec.ts                                       | `cd deploy/tests && npm test -- TC-DEPLOY-005`                                                     |
-| TC-DEPLOY-007                              | deploy/tests/TC-DEPLOY-007.spec.ts                                       | `cd deploy/tests && npm test -- TC-DEPLOY-007`                                                     |
-| TC-DEPLOY-008                              | deploy/tests/TC-DEPLOY-008.spec.ts                                       | `cd deploy/tests && npm test -- TC-DEPLOY-008`                                                     |
+| TC-DEPLOY-001                              | infrastructure/tests/TC-DEPLOY-001.spec.ts                                       | `cd infrastructure/tests && npm test -- TC-DEPLOY-001`                                                     |
+| TC-DEPLOY-002                              | infrastructure/tests/TC-DEPLOY-002.spec.ts                                       | `cd infrastructure/tests && npm test -- TC-DEPLOY-002`                                                     |
+| TC-DEPLOY-004                              | infrastructure/tests/TC-DEPLOY-004.spec.ts                                       | `cd infrastructure/tests && npm test -- TC-DEPLOY-004`                                                     |
+| TC-DEPLOY-005                              | infrastructure/tests/TC-DEPLOY-005.spec.ts                                       | `cd infrastructure/tests && npm test -- TC-DEPLOY-005`                                                     |
+| TC-DEPLOY-007                              | infrastructure/tests/TC-DEPLOY-007.spec.ts                                       | `cd infrastructure/tests && npm test -- TC-DEPLOY-007`                                                     |
+| TC-DEPLOY-008                              | infrastructure/tests/TC-DEPLOY-008.spec.ts                                       | `cd infrastructure/tests && npm test -- TC-DEPLOY-008`                                                     |
 | TC-DEPLOY-011                              | backend/tests/Feature/TcDeploy011Test.php                                | `cd backend && php artisan test --filter=TcDeploy011`                                              |
-| TC-DEPLOY-018                              | deploy/tests/TC-DEPLOY-018.spec.ts                                       | `cd deploy/tests && npm test -- TC-DEPLOY-018`                                                     |
-| TC-DEPLOY-019                              | deploy/tests/TC-DEPLOY-019.spec.ts                                       | `cd deploy/tests && npm test -- TC-DEPLOY-019`                                                     |
-| TC-DEPLOY-020                              | deploy/tests/TC-DEPLOY-020.spec.ts                                       | `cd deploy/tests && npm test -- TC-DEPLOY-020`                                                     |
+| TC-DEPLOY-018                              | infrastructure/tests/TC-DEPLOY-018.spec.ts                                       | `cd infrastructure/tests && npm test -- TC-DEPLOY-018`                                                     |
+| TC-DEPLOY-019                              | infrastructure/tests/TC-DEPLOY-019.spec.ts                                       | `cd infrastructure/tests && npm test -- TC-DEPLOY-019`                                                     |
+| TC-DEPLOY-020                              | infrastructure/tests/TC-DEPLOY-020.spec.ts                                       | `cd infrastructure/tests && npm test -- TC-DEPLOY-020`                                                     |
 | TC-DEPLOY-021                              | backend/tests/Feature/TcDeploy021Test.php                                | `cd backend && php artisan test --filter=TcDeploy021`                                              |
-| TC-DEPLOY-022                              | deploy/tests/TC-DEPLOY-022.spec.ts                                       | `cd deploy/tests && npm test -- TC-DEPLOY-022`                                                     |
+| TC-DEPLOY-022                              | infrastructure/tests/TC-DEPLOY-022.spec.ts                                       | `cd infrastructure/tests && npm test -- TC-DEPLOY-022`                                                     |
 | TC-FRONTEND-README-001,003,004,005,006,007 | frontend/tests/TC-FRONTEND-README.spec.ts                                | `cd frontend && npm test -- tests/TC-FRONTEND`                                                     |
 | TC-FRONTEND-README-009                     | system-tests/TC-FRONTEND-README-009.spec.ts                              | `cd system-tests && npm test -- TC-FRONTEND`                                                       |
 | TC-FSCRIPTS-README-001,009, validate/check | frontend/tests/TC-FSCRIPTS-README.spec.ts                                | `cd frontend && npm test -- tests/TC-FSCRIPTS`                                                     |
 | TC-SCRIPTS-README-001,002,003,007,008,009  | system-tests/TC-SCRIPTS-README.spec.ts                                   | `cd system-tests && npm test -- TC-SCRIPTS`                                                        |
-| TC-ADMIN-MANUAL-012                        | deploy/tests/TC-ADMIN-MANUAL-012.spec.ts                                 | `cd deploy/tests && npm test -- TC-ADMIN`                                                          |
+| TC-ADMIN-MANUAL-012                        | infrastructure/tests/TC-ADMIN-MANUAL-012.spec.ts                                 | `cd infrastructure/tests && npm test -- TC-ADMIN`                                                          |
 | TC-CLERC-MANUAL-001                        | system-tests/TC-CLERC-MANUAL-001.spec.ts                                 | `cd system-tests && npm test -- TC-CLERC`                                                          |
 | TC-CLERC-MANUAL-014                        | system-tests/TC-CLERC-MANUAL-014.spec.ts                                 | `cd system-tests && npm test -- TC-CLERC`                                                          |
 | TC-IMPLEMENTATION-001                      | system-tests/TC-IMPLEMENTATION-001.spec.ts                               | `cd system-tests && npm test -- TC-IMPLEMENTATION`                                                 |
@@ -57,7 +57,7 @@
 ```bash
 npx concurrently -k --names "system,deploy,frontend-offline-ui,frontend-api-online,frontend-e2e-online,backend,backend-realdb" \
   "cd system-tests && npm test" \
-  "cd deploy/tests && npm test" \
+  "cd infrastructure/tests && npm test" \
   "cd frontend && npm run test && npm run test:ui:mock" \
   "cd frontend && npm run test:api:online" \
   "cd frontend && npm run test:e2e" \
@@ -68,14 +68,14 @@ npx concurrently -k --names "system,deploy,frontend-offline-ui,frontend-api-onli
 PowerShell (из корня):
 
 ```powershell
-npx concurrently -k --names "system,deploy,frontend-offline-ui,frontend-api-online,frontend-e2e-online,backend,backend-realdb" "cd system-tests; npm test" "cd deploy/tests; npm test" "cd frontend; npm run test; npm run test:ui:mock" "cd frontend; npm run test:api:online" "cd frontend; npm run test:e2e" "cd backend; php artisan test" "cd backend; php artisan test --configuration=phpunit.realdb.xml"
+npx concurrently -k --names "system,deploy,frontend-offline-ui,frontend-api-online,frontend-e2e-online,backend,backend-realdb" "cd system-tests; npm test" "cd infrastructure/tests; npm test" "cd frontend; npm run test; npm run test:ui:mock" "cd frontend; npm run test:api:online" "cd frontend; npm run test:e2e" "cd backend; php artisan test" "cd backend; php artisan test --configuration=phpunit.realdb.xml"
 ```
 
 ### Последовательно
 
 ```bash
 cd system-tests && npm test && \
-cd ../deploy/tests && npm test && \
+cd ../infrastructure/tests && npm test && \
 cd ../../frontend && npm run test && npm run test:ui:mock && npm run test:api:online && npm run test:e2e && \
 cd ../backend && php artisan test && php artisan test --configuration=phpunit.realdb.xml
 ```
@@ -83,7 +83,7 @@ cd ../backend && php artisan test && php artisan test --configuration=phpunit.re
 PowerShell:
 
 ```powershell
-cd system-tests; npm test; cd ..\deploy\tests; npm test; cd ..\..\frontend; npm run test; npm run test:ui:mock; npm run test:api:online; npm run test:e2e; cd ..\backend; php artisan test; php artisan test --configuration=phpunit.realdb.xml
+cd system-tests; npm test; cd ..\infrastructure\tests; npm test; cd ..\..\frontend; npm run test; npm run test:ui:mock; npm run test:api:online; npm run test:e2e; cd ..\backend; php artisan test; php artisan test --configuration=phpunit.realdb.xml
 ```
 
 ### По отдельности
@@ -92,8 +92,8 @@ cd system-tests; npm test; cd ..\deploy\tests; npm test; cd ..\..\frontend; npm 
 # system-tests
 cd system-tests && npm test
 
-# deploy/tests
-cd deploy/tests && npm test
+# infrastructure/tests
+cd infrastructure/tests && npm test
 
 # frontend offline (unit + UI на mock-данных)
 cd frontend && npm run test && npm run test:ui:mock
@@ -127,7 +127,7 @@ cd backend && php artisan test && php artisan test --configuration=phpunit.reald
 
 ### backend/README.md: ☑ 11–21 | ☐ —
 
-### deploy/DEPLOY.md: ☑ 22,23,25,26,28,29,32,39,40,41,42,43 | ☐ 24,27,33,34,36 | ОТЛОЖЕН 30,31,35,37,38,43
+### infrastructure/DEPLOY.md: ☑ 22,23,25,26,28,29,32,39,40,41,42,43 | ☐ 24,27,33,34,36 | ОТЛОЖЕН 30,31,35,37,38,43
 
 ### frontend/README.md: ☑ 44,46,47,48,49,50,51,52 | ☐ 45,51 (e2e)
 

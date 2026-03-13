@@ -8,12 +8,12 @@ import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const DEPLOY_ROOT = join(__dirname, "..");
+const INFRA_ROOT_PATH = join(__dirname, "..");
 
 describe("TC-DEPLOY-022", () => {
   it("uninstall.sh содержит ветки режимов soft, purge, nuke", () => {
     const content = readFileSync(
-      join(DEPLOY_ROOT, "bootstrap/uninstall.sh"),
+      join(INFRA_ROOT_PATH, "bootstrap/uninstall.sh"),
       "utf-8",
     );
     expect(content).toMatch(/\bsoft\b/);
@@ -23,7 +23,7 @@ describe("TC-DEPLOY-022", () => {
 
   it("uninstall.sh содержит флаги --force, --rm-etc, --rm-root", () => {
     const content = readFileSync(
-      join(DEPLOY_ROOT, "bootstrap/uninstall.sh"),
+      join(INFRA_ROOT_PATH, "bootstrap/uninstall.sh"),
       "utf-8",
     );
     expect(content).toMatch(/--force/);

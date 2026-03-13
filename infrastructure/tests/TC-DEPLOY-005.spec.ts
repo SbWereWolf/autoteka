@@ -1,5 +1,5 @@
 /**
- * TC-DEPLOY-005: deploy.sh — php, composer, migrate, seed, smoke-check, web.
+ * TC-DEPLOY-005: deploy.sh — php, prepare runtime, migrate, seed, smoke-check, web.
  */
 import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
@@ -7,15 +7,15 @@ import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const DEPLOY_ROOT = join(__dirname, "..");
+const INFRA_ROOT_PATH = join(__dirname, "..");
 
 describe("TC-DEPLOY-005", () => {
-  it("deploy.sh содержит упоминания composer, migrate, seed, admin/login", () => {
+  it("deploy.sh содержит шаги подготовки runtime, migrate, seed, admin/login", () => {
     const content = readFileSync(
-      join(DEPLOY_ROOT, "runtime/deploy.sh"),
+      join(INFRA_ROOT_PATH, "runtime/deploy.sh"),
       "utf-8",
     );
-    expect(content).toMatch(/composer/);
+    expect(content).toMatch(/prepare_laravel_runtime/);
     expect(content).toMatch(/migrate/);
     expect(content).toMatch(/seed/);
     expect(content).toMatch(/admin\/login|ADMIN_SMOKE/);
