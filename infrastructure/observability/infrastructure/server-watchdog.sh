@@ -45,12 +45,11 @@ API_HEALTH_URL="${API_HEALTH_URL:-http://127.0.0.1/api/v1/category-list}"
 ADMIN_HEALTH_URL="${ADMIN_HEALTH_URL:-http://127.0.0.1/admin/login}"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-DEPLOY_DIR="$(cd "$SCRIPT_DIR" && while [ ! -f "DEPLOY.md" ] && [ "$PWD" != "/" ]; do cd ..; done; pwd)"
-REPO_ROOT="$(cd "$DEPLOY_DIR/.." && pwd)"
+INFRA_SCRIPT_ROOT="$(cd "$SCRIPT_DIR" && while [ ! -f "DEPLOY.md" ] && [ "$PWD" != "/" ]; do cd ..; done; pwd)"
 # shellcheck disable=SC1090
-source "$DEPLOY_DIR/lib/laravel-runtime.sh"
+source "$INFRA_SCRIPT_ROOT/lib/laravel-runtime.sh"
 # shellcheck disable=SC1090
-source "$DEPLOY_DIR/lib/health-state.sh"
+source "$INFRA_SCRIPT_ROOT/lib/health-state.sh"
 load_autoteka_env
 load_telegram_env
 
@@ -291,7 +290,7 @@ probe_domain() {
 
 run_domain_repair() {
   local domain="$1"
-  local args=("$DEPLOY_DIR/repair/repair-health.sh" "$domain")
+  local args=("$INFRA_SCRIPT_ROOT/repair/repair-health.sh" "$domain")
 
   if [ "$DRY_RUN" = "1" ]; then
     args+=(--dry-run)
@@ -536,8 +535,8 @@ OVERALL_HEALTH="healthy"
 if [ -n "$HOST_REASON" ]; then
   OVERALL_HEALTH="degraded"
   append_metrics "$(now_iso) load=$LOAD ram=$RAM health=$OVERALL_HEALTH nginx=$NGINX_STATUS php=$PHP_STATUS backend=$BACKEND_STATUS admin=$ADMIN_STATUS api=$API_STATUS host=resource-failure"
-  if [ -x "$DEPLOY_DIR/observability/application/metrics-export.sh" ]; then
-    if ! "$DEPLOY_DIR/observability/application/metrics-export.sh" >/dev/null 2>&1; then
+  if [ -x "$INFRA_SCRIPT_ROOT/observability/application/metrics-export.sh" ]; then
+    if ! "$INFRA_SCRIPT_ROOT/observability/application/metrics-export.sh" >/dev/null 2>&1; then
       log_action "notify metrics export failed"
       notify_info "$SCRIPT_ID" "$WATCHDOG_ACTION" "WATCHDOG_METRICS_EXPORT_FAILED" "не удалось обновить infrastructure/observability/application/metrics/data.json"
     fi
@@ -558,8 +557,8 @@ fi
 
 if [ "$NGINX_STATUS" != "healthy" ]; then
   append_metrics "$(now_iso) load=$LOAD ram=$RAM health=$OVERALL_HEALTH nginx=$NGINX_STATUS php=$PHP_STATUS backend=$BACKEND_STATUS admin=$ADMIN_STATUS api=$API_STATUS"
-  if [ -x "$DEPLOY_DIR/observability/application/metrics-export.sh" ]; then
-    if ! "$DEPLOY_DIR/observability/application/metrics-export.sh" >/dev/null 2>&1; then
+  if [ -x "$INFRA_SCRIPT_ROOT/observability/application/metrics-export.sh" ]; then
+    if ! "$INFRA_SCRIPT_ROOT/observability/application/metrics-export.sh" >/dev/null 2>&1; then
       log_action "notify metrics export failed"
       notify_info "$SCRIPT_ID" "$WATCHDOG_ACTION" "WATCHDOG_METRICS_EXPORT_FAILED" "не удалось обновить infrastructure/observability/application/metrics/data.json"
     fi
@@ -577,8 +576,8 @@ fi
 
 if [ "$PHP_STATUS" != "healthy" ]; then
   append_metrics "$(now_iso) load=$LOAD ram=$RAM health=$OVERALL_HEALTH nginx=$NGINX_STATUS php=$PHP_STATUS backend=$BACKEND_STATUS admin=$ADMIN_STATUS api=$API_STATUS"
-  if [ -x "$DEPLOY_DIR/observability/application/metrics-export.sh" ]; then
-    if ! "$DEPLOY_DIR/observability/application/metrics-export.sh" >/dev/null 2>&1; then
+  if [ -x "$INFRA_SCRIPT_ROOT/observability/application/metrics-export.sh" ]; then
+    if ! "$INFRA_SCRIPT_ROOT/observability/application/metrics-export.sh" >/dev/null 2>&1; then
       log_action "notify metrics export failed"
       notify_info "$SCRIPT_ID" "$WATCHDOG_ACTION" "WATCHDOG_METRICS_EXPORT_FAILED" "не удалось обновить infrastructure/observability/application/metrics/data.json"
     fi
@@ -596,8 +595,8 @@ fi
 
 if [ "$BACKEND_STATUS" != "healthy" ]; then
   append_metrics "$(now_iso) load=$LOAD ram=$RAM health=$OVERALL_HEALTH nginx=$NGINX_STATUS php=$PHP_STATUS backend=$BACKEND_STATUS admin=$ADMIN_STATUS api=$API_STATUS"
-  if [ -x "$DEPLOY_DIR/observability/application/metrics-export.sh" ]; then
-    if ! "$DEPLOY_DIR/observability/application/metrics-export.sh" >/dev/null 2>&1; then
+  if [ -x "$INFRA_SCRIPT_ROOT/observability/application/metrics-export.sh" ]; then
+    if ! "$INFRA_SCRIPT_ROOT/observability/application/metrics-export.sh" >/dev/null 2>&1; then
       log_action "notify metrics export failed"
       notify_info "$SCRIPT_ID" "$WATCHDOG_ACTION" "WATCHDOG_METRICS_EXPORT_FAILED" "не удалось обновить infrastructure/observability/application/metrics/data.json"
     fi
@@ -622,8 +621,8 @@ else
 fi
 
 append_metrics "$(now_iso) load=$LOAD ram=$RAM health=$OVERALL_HEALTH nginx=$NGINX_STATUS php=$PHP_STATUS backend=$BACKEND_STATUS admin=$ADMIN_STATUS api=$API_STATUS"
-if [ -x "$DEPLOY_DIR/observability/application/metrics-export.sh" ]; then
-  if ! "$DEPLOY_DIR/observability/application/metrics-export.sh" >/dev/null 2>&1; then
+if [ -x "$INFRA_SCRIPT_ROOT/observability/application/metrics-export.sh" ]; then
+  if ! "$INFRA_SCRIPT_ROOT/observability/application/metrics-export.sh" >/dev/null 2>&1; then
     log_action "notify metrics export failed"
     notify_info "$SCRIPT_ID" "$WATCHDOG_ACTION" "WATCHDOG_METRICS_EXPORT_FAILED" "не удалось обновить infrastructure/observability/application/metrics/data.json"
   fi

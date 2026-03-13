@@ -2,17 +2,16 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-DEPLOY_DIR="$(cd "$SCRIPT_DIR" && while [ ! -f "DEPLOY.md" ] && [ "$PWD" != "/" ]; do cd ..; done; pwd)"
-REPO_ROOT="$(cd "$DEPLOY_DIR/.." && pwd)"
-DEFAULT_INFRA_ROOT="$REPO_ROOT/infrastructure"
-# shellcheck disable=SC1090
-source "$DEPLOY_DIR/lib/laravel-runtime.sh"
-export AUTOTEKA_ROOT="$REPO_ROOT"
-if [ -d "$DEFAULT_INFRA_ROOT" ]; then
-  export INFRA_ROOT="$DEFAULT_INFRA_ROOT"
-else
-  export INFRA_ROOT="$DEPLOY_DIR"
+INFRA_SCRIPT_ROOT="$(cd "$SCRIPT_DIR" && while [ ! -f "DEPLOY.md" ] && [ "$PWD" != "/" ]; do cd ..; done; pwd)"
+REPO_ROOT="${AUTOTEKA_ROOT:-$(git -C "$INFRA_SCRIPT_ROOT" rev-parse --show-toplevel 2>/dev/null || true)}"
+if [ -z "$REPO_ROOT" ]; then
+  echo "AUTOTEKA_ROOT is not set and could not be resolved from the current git worktree." >&2
+  exit 1
 fi
+export AUTOTEKA_ROOT="$REPO_ROOT"
+export INFRA_ROOT="${INFRA_ROOT:-$INFRA_SCRIPT_ROOT}"
+# shellcheck disable=SC1090
+source "$INFRA_SCRIPT_ROOT/lib/laravel-runtime.sh"
 export DOCKER_BUILDKIT="${DOCKER_BUILDKIT:-1}"
 export COMPOSE_DOCKER_CLI_BUILD="${COMPOSE_DOCKER_CLI_BUILD:-1}"
 export DEBIAN_FRONTEND=noninteractive
@@ -33,10 +32,10 @@ if ! docker compose version >/dev/null 2>&1; then
 fi
 
 chmod +x "$SCRIPT_DIR"/*.sh 2>/dev/null || true
-chmod +x "$DEPLOY_DIR/runtime"/*.sh 2>/dev/null || true
-chmod +x "$DEPLOY_DIR/repair"/*.sh 2>/dev/null || true
-chmod +x "$DEPLOY_DIR/maintenance"/*.sh 2>/dev/null || true
-chmod +x "$DEPLOY_DIR/observability/infrastructure"/*.sh 2>/dev/null || true
+chmod +x "$INFRA_SCRIPT_ROOT/runtime"/*.sh 2>/dev/null || true
+chmod +x "$INFRA_SCRIPT_ROOT/repair"/*.sh 2>/dev/null || true
+chmod +x "$INFRA_SCRIPT_ROOT/maintenance"/*.sh 2>/dev/null || true
+chmod +x "$INFRA_SCRIPT_ROOT/observability/infrastructure"/*.sh 2>/dev/null || true
 mkdir -p "$INFRA_ROOT/observability/application/metrics"
 touch "$INFRA_ROOT/observability/application/metrics/data.json" || true
 
@@ -58,18 +57,18 @@ else
   chmod 600 /etc/autoteka/deploy.env
 fi
 
-install -m 0755 "$DEPLOY_DIR/bootstrap/bin/autoteka" /usr/local/bin/autoteka
-install -m 0644 "$DEPLOY_DIR/runtime/systemd/autoteka.service" /etc/systemd/system/autoteka.service
-install -m 0644 "$DEPLOY_DIR/runtime/systemd/watch-changes.service" /etc/systemd/system/watch-changes.service
-install -m 0644 "$DEPLOY_DIR/runtime/systemd/watch-changes.timer" /etc/systemd/system/watch-changes.timer
-install -m 0644 "$DEPLOY_DIR/observability/infrastructure/systemd/server-watchdog.service" /etc/systemd/system/server-watchdog.service
-install -m 0644 "$DEPLOY_DIR/observability/infrastructure/systemd/server-watchdog.timer" /etc/systemd/system/server-watchdog.timer
-install -m 0644 "$DEPLOY_DIR/maintenance/systemd/server-maintenance.service" /etc/systemd/system/server-maintenance.service
-install -m 0644 "$DEPLOY_DIR/maintenance/systemd/server-maintenance.timer" /etc/systemd/system/server-maintenance.timer
-install -m 0644 "$DEPLOY_DIR/maintenance/config/logrotate-vue-app-deploy.conf" /etc/logrotate.d/vue-app-deploy
-install -m 0644 "$DEPLOY_DIR/maintenance/config/logrotate-server-watchdog.conf" /etc/logrotate.d/server-watchdog
-install -m 0644 "$DEPLOY_DIR/maintenance/config/logrotate-autoteka-telegram.conf" /etc/logrotate.d/autoteka-telegram
-install -m 0644 "$DEPLOY_DIR/maintenance/config/logrotate-autoteka-backend.conf" /etc/logrotate.d/autoteka-backend
+install -m 0755 "$INFRA_SCRIPT_ROOT/bootstrap/bin/autoteka" /usr/local/bin/autoteka
+install -m 0644 "$INFRA_SCRIPT_ROOT/runtime/systemd/autoteka.service" /etc/systemd/system/autoteka.service
+install -m 0644 "$INFRA_SCRIPT_ROOT/runtime/systemd/watch-changes.service" /etc/systemd/system/watch-changes.service
+install -m 0644 "$INFRA_SCRIPT_ROOT/runtime/systemd/watch-changes.timer" /etc/systemd/system/watch-changes.timer
+install -m 0644 "$INFRA_SCRIPT_ROOT/observability/infrastructure/systemd/server-watchdog.service" /etc/systemd/system/server-watchdog.service
+install -m 0644 "$INFRA_SCRIPT_ROOT/observability/infrastructure/systemd/server-watchdog.timer" /etc/systemd/system/server-watchdog.timer
+install -m 0644 "$INFRA_SCRIPT_ROOT/maintenance/systemd/server-maintenance.service" /etc/systemd/system/server-maintenance.service
+install -m 0644 "$INFRA_SCRIPT_ROOT/maintenance/systemd/server-maintenance.timer" /etc/systemd/system/server-maintenance.timer
+install -m 0644 "$INFRA_SCRIPT_ROOT/maintenance/config/logrotate-vue-app-deploy.conf" /etc/logrotate.d/vue-app-deploy
+install -m 0644 "$INFRA_SCRIPT_ROOT/maintenance/config/logrotate-server-watchdog.conf" /etc/logrotate.d/server-watchdog
+install -m 0644 "$INFRA_SCRIPT_ROOT/maintenance/config/logrotate-autoteka-telegram.conf" /etc/logrotate.d/autoteka-telegram
+install -m 0644 "$INFRA_SCRIPT_ROOT/maintenance/config/logrotate-autoteka-backend.conf" /etc/logrotate.d/autoteka-backend
 systemctl daemon-reload
 systemctl enable --now fail2ban >/dev/null 2>&1 || true
 systemctl restart docker || true

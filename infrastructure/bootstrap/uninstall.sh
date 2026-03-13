@@ -12,9 +12,9 @@ RM_STORAGE_BACKUPS="no"
 usage() {
   cat <<'USAGE'
 Usage:
-  sudo ./deploy/bootstrap/uninstall.sh soft  [--force]
-  sudo ./deploy/bootstrap/uninstall.sh purge [--force] [--rm-etc] [--rm-storage-backups]
-  sudo ./deploy/bootstrap/uninstall.sh nuke  [--force] [--rm-etc] [--rm-root] [--rm-storage-backups]
+  sudo "$INFRA_ROOT"/bootstrap/uninstall.sh soft  [--force]
+  sudo "$INFRA_ROOT"/bootstrap/uninstall.sh purge [--force] [--rm-etc] [--rm-storage-backups]
+  sudo "$INFRA_ROOT"/bootstrap/uninstall.sh nuke  [--force] [--rm-etc] [--rm-root] [--rm-storage-backups]
 
 Modes:
   soft  - stop/disable timers+services + docker compose down. No file removal.
@@ -46,10 +46,9 @@ if [ "$(id -u)" -ne 0 ]; then
 fi
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-DEPLOY_DIR="$(cd "$SCRIPT_DIR" && while [ ! -f "DEPLOY.md" ] && [ "$PWD" != "/" ]; do cd ..; done; pwd)"
-REPO_ROOT="$(cd "$DEPLOY_DIR/.." && pwd)"
+INFRA_SCRIPT_ROOT="$(cd "$SCRIPT_DIR" && while [ ! -f "DEPLOY.md" ] && [ "$PWD" != "/" ]; do cd ..; done; pwd)"
 # shellcheck disable=SC1090
-source "$DEPLOY_DIR/lib/laravel-runtime.sh"
+source "$INFRA_SCRIPT_ROOT/lib/laravel-runtime.sh"
 load_autoteka_env
 
 UNITS=(

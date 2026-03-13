@@ -10,12 +10,11 @@ set -euo pipefail
 
 LOG="/var/log/server-maintenance.log"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-DEPLOY_DIR="$(cd "$SCRIPT_DIR" && while [ ! -f "DEPLOY.md" ] && [ "$PWD" != "/" ]; do cd ..; done; pwd)"
-REPO_ROOT="$(cd "$DEPLOY_DIR/.." && pwd)"
+INFRA_SCRIPT_ROOT="$(cd "$SCRIPT_DIR" && while [ ! -f "DEPLOY.md" ] && [ "$PWD" != "/" ]; do cd ..; done; pwd)"
 # shellcheck disable=SC1090
-source "$DEPLOY_DIR/lib/bootstrap.sh"
+source "$INFRA_SCRIPT_ROOT/lib/bootstrap.sh"
 # shellcheck disable=SC1090
-source "$DEPLOY_DIR/lib/telegram.sh"
+source "$INFRA_SCRIPT_ROOT/lib/telegram.sh"
 load_autoteka_env
 load_telegram_env
 SCRIPT_ID="server-maintenance"
@@ -89,7 +88,7 @@ if [ -f /var/lib/logrotate/status ]; then
 fi
 
 log "storage+database backup"
-if ! bash "$DEPLOY_DIR/maintenance/storage-backup.sh"; then
+if ! bash "$INFRA_SCRIPT_ROOT/maintenance/storage-backup.sh"; then
   log "ERROR storage backup failed"
   notify_maintenance_error "MAINTENANCE_STORAGE_BACKUP_FAILED" \
     "не удалось создать storage+database backup или очистить старые архивы"

@@ -24,18 +24,16 @@ ensure_infra_root() {
   if [ -n "${INFRA_ROOT:-}" ] && [ -d "$INFRA_ROOT" ]; then
     return 0
   fi
-  if [ -d "$AUTOTEKA_ROOT/infrastructure" ]; then
-    INFRA_ROOT="$AUTOTEKA_ROOT/infrastructure"
-    export INFRA_ROOT
-    return 0
-  fi
-  if [ -d "$AUTOTEKA_ROOT/deploy" ]; then
-    INFRA_ROOT="$AUTOTEKA_ROOT/deploy"
+
+  local inferred_infra_root=""
+  inferred_infra_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+  if [ -d "$inferred_infra_root/runtime" ] && [ -d "$inferred_infra_root/lib" ]; then
+    INFRA_ROOT="$inferred_infra_root"
     export INFRA_ROOT
     return 0
   fi
 
-  echo "INFRA_ROOT is not set and infra directory was not found under AUTOTEKA_ROOT." >&2
+  echo "INFRA_ROOT is not set or does not point to the infra script root." >&2
   exit 1
 }
 
@@ -47,7 +45,7 @@ Usage:
   autoteka --help
 
 Purpose:
-  Unified entrypoint for deployment, monitoring, repair, backup, restore and
+  Unified entrypoint for runtime control, monitoring, repair, backup, restore and
   uninstall operations for autoteka.
 
 Commands:
@@ -61,9 +59,9 @@ Commands:
   health-reset      Clear incident state and Telegram dedup locks.
   repair-infra      Re-enable timers and reset watchdog counters.
   maintenance       Run periodic maintenance tasks.
-  backup            Create a deploy-configuration backup archive.
+  backup            Create a configuration and data backup archive.
   backup-storage    Create storage+database backup archive.
-  restore           Restore deploy configuration from a backup archive.
+  restore           Restore configuration and data from a backup archive.
   uninstall         Remove installed services/configuration by mode.
 
 Get command-specific help:

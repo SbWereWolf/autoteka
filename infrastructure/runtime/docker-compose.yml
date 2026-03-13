@@ -4,7 +4,9 @@ services:
     image: autoteka/runtime-php:prod
     build:
       context: ${AUTOTEKA_ROOT:-../..}
-      dockerfile: deploy/runtime/docker/docker/php/Dockerfile
+      dockerfile: ${INFRA_ROOT:?INFRA_ROOT must be set}/runtime/docker/docker/php/Dockerfile
+      additional_contexts:
+        infra: ${INFRA_ROOT:?INFRA_ROOT must be set}
       target: prod
     container_name: autoteka-php
     restart: unless-stopped
@@ -44,7 +46,9 @@ services:
     image: autoteka/runtime-web:prod
     build:
       context: ${AUTOTEKA_ROOT:-../..}
-      dockerfile: deploy/runtime/docker/docker/prod/nginx/Dockerfile
+      dockerfile: ${INFRA_ROOT:?INFRA_ROOT must be set}/runtime/docker/docker/prod/nginx/Dockerfile
+      additional_contexts:
+        infra: ${INFRA_ROOT:?INFRA_ROOT must be set}
       args:
         VITE_API_BASE_URL: ${VITE_API_BASE_URL:-/api/v1}
         FRONTEND_BUILD_SOURCEMAP: ${FRONTEND_BUILD_SOURCEMAP:-false}
@@ -73,7 +77,7 @@ services:
     ports:
       - "${HTTP_BIND_HOST:-127.0.0.1}:${HTTP_PORT:-80}:80"
     volumes:
-      - "${AUTOTEKA_ROOT:-../..}/deploy/observability/application/metrics:/usr/share/nginx/html/metrics:ro"
+      - "${INFRA_ROOT:?INFRA_ROOT must be set}/observability/application/metrics:/usr/share/nginx/html/metrics:ro"
       - autoteka_backend_storage:/var/www/backend/storage:ro
       - autoteka_backend_admin_vendor:/usr/share/nginx/backend-public/vendor:ro
 
