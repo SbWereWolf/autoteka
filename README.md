@@ -100,32 +100,55 @@ npm run test:ui:mock   # offline UI на mock-данных
 npm run test:e2e       # online e2e (нужен backend)
 ```
 
-### Авто-переключение platform env между Windows и WSL
+### Явная работа с platform env между Windows и WSL
 
-Авто-переключение по среде запуска:
+`swap-env` больше не переключает окружение автоматически. Скрипт
+определяет текущее окружение запуска (`win` или `wsl`) и работает только
+с его env-specific артефактами.
+
+Проверка текущего active-набора:
 
 ```powershell
 pwsh ./scripts/swap-env.ps1
+pwsh ./scripts/swap-env.ps1 validate
+pwsh ./scripts/swap-env.ps1 validate --dry-run
 ```
 
 ```bash
 bash ./scripts/swap-env.sh
+bash ./scripts/swap-env.sh validate
+bash ./scripts/swap-env.sh validate --dry-run
 ```
 
-Возможна проверка статуса и dry-run:
+Сохранение active-артефакта в env-specific storage текущей среды:
 
 ```powershell
-pwsh ./scripts/swap-env.ps1 -Status
-pwsh ./scripts/swap-env.ps1 -DryRun
+pwsh ./scripts/swap-env.ps1 save --type scripts-env --type root-lock
 ```
 
 ```bash
-bash ./scripts/swap-env.sh --status
-bash ./scripts/swap-env.sh --dry-run
+bash ./scripts/swap-env.sh save --type scripts-env --type root-lock
 ```
 
-Если для целевой платформы локальные пакеты ещё не устанавливались,
-после переключения выполните `npm install` в нужном подпроекте.
+Загрузка active-артефакта из env-specific storage текущей среды:
+
+```powershell
+pwsh ./scripts/swap-env.ps1 load --type scripts-env --type root-lock
+```
+
+```bash
+bash ./scripts/swap-env.sh load --type scripts-env --type root-lock
+```
+
+Полная справка со всеми типами и путями:
+
+```powershell
+pwsh ./scripts/swap-env.ps1 --help
+```
+
+```bash
+bash ./scripts/swap-env.sh --help
+```
 
 ### Backend и back office
 
