@@ -186,3 +186,22 @@ Docker DEV вариант:
 2. `npm --prefix system-tests run test:ui-headless-dev`
 
 PROD профили выполнять точечно как финальный предрелизный прогон.
+
+## 8. Quick verify cache
+
+`scripts/agent/verify.ps1 -TestProfile minimal` использует локальный
+кэш quick-проверок по хэшам `src`-деревьев.
+
+- Кэш хранится в `/.runtime/verify/minimal-src-cache.json`.
+- Frontend quick-блок учитывает только `frontend/src`.
+- Backend quick-блок `ShopAPI` учитывает
+  `backend/apps/ShopAPI/app` и `backend/packages/SchemaDefinition/src`.
+- Backend quick-блок `ShopOperator` учитывает
+  `backend/apps/ShopOperator/app` и
+  `backend/packages/SchemaDefinition/src`.
+- Если хэш не изменился с прошлого успешного запуска, блок пропускается
+  с сообщением `cache hit: src unchanged`.
+
+Сброс кэша выполняется только вручную: удалите
+`/.runtime/verify/minimal-src-cache.json`, если нужен полный rerun без
+использования старых fingerprints.

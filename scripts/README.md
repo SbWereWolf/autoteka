@@ -153,6 +153,27 @@ bash ./scripts/swap-env.sh --help
 
 ## Примеры helper-коммита
 
+## Quick verify cache
+
+`scripts/agent/verify.ps1 -TestProfile minimal` использует локальный
+кэш fingerprints для quick-проверок frontend, `ShopAPI` и
+`ShopOperator`.
+
+- Кэш хранится в `/.runtime/verify/minimal-src-cache.json`.
+- Для frontend fingerprint считается по `frontend/src`.
+- Для `ShopAPI` fingerprint считается по `backend/apps/ShopAPI/app` и
+  `backend/packages/SchemaDefinition/src`.
+- Для `ShopOperator` fingerprint считается по
+  `backend/apps/ShopOperator/app` и `backend/packages/SchemaDefinition/src`.
+- Если fingerprint не изменился с прошлого успешного запуска,
+  `verify.ps1` печатает `cache hit: src unchanged` и не запускает
+  повторно соответствующий quick-блок.
+
+Кэш не сбрасывается автоматически. Если нужен полный rerun без
+использования старых fingerprints, удалите файл
+`/.runtime/verify/minimal-src-cache.json` вручную и затем повторите
+`verify`.
+
 PowerShell:
 
 ```powershell
