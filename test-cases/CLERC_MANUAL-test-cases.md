@@ -46,7 +46,7 @@
 - Ожидаемый результат: команда поддерживает все заявленные
   scope/режимы.
 - Тип: automated
-- Каталог тестов: `backend/tests` + `deploy/tests`
+- Каталог тестов: `backend/tests` + `infrastructure/tests`
 
 ### TC-CLERC-MANUAL-004
 
@@ -165,7 +165,7 @@
 ### TC-CLERC-MANUAL-014
 
 - Утверждение: в разделе "Смежные документы" ссылки на
-  `ADMIN_MANUAL.md`, `IMPLEMENTATION.md`, `deploy/DEPLOY.md` валидны.
+  `ADMIN_MANUAL.md`, `IMPLEMENTATION.md`, `infrastructure/DEPLOY.md` валидны.
 - Проверка: проверить существование файлов по указанным путям.
 - Ожидаемый результат: все ссылки ведут на существующие документы.
 - Тип: automated

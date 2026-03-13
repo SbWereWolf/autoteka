@@ -11,7 +11,7 @@
 
 - `docs/foundations/IMPLEMENTATION.md` — архитектура и кодовая
   реализация для разработчиков.
-- `deploy/DEPLOY.md` — deploy-процессы, install/backup/restore,
+- `infrastructure/DEPLOY.md` — deploy-процессы, install/backup/restore,
   systemd/compose и эксплуатационный контур для админов.
 - `docs/manual/ADMIN_MANUAL.md` (этот документ) — практические
   инструкции по развёртыванию установки, регулярному обслуживанию и
@@ -231,23 +231,23 @@ deploy создаст его из `frontend/example.env`.
 
 - `/etc/autoteka/deploy.env` — `AUTOTEKA_ROOT`, `BRANCH`, `REMOTE`,
   `HTTP_PORT` (см.
-  [DEPLOY §5.1](../../deploy/DEPLOY.md#51-etcautotekadeployenv))
+  [DEPLOY §5.1](../../infrastructure/DEPLOY.md#51-etcautotekadeployenv))
 - `/etc/autoteka/telegram.env` — Telegram-уведомления watchdog (см.
-  [DEPLOY §5.2](../../deploy/DEPLOY.md#52-etcautotekatelegramenv))
+  [DEPLOY §5.2](../../infrastructure/DEPLOY.md#52-etcautotekatelegramenv))
 
 **Шаблоны в репозитории:**
 
-- `deploy/bootstrap/config/deploy.example.env` — шаблон для
+- `$INFRA_ROOT/bootstrap/config/deploy.example.env` — шаблон для
   `/etc/autoteka/deploy.env`. Устанавливается `install.sh` при первом
   запуске, если файл отсутствует. Содержит параметры `AUTOTEKA_ROOT`,
   `BRANCH`, `REMOTE`, `HTTP_PORT`, `STORAGE_BACKUP_DIR`,
   `STORAGE_BACKUP_RETENTION_DAYS`. Подробности см.
-  [DEPLOY §5.5](../../deploy/DEPLOY.md#55-deployconfigdeployexampleenv).
-- `deploy/bootstrap/config/telegram.example.env` — шаблон для
+  [DEPLOY §5.5](../../infrastructure/DEPLOY.md#55-deployconfigdeployexampleenv).
+- `$INFRA_ROOT/bootstrap/config/telegram.example.env` — шаблон для
   `/etc/autoteka/telegram.env`. Устанавливается `install.sh`
   опционально, если файл отсутствует. Содержит `TELEGRAM_TOKEN` и
   `TELEGRAM_CHAT`. Подробности см.
-  [DEPLOY §5.6](../../deploy/DEPLOY.md#56-deployconfigtelegramenvexample).
+  [DEPLOY §5.6](../../infrastructure/DEPLOY.md#56-deployconfigtelegramenvexample).
 
 ## 7. Запуск и рабочие инструкции администратора
 
@@ -257,9 +257,9 @@ deploy создаст его из `frontend/example.env`.
 
 - `backend/example.env`;
 - `frontend/example.env`;
-- `deploy/bootstrap/config/deploy.example.env`;
-- `deploy/bootstrap/config/dev.example.env`;
-- `deploy/bootstrap/config/telegram.example.env`.
+- `$INFRA_ROOT/bootstrap/config/deploy.example.env`;
+- `$INFRA_ROOT/bootstrap/config/dev.example.env`;
+- `$INFRA_ROOT/bootstrap/config/telegram.example.env`.
 
 Рабочие env-файлы:
 
@@ -276,8 +276,8 @@ apt update && apt install -y git
 mkdir -p /opt/vue-app
 cd /opt/vue-app
 git clone <YOUR_REPO_URL> .
-chmod +x ./deploy/bootstrap/install.sh
-sudo ./deploy/bootstrap/install.sh
+chmod +x ./$INFRA_ROOT/bootstrap/install.sh
+sudo ./$INFRA_ROOT/bootstrap/install.sh
 autoteka deploy
 ```
 
@@ -294,42 +294,42 @@ systemctl status autoteka.service
 systemctl status watch-changes.timer
 systemctl status server-watchdog.timer
 systemctl status server-maintenance.timer
-docker compose -f deploy/runtime/docker-compose.yml ps
+docker compose -f $INFRA_ROOT/runtime/docker-compose.yml ps
 ```
 
 Подробности:
 
 - первичная установка —
-  [DEPLOY §4](../../deploy/DEPLOY.md#4-развёртывание-с-нуля);
+  [DEPLOY §4](../../infrastructure/DEPLOY.md#4-развёртывание-с-нуля);
 - переменные окружения —
-  [DEPLOY §5](../../deploy/DEPLOY.md#5-настройки-окружения);
+  [DEPLOY §5](../../infrastructure/DEPLOY.md#5-настройки-окружения);
 - что именно делает `install.sh` —
-  [DEPLOY §3](../../deploy/DEPLOY.md#3-что-делает-installsh).
+  [DEPLOY §3](../../infrastructure/DEPLOY.md#3-что-делает-installsh).
 
 ### 7.3. Как запустить local dev / debug
 
 Базовый dev-runtime с `php` target = `dev`:
 
 ```powershell
-docker compose -f .\deploy\runtime\docker-compose.dev.yml -f .\deploy\runtime\docker-compose.dev.target-dev.yml up --build -d
+docker compose -f $env:INFRA_ROOT\runtime\docker-compose.dev.yml -f $env:INFRA_ROOT\runtime\docker-compose.dev.target-dev.yml up --build -d
 ```
 
 Локальный smoke runtime с `php` target = `prod`:
 
 ```powershell
-docker compose -f .\deploy\runtime\docker-compose.dev.yml -f .\deploy\runtime\docker-compose.dev.target-prod.yml up --build -d
+docker compose -f $env:INFRA_ROOT\runtime\docker-compose.dev.yml -f $env:INFRA_ROOT\runtime\docker-compose.dev.target-prod.yml up --build -d
 ```
 
 Остановить dev/debug-контур:
 
 ```powershell
-docker compose -f .\deploy\runtime\docker-compose.dev.yml -f .\deploy\runtime\docker-compose.dev.target-dev.yml down
+docker compose -f $env:INFRA_ROOT\runtime\docker-compose.dev.yml -f $env:INFRA_ROOT\runtime\docker-compose.dev.target-dev.yml down
 ```
 
 Переcобрать контейнеры:
 
 ```powershell
-docker compose -f .\deploy\runtime\docker-compose.dev.yml -f .\deploy\runtime\docker-compose.dev.target-dev.yml build
+docker compose -f $env:INFRA_ROOT\runtime\docker-compose.dev.yml -f $env:INFRA_ROOT\runtime\docker-compose.dev.target-dev.yml build
 ```
 
 Открыть shell в backend-контейнере:
@@ -340,12 +340,12 @@ docker exec autoteka-dev-php sh
 
 По умолчанию приложение доступно по адресу `http://127.0.0.1:8081`.
 Адрес и порты управляются через
-`deploy/bootstrap/config/dev.example.env` и локальный `deploy/.env`.
+`$INFRA_ROOT/bootstrap/config/dev.example.env` и локальный `$INFRA_ROOT/.env`.
 
 Подробности по локальным runtime-командам и env:
 
 - [README: Dev runtime с выбором php target](../../README.md#dev-runtime-с-выбором-php-target-override);
-- [DEPLOY §5](../../deploy/DEPLOY.md#5-настройки-окружения).
+- [DEPLOY §5](../../infrastructure/DEPLOY.md#5-настройки-окружения).
 
 ### 7.4. Режимы frontend в dev/debug
 
@@ -371,27 +371,27 @@ docker exec autoteka-dev-php sh
 Проверить контейнеры production:
 
 ```bash
-docker compose -f deploy/runtime/docker-compose.yml ps
+docker compose -f $INFRA_ROOT/runtime/docker-compose.yml ps
 ```
 
 Проверить контейнеры local dev/debug:
 
 ```bash
-cd deploy
+cd "$INFRA_ROOT"
 docker compose -f runtime/docker-compose.dev.yml ps
 ```
 
 Посмотреть логи web:
 
 ```bash
-cd deploy
+cd "$INFRA_ROOT"
 docker compose -f runtime/docker-compose.dev.yml logs -f web
 ```
 
 Посмотреть логи php:
 
 ```bash
-cd deploy
+cd "$INFRA_ROOT"
 docker compose -f runtime/docker-compose.dev.yml logs -f php
 ```
 
@@ -415,11 +415,11 @@ autoteka health-reset all
 
 Подробные сценарии диагностики и починки:
 
-- [DEPLOY §7.1](../../deploy/DEPLOY.md#71-сайт-недоступен);
-- [DEPLOY §7.2](../../deploy/DEPLOY.md#72-backendapi-не-отвечает);
-- [DEPLOY §7.3](../../deploy/DEPLOY.md#73-контейнер-unhealthy-или-missing);
-- [DEPLOY §7.5](../../deploy/DEPLOY.md#75-не-обновляется-metrics);
-- [DEPLOY §7.6](../../deploy/DEPLOY.md#76-не-приходят-telegram-уведомления).
+- [DEPLOY §7.1](../../infrastructure/DEPLOY.md#71-сайт-недоступен);
+- [DEPLOY §7.2](../../infrastructure/DEPLOY.md#72-backendapi-не-отвечает);
+- [DEPLOY §7.3](../../infrastructure/DEPLOY.md#73-контейнер-unhealthy-или-missing);
+- [DEPLOY §7.5](../../infrastructure/DEPLOY.md#75-не-обновляется-metrics);
+- [DEPLOY §7.6](../../infrastructure/DEPLOY.md#76-не-приходят-telegram-уведомления).
 
 ### 7.6. Как обслуживать систему
 
@@ -448,9 +448,9 @@ sudo systemctl start server-maintenance.service
 ```
 
 Подробности по смыслу и ограничениям deploy-скриптов см. в
-[DEPLOY §8](../../deploy/DEPLOY.md#8-техническое-обслуживание),
-[DEPLOY §9](../../deploy/DEPLOY.md#9-удаление-установленной-системы) и
-[DEPLOY §10](../../deploy/DEPLOY.md#10-резервное-копирование-и-восстановление-deploy-настроек).
+[DEPLOY §8](../../infrastructure/DEPLOY.md#8-техническое-обслуживание),
+[DEPLOY §9](../../infrastructure/DEPLOY.md#9-удаление-установленной-системы) и
+[DEPLOY §10](../../infrastructure/DEPLOY.md#10-резервное-копирование-и-восстановление-deploy-настроек).
 Архитектурный контекст модулей см. в
 [IMPLEMENTATION](../foundations/IMPLEMENTATION.md).
 
@@ -458,60 +458,60 @@ sudo systemctl start server-maintenance.service
 
 Ниже перечислены скрипты и основной способ запуска. Полное поведение,
 диагностика, аварийные сценарии и ограничения описаны в
-`deploy/DEPLOY.md`.
+`infrastructure/DEPLOY.md`.
 
-- `deploy/bootstrap/install.sh` или `autoteka up`/`autoteka deploy`
+- `$INFRA_ROOT/bootstrap/install.sh` или `autoteka up`/`autoteka deploy`
   после установки — начальная установка и подготовка сервера.
-- `deploy/runtime/watch-changes.sh` или `autoteka watch-changes` —
+- `$INFRA_ROOT/runtime/watch-changes.sh` или `autoteka watch-changes` —
   ручной запуск проверки remote и автодеплоя.
-- `deploy/runtime/deploy.sh` или `autoteka deploy` — ручная раскатка
+- `$INFRA_ROOT/runtime/deploy.sh` или `autoteka deploy` — ручная раскатка
   текущего локального `HEAD`.
-- `deploy/repair/repair-runtime.sh` или `autoteka repair-runtime` —
+- `$INFRA_ROOT/repair/repair-runtime.sh` или `autoteka repair-runtime` —
   тяжёлая починка runtime и smoke-check backend/admin/API.
-- `deploy/repair/repair-health.sh` или
+- `$INFRA_ROOT/repair/repair-health.sh` или
   `autoteka repair-health <domain>` — точечная починка одного
   health-домена.
-- `deploy/repair/health-reset.sh` или `autoteka health-reset <target>`
+- `$INFRA_ROOT/repair/health-reset.sh` или `autoteka health-reset <target>`
   — сброс incident state и Telegram dedup lock'ов.
-- `deploy/repair/repair-infra.sh` или `autoteka repair-infra` —
+- `$INFRA_ROOT/repair/repair-infra.sh` или `autoteka repair-infra` —
   восстановление таймеров и инфраструктурного состояния watchdog.
-- `deploy/observability/infrastructure/server-watchdog.sh` или
+- `$INFRA_ROOT/observability/infrastructure/server-watchdog.sh` или
   `autoteka watchdog` — проверка здоровья и bounded auto-remediation.
-- `deploy/observability/application/metrics-export.sh` — экспорт
+- `$INFRA_ROOT/observability/application/metrics-export.sh` — экспорт
   метрик из логов в `/metrics/data.json`.
-- `deploy/maintenance/server-maintenance.sh` или
+- `$INFRA_ROOT/maintenance/server-maintenance.sh` или
   `autoteka maintenance` — периодическое техобслуживание.
-- `deploy/maintenance/storage-backup.sh` или `autoteka backup-storage`
+- `$INFRA_ROOT/maintenance/storage-backup.sh` или `autoteka backup-storage`
   — backup `backend/storage` и `database.sqlite`.
-- `deploy/maintenance/backup.sh` или `autoteka backup` — backup
-  deploy-конфигурации и секретов.
-- `deploy/maintenance/restore.sh` или `autoteka restore <archive>` —
-  восстановление deploy-конфига и сброс runtime health-state.
-- `deploy/bootstrap/uninstall.sh` или `autoteka uninstall <mode>` —
+- `$INFRA_ROOT/maintenance/backup.sh` или `autoteka backup` — backup
+  runtime-конфигурации и секретов.
+- `$INFRA_ROOT/maintenance/restore.sh` или `autoteka restore <archive>` —
+  восстановление runtime-конфига и сброс runtime health-state.
+- `$INFRA_ROOT/bootstrap/uninstall.sh` или `autoteka uninstall <mode>` —
   удаление установленной системы.
 
 Куда смотреть за подробностями:
 
 - install/bootstrap —
-  [DEPLOY §3](../../deploy/DEPLOY.md#3-что-делает-installsh) и
-  [DEPLOY §4](../../deploy/DEPLOY.md#4-развёртывание-с-нуля);
+  [DEPLOY §3](../../infrastructure/DEPLOY.md#3-что-делает-installsh) и
+  [DEPLOY §4](../../infrastructure/DEPLOY.md#4-развёртывание-с-нуля);
 - диагностика и repair —
-  [DEPLOY §7](../../deploy/DEPLOY.md#7-диагностика-поломок);
+  [DEPLOY §7](../../infrastructure/DEPLOY.md#7-диагностика-поломок);
 - maintenance —
-  [DEPLOY §8](../../deploy/DEPLOY.md#8-техническое-обслуживание);
+  [DEPLOY §8](../../infrastructure/DEPLOY.md#8-техническое-обслуживание);
 - uninstall —
-  [DEPLOY §9](../../deploy/DEPLOY.md#9-удаление-установленной-системы);
+  [DEPLOY §9](../../infrastructure/DEPLOY.md#9-удаление-установленной-системы);
 - backup/restore —
-  [DEPLOY §10](../../deploy/DEPLOY.md#10-резервное-копирование-и-восстановление-deploy-настроек).
+  [DEPLOY §10](../../infrastructure/DEPLOY.md#10-резервное-копирование-и-восстановление-deploy-настроек).
 
 ## 9. Backup, restore и uninstall
 
 Основные команды администратора:
 
-- `autoteka backup` — backup deploy-настроек и секретов;
+- `autoteka backup` — backup runtime-настроек и секретов;
 - `autoteka backup-storage` — backup `backend/storage` и
   `database/database.sqlite`;
-- `autoteka restore <archive>` — restore deploy-настроек;
+- `autoteka restore <archive>` — restore runtime-настроек;
 - `autoteka uninstall <mode>` — удаление установленной системы.
 
 Быстрые примеры:
@@ -526,9 +526,9 @@ sudo autoteka uninstall soft
 Подробности:
 
 - backup/restore —
-  [DEPLOY §10](../../deploy/DEPLOY.md#10-резервное-копирование-и-восстановление-deploy-настроек);
+  [DEPLOY §10](../../infrastructure/DEPLOY.md#10-резервное-копирование-и-восстановление-deploy-настроек);
 - uninstall —
-  [DEPLOY §9](../../deploy/DEPLOY.md#9-удаление-установленной-системы).
+  [DEPLOY §9](../../infrastructure/DEPLOY.md#9-удаление-установленной-системы).
 
 ## 10. Минимальный регламент администратора
 
@@ -544,7 +544,7 @@ sudo autoteka uninstall soft
 
 1. проверить `systemctl status`;
 2. проверить `docker compose ps`;
-3. проверить логи deploy/watchdog/maintenance;
+3. проверить логи rollout/watchdog/maintenance;
 4. проверить `/metrics`.
 
 Если выполнялись backup/restore/uninstall/repair-сценарии,
@@ -558,7 +558,7 @@ sudo autoteka uninstall soft
 
 Полная матрица healthcheck, incident phases, repair-команд и кодов
 ошибок вынесена в
-[DEPLOY §7](../../deploy/DEPLOY.md#7-диагностика-поломок).
+[DEPLOY §7](../../infrastructure/DEPLOY.md#7-диагностика-поломок).
 
 ### 11.1. Набор проверок
 
@@ -622,11 +622,11 @@ autoteka health-reset all
 Подробности:
 
 - ручные команды —
-  [DEPLOY §7.3.3](../../deploy/DEPLOY.md#733-ручные-команды);
+  [DEPLOY §7.3.3](../../infrastructure/DEPLOY.md#733-ручные-команды);
 - repair-infra —
-  [DEPLOY §7.5.2](../../deploy/DEPLOY.md#752-repair-infra--починка-инфраструктуры);
+  [DEPLOY §7.5.2](../../infrastructure/DEPLOY.md#752-repair-infra--починка-инфраструктуры);
 - коды ошибок —
-  [DEPLOY §7.7](../../deploy/DEPLOY.md#77-коды-сообщений-причины-и-способы-исправления).
+  [DEPLOY §7.7](../../infrastructure/DEPLOY.md#77-коды-сообщений-причины-и-способы-исправления).
 
 ### 11.4. Локальные файлы состояния
 

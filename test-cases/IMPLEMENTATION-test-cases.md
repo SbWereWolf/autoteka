@@ -12,7 +12,7 @@
 ### TC-IMPLEMENTATION-001
 
 - Утверждение: монорепозиторий содержит зоны `frontend/`, `backend/`,
-  `deploy/`.
+  `infrastructure/`.
 - Проверка: проверить существование каталогов.
 - Ожидаемый результат: все три зоны присутствуют.
 - Тип: automated
@@ -135,15 +135,15 @@
 
 - Утверждение: compose-контур поднимает `php` (`autoteka-php`) и `web`
   (`vue-app`), а `web` публикует порт, имеет healthcheck, монтирует
-  `deploy/observability/application/metrics` и раздаёт `/storage/*`.
+  `$INFRA_ROOT/observability/application/metrics` и раздаёт `/storage/*`.
 - Проверка:
-  1. Проверить `deploy/runtime/docker-compose.yml` и nginx-конфиг.
+  1. Проверить `$INFRA_ROOT/runtime/docker-compose.yml` и nginx-конфиг.
   2. Поднять контур и проверить `docker compose ps` +
      `GET /storage/*`.
 - Ожидаемый результат: compose и web-конфигурация соответствуют
   заявленному поведению.
 - Тип: automated
-- Каталог тестов: `deploy/tests` + `system-tests`
+- Каталог тестов: `infrastructure/tests` + `system-tests`
 
 ### TC-IMPLEMENTATION-013
 
@@ -156,7 +156,7 @@
 - Ожидаемый результат: unit'ы/timer'ы и цепочка watcher -> deploy
   работают.
 - Тип: automated
-- Каталог тестов: `deploy/tests`
+- Каталог тестов: `infrastructure/tests`
 
 ### TC-IMPLEMENTATION-014
 
@@ -168,7 +168,7 @@
 - Ожидаемый результат: метрики и self-healing работают по описанному
   алгоритму.
 - Тип: automated
-- Каталог тестов: `deploy/tests`
+- Каталог тестов: `infrastructure/tests`
 
 ### TC-IMPLEMENTATION-015
 
@@ -179,7 +179,7 @@
   2. Выполнить скрипт и проверить логи выполнения.
 - Ожидаемый результат: maintenance-сценарий соответствует документу.
 - Тип: automated
-- Каталог тестов: `deploy/tests`
+- Каталог тестов: `infrastructure/tests`
 
 ### TC-IMPLEMENTATION-016
 

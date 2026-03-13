@@ -13,7 +13,7 @@ const REPO_ROOT = join(__dirname, "..", "..");
 
 const DOC_MAP_FILES = [
   "docs/manual/ADMIN_MANUAL.md",
-  "deploy/DEPLOY.md",
+  "infrastructure/DEPLOY.md",
   "docs/manual/USER_MANUAL.md",
   "docs/manual/CLERC_MANUAL.md",
   "docs/foundations/IMPLEMENTATION.md",

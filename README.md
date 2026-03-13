@@ -4,7 +4,7 @@
 
 - `docs/` — постоянная документация по эксплуатации, использованию и
   разработке.
-- `deploy/` — install/deploy/uninstall, docker compose, systemd,
+- `infrastructure/` — install/uninstall, docker compose, systemd,
   watchdog и maintenance.
 - `frontend/` — клиентское приложение, его сборка и frontend-тесты.
 - `backend/` — серверные Laravel-модули и связанные PHP-пакеты
@@ -25,7 +25,7 @@
   - клиентское приложение;
   - серверное приложение;
   - приложение для развёртывания и обслуживания установленной Системы
-    (скрипты/infra в `deploy/`).
+    (скрипты/infra в `infrastructure/`).
 - Клиентское приложение состоит из двух модулей:
   - редактор тем оформления;
   - модуль каталога (front office).
@@ -52,7 +52,7 @@
 
 - [ADMIN_MANUAL](docs/manual/ADMIN_MANUAL.md) — серверные настройки и
   служебные скрипты;
-- [DEPLOY](deploy/DEPLOY.md) — развёртывание, наблюдаемость,
+- [DEPLOY](infrastructure/DEPLOY.md) — развёртывание, наблюдаемость,
   диагностика поломок и техническое обслуживание;
 
 ### Использование
@@ -223,17 +223,17 @@ docker exec autoteka-dev-php sh -lc "cd /workspace/backend/apps/ShopOperator && 
 - `frontend/example.env` — шаблон frontend-конфига. Локально:
   `cp frontend/example.env frontend/.env`. Подробности:
   [ADMIN_MANUAL §6.1](docs/manual/ADMIN_MANUAL.md),
-  [DEPLOY §5](deploy/DEPLOY.md).
+  [DEPLOY §5](infrastructure/DEPLOY.md).
 - `backend/example.env` — шаблон Laravel-конфига. Локально:
   `cp backend/example.env backend/.env`. Подробности:
   [ADMIN_MANUAL §6.2](docs/manual/ADMIN_MANUAL.md),
-  [DEPLOY §5.3](deploy/DEPLOY.md).
+  [DEPLOY §5.3](infrastructure/DEPLOY.md).
 - `/etc/autoteka/deploy.env` — server-side deployment config для
   `AUTOTEKA_ROOT`, `BRANCH`, `REMOTE`, `HTTP_PORT`. Подробности:
-  [DEPLOY §5.1](deploy/DEPLOY.md).
+  [DEPLOY §5.1](infrastructure/DEPLOY.md).
 - `/etc/autoteka/telegram.env` — server-side Telegram config для
-  deploy/watchdog/maintenance уведомлений. Подробности:
-  [DEPLOY §5.2](deploy/DEPLOY.md),
+  rollout/watchdog/maintenance уведомлений. Подробности:
+  [DEPLOY §5.2](infrastructure/DEPLOY.md),
   [ADMIN_MANUAL §6.3](docs/manual/ADMIN_MANUAL.md).
 
 ## Профили тестирования

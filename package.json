@@ -13,8 +13,8 @@
     "test:frontend:parallel": "cd frontend && npm run test:unit:parallel",
     "test:backend:parallel": "npx concurrently --kill-others-on-fail --names \"shop-api,shop-operator\" \"cd backend/apps/ShopAPI && composer test:parallel\" \"cd backend/apps/ShopOperator && composer test:parallel\"",
     "test:backend:pest:parallel": "npx concurrently --kill-others-on-fail --names \"shop-api-pest,shop-operator-pest\" \"cd backend/apps/ShopAPI && composer test:pest:parallel\" \"cd backend/apps/ShopOperator && composer test:pest:parallel\"",
-    "test:profile:offline": "npx concurrently --kill-others-on-fail --names \"system,deploy,frontend-offline,backend-offline\" \"cd system-tests && npm test\" \"cd deploy/tests && npm test\" \"cd frontend && npm run test && npm run test:ui:mock\" \"npm run test:backend:parallel\"",
-    "test:profile:installation-e2e": "npx concurrently --kill-others-on-fail --names \"system,deploy,frontend-unit,frontend-api-online,frontend-e2e-online,backend\" \"cd system-tests && npm test\" \"cd deploy/tests && npm test\" \"cd frontend && npm run test\" \"cd frontend && npm run test:api:online\" \"cd frontend && npm run test:e2e\" \"npm run test:backend:parallel\""
+    "test:profile:offline": "npx concurrently --kill-others-on-fail --names \"system,deploy,frontend-offline,backend-offline\" \"cd system-tests && npm test\" \"cd infrastructure/tests && npm test\" \"cd frontend && npm run test && npm run test:ui:mock\" \"npm run test:backend:parallel\"",
+    "test:profile:installation-e2e": "npx concurrently --kill-others-on-fail --names \"system,deploy,frontend-unit,frontend-api-online,frontend-e2e-online,backend\" \"cd system-tests && npm test\" \"cd infrastructure/tests && npm test\" \"cd frontend && npm run test\" \"cd frontend && npm run test:api:online\" \"cd frontend && npm run test:e2e\" \"npm run test:backend:parallel\""
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

@@ -1,5 +1,5 @@
 /**
- * TC-CLERC-MANUAL-014: ссылки «Смежные документы» — ADMIN_MANUAL, IMPLEMENTATION, deploy/DEPLOY.
+ * TC-CLERC-MANUAL-014: ссылки «Смежные документы» — ADMIN_MANUAL, IMPLEMENTATION, infrastructure/DEPLOY.
  */
 import { describe, it, expect } from "vitest";
 import { existsSync } from "node:fs";
@@ -13,7 +13,7 @@ describe("TC-CLERC-MANUAL-014", () => {
   const links = [
     "docs/manual/ADMIN_MANUAL.md",
     "docs/foundations/IMPLEMENTATION.md",
-    "deploy/DEPLOY.md",
+    "infrastructure/DEPLOY.md",
   ];
   for (const p of links) {
     it(`файл ${p} существует`, () => {
@@ -21,4 +21,3 @@ describe("TC-CLERC-MANUAL-014", () => {
     });
   }
 });
-

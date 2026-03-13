@@ -144,4 +144,4 @@ location.reload();
 - серверные настройки;
 - развёртывание и обслуживание окружения.
 
-Эти темы описаны в `docs/manual/ADMIN_MANUAL.md` и `deploy/DEPLOY.md`.
+Эти темы описаны в `docs/manual/ADMIN_MANUAL.md` и `infrastructure/DEPLOY.md`.

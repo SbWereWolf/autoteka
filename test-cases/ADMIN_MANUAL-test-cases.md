@@ -138,28 +138,28 @@
   2. Проверить использование ключей в runtime.
 - Ожидаемый результат: ключи существуют и задействованы в работе.
 - Тип: automated
-- Каталог тестов: `deploy/tests` + `backend/tests` + `frontend/tests`
+- Каталог тестов: `infrastructure/tests` + `backend/tests` + `frontend/tests`
 
 ### TC-ADMIN-MANUAL-012
 
-- Утверждение: в `deploy/` присутствуют скрипты `install.sh`,
+- Утверждение: в `infrastructure/` присутствуют скрипты `install.sh`,
   `watch-changes.sh`, `deploy.sh`, `server-watchdog.sh`,
   `metrics-export.sh`, `server-maintenance.sh`, `uninstall.sh`.
 - Проверка: проверить наличие всех перечисленных файлов.
 - Ожидаемый результат: набор серверных скриптов полный.
 - Тип: automated
-- Каталог тестов: `deploy/tests`
+- Каталог тестов: `infrastructure/tests`
 
 ### TC-ADMIN-MANUAL-013
 
 - Утверждение: `uninstall.sh` поддерживает режимы `soft`, `purge`,
   `nuke` и safety-границы для `--rm-root`/`--rm-etc`.
 - Проверка:
-  1. Проверить ветки режима и флаги в `deploy/bootstrap/uninstall.sh`.
+  1. Проверить ветки режима и флаги в `$INFRA_ROOT/bootstrap/uninstall.sh`.
   2. На стенде проверить side effects по каждому режиму.
 - Ожидаемый результат: логика удаления соответствует документу.
 - Тип: automated
-- Каталог тестов: `deploy/tests`
+- Каталог тестов: `infrastructure/tests`
 
 ### TC-ADMIN-MANUAL-014
 

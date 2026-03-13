@@ -14,7 +14,7 @@ const REPO_ROOT = join(__dirname, "..", "..");
 const DOC_LINKS = [
   "docs/foundations/IMPLEMENTATION.md",
   "docs/manual/ADMIN_MANUAL.md",
-  "deploy/DEPLOY.md",
+  "infrastructure/DEPLOY.md",
 ];
 
 describe("TC-BACKEND-README-011", () => {

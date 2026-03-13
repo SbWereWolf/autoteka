@@ -150,7 +150,7 @@
 - Утверждение: ссылки на `ADMIN_MANUAL` и `DEPLOY` в конце документа
   валидны.
 - Проверка: проверить существование файлов
-  `docs/foundations/ADMIN_MANUAL.md` и `deploy/DEPLOY.md`.
+  `docs/foundations/ADMIN_MANUAL.md` и `infrastructure/DEPLOY.md`.
 - Ожидаемый результат: обе ссылки указывают на существующие документы.
 - Тип: automated
 - Каталог тестов: `system-tests`

@@ -1,11 +1,13 @@
 /**
- * TC-DEPLOY-007: deploy.env переменные — AUTOTEKA_ROOT, BRANCH, REMOTE, HTTP_PORT, etc.
+ * TC-DEPLOY-007: env-контракт содержит AUTOTEKA_ROOT, INFRA_ROOT и runtime-переменные.
  */
 import { describe, it, expect } from "vitest";
 import { readFileSync, existsSync } from "node:fs";
-import { join } from "node:path";
+import { join, dirname } from "node:path";
+import { fileURLToPath } from "node:url";
 
-const DEPLOY_ROOT = join(process.cwd(), "deploy");
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const INFRA_ROOT_PATH = join(__dirname, "..");
 
 const EXPECTED_VARS = [
   "AUTOTEKA_ROOT",
@@ -17,26 +19,22 @@ const EXPECTED_VARS = [
 ];
 
 describe("TC-DEPLOY-007", () => {
-  it("deploy.env.example или config содержит переменные", () => {
-    const examplePath = join(
-      DEPLOY_ROOT,
-      "bootstrap/config/deploy.env.example",
-    );
-    const altPath = join(
-      DEPLOY_ROOT,
+  it("deploy.example.env содержит переменные окружения runtime", () => {
+    const path = join(
+      INFRA_ROOT_PATH,
       "bootstrap/config/deploy.example.env",
     );
-    const path = existsSync(examplePath) ? examplePath : altPath;
     expect(existsSync(path)).toBe(true);
     const content = readFileSync(path, "utf-8");
     for (const v of EXPECTED_VARS) {
       expect(content).toMatch(new RegExp(v));
     }
+    expect(content).toMatch(/INFRA_ROOT/);
   });
 
-  it("deploy скрипты используют переменные из env", () => {
+  it("runtime-скрипты используют переменные из env", () => {
     const deployContent = readFileSync(
-      join(DEPLOY_ROOT, "runtime/deploy.sh"),
+      join(INFRA_ROOT_PATH, "runtime/deploy.sh"),
       "utf-8",
     );
     for (const v of [
@@ -48,7 +46,7 @@ describe("TC-DEPLOY-007", () => {
     }
 
     const watchChangesContent = readFileSync(
-      join(DEPLOY_ROOT, "runtime/watch-changes.sh"),
+      join(INFRA_ROOT_PATH, "runtime/watch-changes.sh"),
       "utf-8",
     );
     for (const v of ["AUTOTEKA_ROOT", "BRANCH", "REMOTE"]) {
@@ -56,7 +54,7 @@ describe("TC-DEPLOY-007", () => {
     }
 
     const composeContent = readFileSync(
-      join(DEPLOY_ROOT, "runtime/docker-compose.yml"),
+      join(INFRA_ROOT_PATH, "runtime/docker-compose.yml"),
       "utf-8",
     );
     expect(composeContent).toMatch(/HTTP_PORT/);

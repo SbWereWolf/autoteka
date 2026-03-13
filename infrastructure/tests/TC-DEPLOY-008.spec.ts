@@ -7,11 +7,11 @@ import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const DEPLOY_ROOT = join(__dirname, "..");
+const INFRA_ROOT_PATH = join(__dirname, "..");
 const SYSTEMD_DIRS = [
-  join(DEPLOY_ROOT, "runtime/systemd"),
-  join(DEPLOY_ROOT, "maintenance/systemd"),
-  join(DEPLOY_ROOT, "observability/infrastructure/systemd"),
+  join(INFRA_ROOT_PATH, "runtime/systemd"),
+  join(INFRA_ROOT_PATH, "maintenance/systemd"),
+  join(INFRA_ROOT_PATH, "observability/infrastructure/systemd"),
 ];
 
 describe("TC-DEPLOY-008", () => {

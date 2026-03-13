@@ -11,7 +11,7 @@
 
 ### TC-README-001
 
-- Утверждение: в репозитории есть каталоги `deploy/`, `frontend/`, `backend/`.
+- Утверждение: в репозитории есть каталоги `infrastructure/`, `frontend/`, `backend/`.
 - Проверка:
   1. Проверить существование каталогов в корне репозитория.
   2. Убедиться, что это именно директории.
@@ -23,7 +23,7 @@
 
 - Утверждение: существует карта документации с файлами:
   - `docs/foundations/ADMIN_MANUAL.md`
-  - `deploy/DEPLOY.md`
+  - `infrastructure/DEPLOY.md`
   - `docs/foundations/USER_MANUAL.md`
   - `docs/foundations/CLERC_MANUAL.md`
   - `docs/foundations/IMPLEMENTATION.md`
@@ -139,10 +139,10 @@
 - Проверка:
   1. На целевом сервере проверить наличие обоих файлов.
   2. Проверить права чтения для пользователя, под которым выполняются
-     deploy/watchdog/maintenance скрипты.
+     rollout/watchdog/maintenance скрипты.
 - Ожидаемый результат: оба файла существуют и доступны для чтения.
 - Тип: automated (server integration)
-- Каталог тестов: `deploy/tests`
+- Каталог тестов: `infrastructure/tests`
 
 ## Непроверяемые/условно проверяемые утверждения
 

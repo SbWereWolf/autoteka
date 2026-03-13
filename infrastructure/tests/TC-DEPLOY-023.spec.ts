@@ -1,40 +1,42 @@
 /**
- * TC-DEPLOY-023: deploy/lib разделён на предметные библиотеки, монолитный _common.sh удалён,
+ * TC-DEPLOY-023: infra/lib разделён на предметные библиотеки, монолитный _common.sh удалён,
  * а скрипты подключают только нужные им source-файлы.
  */
 import { describe, it, expect } from "vitest";
 import { existsSync, readFileSync } from "node:fs";
-import { join } from "node:path";
+import { join, dirname } from "node:path";
+import { fileURLToPath } from "node:url";
 
-const DEPLOY_ROOT = join(process.cwd(), "deploy");
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const INFRA_ROOT_PATH = join(__dirname, "..");
 
 function read(relPath: string): string {
-  return readFileSync(join(DEPLOY_ROOT, relPath), "utf-8");
+  return readFileSync(join(INFRA_ROOT_PATH, relPath), "utf-8");
 }
 
 describe("TC-DEPLOY-023", () => {
-  it("deploy/lib содержит специализированные библиотеки и не содержит _common.sh", () => {
-    expect(existsSync(join(DEPLOY_ROOT, "lib/bootstrap.sh"))).toBe(
+  it("infra/lib содержит специализированные библиотеки и не содержит _common.sh", () => {
+    expect(existsSync(join(INFRA_ROOT_PATH, "lib/bootstrap.sh"))).toBe(
       true,
     );
     expect(
-      existsSync(join(DEPLOY_ROOT, "lib/laravel-runtime.sh")),
+      existsSync(join(INFRA_ROOT_PATH, "lib/laravel-runtime.sh")),
     ).toBe(true);
-    expect(existsSync(join(DEPLOY_ROOT, "lib/dry-run.sh"))).toBe(
+    expect(existsSync(join(INFRA_ROOT_PATH, "lib/dry-run.sh"))).toBe(
       true,
     );
-    expect(existsSync(join(DEPLOY_ROOT, "lib/telegram.sh"))).toBe(
+    expect(existsSync(join(INFRA_ROOT_PATH, "lib/telegram.sh"))).toBe(
       true,
     );
-    expect(existsSync(join(DEPLOY_ROOT, "lib/health-state.sh"))).toBe(
+    expect(existsSync(join(INFRA_ROOT_PATH, "lib/health-state.sh"))).toBe(
       true,
     );
-    expect(existsSync(join(DEPLOY_ROOT, "lib/_common.sh"))).toBe(
+    expect(existsSync(join(INFRA_ROOT_PATH, "lib/_common.sh"))).toBe(
       false,
     );
   });
 
-  it("deploy-скрипты больше не source'ят _common.sh", () => {
+  it("infra-скрипты больше не source'ят _common.sh", () => {
     const scripts = [
       "bootstrap/install.sh",
       "bootstrap/uninstall.sh",
@@ -57,25 +59,25 @@ describe("TC-DEPLOY-023", () => {
 
   it("ключевые скрипты подключают предметные библиотеки по назначению", () => {
     expect(read("maintenance/backup.sh")).toMatch(
-      /source "\$DEPLOY_DIR\/lib\/bootstrap\.sh"/,
+      /source "\$INFRA_SCRIPT_ROOT\/lib\/bootstrap\.sh"/,
     );
     expect(read("runtime/deploy.sh")).toMatch(
-      /source "\$DEPLOY_DIR\/lib\/laravel-runtime\.sh"/,
+      /source "\$INFRA_SCRIPT_ROOT\/lib\/laravel-runtime\.sh"/,
     );
     expect(read("runtime/deploy.sh")).toMatch(
-      /source "\$DEPLOY_DIR\/lib\/telegram\.sh"/,
+      /source "\$INFRA_SCRIPT_ROOT\/lib\/telegram\.sh"/,
     );
     expect(read("runtime/watch-changes.sh")).toMatch(
-      /source "\$DEPLOY_DIR\/lib\/bootstrap\.sh"/,
+      /source "\$INFRA_SCRIPT_ROOT\/lib\/bootstrap\.sh"/,
     );
     expect(read("runtime/watch-changes.sh")).toMatch(
-      /source "\$DEPLOY_DIR\/lib\/telegram\.sh"/,
+      /source "\$INFRA_SCRIPT_ROOT\/lib\/telegram\.sh"/,
     );
     expect(
       read("observability/infrastructure/server-watchdog.sh"),
-    ).toMatch(/source "\$DEPLOY_DIR\/lib\/laravel-runtime\.sh"/);
+    ).toMatch(/source "\$INFRA_SCRIPT_ROOT\/lib\/laravel-runtime\.sh"/);
     expect(
       read("observability/infrastructure/server-watchdog.sh"),
-    ).toMatch(/source "\$DEPLOY_DIR\/lib\/health-state\.sh"/);
+    ).toMatch(/source "\$INFRA_SCRIPT_ROOT\/lib\/health-state\.sh"/);
   });
 });
