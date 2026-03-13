@@ -22,7 +22,7 @@ Do not mix these axes in one document without a strong reason.
 Use the repo's document roles consistently:
 
 - `docs/foundations/IMPLEMENTATION.md` -> how the system is physically/factually implemented; structure, boundaries, responsibilities, connections
-- `deploy/DEPLOY.md` -> physical infrastructure and deploy/ops processes
+- `infrastructure/DEPLOY.md` -> physical infrastructure and runtime/ops processes
 - `docs/manual/USER_MANUAL.md`, `CLERC_MANUAL.md`, `ADMIN_MANUAL.md`, `TESTING.md` -> runbooks / ways of using the system
 - `test-cases/*` -> traceability from docs/requirements to verification
 

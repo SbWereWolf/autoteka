@@ -25,7 +25,7 @@ This directory is formatted for repo-local Codex skill discovery.
    - `$backend review this Laravel controller`
    - `$frontend refactor this Vue page`
    - `$layout-and-design audit this modal`
-   - `$infrastructure review this deploy script`
+   - `$infrastructure review this runtime script`
    - `$tech-writer rewrite this IMPLEMENTATION section`
 
 ## Notes
