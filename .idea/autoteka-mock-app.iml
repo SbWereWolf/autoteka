@@ -422,6 +422,10 @@
       <excludeFolder url="file://$MODULE_DIR$/vendor/symfony/stopwatch" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/symfony/string" />
       <excludeFolder url="file://$MODULE_DIR$/node_modules.win" />
+      <excludeFolder url="file://$MODULE_DIR$/frontend/node_modules.wsl" />
+      <excludeFolder url="file://$MODULE_DIR$/infrastructure/tests/node_modules.wsl" />
+      <excludeFolder url="file://$MODULE_DIR$/node_modules.wsl" />
+      <excludeFolder url="file://$MODULE_DIR$/system-tests/node_modules.wsl" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

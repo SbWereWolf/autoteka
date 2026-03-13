@@ -1,5 +1,15 @@
 # AGENTS.md
 
+## Language
+
+The agent must write in Russian. Project text artifacts must also 
+be in Russian, except where standard English syntax is required 
+for a command, flag, API, filename, library, technology name, 
+or where English is explicitly required by this document.
+
+If there is no loss of precision between a Russian and an English 
+formulation, the agent must choose Russian.
+
 ## 0. Canonical Workflow (Mandatory)
 
 Always follow this sequence:
