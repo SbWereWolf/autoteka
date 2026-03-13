@@ -1,10 +1,13 @@
 param(
     [Parameter(Mandatory = $true)]
     [string]$Message,
+    [Parameter(Mandatory = $true)]
     [ValidateSet("UserMessage", "ProposedPlan", "FinalAnswer")]
-    [string]$Type = "ProposedPlan",
-    [string]$AISystemName = "Codex",
-    [string]$LLMName = "gpt-5"
+    [string]$Type,
+    [Parameter(Mandatory = $true)]
+    [string]$AISystemName,
+    [Parameter(Mandatory = $true)]
+    [string]$LLMName
 )
 
 $ErrorActionPreference = "Stop"
