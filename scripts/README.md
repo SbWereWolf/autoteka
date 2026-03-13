@@ -12,9 +12,8 @@
   key/value-словарь.
 - `resolve-bash-runtime.ps1` — выбор bash-интерпретатора через
   `scripts/.env` и PATH.
-- `swap-env.ps1` / `swap-env.sh` — переключение platform-dependent
-  рабочих путей между `win` и `wsl` через active файлы и средовые
-  варианты.
+- `swap-env.ps1` / `swap-env.sh` — явная проверка, сохранение и загрузка
+  platform-specific артефактов для `win` и `wsl`.
 - `check-bash-runtime.ps1` — проверка запуска bash и синтаксиса
   `commit-with-message.sh`.
 - `log-entry.ps1` — запись журнала работ в `logs/` по правилам из
@@ -36,28 +35,121 @@
 - `SCRIPT_PHP_PATH` — путь к исполняемому файлу `php` для репозиторных
   PowerShell-скриптов, включая `scripts/agent/verify.ps1`.
 
-## Переключение platform env
+## Работа с platform env
 
-`swap-env.ps1` и `swap-env.sh` определяют текущую среду (`win` или
-`wsl`) и приводят рабочие пути к схеме с активным набором:
+`swap-env.ps1` и `swap-env.sh` определяют текущую среду запуска (`win`
+или `wsl`) и работают только с артефактами этой среды. Автоматического
+переключения нет: пользователь сам решает, когда проверять активное
+состояние, когда сохранять его в platform-specific storage и когда
+загружать сохранённый набор обратно в active-пути.
 
-- `node_modules` — рабочий каталог текущей среды
-- `node_modules.win` / `node_modules.wsl` — неактивные средовые варианты
-- `package-lock.json` — рабочий lock текущей среды
-- `package-lock.win.json` / `package-lock.wsl.json` — версионируемые
-  средовые lock-файлы
-- `scripts/.env` — активный env для общих PowerShell/bash-скриптов
-- `lint/.env` — активный env для lint-скриптов
-- `backend/apps/ShopAPI/.env` — активный env runtime `ShopAPI`
-- `backend/apps/ShopOperator/.env` — активный env runtime
-  `ShopOperator`
+### Команды
 
-Для переключения сред скрипты перемещают active пути между вариантами, а
-не полагаются на `node_modules`-симлинки в WSL. Active `package-lock.json`
-остается локальным рабочим файлом и не должен попадать в Git.
-То же правило действует для active `.env`: сами runtime/verify/lint
-скрипты работают только с `.env`, а platform-specific варианты
-`win.env` / `wsl.env` подменяются заранее через `swap-env.*`.
+- `validate` — сверяет active-артефакт с env-specific артефактом текущей
+  среды. Это команда по умолчанию.
+- `save` — полностью перезаписывает env-specific артефакт текущей среды
+  из active-артефакта.
+- `load` — полностью перезаписывает active-артефакт из env-specific
+  артефакта текущей среды.
+- `--help` — показывает `USAGE`, список типов и связанные пути.
+
+`--dry-run` поддерживается только у `validate` и показывает, на каких
+парах будет ошибка, не меняя файлы и каталоги.
+
+### Что проверяется и сохраняется
+
+Типы файлов:
+
+- `root-lock`
+- `frontend-lock`
+- `system-tests-lock`
+- `infrastructure-tests-lock`
+- `scripts-env`
+- `lint-env`
+- `shop-api-env`
+- `shop-operator-env`
+
+Типы каталогов:
+
+- `root-node-modules`
+- `frontend-node-modules`
+- `system-tests-node-modules`
+- `infrastructure-tests-node-modules`
+
+Сопоставление путей:
+
+- `*-env` — active `.env` и `win.env` / `wsl.env`
+- `*-lock` — active `package-lock.json` и
+  `package-lock.win.json` / `package-lock.wsl.json`
+- `*-node-modules` — active `node_modules` и
+  `node_modules.win` / `node_modules.wsl`
+
+`validate` сравнивает:
+
+- файлы — по полному совпадению содержимого;
+- каталоги `node_modules` — только по списку относительных директорий,
+  без сравнения списков файлов и без сравнения содержимого файлов.
+
+Если обязательный источник для текущей среды не найден или не читается,
+`swap-env` завершится с кодом `3`. Если источник найден, но содержимое
+или структура не совпадают, `swap-env` завершится с кодом `1` и
+попросит пользователя синхронизировать артефакты вручную.
+
+### Примеры
+
+Проверка всего active-набора:
+
+```powershell
+pwsh ./scripts/swap-env.ps1
+pwsh ./scripts/swap-env.ps1 validate --dry-run
+```
+
+```bash
+bash ./scripts/swap-env.sh
+bash ./scripts/swap-env.sh validate --dry-run
+```
+
+Сохранение активных артефактов текущей среды:
+
+```powershell
+pwsh ./scripts/swap-env.ps1 save `
+  --type scripts-env `
+  --type lint-env `
+  --type root-lock
+```
+
+```bash
+bash ./scripts/swap-env.sh save \
+  --type scripts-env \
+  --type lint-env \
+  --type root-lock
+```
+
+Загрузка сохранённых артефактов текущей среды в active-пути:
+
+```powershell
+pwsh ./scripts/swap-env.ps1 load `
+  --type scripts-env `
+  --type lint-env `
+  --type root-lock
+```
+
+```bash
+bash ./scripts/swap-env.sh load \
+  --type scripts-env \
+  --type lint-env \
+  --type root-lock
+```
+
+Полная справка:
+
+```powershell
+pwsh ./scripts/swap-env.ps1 --help
+```
+
+```bash
+bash ./scripts/swap-env.sh --help
+```
 
 ## Примеры helper-коммита
 

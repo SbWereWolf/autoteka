@@ -1,35 +1,32 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-mode="switch"
-if [[ "${1:-}" == "--status" ]]; then
-  mode="status"
-elif [[ "${1:-}" == "--dry-run" ]]; then
-  mode="dry-run"
-elif [[ "${1:-}" != "" ]]; then
-  printf "Usage: %s [--status|--dry-run]\n" "$(basename "$0")" >&2
-  exit 1
-fi
-
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 repo_root="$(cd "$script_dir/.." && pwd)"
-state_file="$repo_root/.node-env.active"
 
-package_roots=(
-  "."
-  "frontend"
-  "system-tests"
-  "infrastructure/tests"
+all_types=(
+  "root-lock"
+  "frontend-lock"
+  "system-tests-lock"
+  "infrastructure-tests-lock"
+  "root-node-modules"
+  "frontend-node-modules"
+  "system-tests-node-modules"
+  "infrastructure-tests-node-modules"
+  "scripts-env"
+  "lint-env"
+  "shop-api-env"
+  "shop-operator-env"
 )
 
-env_roots=(
-  "scripts"
-  "lint"
-  "backend/apps/ShopAPI"
-  "backend/apps/ShopOperator"
-)
+subcommand="validate"
+dry_run=0
+show_help=0
+declare -a requested_types=()
+declare -a missing_messages=()
+declare -a mismatch_messages=()
 
-get_target_platform() {
+get_current_platform() {
   if [[ -n "${WSL_DISTRO_NAME:-}" || -n "${WSL_INTEROP:-}" ]]; then
     printf "wsl"
     return
@@ -38,370 +35,599 @@ get_target_platform() {
   printf "win"
 }
 
-get_state_platform() {
-  if [[ ! -f "$state_file" ]]; then
-    return
-  fi
+current_platform="$(get_current_platform)"
 
-  local value
-  value="$(tr -d '\r\n' < "$state_file")"
-  if [[ "$value" == "win" || "$value" == "wsl" ]]; then
-    printf "%s" "$value"
-  fi
-}
-
-set_state_platform() {
-  local platform="$1"
-
-  if [[ "$mode" == "dry-run" ]]; then
-    printf "[swap-env] dry-run write state '%s' -> '%s'\n" "$platform" "$state_file"
-    return
-  fi
-
-  printf "%s" "$platform" > "$state_file"
-}
-
-path_exists_any() {
-  local path="$1"
-  [[ -e "$path" || -L "$path" ]]
-}
-
-get_link_platform() {
-  local path="$1"
-
-  if [[ ! -L "$path" ]]; then
-    return
-  fi
-
-  local target
-  target="$(readlink "$path")"
-
-  case "$(basename "$target")" in
-    *.win|*.win.json)
-      printf "win"
+get_type_kind() {
+  case "$1" in
+    root-lock|frontend-lock|system-tests-lock|infrastructure-tests-lock|scripts-env|lint-env|shop-api-env|shop-operator-env)
+      printf "file"
       ;;
-    *.wsl|*.wsl.json)
-      printf "wsl"
+    root-node-modules|frontend-node-modules|system-tests-node-modules|infrastructure-tests-node-modules)
+      printf "directory"
       ;;
     *)
-      printf "other"
+      return 1
       ;;
   esac
 }
 
-describe_active_entry() {
+get_type_active_path() {
+  case "$1" in
+    root-lock)
+      printf "%s/package-lock.json" "$repo_root"
+      ;;
+    frontend-lock)
+      printf "%s/frontend/package-lock.json" "$repo_root"
+      ;;
+    system-tests-lock)
+      printf "%s/system-tests/package-lock.json" "$repo_root"
+      ;;
+    infrastructure-tests-lock)
+      printf "%s/infrastructure/tests/package-lock.json" "$repo_root"
+      ;;
+    root-node-modules)
+      printf "%s/node_modules" "$repo_root"
+      ;;
+    frontend-node-modules)
+      printf "%s/frontend/node_modules" "$repo_root"
+      ;;
+    system-tests-node-modules)
+      printf "%s/system-tests/node_modules" "$repo_root"
+      ;;
+    infrastructure-tests-node-modules)
+      printf "%s/infrastructure/tests/node_modules" "$repo_root"
+      ;;
+    scripts-env)
+      printf "%s/scripts/.env" "$repo_root"
+      ;;
+    lint-env)
+      printf "%s/lint/.env" "$repo_root"
+      ;;
+    shop-api-env)
+      printf "%s/backend/apps/ShopAPI/.env" "$repo_root"
+      ;;
+    shop-operator-env)
+      printf "%s/backend/apps/ShopOperator/.env" "$repo_root"
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+}
+
+get_type_variant_path() {
+  local type_name="$1"
+  local platform_name="$2"
+
+  case "$type_name" in
+    root-lock)
+      printf "%s/package-lock.%s.json" "$repo_root" "$platform_name"
+      ;;
+    frontend-lock)
+      printf "%s/frontend/package-lock.%s.json" "$repo_root" "$platform_name"
+      ;;
+    system-tests-lock)
+      printf "%s/system-tests/package-lock.%s.json" "$repo_root" "$platform_name"
+      ;;
+    infrastructure-tests-lock)
+      printf "%s/infrastructure/tests/package-lock.%s.json" "$repo_root" "$platform_name"
+      ;;
+    root-node-modules)
+      printf "%s/node_modules.%s" "$repo_root" "$platform_name"
+      ;;
+    frontend-node-modules)
+      printf "%s/frontend/node_modules.%s" "$repo_root" "$platform_name"
+      ;;
+    system-tests-node-modules)
+      printf "%s/system-tests/node_modules.%s" "$repo_root" "$platform_name"
+      ;;
+    infrastructure-tests-node-modules)
+      printf "%s/infrastructure/tests/node_modules.%s" "$repo_root" "$platform_name"
+      ;;
+    scripts-env)
+      printf "%s/scripts/%s.env" "$repo_root" "$platform_name"
+      ;;
+    lint-env)
+      printf "%s/lint/%s.env" "$repo_root" "$platform_name"
+      ;;
+    shop-api-env)
+      printf "%s/backend/apps/ShopAPI/%s.env" "$repo_root" "$platform_name"
+      ;;
+    shop-operator-env)
+      printf "%s/backend/apps/ShopOperator/%s.env" "$repo_root" "$platform_name"
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+}
+
+print_help() {
+  cat <<EOF
+USAGE
+  $(basename "$0") [validate] [--dry-run] [--type TYPE ...]
+  $(basename "$0") save --type TYPE [--type TYPE ...]
+  $(basename "$0") load --type TYPE [--type TYPE ...]
+  $(basename "$0") --help
+
+Описание
+  Скрипт определяет текущее окружение запуска и работает только с
+  артефактами этой среды. Автоматического переключения между win и wsl нет.
+
+Команды
+  validate   Проверяет, что active-артефакты совпадают с артефактами
+             текущей среды. Это команда по умолчанию.
+  save       Перезаписывает env-specific артефакты текущей среды из
+             active-артефактов.
+  load       Перезаписывает active-артефакты из env-specific
+             артефактов текущей среды.
+
+Флаги
+  --type TYPE   Повторяемый тип для обработки.
+  --dry-run     Разрешён только для validate и показывает, где была бы ошибка.
+  --help        Показать эту справку.
+
+Текущее окружение
+  $current_platform
+
+Типы и пути
+$(for type_name in "${all_types[@]}"; do
+  active_path="$(get_type_active_path "$type_name")"
+  win_path="$(get_type_variant_path "$type_name" "win")"
+  wsl_path="$(get_type_variant_path "$type_name" "wsl")"
+  printf "  %s\n    active: %s\n    win:    %s\n    wsl:    %s\n" "$type_name" "$active_path" "$win_path" "$wsl_path"
+done)
+EOF
+}
+
+append_missing_message() {
+  missing_messages+=("$1")
+}
+
+append_mismatch_message() {
+  mismatch_messages+=("$1")
+}
+
+is_known_type() {
+  local type_name="$1"
+  local known_type
+  for known_type in "${all_types[@]}"; do
+    if [[ "$known_type" == "$type_name" ]]; then
+      return 0
+    fi
+  done
+
+  return 1
+}
+
+unique_types() {
+  local -a deduped=()
+  local candidate
+  local existing
+  for candidate in "$@"; do
+    local seen=0
+    for existing in "${deduped[@]}"; do
+      if [[ "$existing" == "$candidate" ]]; then
+        seen=1
+        break
+      fi
+    done
+    if [[ "$seen" -eq 0 ]]; then
+      deduped+=("$candidate")
+    fi
+  done
+
+  printf "%s\n" "${deduped[@]}"
+}
+
+print_messages() {
+  local prefix="$1"
+  local message
+
+  for message in "${missing_messages[@]}"; do
+    printf "[swap-env] %s%s\n" "$prefix" "$message" >&2
+  done
+
+  for message in "${mismatch_messages[@]}"; do
+    printf "[swap-env] %s%s\n" "$prefix" "$message" >&2
+  done
+}
+
+ensure_file_source_readable() {
+  local type_name="$1"
+  local path_role="$2"
+  local source_path="$3"
+  local peer_path="$4"
+
+  if [[ ! -e "$source_path" && ! -L "$source_path" ]]; then
+    append_missing_message "Для типа '$type_name' отсутствует $path_role: ожидался файл '$source_path'. Связанный путь: '$peer_path'. Создайте файл или синхронизируйте его вручную и повторите запуск."
+    return 1
+  fi
+
+  if [[ ! -f "$source_path" ]]; then
+    append_missing_message "Для типа '$type_name' $path_role не читается: ожидался файл '$source_path'. Связанный путь: '$peer_path'. Исправьте путь или пересоздайте файл и повторите запуск."
+    return 1
+  fi
+
+  if [[ ! -r "$source_path" ]]; then
+    append_missing_message "Для типа '$type_name' $path_role не читается: не удалось прочитать '$source_path'. Связанный путь: '$peer_path'. Исправьте права доступа или пересоздайте файл и повторите запуск."
+    return 1
+  fi
+
+  return 0
+}
+
+ensure_directory_source_readable() {
+  local type_name="$1"
+  local path_role="$2"
+  local source_path="$3"
+  local peer_path="$4"
+
+  if [[ ! -e "$source_path" && ! -L "$source_path" ]]; then
+    append_missing_message "Для типа '$type_name' отсутствует $path_role: ожидалась директория '$source_path'. Связанный путь: '$peer_path'. Создайте директорию или синхронизируйте её вручную и повторите запуск."
+    return 1
+  fi
+
+  if [[ ! -d "$source_path" ]]; then
+    append_missing_message "Для типа '$type_name' $path_role не читается: ожидалась директория '$source_path'. Связанный путь: '$peer_path'. Исправьте путь или пересоздайте директорию и повторите запуск."
+    return 1
+  fi
+
+  if ! find "$source_path" -type d -printf '%P\n' >/dev/null 2>&1; then
+    append_missing_message "Для типа '$type_name' $path_role не читается: не удалось прочитать структуру директорий '$source_path'. Связанный путь: '$peer_path'. Исправьте права доступа или пересоздайте директорию и повторите запуск."
+    return 1
+  fi
+
+  return 0
+}
+
+get_directory_list() {
   local path="$1"
-
-  if [[ -L "$path" ]]; then
-    local link_platform
-    link_platform="$(get_link_platform "$path")"
-
-    if [[ -e "$path" ]]; then
-      printf "symlink-%s" "$link_platform"
-    else
-      printf "broken-symlink-%s" "$link_platform"
-    fi
-    return
-  fi
-
-  if [[ -d "$path" ]]; then
-    printf "directory"
-    return
-  fi
-
-  if [[ -f "$path" ]]; then
-    printf "file"
-    return
-  fi
-
-  if [[ -e "$path" ]]; then
-    printf "other"
-    return
-  fi
-
-  printf "missing"
+  find "$path" -type d -printf '%P\n' | LC_ALL=C sort
 }
 
-get_inferred_platform() {
-  local active_description="$1"
-  local has_win_variant="$2"
-  local has_wsl_variant="$3"
-  local state_platform="$4"
+compare_type() {
+  local type_name="$1"
+  local kind="$2"
+  local active_path="$3"
+  local env_path="$4"
 
-  case "$active_description" in
-    symlink-win|broken-symlink-win)
-      printf "win"
-      return
-      ;;
-    symlink-wsl|broken-symlink-wsl)
-      printf "wsl"
-      return
-      ;;
-  esac
-
-  if [[ "$active_description" != "missing" ]]; then
-    if [[ "$has_wsl_variant" -eq 1 && "$has_win_variant" -eq 0 ]]; then
-      printf "win"
-      return
+  if [[ "$kind" == "file" ]]; then
+    ensure_file_source_readable "$type_name" "active-файл" "$active_path" "$env_path" || return
+    ensure_file_source_readable "$type_name" "файл текущей среды" "$env_path" "$active_path" || return
+    if ! cmp -s "$active_path" "$env_path"; then
+      append_mismatch_message "Для типа '$type_name' файл '$active_path' не совпадает с '$env_path'. Синхронизируйте эти файлы вручную и повторите запуск."
     fi
-
-    if [[ "$has_win_variant" -eq 1 && "$has_wsl_variant" -eq 0 ]]; then
-      printf "wsl"
-      return
-    fi
-
-    if [[ -n "$state_platform" ]]; then
-      printf "%s" "$state_platform"
-      return
-    fi
-
-    printf "unknown-active"
     return
   fi
 
-  if [[ "$has_win_variant" -eq 1 || "$has_wsl_variant" -eq 1 ]]; then
-    printf "stored-only"
-    return
-  fi
+  ensure_directory_source_readable "$type_name" "active-директория" "$active_path" "$env_path" || return
+  ensure_directory_source_readable "$type_name" "директория текущей среды" "$env_path" "$active_path" || return
 
-  printf "empty"
+  local active_dirs
+  local env_dirs
+  active_dirs="$(get_directory_list "$active_path")"
+  env_dirs="$(get_directory_list "$env_path")"
+  if [[ "$active_dirs" != "$env_dirs" ]]; then
+    append_mismatch_message "Для типа '$type_name' структура директорий '$active_path' не совпадает с '$env_path'. Синхронизируйте эти директории вручную и повторите запуск."
+  fi
 }
 
-invoke_move() {
+remove_destination_path() {
+  local destination_path="$1"
+  if [[ -e "$destination_path" || -L "$destination_path" ]]; then
+    if rm -rf "$destination_path"; then
+      return
+    fi
+
+    if [[ "$current_platform" == "wsl" && "$destination_path" =~ ^/mnt/[a-zA-Z]/ ]] && command -v wslpath >/dev/null 2>&1 && command -v cmd.exe >/dev/null 2>&1; then
+      local windows_path
+      windows_path="$(wslpath -w "$destination_path")"
+      if [[ -d "$destination_path" ]]; then
+        cmd.exe /d /c rd /s /q "$windows_path" >/dev/null 2>&1 && return
+      else
+        cmd.exe /d /c del /f /q "$windows_path" >/dev/null 2>&1 && return
+      fi
+    fi
+
+    printf "[swap-env] Не удалось удалить путь '%s'.\n" "$destination_path" >&2
+    exit 1
+  fi
+}
+
+copy_file_artifact() {
   local source_path="$1"
   local destination_path="$2"
-
-  if [[ "$mode" == "dry-run" ]]; then
-    printf "[swap-env] dry-run move '%s' -> '%s'\n" "$source_path" "$destination_path"
-    return
-  fi
-
-  mv "$source_path" "$destination_path"
+  mkdir -p "$(dirname "$destination_path")"
+  cp "$source_path" "$destination_path"
 }
 
-remove_link() {
-  local path="$1"
-
-  if [[ "$mode" == "dry-run" ]]; then
-    printf "[swap-env] dry-run remove link '%s'\n" "$path"
+copy_directory_artifact() {
+  local source_path="$1"
+  local destination_path="$2"
+  mkdir -p "$destination_path"
+  if command -v rsync >/dev/null 2>&1; then
+    rsync -a --delete "$source_path"/ "$destination_path"/
     return
   fi
 
-  rm -f "$path"
+  cp -a "$source_path"/. "$destination_path"/
 }
 
-remove_path() {
-  local path="$1"
+save_or_load_type() {
+  local action_name="$1"
+  local type_name="$2"
+  local kind="$3"
+  local source_path="$4"
+  local destination_path="$5"
 
-  if [[ "$mode" == "dry-run" ]]; then
-    printf "[swap-env] dry-run remove '%s'\n" "$path"
+  if [[ "$kind" == "file" ]]; then
+    ensure_file_source_readable "$type_name" "исходный файл для '$action_name'" "$source_path" "$destination_path" || return
+    remove_destination_path "$destination_path"
+    copy_file_artifact "$source_path" "$destination_path"
+    printf "[swap-env] %s: '%s' -> '%s'\n" "$type_name" "$source_path" "$destination_path"
     return
   fi
 
-  if [[ -d "$path" && ! -L "$path" ]]; then
-    rm -rf "$path"
-    return
-  fi
-
-  if path_exists_any "$path"; then
-    rm -f "$path"
-  fi
+  ensure_directory_source_readable "$type_name" "исходная директория для '$action_name'" "$source_path" "$destination_path" || return
+  remove_destination_path "$destination_path"
+  copy_directory_artifact "$source_path" "$destination_path"
+  printf "[swap-env] %s: '%s' -> '%s'\n" "$type_name" "$source_path" "$destination_path"
 }
 
-get_status_label() {
-  local path="$1"
-  local target_platform="$2"
+run_single_validate_type() {
+  local type_name="$1"
+  local validate_dry_run="$2"
+  local kind
+  local active_path
+  local env_path
 
-  if [[ -d "$path" ]]; then
-    printf "directory:%s" "$target_platform"
-    return
+  kind="$(get_type_kind "$type_name")"
+  active_path="$(get_type_active_path "$type_name")"
+  env_path="$(get_type_variant_path "$type_name" "$current_platform")"
+
+  compare_type "$type_name" "$kind" "$active_path" "$env_path"
+
+  if [[ "${#missing_messages[@]}" -gt 0 || "${#mismatch_messages[@]}" -gt 0 ]]; then
+    if [[ "$validate_dry_run" -eq 1 ]]; then
+      print_messages "dry-run: "
+    else
+      print_messages ""
+    fi
+
+    if [[ "${#missing_messages[@]}" -gt 0 ]]; then
+      exit 3
+    fi
+
+    exit 1
   fi
 
-  if [[ -f "$path" ]]; then
-    printf "file:%s" "$target_platform"
-    return
-  fi
-
-  if [[ -L "$path" ]]; then
-    printf "symlink:%s" "$target_platform"
-    return
-  fi
-
-  printf "missing"
+  exit 0
 }
 
-switch_entry() {
-  local entry_label="$1"
-  local active_path="$2"
-  local win_variant_path="$3"
-  local wsl_variant_path="$4"
-  local state_platform="$5"
-  local target_platform="$6"
-
-  local active_description
-  active_description="$(describe_active_entry "$active_path")"
-
-  local has_win_variant=0
-  local has_wsl_variant=0
-  path_exists_any "$win_variant_path" && has_win_variant=1
-  path_exists_any "$wsl_variant_path" && has_wsl_variant=1
-
-  local inferred_platform
-  inferred_platform="$(get_inferred_platform "$active_description" "$has_win_variant" "$has_wsl_variant" "$state_platform")"
-
-  local current_variant_path=""
-  local target_variant_path=""
-  if [[ "$inferred_platform" == "win" ]]; then
-    current_variant_path="$win_variant_path"
-  elif [[ "$inferred_platform" == "wsl" ]]; then
-    current_variant_path="$wsl_variant_path"
+get_max_parallel_jobs() {
+  local cpu_count=1
+  if command -v nproc >/dev/null 2>&1; then
+    cpu_count="$(nproc)"
   fi
 
-  if [[ "$target_platform" == "win" ]]; then
-    target_variant_path="$win_variant_path"
+  local max_jobs=$(( cpu_count * 80 / 100 ))
+  if [[ "$max_jobs" -lt 1 ]]; then
+    max_jobs=1
+  fi
+
+  printf "%s" "$max_jobs"
+}
+
+run_parallel_validate() {
+  local validate_dry_run="$1"
+  shift
+  local -a types_to_check=("$@")
+  local -a ordered_types=()
+  local -a running_pids=()
+  local -a running_indexes=()
+  local -a output_files=()
+  local -a exit_codes=()
+  local type_name
+  local index=0
+  local max_jobs
+  local temp_dir
+  local has_missing=0
+  local has_mismatch=0
+  local has_internal_error=0
+
+  for type_name in "${types_to_check[@]}"; do
+    if [[ "$(get_type_kind "$type_name")" == "directory" ]]; then
+      ordered_types+=("$type_name")
+    fi
+  done
+
+  for type_name in "${types_to_check[@]}"; do
+    if [[ "$(get_type_kind "$type_name")" == "file" ]]; then
+      ordered_types+=("$type_name")
+    fi
+  done
+
+  max_jobs="$(get_max_parallel_jobs)"
+  temp_dir="$(mktemp -d)"
+
+  collect_finished_job() {
+    local pid="$1"
+    local job_index="$2"
+    local status=0
+
+    set +e
+    wait "$pid"
+    status=$?
+    set -e
+
+    exit_codes[$job_index]="$status"
+
+    if [[ -s "${output_files[$job_index]}" ]]; then
+      cat "${output_files[$job_index]}" >&2
+    fi
+  }
+
+  while [[ "$index" -lt "${#ordered_types[@]}" ]]; do
+    type_name="${ordered_types[$index]}"
+    output_files[$index]="$temp_dir/$index.out"
+
+    if [[ "$validate_dry_run" -eq 1 ]]; then
+      bash "$0" __validate-type --dry-run "$type_name" >"${output_files[$index]}" 2>&1 &
+    else
+      bash "$0" __validate-type "$type_name" >"${output_files[$index]}" 2>&1 &
+    fi
+
+    running_pids+=("$!")
+    running_indexes+=("$index")
+    index=$((index + 1))
+
+    if [[ "${#running_pids[@]}" -ge "$max_jobs" ]]; then
+      collect_finished_job "${running_pids[0]}" "${running_indexes[0]}"
+      running_pids=("${running_pids[@]:1}")
+      running_indexes=("${running_indexes[@]:1}")
+    fi
+  done
+
+  while [[ "${#running_pids[@]}" -gt 0 ]]; do
+    collect_finished_job "${running_pids[0]}" "${running_indexes[0]}"
+    running_pids=("${running_pids[@]:1}")
+    running_indexes=("${running_indexes[@]:1}")
+  done
+
+  rm -rf "$temp_dir"
+
+  for status in "${exit_codes[@]}"; do
+    case "${status:-0}" in
+      0)
+        ;;
+      1)
+        has_mismatch=1
+        ;;
+      3)
+        has_missing=1
+        ;;
+      *)
+        has_internal_error=1
+        ;;
+    esac
+  done
+
+  if [[ "$has_internal_error" -eq 1 ]]; then
+    exit 2
+  fi
+
+  if [[ "$has_missing" -eq 1 ]]; then
+    exit 3
+  fi
+
+  if [[ "$has_mismatch" -eq 1 ]]; then
+    exit 1
+  fi
+
+  if [[ "$validate_dry_run" -eq 1 ]]; then
+    printf "[swap-env] dry-run: все запрошенные типы синхронизированы для среды '%s'.\n" "$current_platform"
   else
-    target_variant_path="$wsl_variant_path"
+    printf "[swap-env] validate: все запрошенные типы синхронизированы для среды '%s'.\n" "$current_platform"
   fi
-
-  case "$active_description" in
-    symlink-*|broken-symlink-*)
-      remove_link "$active_path"
-      active_description="missing"
-      ;;
-  esac
-
-  case "$active_description" in
-    directory|file|other)
-      if [[ "$inferred_platform" == "unknown-active" ]]; then
-        printf "Cannot migrate active %s '%s': current platform is unknown. Set .node-env.active to 'win' or 'wsl' and retry.\n" \
-          "$entry_label" \
-          "$active_path" >&2
-        exit 1
-      fi
-
-      if [[ "$inferred_platform" == "$target_platform" ]]; then
-        printf "%s" "$(get_status_label "$active_path" "$target_platform")"
-        return
-      fi
-
-      if [[ -n "$current_variant_path" ]] && path_exists_any "$current_variant_path"; then
-        remove_path "$current_variant_path"
-      fi
-
-      if [[ -z "$current_variant_path" ]]; then
-        printf "Cannot switch active %s '%s': current platform is not resolved.\n" \
-          "$entry_label" \
-          "$active_path" >&2
-        exit 1
-      fi
-
-      invoke_move "$active_path" "$current_variant_path"
-      ;;
-  esac
-
-  if path_exists_any "$target_variant_path"; then
-    invoke_move "$target_variant_path" "$active_path"
-  fi
-
-  printf "%s" "$(get_status_label "$active_path" "$target_platform")"
 }
 
-target_platform="$(get_target_platform)"
-state_platform="$(get_state_platform)"
-
-for relative_root in "${package_roots[@]}"; do
-  if [[ "$relative_root" == "." ]]; then
-    package_root="$repo_root"
-  else
-    package_root="$repo_root/$relative_root"
+if [[ "${1:-}" == "__validate-type" ]]; then
+  shift
+  internal_dry_run=0
+  if [[ "${1:-}" == "--dry-run" ]]; then
+    internal_dry_run=1
+    shift
   fi
-
-  if [[ ! -f "$package_root/package.json" ]]; then
-    continue
+  if [[ "$#" -ne 1 ]]; then
+    printf "[swap-env] Внутренняя команда __validate-type ожидает ровно один type.\n" >&2
+    exit 2
   fi
-
-  active_node_modules="$package_root/node_modules"
-  win_node_modules="$package_root/node_modules.win"
-  wsl_node_modules="$package_root/node_modules.wsl"
-  active_lock="$package_root/package-lock.json"
-  win_lock="$package_root/package-lock.win.json"
-  wsl_lock="$package_root/package-lock.wsl.json"
-
-  node_modules_description="$(describe_active_entry "$active_node_modules")"
-  lock_description="$(describe_active_entry "$active_lock")"
-
-  has_win_node_modules=0
-  has_wsl_node_modules=0
-  has_win_lock=0
-  has_wsl_lock=0
-
-  path_exists_any "$win_node_modules" && has_win_node_modules=1
-  path_exists_any "$wsl_node_modules" && has_wsl_node_modules=1
-  path_exists_any "$win_lock" && has_win_lock=1
-  path_exists_any "$wsl_lock" && has_wsl_lock=1
-
-  node_modules_platform="$(get_inferred_platform "$node_modules_description" "$has_win_node_modules" "$has_wsl_node_modules" "$state_platform")"
-  lock_platform="$(get_inferred_platform "$lock_description" "$has_win_lock" "$has_wsl_lock" "$state_platform")"
-
-  if [[ "$mode" == "status" ]]; then
-    printf "[swap-env] %s -> target=%s, state=%s, node_modules=%s, node_modules.current=%s, node_modules.win=%s, node_modules.wsl=%s, package-lock=%s, package-lock.current=%s, package-lock.win=%s, package-lock.wsl=%s\n" \
-      "$relative_root" \
-      "$target_platform" \
-      "${state_platform:-missing}" \
-      "$node_modules_description" \
-      "$node_modules_platform" \
-      "$( [[ "$has_win_node_modules" -eq 1 ]] && printf "present" || printf "missing" )" \
-      "$( [[ "$has_wsl_node_modules" -eq 1 ]] && printf "present" || printf "missing" )" \
-      "$lock_description" \
-      "$lock_platform" \
-      "$( [[ "$has_win_lock" -eq 1 ]] && printf "present" || printf "missing" )" \
-      "$( [[ "$has_wsl_lock" -eq 1 ]] && printf "present" || printf "missing" )"
-    continue
+  if ! is_known_type "$1"; then
+    printf "[swap-env] Неподдерживаемый тип: %s\n" "$1" >&2
+    exit 2
   fi
-
-  node_modules_status="$(switch_entry "node_modules" "$active_node_modules" "$win_node_modules" "$wsl_node_modules" "$state_platform" "$target_platform")"
-  lock_status="$(switch_entry "package-lock" "$active_lock" "$win_lock" "$wsl_lock" "$state_platform" "$target_platform")"
-
-  printf "[swap-env] %s -> node_modules=%s, package-lock=%s\n" \
-    "$relative_root" \
-    "$node_modules_status" \
-    "$lock_status"
-done
-
-for relative_root in "${env_roots[@]}"; do
-  env_root="$repo_root/$relative_root"
-  active_env="$env_root/.env"
-  win_env="$env_root/win.env"
-  wsl_env="$env_root/wsl.env"
-
-  env_description="$(describe_active_entry "$active_env")"
-
-  has_win_env=0
-  has_wsl_env=0
-  path_exists_any "$win_env" && has_win_env=1
-  path_exists_any "$wsl_env" && has_wsl_env=1
-
-  env_platform="$(get_inferred_platform "$env_description" "$has_win_env" "$has_wsl_env" "$state_platform")"
-
-  if [[ "$mode" == "status" ]]; then
-    printf "[swap-env] %s -> target=%s, state=%s, .env=%s, .env.current=%s, win.env=%s, wsl.env=%s\n" \
-      "$relative_root" \
-      "$target_platform" \
-      "${state_platform:-missing}" \
-      "$env_description" \
-      "$env_platform" \
-      "$( [[ "$has_win_env" -eq 1 ]] && printf "present" || printf "missing" )" \
-      "$( [[ "$has_wsl_env" -eq 1 ]] && printf "present" || printf "missing" )"
-    continue
-  fi
-
-  env_status="$(switch_entry ".env" "$active_env" "$win_env" "$wsl_env" "$state_platform" "$target_platform")"
-
-  printf "[swap-env] %s -> .env=%s\n" \
-    "$relative_root" \
-    "$env_status"
-done
-
-if [[ "$mode" != "status" ]]; then
-  set_state_platform "$target_platform"
+  run_single_validate_type "$1" "$internal_dry_run"
 fi
+
+if [[ "${1:-}" == "validate" || "${1:-}" == "save" || "${1:-}" == "load" ]]; then
+  subcommand="$1"
+  shift
+fi
+
+while (($# > 0)); do
+  case "$1" in
+    --help|-h)
+      show_help=1
+      shift
+      ;;
+    --dry-run)
+      dry_run=1
+      shift
+      ;;
+    --type)
+      if (($# < 2)); then
+        printf "[swap-env] После --type ожидается значение.\n" >&2
+        exit 2
+      fi
+      requested_types+=("$2")
+      shift 2
+      ;;
+    --type=*)
+      requested_types+=("${1#--type=}")
+      shift
+      ;;
+    *)
+      printf "[swap-env] Неподдерживаемый аргумент: %s\n" "$1" >&2
+      exit 2
+      ;;
+  esac
+done
+
+if [[ "$show_help" -eq 1 ]]; then
+  print_help
+  exit 0
+fi
+
+if [[ "$dry_run" -eq 1 && "$subcommand" != "validate" ]]; then
+  printf "[swap-env] --dry-run поддерживается только для validate.\n" >&2
+  exit 2
+fi
+
+if [[ "${#requested_types[@]}" -eq 0 ]]; then
+  if [[ "$subcommand" == "validate" ]]; then
+    requested_types=("${all_types[@]}")
+  else
+    printf "[swap-env] Для команды %s нужен хотя бы один --type.\n" "$subcommand" >&2
+    exit 2
+  fi
+fi
+
+mapfile -t requested_types < <(unique_types "${requested_types[@]}")
+
+for type_name in "${requested_types[@]}"; do
+  if ! is_known_type "$type_name"; then
+    printf "[swap-env] Неподдерживаемый тип: %s\n" "$type_name" >&2
+    exit 2
+  fi
+done
+
+if [[ "$subcommand" == "validate" ]]; then
+  run_parallel_validate "$dry_run" "${requested_types[@]}"
+  exit 0
+fi
+
+for type_name in "${requested_types[@]}"; do
+  kind="$(get_type_kind "$type_name")"
+  active_path="$(get_type_active_path "$type_name")"
+  env_path="$(get_type_variant_path "$type_name" "$current_platform")"
+
+  case "$subcommand" in
+    save)
+      save_or_load_type "save" "$type_name" "$kind" "$active_path" "$env_path"
+      ;;
+    load)
+      save_or_load_type "load" "$type_name" "$kind" "$env_path" "$active_path"
+      ;;
+  esac
+done
