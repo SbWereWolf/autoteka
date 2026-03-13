@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Backup deploy settings: env, systemd, docker, fail2ban, logrotate.
+# Backup deploy settings: env, systemd, docker, fail2ban, logrotate + app data.
 # Creates tar.gz archive with deploy configuration affecting app and Docker services.
 # Runtime health incident state is intentionally NOT included.
 
@@ -13,6 +13,7 @@ source "$DEPLOY_DIR/lib/bootstrap.sh"
 load_autoteka_env
 
 OUTPUT_DIR="/root"
+IGNORE_ALLOWLIST_FILE="$INFRA_ROOT/maintenance/config/backup-ignored-allowlist.txt"
 
 usage() {
   cat <<'USAGE'
@@ -20,21 +21,22 @@ Usage:
   sudo ./deploy/maintenance/backup.sh [--output-dir=PATH]
 
 Purpose:
-  Create a backup archive with deploy-time configuration and secrets needed to
-  restore autoteka deployment settings on the same or another host.
+  Create a backup archive with deploy-time configuration, project secrets and
+  data required for restore on the same or another host.
 
 Included in backup:
   - /etc/autoteka/deploy.env
   - /etc/autoteka/telegram.env
   - backend/.env and frontend/.env from AUTOTEKA_ROOT
+  - backend/database and backend/storage from AUTOTEKA_ROOT
+  - ignored-files curated allowlist from INFRA_ROOT
   - systemd units installed by deploy/bootstrap/install.sh
   - docker/journald/fail2ban/logrotate configuration managed by this project
 
 Explicitly NOT included:
   - active watchdog/health incident state in /var/lib/server-watchdog*
   - Telegram notification dedup locks in ${TMPDIR:-/tmp}/autoteka-telegram-locks
-  - Docker images, volumes, bind-mounted runtime data, database contents
-  - application logs and temporary files
+  - Docker images and unnamed temporary files
 
 Options:
   --output-dir=PATH   Directory where the .tar.gz archive will be created.
@@ -93,19 +95,72 @@ copy_if_exists() {
   fi
 }
 
+copy_allowlisted_ignored() {
+  local allowlist_file="$1"
+
+  if [ ! -f "$allowlist_file" ]; then
+    echo "  (skip, allowlist not found: $allowlist_file)" >&2
+    return 0
+  fi
+
+  mkdir -p "$BACKUP_ROOT/project"
+  cp -a "$allowlist_file" "$BACKUP_ROOT/project/backup-ignored-allowlist.txt"
+
+  shopt -s nullglob dotglob globstar
+  while IFS= read -r line || [ -n "$line" ]; do
+    line="${line%%#*}"
+    line="${line#"${line%%[![:space:]]*}"}"
+    line="${line%"${line##*[![:space:]]}"}"
+    line="${line#./}"
+    line="${line#/}"
+    if [ -z "$line" ]; then
+      continue
+    fi
+    if [[ "$line" == "!"* ]]; then
+      continue
+    fi
+
+    local matches=( "$AUTOTEKA_ROOT"/$line )
+    if [ "${#matches[@]}" -eq 0 ]; then
+      echo "  (skip, allowlist miss: $line)" >&2
+      continue
+    fi
+
+    local src rel
+    for src in "${matches[@]}"; do
+      rel="${src#$AUTOTEKA_ROOT/}"
+      case "$rel" in
+        ""|../*|*/../*|*"/.."|..)
+          echo "  (skip, invalid allowlist path: $src)" >&2
+          continue
+          ;;
+      esac
+      copy_if_exists "$src" "$BACKUP_ROOT/project/ignored/$rel" || true
+    done
+  done < "$allowlist_file"
+  shopt -u nullglob dotglob globstar
+}
+
 TMP_DIR="$(mktemp -d)"
 BACKUP_ROOT="$TMP_DIR/$BACKUP_NAME"
 mkdir -p "$BACKUP_ROOT"
 
-say "Collecting deploy configuration..."
+say "Collecting deploy configuration and data..."
 
 # /etc/autoteka
 copy_if_exists /etc/autoteka/deploy.env "$BACKUP_ROOT/etc/autoteka/deploy.env" || true
 copy_if_exists /etc/autoteka/telegram.env "$BACKUP_ROOT/etc/autoteka/telegram.env" || true
 
-# project .env
+# project env
 copy_if_exists "$AUTOTEKA_ROOT/backend/.env" "$BACKUP_ROOT/project/backend/.env" || true
 copy_if_exists "$AUTOTEKA_ROOT/frontend/.env" "$BACKUP_ROOT/project/frontend/.env" || true
+
+# project data
+copy_if_exists "$AUTOTEKA_ROOT/backend/database" "$BACKUP_ROOT/project/backend/database" || true
+copy_if_exists "$AUTOTEKA_ROOT/backend/storage" "$BACKUP_ROOT/project/backend/storage" || true
+
+# curated ignored allowlist
+copy_allowlisted_ignored "$IGNORE_ALLOWLIST_FILE"
 
 # systemd units
 for u in autoteka.service watch-changes.service watch-changes.timer \
@@ -141,12 +196,17 @@ copy_if_exists /etc/logrotate.d/autoteka-backend \
 
 Path="$BACKUP_ROOT/BACKUP_NOTES.txt"
 cat > "$Path" <<NOTES
-Autoteka deploy backup created at: $(date -Is)
+Autoteka backup created at: $(date -Is)
 AUTOTEKA_ROOT snapshot source: $AUTOTEKA_ROOT
+INFRA_ROOT snapshot source: $INFRA_ROOT
 
-This archive contains deploy-time configuration only.
+This archive contains deploy-time configuration and selected project data:
+- env and system configs
+- backend/database and backend/storage
+- curated ignored allowlist content
+
 It intentionally does NOT include runtime watchdog/health incident state,
-Telegram deduplication locks, logs, Docker images, volumes, or application data.
+Telegram deduplication locks, logs, or Docker images.
 
 After restore, restart monitoring from a clean state.
 NOTES

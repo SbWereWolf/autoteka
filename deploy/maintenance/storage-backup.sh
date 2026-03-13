@@ -41,7 +41,7 @@ BACKUP_DIR="${STORAGE_BACKUP_DIR:-/root/autoteka-storage-backups}"
 RETENTION_DAYS="${STORAGE_BACKUP_RETENTION_DAYS:-7}"
 TS="$(date +%Y%m%d-%H%M%S)"
 ARCHIVE="$BACKUP_DIR/storage-db-$TS.tar.gz"
-COMPOSE_FILE="$AUTOTEKA_ROOT/deploy/runtime/docker-compose.yml"
+COMPOSE_FILE="$INFRA_ROOT/runtime/docker-compose.yml"
 
 if ! [[ "$RETENTION_DAYS" =~ ^[0-9]+$ ]]; then
   echo "STORAGE_BACKUP_RETENTION_DAYS must be integer, got: $RETENTION_DAYS" >&2

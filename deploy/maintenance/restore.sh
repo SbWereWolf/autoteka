@@ -2,8 +2,8 @@
 set -euo pipefail
 
 # Restore deploy settings from backup archive.
-# Restore recreates configuration, then resets watchdog/health runtime state so
-# monitoring starts from a clean baseline on the restored host.
+# Restore recreates configuration, optionally restores project data, then resets
+# watchdog/health runtime state so monitoring starts from a clean baseline.
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DEPLOY_DIR="$(cd "$SCRIPT_DIR" && while [ ! -f "DEPLOY.md" ] && [ "$PWD" != "/" ]; do cd ..; done; pwd)"
@@ -11,6 +11,7 @@ REPO_ROOT="$(cd "$DEPLOY_DIR/.." && pwd)"
 
 DRY_RUN="no"
 FORCE="no"
+PROFILE="full"
 TARGET_ROOT=""
 EXPLICIT_TARGET_ROOT="no"
 ARCHIVE=""
@@ -22,28 +23,31 @@ TELEGRAM_LOCK_DIR="${TMPDIR:-/tmp}/autoteka-telegram-locks"
 usage() {
   cat <<'USAGE'
 Usage:
-  sudo ./deploy/maintenance/restore.sh <archive> [--dry-run] [--force] [--target-root=PATH]
+  sudo ./deploy/maintenance/restore.sh <archive> [--profile=full|config] [--dry-run] [--force] [--target-root=PATH]
 
 Purpose:
-  Restore deploy-time configuration from an autoteka backup archive, then reset
-  runtime health/watchdog incident state so monitoring restarts cleanly.
+  Restore deploy-time configuration from an autoteka backup archive, optionally
+  restore project data, then reset runtime health/watchdog incident state.
 
 Positional arguments:
   <archive>                Path to autoteka-backup-*.tar.gz created by backup.sh.
 
 Options:
+  --profile=full|config    Restore scope profile. Default: full.
+                           full   = config + project data + ignored allowlist files.
+                           config = config + project env only.
   --dry-run                Show what would be restored and reset.
                            No files, timers, or runtime state will be changed.
   --force                  Skip interactive confirmation.
-  --target-root=PATH       Restore backend/.env and frontend/.env into PATH.
-                           If provided explicitly, AUTOTEKA_ROOT in deploy.env is
-                           rewritten to this PATH.
+  --target-root=PATH       Restore project files into PATH.
+                           If provided explicitly, AUTOTEKA_ROOT/INFRA_ROOT in
+                           deploy.env are rewritten to PATH values.
   -h, --help               Show this help.
 
 Notes:
   - Runtime health incident state is NOT restored from backup.
-  - During restore the current watchdog counters, cooldown markers, and Telegram
-    dedup lock files are cleared so the restored host starts from a clean state.
+  - During restore watchdog counters, cooldown markers, and Telegram dedup lock
+    files are cleared so the restored host starts from a clean state.
 USAGE
 }
 
@@ -55,6 +59,10 @@ while [ "${1:-}" != "" ]; do
       ;;
     --force)
       FORCE="yes"
+      shift
+      ;;
+    --profile=*)
+      PROFILE="${1#--profile=}"
       shift
       ;;
     --target-root=*)
@@ -83,6 +91,11 @@ while [ "${1:-}" != "" ]; do
       ;;
   esac
 done
+
+if [ "$PROFILE" != "full" ] && [ "$PROFILE" != "config" ]; then
+  echo "Unsupported profile: $PROFILE" >&2
+  exit 2
+fi
 
 if [ -z "$ARCHIVE" ]; then
   echo "Archive path required." >&2
@@ -132,6 +145,27 @@ restore_file_private() {
   fi
 }
 
+restore_tree_if_exists() {
+  local src="$1" dest="$2"
+  if [ -d "$src" ]; then
+    mkdir -p "$dest"
+    cp -a "$src"/. "$dest"/
+    say "restored directory tree: $dest"
+  fi
+}
+
+resolve_target_infra_root() {
+  if [ -d "$TARGET_ROOT/infrastructure" ]; then
+    printf '%s\n' "$TARGET_ROOT/infrastructure"
+    return 0
+  fi
+  if [ -d "$TARGET_ROOT/deploy" ]; then
+    printf '%s\n' "$TARGET_ROOT/deploy"
+    return 0
+  fi
+  return 1
+}
+
 confirm_or_exit() {
   if [ "$FORCE" = "yes" ]; then
     return 0
@@ -159,6 +193,7 @@ show_dry_run_plan() {
   echo
   echo "Archive: $ARCHIVE"
   echo "Backup root: $BACKUP_ROOT"
+  echo "Profile: $PROFILE"
   echo "Target project root: $TARGET_ROOT"
   echo
   echo "Files to restore:"
@@ -173,6 +208,26 @@ show_dry_run_plan() {
         ;;
       project/frontend/.env)
         echo "  $rel -> $TARGET_ROOT/frontend/.env"
+        ;;
+      project/backend/database/*)
+        if [ "$PROFILE" = "full" ]; then
+          echo "  $rel -> $TARGET_ROOT/backend/database/*"
+        fi
+        ;;
+      project/backend/storage/*)
+        if [ "$PROFILE" = "full" ]; then
+          echo "  $rel -> $TARGET_ROOT/backend/storage/*"
+        fi
+        ;;
+      project/ignored/*)
+        if [ "$PROFILE" = "full" ]; then
+          echo "  $rel -> $TARGET_ROOT/${rel#project/ignored/}"
+        fi
+        ;;
+      project/backup-ignored-allowlist.txt)
+        if [ "$PROFILE" = "full" ]; then
+          echo "  $rel -> <target INFRA_ROOT>/maintenance/config/backup-ignored-allowlist.txt"
+        fi
         ;;
       *)
         echo "  $rel -> (not restored automatically)"
@@ -239,26 +294,48 @@ if [ "$DRY_RUN" = "yes" ]; then
   exit 0
 fi
 
-confirm_or_exit "Restore will overwrite existing deploy configuration and reset active watchdog incident state."
+confirm_or_exit "Restore profile '$PROFILE' will overwrite existing deploy configuration and reset active watchdog incident state."
 
 say "Restoring /etc/autoteka..."
 restore_file_private "$BACKUP_ROOT/etc/autoteka/deploy.env" /etc/autoteka/deploy.env
 restore_file_private "$BACKUP_ROOT/etc/autoteka/telegram.env" /etc/autoteka/telegram.env
 
-# Update AUTOTEKA_ROOT in deploy.env if --target-root was explicitly specified
+# Update AUTOTEKA_ROOT and INFRA_ROOT in deploy.env if --target-root was explicitly specified
 if [ "$EXPLICIT_TARGET_ROOT" = "yes" ] && [ -f /etc/autoteka/deploy.env ]; then
   if grep -qE '^AUTOTEKA_ROOT=' /etc/autoteka/deploy.env; then
     sed -i -E "s|^AUTOTEKA_ROOT=.*$|AUTOTEKA_ROOT=$TARGET_ROOT|" /etc/autoteka/deploy.env
-    say "updated AUTOTEKA_ROOT in deploy.env to $TARGET_ROOT"
   else
     echo "AUTOTEKA_ROOT=$TARGET_ROOT" >> /etc/autoteka/deploy.env
-    chmod 600 /etc/autoteka/deploy.env
   fi
+  if grep -qE '^INFRA_ROOT=' /etc/autoteka/deploy.env; then
+    sed -i -E "s|^INFRA_ROOT=.*$|INFRA_ROOT=$TARGET_ROOT/infrastructure|" /etc/autoteka/deploy.env
+  else
+    echo "INFRA_ROOT=$TARGET_ROOT/infrastructure" >> /etc/autoteka/deploy.env
+  fi
+  chmod 600 /etc/autoteka/deploy.env
+  say "updated AUTOTEKA_ROOT/INFRA_ROOT in deploy.env to $TARGET_ROOT"
 fi
 
 say "Restoring project .env..."
 restore_file_private "$BACKUP_ROOT/project/backend/.env" "$TARGET_ROOT/backend/.env"
 restore_file_private "$BACKUP_ROOT/project/frontend/.env" "$TARGET_ROOT/frontend/.env"
+
+if [ "$PROFILE" = "full" ]; then
+  say "Restoring project data (backend/database + backend/storage)..."
+  restore_tree_if_exists "$BACKUP_ROOT/project/backend/database" "$TARGET_ROOT/backend/database"
+  restore_tree_if_exists "$BACKUP_ROOT/project/backend/storage" "$TARGET_ROOT/backend/storage"
+
+  if [ -d "$BACKUP_ROOT/project/ignored" ]; then
+    say "Restoring ignored allowlist files..."
+    cp -a "$BACKUP_ROOT/project/ignored"/. "$TARGET_ROOT"/
+  fi
+
+  target_infra_root="$(resolve_target_infra_root || true)"
+  if [ -n "${target_infra_root:-}" ]; then
+    restore_file "$BACKUP_ROOT/project/backup-ignored-allowlist.txt" \
+      "$target_infra_root/maintenance/config/backup-ignored-allowlist.txt"
+  fi
+fi
 
 say "Restoring systemd units..."
 for u in autoteka.service watch-changes.service watch-changes.timer \
@@ -297,6 +374,6 @@ safe_systemctl enable --now server-watchdog.timer
 safe_systemctl enable --now server-maintenance.timer
 
 echo
-echo "Restore completed."
+echo "Restore completed (profile=$PROFILE)."
 echo "Recommended follow-up: autoteka watchdog --dry-run"
 echo "Recommended checks: curl -i http://127.0.0.1/healthcheck ; curl -i http://127.0.0.1/up"

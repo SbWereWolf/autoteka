@@ -70,7 +70,7 @@ run_smoke() {
   fi
 }
 
-run_cmd /usr/bin/docker compose -f "$AUTOTEKA_ROOT/deploy/runtime/docker-compose.yml" up -d --build --remove-orphans php
+run_cmd /usr/bin/docker compose -f "$INFRA_ROOT/runtime/docker-compose.yml" up -d --build --remove-orphans php
 
 if ! is_dry_run; then
   wait_for_php_exec_ready "$PHP_READY_TIMEOUT"
@@ -85,7 +85,7 @@ else
   dry_run_log "ensure_public_storage_link"
   dry_run_log "clear_laravel_optimizations"
   dry_run_log "check_sqlite_write_access"
-  dry_run_log "/usr/bin/docker compose -f $AUTOTEKA_ROOT/deploy/runtime/docker-compose.yml up -d --build --remove-orphans web"
+  dry_run_log "/usr/bin/docker compose -f $INFRA_ROOT/runtime/docker-compose.yml up -d --build --remove-orphans web"
 fi
 
 run_smoke "$BACKEND_SMOKE_URL"

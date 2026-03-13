@@ -6,6 +6,7 @@ node_modules
 scripts/.env
 /frontend/dist/
 /deploy/observability/application/metrics/data.json
+/infrastructure/observability/application/metrics/data.json
 /frontend/.env
 /tasks/
 /backup/
@@ -15,6 +16,7 @@ scripts/.env
 /operational/
 !/operational/.gitkeep
 /deploy/.env
+/infrastructure/.env
 /backend/apps/ShopAPI/storage/
 /vendor/
 /.php-cs-fixer.cache

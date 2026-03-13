@@ -1,0 +1,23 @@
+# Curated allowlist for backup of ignored files.
+# Paths are relative to AUTOTEKA_ROOT.
+# This file is intentionally editable by operators.
+#
+# Rules:
+# - comments and empty lines are ignored
+# - leading "/" is accepted and treated as repo-relative path
+# - glob patterns are supported
+# - only server-relevant files should stay here
+
+scripts/.env
+frontend/.env
+deploy/.env
+infrastructure/.env
+
+backend/.env
+backend/database/*.sqlite*
+backend/storage/**
+
+backend/apps/ShopAPI/.env
+backend/apps/ShopOperator/.env
+backend/apps/ShopAPI/storage/**
+backend/apps/ShopOperator/storage/**

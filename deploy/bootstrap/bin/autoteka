@@ -20,6 +20,25 @@ ensure_autoteka_root() {
   fi
 }
 
+ensure_infra_root() {
+  if [ -n "${INFRA_ROOT:-}" ] && [ -d "$INFRA_ROOT" ]; then
+    return 0
+  fi
+  if [ -d "$AUTOTEKA_ROOT/infrastructure" ]; then
+    INFRA_ROOT="$AUTOTEKA_ROOT/infrastructure"
+    export INFRA_ROOT
+    return 0
+  fi
+  if [ -d "$AUTOTEKA_ROOT/deploy" ]; then
+    INFRA_ROOT="$AUTOTEKA_ROOT/deploy"
+    export INFRA_ROOT
+    return 0
+  fi
+
+  echo "INFRA_ROOT is not set and infra directory was not found under AUTOTEKA_ROOT." >&2
+  exit 1
+}
+
 print_global_usage() {
   cat <<'USAGE'
 Usage:
@@ -60,7 +79,7 @@ Usage:
 
 Purpose:
   Start or recreate the deployment Docker Compose stack defined in
-  deploy/runtime/docker-compose.yml.
+  INFRA_ROOT/runtime/docker-compose.yml.
 
 Arguments:
   none
@@ -76,7 +95,7 @@ Usage:
   autoteka down
 
 Purpose:
-  Stop the deployment Docker Compose stack defined in deploy/runtime/docker-compose.yml.
+  Stop the deployment Docker Compose stack defined in INFRA_ROOT/runtime/docker-compose.yml.
 
 Arguments:
   none
@@ -239,7 +258,7 @@ Usage:
   autoteka maintenance
 
 Purpose:
-  Run periodic maintenance tasks defined by deploy/maintenance/server-maintenance.sh.
+  Run periodic maintenance tasks defined by INFRA_ROOT/maintenance/server-maintenance.sh.
 
 Arguments:
   none
@@ -387,7 +406,8 @@ case "$CMD" in
       exit 0
     fi
     ensure_autoteka_root
-    exec /usr/bin/docker compose -f "$AUTOTEKA_ROOT/deploy/runtime/docker-compose.yml" up -d --remove-orphans
+    ensure_infra_root
+    exec /usr/bin/docker compose -f "$INFRA_ROOT/runtime/docker-compose.yml" up -d --remove-orphans
     ;;
   down)
     if [ "${1:-}" = "-h" ] || [ "${1:-}" = "--help" ]; then
@@ -395,7 +415,8 @@ case "$CMD" in
       exit 0
     fi
     ensure_autoteka_root
-    exec /usr/bin/docker compose -f "$AUTOTEKA_ROOT/deploy/runtime/docker-compose.yml" down
+    ensure_infra_root
+    exec /usr/bin/docker compose -f "$INFRA_ROOT/runtime/docker-compose.yml" down
     ;;
   watch-changes)
     if [ "${1:-}" = "-h" ] || [ "${1:-}" = "--help" ]; then
@@ -403,7 +424,8 @@ case "$CMD" in
       exit 0
     fi
     ensure_autoteka_root
-    exec "$AUTOTEKA_ROOT/deploy/runtime/watch-changes.sh" "$@"
+    ensure_infra_root
+    exec "$INFRA_ROOT/runtime/watch-changes.sh" "$@"
     ;;
   deploy)
     if [ "${1:-}" = "-h" ] || [ "${1:-}" = "--help" ]; then
@@ -411,7 +433,8 @@ case "$CMD" in
       exit 0
     fi
     ensure_autoteka_root
-    exec "$AUTOTEKA_ROOT/deploy/runtime/deploy.sh" "$@"
+    ensure_infra_root
+    exec "$INFRA_ROOT/runtime/deploy.sh" "$@"
     ;;
   repair-runtime)
     if [ "${1:-}" = "-h" ] || [ "${1:-}" = "--help" ]; then
@@ -419,7 +442,8 @@ case "$CMD" in
       exit 0
     fi
     ensure_autoteka_root
-    exec "$AUTOTEKA_ROOT/deploy/repair/repair-runtime.sh" "$@"
+    ensure_infra_root
+    exec "$INFRA_ROOT/repair/repair-runtime.sh" "$@"
     ;;
   repair-health)
     if [ "${1:-}" = "-h" ] || [ "${1:-}" = "--help" ]; then
@@ -427,7 +451,8 @@ case "$CMD" in
       exit 0
     fi
     ensure_autoteka_root
-    exec "$AUTOTEKA_ROOT/deploy/repair/repair-health.sh" "$@"
+    ensure_infra_root
+    exec "$INFRA_ROOT/repair/repair-health.sh" "$@"
     ;;
   health-reset)
     if [ "${1:-}" = "-h" ] || [ "${1:-}" = "--help" ]; then
@@ -435,7 +460,8 @@ case "$CMD" in
       exit 0
     fi
     ensure_autoteka_root
-    exec "$AUTOTEKA_ROOT/deploy/repair/health-reset.sh" "$@"
+    ensure_infra_root
+    exec "$INFRA_ROOT/repair/health-reset.sh" "$@"
     ;;
   repair-infra)
     if [ "${1:-}" = "-h" ] || [ "${1:-}" = "--help" ]; then
@@ -443,7 +469,8 @@ case "$CMD" in
       exit 0
     fi
     ensure_autoteka_root
-    exec "$AUTOTEKA_ROOT/deploy/repair/repair-infra.sh" "$@"
+    ensure_infra_root
+    exec "$INFRA_ROOT/repair/repair-infra.sh" "$@"
     ;;
   watchdog)
     if [ "${1:-}" = "-h" ] || [ "${1:-}" = "--help" ]; then
@@ -451,7 +478,8 @@ case "$CMD" in
       exit 0
     fi
     ensure_autoteka_root
-    exec "$AUTOTEKA_ROOT/deploy/observability/infrastructure/server-watchdog.sh" "$@"
+    ensure_infra_root
+    exec "$INFRA_ROOT/observability/infrastructure/server-watchdog.sh" "$@"
     ;;
   maintenance)
     if [ "${1:-}" = "-h" ] || [ "${1:-}" = "--help" ]; then
@@ -459,7 +487,8 @@ case "$CMD" in
       exit 0
     fi
     ensure_autoteka_root
-    exec "$AUTOTEKA_ROOT/deploy/maintenance/server-maintenance.sh" "$@"
+    ensure_infra_root
+    exec "$INFRA_ROOT/maintenance/server-maintenance.sh" "$@"
     ;;
   uninstall)
     if [ "${1:-}" = "-h" ] || [ "${1:-}" = "--help" ]; then
@@ -467,7 +496,8 @@ case "$CMD" in
       exit 0
     fi
     ensure_autoteka_root
-    exec "$AUTOTEKA_ROOT/deploy/bootstrap/uninstall.sh" "$@"
+    ensure_infra_root
+    exec "$INFRA_ROOT/bootstrap/uninstall.sh" "$@"
     ;;
   backup)
     if [ "${1:-}" = "-h" ] || [ "${1:-}" = "--help" ]; then
@@ -475,7 +505,8 @@ case "$CMD" in
       exit 0
     fi
     ensure_autoteka_root
-    exec "$AUTOTEKA_ROOT/deploy/maintenance/backup.sh" "$@"
+    ensure_infra_root
+    exec "$INFRA_ROOT/maintenance/backup.sh" "$@"
     ;;
   backup-storage)
     if [ "${1:-}" = "-h" ] || [ "${1:-}" = "--help" ]; then
@@ -483,7 +514,8 @@ case "$CMD" in
       exit 0
     fi
     ensure_autoteka_root
-    exec bash "$AUTOTEKA_ROOT/deploy/maintenance/storage-backup.sh" "$@"
+    ensure_infra_root
+    exec bash "$INFRA_ROOT/maintenance/storage-backup.sh" "$@"
     ;;
   restore)
     if [ "${1:-}" = "-h" ] || [ "${1:-}" = "--help" ]; then
@@ -491,7 +523,8 @@ case "$CMD" in
       exit 0
     fi
     ensure_autoteka_root
-    exec "$AUTOTEKA_ROOT/deploy/maintenance/restore.sh" "$@"
+    ensure_infra_root
+    exec "$INFRA_ROOT/maintenance/restore.sh" "$@"
     ;;
   *)
     echo "Unknown command: $CMD" >&2
