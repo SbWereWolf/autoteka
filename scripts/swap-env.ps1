@@ -199,6 +199,27 @@ function Remove-LinkPath {
     Remove-Item -LiteralPath $Path -Force
 }
 
+function Remove-Path {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Path
+    )
+
+    if ($DryRun) {
+        Write-Host "[swap-env] dry-run remove '$Path'"
+        return
+    }
+
+    if (Test-Path $Path -PathType Container) {
+        Remove-Item -LiteralPath $Path -Recurse -Force
+        return
+    }
+
+    if (Test-PathExistsAny -Path $Path) {
+        Remove-Item -LiteralPath $Path -Force
+    }
+}
+
 function Get-StatusLabel {
     param(
         [Parameter(Mandatory = $true)]
@@ -266,10 +287,6 @@ function Switch-Entry {
         }
 
         if ($inferredPlatform -eq $TargetPlatform) {
-            if (Test-PathExistsAny -Path $targetVariantPath) {
-                throw "Cannot keep active $EntryLabel '$ActivePath': target variant '$targetVariantPath' already exists."
-            }
-
             return Get-StatusLabel -Path $ActivePath -TargetPlatform $TargetPlatform
         }
 
@@ -278,7 +295,7 @@ function Switch-Entry {
         }
 
         if (Test-PathExistsAny -Path $currentVariantPath) {
-            throw "Cannot switch active $EntryLabel '$ActivePath': current variant '$currentVariantPath' already exists."
+            Remove-Path -Path $currentVariantPath
         }
 
         Invoke-Move -SourcePath $ActivePath -DestinationPath $currentVariantPath

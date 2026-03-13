@@ -190,6 +190,24 @@ remove_link() {
   rm -f "$path"
 }
 
+remove_path() {
+  local path="$1"
+
+  if [[ "$mode" == "dry-run" ]]; then
+    printf "[swap-env] dry-run remove '%s'\n" "$path"
+    return
+  fi
+
+  if [[ -d "$path" && ! -L "$path" ]]; then
+    rm -rf "$path"
+    return
+  fi
+
+  if path_exists_any "$path"; then
+    rm -f "$path"
+  fi
+}
+
 get_status_label() {
   local path="$1"
   local target_platform="$2"
@@ -262,24 +280,12 @@ switch_entry() {
       fi
 
       if [[ "$inferred_platform" == "$target_platform" ]]; then
-        if path_exists_any "$target_variant_path"; then
-          printf "Cannot keep active %s '%s': target variant '%s' already exists.\n" \
-            "$entry_label" \
-            "$active_path" \
-            "$target_variant_path" >&2
-          exit 1
-        fi
-
         printf "%s" "$(get_status_label "$active_path" "$target_platform")"
         return
       fi
 
       if [[ -n "$current_variant_path" ]] && path_exists_any "$current_variant_path"; then
-        printf "Cannot switch active %s '%s': current variant '%s' already exists.\n" \
-          "$entry_label" \
-          "$active_path" \
-          "$current_variant_path" >&2
-        exit 1
+        remove_path "$current_variant_path"
       fi
 
       if [[ -z "$current_variant_path" ]]; then
