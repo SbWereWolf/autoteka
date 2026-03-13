@@ -8,12 +8,11 @@ set -euo pipefail
 # - protected from parallel runs via flock
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-DEPLOY_DIR="$(cd "$SCRIPT_DIR" && while [ ! -f "DEPLOY.md" ] && [ "$PWD" != "/" ]; do cd ..; done; pwd)"
-REPO_ROOT="$(cd "$DEPLOY_DIR/.." && pwd)"
+INFRA_SCRIPT_ROOT="$(cd "$SCRIPT_DIR" && while [ ! -f "DEPLOY.md" ] && [ "$PWD" != "/" ]; do cd ..; done; pwd)"
 # shellcheck disable=SC1090
-source "$DEPLOY_DIR/lib/bootstrap.sh"
+source "$INFRA_SCRIPT_ROOT/lib/bootstrap.sh"
 # shellcheck disable=SC1090
-source "$DEPLOY_DIR/lib/telegram.sh"
+source "$INFRA_SCRIPT_ROOT/lib/telegram.sh"
 load_autoteka_env
 load_telegram_env
 

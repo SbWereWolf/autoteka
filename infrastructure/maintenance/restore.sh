@@ -6,8 +6,8 @@ set -euo pipefail
 # watchdog/health runtime state so monitoring starts from a clean baseline.
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-DEPLOY_DIR="$(cd "$SCRIPT_DIR" && while [ ! -f "DEPLOY.md" ] && [ "$PWD" != "/" ]; do cd ..; done; pwd)"
-REPO_ROOT="$(cd "$DEPLOY_DIR/.." && pwd)"
+INFRA_SCRIPT_ROOT="$(cd "$SCRIPT_DIR" && while [ ! -f "DEPLOY.md" ] && [ "$PWD" != "/" ]; do cd ..; done; pwd)"
+REPO_ROOT="$(cd "$INFRA_SCRIPT_ROOT/.." && pwd)"
 
 DRY_RUN="no"
 FORCE="no"
@@ -23,10 +23,10 @@ TELEGRAM_LOCK_DIR="${TMPDIR:-/tmp}/autoteka-telegram-locks"
 usage() {
   cat <<'USAGE'
 Usage:
-  sudo ./deploy/maintenance/restore.sh <archive> [--profile=full|config] [--dry-run] [--force] [--target-root=PATH]
+  sudo "$INFRA_ROOT"/maintenance/restore.sh <archive> [--profile=full|config] [--dry-run] [--force] [--target-root=PATH]
 
 Purpose:
-  Restore deploy-time configuration from an autoteka backup archive, optionally
+  Restore runtime configuration from an autoteka backup archive, optionally
   restore project data, then reset runtime health/watchdog incident state.
 
 Positional arguments:
@@ -40,8 +40,8 @@ Options:
                            No files, timers, or runtime state will be changed.
   --force                  Skip interactive confirmation.
   --target-root=PATH       Restore project files into PATH.
-                           If provided explicitly, AUTOTEKA_ROOT/INFRA_ROOT in
-                           deploy.env are rewritten to PATH values.
+                           If provided explicitly, AUTOTEKA_ROOT in deploy.env
+                           is rewritten to this PATH.
   -h, --help               Show this help.
 
 Notes:
@@ -152,18 +152,6 @@ restore_tree_if_exists() {
     cp -a "$src"/. "$dest"/
     say "restored directory tree: $dest"
   fi
-}
-
-resolve_target_infra_root() {
-  if [ -d "$TARGET_ROOT/infrastructure" ]; then
-    printf '%s\n' "$TARGET_ROOT/infrastructure"
-    return 0
-  fi
-  if [ -d "$TARGET_ROOT/deploy" ]; then
-    printf '%s\n' "$TARGET_ROOT/deploy"
-    return 0
-  fi
-  return 1
 }
 
 confirm_or_exit() {
@@ -294,26 +282,21 @@ if [ "$DRY_RUN" = "yes" ]; then
   exit 0
 fi
 
-confirm_or_exit "Restore profile '$PROFILE' will overwrite existing deploy configuration and reset active watchdog incident state."
+confirm_or_exit "Restore profile '$PROFILE' will overwrite existing runtime configuration and reset active watchdog incident state."
 
 say "Restoring /etc/autoteka..."
 restore_file_private "$BACKUP_ROOT/etc/autoteka/deploy.env" /etc/autoteka/deploy.env
 restore_file_private "$BACKUP_ROOT/etc/autoteka/telegram.env" /etc/autoteka/telegram.env
 
-# Update AUTOTEKA_ROOT and INFRA_ROOT in deploy.env if --target-root was explicitly specified
+# Update AUTOTEKA_ROOT in deploy.env if --target-root was explicitly specified
 if [ "$EXPLICIT_TARGET_ROOT" = "yes" ] && [ -f /etc/autoteka/deploy.env ]; then
   if grep -qE '^AUTOTEKA_ROOT=' /etc/autoteka/deploy.env; then
     sed -i -E "s|^AUTOTEKA_ROOT=.*$|AUTOTEKA_ROOT=$TARGET_ROOT|" /etc/autoteka/deploy.env
   else
     echo "AUTOTEKA_ROOT=$TARGET_ROOT" >> /etc/autoteka/deploy.env
   fi
-  if grep -qE '^INFRA_ROOT=' /etc/autoteka/deploy.env; then
-    sed -i -E "s|^INFRA_ROOT=.*$|INFRA_ROOT=$TARGET_ROOT/infrastructure|" /etc/autoteka/deploy.env
-  else
-    echo "INFRA_ROOT=$TARGET_ROOT/infrastructure" >> /etc/autoteka/deploy.env
-  fi
   chmod 600 /etc/autoteka/deploy.env
-  say "updated AUTOTEKA_ROOT/INFRA_ROOT in deploy.env to $TARGET_ROOT"
+  say "updated AUTOTEKA_ROOT in deploy.env to $TARGET_ROOT"
 fi
 
 say "Restoring project .env..."
@@ -330,10 +313,17 @@ if [ "$PROFILE" = "full" ]; then
     cp -a "$BACKUP_ROOT/project/ignored"/. "$TARGET_ROOT"/
   fi
 
-  target_infra_root="$(resolve_target_infra_root || true)"
-  if [ -n "${target_infra_root:-}" ]; then
+  restore_infra_root="${INFRA_ROOT:-$INFRA_SCRIPT_ROOT}"
+  if [ -f /etc/autoteka/deploy.env ]; then
+    # shellcheck disable=SC1090
+    set -a
+    source /etc/autoteka/deploy.env 2>/dev/null || true
+    set +a
+    restore_infra_root="${INFRA_ROOT:-$restore_infra_root}"
+  fi
+  if [ -n "${restore_infra_root:-}" ]; then
     restore_file "$BACKUP_ROOT/project/backup-ignored-allowlist.txt" \
-      "$target_infra_root/maintenance/config/backup-ignored-allowlist.txt"
+      "$restore_infra_root/maintenance/config/backup-ignored-allowlist.txt"
   fi
 fi
 

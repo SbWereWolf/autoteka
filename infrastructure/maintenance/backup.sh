@@ -6,10 +6,9 @@ set -euo pipefail
 # Runtime health incident state is intentionally NOT included.
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-DEPLOY_DIR="$(cd "$SCRIPT_DIR" && while [ ! -f "DEPLOY.md" ] && [ "$PWD" != "/" ]; do cd ..; done; pwd)"
-REPO_ROOT="$(cd "$DEPLOY_DIR/.." && pwd)"
+INFRA_SCRIPT_ROOT="$(cd "$SCRIPT_DIR" && while [ ! -f "DEPLOY.md" ] && [ "$PWD" != "/" ]; do cd ..; done; pwd)"
 # shellcheck disable=SC1090
-source "$DEPLOY_DIR/lib/bootstrap.sh"
+source "$INFRA_SCRIPT_ROOT/lib/bootstrap.sh"
 load_autoteka_env
 
 OUTPUT_DIR="/root"
@@ -18,10 +17,10 @@ IGNORE_ALLOWLIST_FILE="$INFRA_ROOT/maintenance/config/backup-ignored-allowlist.t
 usage() {
   cat <<'USAGE'
 Usage:
-  sudo ./deploy/maintenance/backup.sh [--output-dir=PATH]
+  sudo "$INFRA_ROOT"/maintenance/backup.sh [--output-dir=PATH]
 
 Purpose:
-  Create a backup archive with deploy-time configuration, project secrets and
+  Create a backup archive with runtime configuration, project secrets and
   data required for restore on the same or another host.
 
 Included in backup:
@@ -30,7 +29,7 @@ Included in backup:
   - backend/.env and frontend/.env from AUTOTEKA_ROOT
   - backend/database and backend/storage from AUTOTEKA_ROOT
   - ignored-files curated allowlist from INFRA_ROOT
-  - systemd units installed by deploy/bootstrap/install.sh
+  - systemd units installed by the current infra install script
   - docker/journald/fail2ban/logrotate configuration managed by this project
 
 Explicitly NOT included:
@@ -145,7 +144,7 @@ TMP_DIR="$(mktemp -d)"
 BACKUP_ROOT="$TMP_DIR/$BACKUP_NAME"
 mkdir -p "$BACKUP_ROOT"
 
-say "Collecting deploy configuration and data..."
+say "Collecting runtime configuration and data..."
 
 # /etc/autoteka
 copy_if_exists /etc/autoteka/deploy.env "$BACKUP_ROOT/etc/autoteka/deploy.env" || true
@@ -200,7 +199,7 @@ Autoteka backup created at: $(date -Is)
 AUTOTEKA_ROOT snapshot source: $AUTOTEKA_ROOT
 INFRA_ROOT snapshot source: $INFRA_ROOT
 
-This archive contains deploy-time configuration and selected project data:
+This archive contains runtime configuration and selected project data:
 - env and system configs
 - backend/database and backend/storage
 - curated ignored allowlist content

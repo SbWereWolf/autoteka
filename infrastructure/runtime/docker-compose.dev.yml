@@ -4,7 +4,9 @@ services:
     image: autoteka/runtime-php:dev
     build:
       context: ${AUTOTEKA_ROOT:-../..}
-      dockerfile: deploy/runtime/docker/docker/php/Dockerfile
+      dockerfile: ${INFRA_ROOT:?INFRA_ROOT must be set}/runtime/docker/docker/php/Dockerfile
+      additional_contexts:
+        infra: ${INFRA_ROOT:?INFRA_ROOT must be set}
       target: dev
     container_name: autoteka-dev-php
     working_dir: /workspace/backend
@@ -38,7 +40,9 @@ services:
     image: autoteka/runtime-frontend:dev
     build:
       context: ${AUTOTEKA_ROOT:-../..}
-      dockerfile: deploy/runtime/docker/docker/dev/frontend/Dockerfile
+      dockerfile: ${INFRA_ROOT:?INFRA_ROOT must be set}/runtime/docker/docker/dev/frontend/Dockerfile
+      additional_contexts:
+        infra: ${INFRA_ROOT:?INFRA_ROOT must be set}
     container_name: autoteka-dev-frontend
     working_dir: /workspace/frontend
     environment:
@@ -59,7 +63,9 @@ services:
     image: autoteka/runtime-web:dev
     build:
       context: ${AUTOTEKA_ROOT:-../..}
-      dockerfile: deploy/runtime/docker/docker/dev/nginx/Dockerfile
+      dockerfile: ${INFRA_ROOT:?INFRA_ROOT must be set}/runtime/docker/docker/dev/nginx/Dockerfile
+      additional_contexts:
+        infra: ${INFRA_ROOT:?INFRA_ROOT must be set}
     container_name: autoteka-dev-web
     depends_on:
       - php

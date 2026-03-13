@@ -6,18 +6,6 @@ if [ -z "${AUTOTEKA_LIB_BOOTSTRAP_SH:-}" ]; then
 
   ENV_FILE_DEFAULT="/etc/autoteka/deploy.env"
 
-  resolve_infra_root_from_autoteka_root() {
-    if [ -n "${AUTOTEKA_ROOT:-}" ] && [ -d "$AUTOTEKA_ROOT/infrastructure" ]; then
-      printf '%s\n' "$AUTOTEKA_ROOT/infrastructure"
-      return 0
-    fi
-    if [ -n "${AUTOTEKA_ROOT:-}" ] && [ -d "$AUTOTEKA_ROOT/deploy" ]; then
-      printf '%s\n' "$AUTOTEKA_ROOT/deploy"
-      return 0
-    fi
-    return 1
-  }
-
   resolve_infra_root_from_script_location() {
     local script_dir=""
     local search_root=""
@@ -38,21 +26,11 @@ if [ -z "${AUTOTEKA_LIB_BOOTSTRAP_SH:-}" ]; then
   load_autoteka_env() {
     local env_file="${1:-$ENV_FILE_DEFAULT}"
 
-    # Load environment from file, but keep compatibility with partially filled files.
     if [ -f "$env_file" ]; then
       # shellcheck disable=SC1090
       set -a
       source "$env_file" || true
       set +a
-    fi
-
-    # If AUTOTEKA_ROOT is not explicitly configured, infer it from script location.
-    if [ -z "${AUTOTEKA_ROOT:-}" ]; then
-      local inferred_infra_root=""
-      if inferred_infra_root="$(resolve_infra_root_from_script_location)"; then
-        AUTOTEKA_ROOT="$(cd "$inferred_infra_root/.." && pwd)"
-        export AUTOTEKA_ROOT
-      fi
     fi
 
     if [ -z "${AUTOTEKA_ROOT:-}" ] || [ ! -d "$AUTOTEKA_ROOT" ]; then
@@ -62,9 +40,7 @@ if [ -z "${AUTOTEKA_LIB_BOOTSTRAP_SH:-}" ]; then
 
     if [ -z "${INFRA_ROOT:-}" ]; then
       local inferred_infra_root=""
-      if inferred_infra_root="$(resolve_infra_root_from_autoteka_root)"; then
-        INFRA_ROOT="$inferred_infra_root"
-      elif inferred_infra_root="$(resolve_infra_root_from_script_location)"; then
+      if inferred_infra_root="$(resolve_infra_root_from_script_location)"; then
         INFRA_ROOT="$inferred_infra_root"
       fi
       export INFRA_ROOT
