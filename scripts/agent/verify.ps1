@@ -75,6 +75,33 @@ function Start-VerifyProcess {
         -PassThru
 }
 
+function Resolve-ExecutableCommand {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Value,
+        [Parameter(Mandatory = $true)]
+        [string]$Label
+    )
+
+    $trimmedValue = $Value.Trim()
+    if ([string]::IsNullOrWhiteSpace($trimmedValue)) {
+        Write-Error "[verify] $Label is empty."
+        exit 2
+    }
+
+    $resolvedCommand = Get-Command $trimmedValue -ErrorAction SilentlyContinue | Select-Object -First 1
+    if ($null -eq $resolvedCommand) {
+        Write-Error "[verify] $Label '$trimmedValue' is not executable in the current environment."
+        exit 3
+    }
+
+    if ($resolvedCommand.Path) {
+        return $resolvedCommand.Path
+    }
+
+    return $resolvedCommand.Source
+}
+
 if ($TestProfile -ne "minimal") {
     Write-Error "[verify] unsupported profile: $TestProfile"
     exit 1
@@ -89,10 +116,119 @@ $frontendDir = Join-Path $repoRoot "frontend"
 $shopApiDir = Join-Path $repoRoot "backend/apps/ShopAPI"
 $shopOperatorDir = Join-Path $repoRoot "backend/apps/ShopOperator"
 $scriptsEnvPath = Join-Path $repoRoot "scripts/.env"
+$verifyCachePath = Join-Path $repoRoot ".runtime/verify/minimal-src-cache.json"
 [int]$parallelWorkers = 2
 $phpCommand = "php"
 
-Invoke-Step -Name "activate node env" -Script {
+function Get-SourceFingerprint {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string[]]$Paths
+    )
+
+    $hash = [System.Security.Cryptography.SHA256]::Create()
+
+    try {
+        foreach ($path in ($Paths | Sort-Object)) {
+            $normalizedPath = [System.IO.Path]::GetFullPath($path)
+            $pathHeader = [System.Text.Encoding]::UTF8.GetBytes("##$normalizedPath`n")
+            [void]$hash.TransformBlock($pathHeader, 0, $pathHeader.Length, $pathHeader, 0)
+
+            if (-not (Test-Path -LiteralPath $normalizedPath -PathType Container)) {
+                $missingBytes = [System.Text.Encoding]::UTF8.GetBytes("__missing__`n")
+                [void]$hash.TransformBlock($missingBytes, 0, $missingBytes.Length, $missingBytes, 0)
+                continue
+            }
+
+            $files = Get-ChildItem -LiteralPath $normalizedPath -File -Recurse | Sort-Object FullName
+            foreach ($file in $files) {
+                $relativePath = [System.IO.Path]::GetRelativePath($normalizedPath, $file.FullName).Replace("\", "/")
+                $pathBytes = [System.Text.Encoding]::UTF8.GetBytes("$relativePath`n")
+                [void]$hash.TransformBlock($pathBytes, 0, $pathBytes.Length, $pathBytes, 0)
+
+                $fileStream = [System.IO.File]::OpenRead($file.FullName)
+                try {
+                    $buffer = New-Object byte[] 8192
+                    while (($read = $fileStream.Read($buffer, 0, $buffer.Length)) -gt 0) {
+                        [void]$hash.TransformBlock($buffer, 0, $read, $buffer, 0)
+                    }
+                }
+                finally {
+                    $fileStream.Dispose()
+                }
+            }
+        }
+
+        $finalBytes = [System.Text.Encoding]::UTF8.GetBytes("__end__")
+        [void]$hash.TransformFinalBlock($finalBytes, 0, $finalBytes.Length)
+        return ([System.BitConverter]::ToString($hash.Hash)).Replace("-", "").ToLowerInvariant()
+    }
+    finally {
+        $hash.Dispose()
+    }
+}
+
+function New-VerifyBlock {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Key,
+        [Parameter(Mandatory = $true)]
+        [string]$Name,
+        [Parameter(Mandatory = $true)]
+        [string[]]$SourcePaths,
+        [Parameter(Mandatory = $true)]
+        [string]$WorkingDirectory,
+        [Parameter(Mandatory = $true)]
+        [string]$FilePath,
+        [string[]]$Arguments = @()
+    )
+
+    return @{
+        Key = $Key
+        Name = $Name
+        SourcePaths = $SourcePaths
+        WorkingDirectory = $WorkingDirectory
+        FilePath = $FilePath
+        Arguments = $Arguments
+        Fingerprint = (Get-SourceFingerprint -Paths $SourcePaths)
+    }
+}
+function Load-VerifyCache {
+    if (-not (Test-Path -LiteralPath $verifyCachePath -PathType Leaf)) {
+        return @{}
+    }
+
+    try {
+        $raw = Get-Content -LiteralPath $verifyCachePath -Raw
+        if ([string]::IsNullOrWhiteSpace($raw)) {
+            return @{}
+        }
+
+        $parsed = ConvertFrom-Json $raw -AsHashtable
+        if ($parsed) {
+            return $parsed
+        }
+
+        return @{}
+    }
+    catch {
+        Write-Warning "[verify] failed to read cache '$verifyCachePath'; continuing without cache."
+        return @{}
+    }
+}
+
+function Save-VerifyCache {
+    param(
+        [Parameter(Mandatory = $true)]
+        [hashtable]$Cache
+    )
+
+    $cacheDir = Split-Path -Parent $verifyCachePath
+    New-Item -ItemType Directory -Path $cacheDir -Force | Out-Null
+    $Cache | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath $verifyCachePath -NoNewline
+}
+
+Invoke-Step -Name "validate platform artifacts" -Script {
     & (Join-Path $repoRoot "scripts/swap-env.ps1")
     if ($LASTEXITCODE -ne 0) {
         exit $LASTEXITCODE
@@ -114,28 +250,11 @@ if ($scriptsEnv.ContainsKey("TEST_PARALLEL_WORKERS")) {
 
 if ($scriptsEnv.ContainsKey("SCRIPT_PHP_PATH")) {
     $configuredPhpPath = $scriptsEnv["SCRIPT_PHP_PATH"].Trim()
-    if ([string]::IsNullOrWhiteSpace($configuredPhpPath)) {
-        Write-Error "[verify] SCRIPT_PHP_PATH is empty in '$scriptsEnvPath'."
-        exit 2
-    }
-
-    if (-not (Test-Path -LiteralPath $configuredPhpPath -PathType Leaf)) {
-        Write-Error "[verify] SCRIPT_PHP_PATH '$configuredPhpPath' does not exist."
-        exit 3
-    }
-
-    $phpCommand = $configuredPhpPath
+    $phpCommand = Resolve-ExecutableCommand -Value $configuredPhpPath -Label "SCRIPT_PHP_PATH"
 }
 
-if (-not (Get-Command npm -ErrorAction SilentlyContinue)) {
-    Write-Error "[verify] npm not found."
-    exit 3
-}
-
-if (-not (Get-Command $phpCommand -ErrorAction SilentlyContinue)) {
-    Write-Error "[verify] php not found: $phpCommand"
-    exit 3
-}
+$npmCommand = Resolve-ExecutableCommand -Value "npm" -Label "npm"
+$phpCommand = Resolve-ExecutableCommand -Value $phpCommand -Label "php"
 
 if (-not (Test-Path (Join-Path $frontendDir "node_modules"))) {
     Write-Error "[verify] frontend/node_modules is missing."
@@ -153,26 +272,58 @@ if (-not (Test-Path (Join-Path $shopOperatorDir "vendor"))) {
 }
 
 Invoke-Step -Name "minimal tests (parallel)" -Script {
-    $processes = @(
-        Start-VerifyProcess `
+    $cache = Load-VerifyCache
+    $blocks = @(
+        (New-VerifyBlock `
+            -Key "frontend-unit" `
             -Name "frontend unit tests" `
+            -SourcePaths @((Join-Path $frontendDir "src")) `
             -WorkingDirectory $frontendDir `
-            -FilePath "npm" `
-            -Arguments @("run", "test:unit:parallel", "--if-present")
-        Start-VerifyProcess `
+            -FilePath $npmCommand `
+            -Arguments @("run", "test:unit:parallel", "--if-present"))
+        (New-VerifyBlock `
+            -Key "shop-api-quick" `
             -Name "backend quick tests (ShopAPI)" `
+            -SourcePaths @(
+                (Join-Path $shopApiDir "app"),
+                (Join-Path $repoRoot "backend/packages/SchemaDefinition/src")
+            ) `
             -WorkingDirectory $shopApiDir `
             -FilePath $phpCommand `
-            -Arguments @("artisan", "test", "--parallel", "--processes=$parallelWorkers")
-        Start-VerifyProcess `
+            -Arguments @("artisan", "test", "--parallel", "--processes=$parallelWorkers"))
+        (New-VerifyBlock `
+            -Key "shop-operator-quick" `
             -Name "backend quick tests (ShopOperator)" `
+            -SourcePaths @(
+                (Join-Path $shopOperatorDir "app"),
+                (Join-Path $repoRoot "backend/packages/SchemaDefinition/src")
+            ) `
             -WorkingDirectory $shopOperatorDir `
             -FilePath $phpCommand `
-            -Arguments @("artisan", "test", "--parallel", "--processes=$parallelWorkers")
+            -Arguments @("artisan", "test", "--parallel", "--processes=$parallelWorkers"))
     )
 
+    $processEntries = @()
+    foreach ($block in $blocks) {
+        $cachedFingerprint = if ($cache.ContainsKey($block.Key)) { [string]$cache[$block.Key] } else { $null }
+        if ($cachedFingerprint -and $cachedFingerprint -eq $block.Fingerprint) {
+            Write-Host "[verify] $($block.Name) (cache hit: src unchanged)"
+            continue
+        }
+
+        $processEntries += [pscustomobject]@{
+            Block = $block
+            Process = Start-VerifyProcess `
+                -Name $block.Name `
+                -WorkingDirectory $block.WorkingDirectory `
+                -FilePath $block.FilePath `
+                -Arguments $block.Arguments
+        }
+    }
+
     $hasFailures = $false
-    foreach ($process in $processes) {
+    foreach ($entry in $processEntries) {
+        $process = $entry.Process
         $process.WaitForExit()
         $process.Refresh()
         $exitCode = $process.ExitCode
@@ -183,12 +334,17 @@ Invoke-Step -Name "minimal tests (parallel)" -Script {
         if ($exitCode -ne 0) {
             Write-Error "[verify] failed: process id=$($process.Id), exit code=$exitCode"
             $hasFailures = $true
+            continue
         }
+
+        $cache[$entry.Block.Key] = $entry.Block.Fingerprint
     }
 
     if ($hasFailures) {
         exit 1
     }
+
+    Save-VerifyCache -Cache $cache
 }
 
 Write-Host "[verify] quick verification passed."
