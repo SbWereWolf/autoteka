@@ -1288,6 +1288,7 @@
         "glibc"
       ],
       "license": "MIT",
+      "optional": true,
       "os": [
         "linux"
       ]
