@@ -8,9 +8,12 @@
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest run",
+    "test:ci": "npm run test:unit:ci",
     "test:api": "npm run test:api:online",
     "test:api:online": "vitest run tests/TC-API-INTEGRATION.spec.ts",
     "test:unit": "vitest run",
+    "test:unit:parallel": "vitest run --pool=forks --maxWorkers=50%",
+    "test:unit:ci": "vitest run --pool=forks --maxWorkers=50%",
     "test:e2e": "playwright test --config playwright.e2e.config.ts",
     "test:e2e:headed": "playwright test --config playwright.e2e.config.ts --headed",
     "test:ui:mock": "playwright test --config playwright.ui-mock.config.ts",
@@ -23,6 +26,7 @@
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.58.2",
+    "@rollup/rollup-linux-x64-gnu": "^4.59.0",
     "@tailwindcss/postcss": "^4.1.0",
     "@vitejs/plugin-vue": "^5.1.0",
     "autoprefixer": "^10.4.20",
@@ -39,8 +43,8 @@
     "tailwindcss": "^4.1.0",
     "typescript": "^5.6.3",
     "typescript-eslint": "^8.56.1",
-    "vitest": "^3.2.4",
-    "vite": "^5.4.8"
+    "vite": "^5.4.8",
+    "vitest": "^3.2.4"
   },
   "description": "Это скелет проекта под согласованное ТЗ: каталог плиток, меню (город/категории/фишка), сортировка по алгоритму a/b/c/d, 6 тем (3 стиля × 2 палитры), страница магазина, переход на сайт через кнопку и через \"доскролл вниз\".",
   "main": "postcss.config.js",
