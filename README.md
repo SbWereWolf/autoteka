@@ -100,6 +100,33 @@ npm run test:ui:mock   # offline UI на mock-данных
 npm run test:e2e       # online e2e (нужен backend)
 ```
 
+### Авто-переключение platform env между Windows и WSL
+
+Авто-переключение по среде запуска:
+
+```powershell
+pwsh ./scripts/swap-env.ps1
+```
+
+```bash
+bash ./scripts/swap-env.sh
+```
+
+Возможна проверка статуса и dry-run:
+
+```powershell
+pwsh ./scripts/swap-env.ps1 -Status
+pwsh ./scripts/swap-env.ps1 -DryRun
+```
+
+```bash
+bash ./scripts/swap-env.sh --status
+bash ./scripts/swap-env.sh --dry-run
+```
+
+Если для целевой платформы локальные пакеты ещё не устанавливались,
+после переключения выполните `npm install` в нужном подпроекте.
+
 ### Backend и back office
 
 ```bash
