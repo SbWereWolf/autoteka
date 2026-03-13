@@ -3,10 +3,10 @@ set -e
 
 if command -v pwsh >/dev/null 2>&1; then
   pwsh scripts/log-entry.ps1 \
-    -Type "${2:-ProposedPlan}" \
+    -Type "${2}" \
     -Message "$1" \
-    -AISystemName "${3:-Codex}" \
-    -LLMName "${4:-gpt-5}"
+    -AISystemName "${3}" \
+    -LLMName "${4}"
   exit $?
 else
   exit 3
