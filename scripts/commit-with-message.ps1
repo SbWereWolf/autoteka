@@ -8,7 +8,7 @@ param(
   [Parameter(Mandatory = $true)]
   [string]$AISystemName,
 
-  [string]$LLMName = "gpt-5",
+  [string]$LLMName = "",
 
   [switch]$DryRun
 )
