@@ -4,7 +4,7 @@ services:
     image: autoteka/runtime-php:prod
     build:
       context: ${AUTOTEKA_ROOT:-../..}
-      dockerfile: ${INFRA_ROOT:?INFRA_ROOT must be set}/runtime/docker/docker/php/Dockerfile
+      dockerfile: ${INFRA_ROOT:?INFRA_ROOT must be set}/runtime/docker/php/Dockerfile
       additional_contexts:
         infra: ${INFRA_ROOT:?INFRA_ROOT must be set}
       target: prod
@@ -46,7 +46,7 @@ services:
     image: autoteka/runtime-web:prod
     build:
       context: ${AUTOTEKA_ROOT:-../..}
-      dockerfile: ${INFRA_ROOT:?INFRA_ROOT must be set}/runtime/docker/docker/prod/nginx/Dockerfile
+      dockerfile: ${INFRA_ROOT:?INFRA_ROOT must be set}/runtime/docker/prod/nginx/Dockerfile
       additional_contexts:
         infra: ${INFRA_ROOT:?INFRA_ROOT must be set}
       args:
