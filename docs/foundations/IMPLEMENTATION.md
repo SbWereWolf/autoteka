@@ -291,13 +291,13 @@ Dev (`$INFRA_ROOT/runtime/docker-compose.dev.yml`):
 
 ### 4.2. Dockerfile и entrypoint пути
 
-- PHP образ: `$INFRA_ROOT/runtime/docker/docker/php/Dockerfile` (targets:
+- PHP образ: `$INFRA_ROOT/runtime/docker/php/Dockerfile` (targets:
   `dev`, `prod`).
-- Dev nginx: `$INFRA_ROOT/runtime/docker/docker/dev/nginx/Dockerfile`.
-- Prod nginx: `$INFRA_ROOT/runtime/docker/docker/prod/nginx/Dockerfile`.
+- Dev nginx: `$INFRA_ROOT/runtime/docker/dev/nginx/Dockerfile`.
+- Prod nginx: `$INFRA_ROOT/runtime/docker/prod/nginx/Dockerfile`.
 - Entry points PHP:
-  - `$INFRA_ROOT/runtime/docker/docker/php/dev-entrypoint.sh`
-  - `$INFRA_ROOT/runtime/docker/docker/php/prod-entrypoint.sh`
+  - `$INFRA_ROOT/runtime/docker/php/dev-entrypoint.sh`
+  - `$INFRA_ROOT/runtime/docker/php/prod-entrypoint.sh`
 
 Оба PHP-entrypoint подготавливают окружение для двух приложений
 `apps/ShopAPI` и `apps/ShopOperator` (env, cache/bootstrap каталоги,
