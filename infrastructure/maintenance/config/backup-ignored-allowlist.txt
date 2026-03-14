@@ -12,13 +12,8 @@ scripts/.env
 frontend/.env
 infrastructure/.env
 
-backend/.env
 backend/database/*.sqlite*
 backend/storage/**
 
 backend/apps/ShopAPI/.env
-backend/apps/ShopAPI/database/*.sqlite*
-backend/apps/ShopAPI/storage/**
 backend/apps/ShopOperator/.env
-backend/apps/ShopOperator/database/*.sqlite*
-backend/apps/ShopOperator/storage/**
