@@ -24,6 +24,9 @@ $allTypes = @(
 $script:ErrorsFound = New-Object System.Collections.Generic.List[string]
 $script:HasMismatch = $false
 $script:HasMissing = $false
+$script:AggregateHints = $false
+$script:SummaryHintActions = New-Object System.Collections.Generic.List[string]
+$script:SummaryHintShown = $false
 $Arguments = @($Arguments | Where-Object { $_ -ne "" })
 
 function Get-CurrentPlatform {
@@ -32,6 +35,10 @@ function Get-CurrentPlatform {
     }
 
     return "win"
+}
+
+function Get-ScriptCommandPrefix {
+    return "pwsh ./scripts/swap-env.ps1"
 }
 
 function Get-TypeInfo {
@@ -51,9 +58,7 @@ function Get-TypeInfo {
                 Kind = "File"
                 Label = "root package-lock"
                 ActivePath = Join-Path $repoRoot "package-lock.json"
-                StoredPath = Join-Path $repoRoot "package-lock.$Platform.json"
-                WinPath = Join-Path $repoRoot "package-lock.win.json"
-                WslPath = Join-Path $repoRoot "package-lock.wsl.json"
+                CurrentEnvPath = Join-Path $repoRoot "package-lock.$Platform.json"
             }
         }
         "frontend-lock" {
@@ -62,9 +67,7 @@ function Get-TypeInfo {
                 Kind = "File"
                 Label = "frontend package-lock"
                 ActivePath = Join-Path $base "package-lock.json"
-                StoredPath = Join-Path $base "package-lock.$Platform.json"
-                WinPath = Join-Path $base "package-lock.win.json"
-                WslPath = Join-Path $base "package-lock.wsl.json"
+                CurrentEnvPath = Join-Path $base "package-lock.$Platform.json"
             }
         }
         "system-tests-lock" {
@@ -73,9 +76,7 @@ function Get-TypeInfo {
                 Kind = "File"
                 Label = "system-tests package-lock"
                 ActivePath = Join-Path $base "package-lock.json"
-                StoredPath = Join-Path $base "package-lock.$Platform.json"
-                WinPath = Join-Path $base "package-lock.win.json"
-                WslPath = Join-Path $base "package-lock.wsl.json"
+                CurrentEnvPath = Join-Path $base "package-lock.$Platform.json"
             }
         }
         "infrastructure-tests-lock" {
@@ -84,9 +85,7 @@ function Get-TypeInfo {
                 Kind = "File"
                 Label = "infrastructure/tests package-lock"
                 ActivePath = Join-Path $base "package-lock.json"
-                StoredPath = Join-Path $base "package-lock.$Platform.json"
-                WinPath = Join-Path $base "package-lock.win.json"
-                WslPath = Join-Path $base "package-lock.wsl.json"
+                CurrentEnvPath = Join-Path $base "package-lock.$Platform.json"
             }
         }
         "root-node-modules" {
@@ -94,9 +93,7 @@ function Get-TypeInfo {
                 Kind = "Directory"
                 Label = "root node_modules"
                 ActivePath = Join-Path $repoRoot "node_modules"
-                StoredPath = Join-Path $repoRoot "node_modules.$Platform"
-                WinPath = Join-Path $repoRoot "node_modules.win"
-                WslPath = Join-Path $repoRoot "node_modules.wsl"
+                CurrentEnvPath = Join-Path $repoRoot "node_modules.$Platform"
             }
         }
         "frontend-node-modules" {
@@ -105,9 +102,7 @@ function Get-TypeInfo {
                 Kind = "Directory"
                 Label = "frontend node_modules"
                 ActivePath = Join-Path $base "node_modules"
-                StoredPath = Join-Path $base "node_modules.$Platform"
-                WinPath = Join-Path $base "node_modules.win"
-                WslPath = Join-Path $base "node_modules.wsl"
+                CurrentEnvPath = Join-Path $base "node_modules.$Platform"
             }
         }
         "system-tests-node-modules" {
@@ -116,9 +111,7 @@ function Get-TypeInfo {
                 Kind = "Directory"
                 Label = "system-tests node_modules"
                 ActivePath = Join-Path $base "node_modules"
-                StoredPath = Join-Path $base "node_modules.$Platform"
-                WinPath = Join-Path $base "node_modules.win"
-                WslPath = Join-Path $base "node_modules.wsl"
+                CurrentEnvPath = Join-Path $base "node_modules.$Platform"
             }
         }
         "infrastructure-tests-node-modules" {
@@ -127,9 +120,7 @@ function Get-TypeInfo {
                 Kind = "Directory"
                 Label = "infrastructure/tests node_modules"
                 ActivePath = Join-Path $base "node_modules"
-                StoredPath = Join-Path $base "node_modules.$Platform"
-                WinPath = Join-Path $base "node_modules.win"
-                WslPath = Join-Path $base "node_modules.wsl"
+                CurrentEnvPath = Join-Path $base "node_modules.$Platform"
             }
         }
         "scripts-env" {
@@ -138,9 +129,7 @@ function Get-TypeInfo {
                 Kind = "File"
                 Label = "scripts env"
                 ActivePath = Join-Path $base ".env"
-                StoredPath = Join-Path $base $envFileName
-                WinPath = Join-Path $base "win.env"
-                WslPath = Join-Path $base "wsl.env"
+                CurrentEnvPath = Join-Path $base $envFileName
             }
         }
         "lint-env" {
@@ -149,9 +138,7 @@ function Get-TypeInfo {
                 Kind = "File"
                 Label = "lint env"
                 ActivePath = Join-Path $base ".env"
-                StoredPath = Join-Path $base $envFileName
-                WinPath = Join-Path $base "win.env"
-                WslPath = Join-Path $base "wsl.env"
+                CurrentEnvPath = Join-Path $base $envFileName
             }
         }
         "shop-api-env" {
@@ -160,9 +147,7 @@ function Get-TypeInfo {
                 Kind = "File"
                 Label = "ShopAPI env"
                 ActivePath = Join-Path $base ".env"
-                StoredPath = Join-Path $base $envFileName
-                WinPath = Join-Path $base "win.env"
-                WslPath = Join-Path $base "wsl.env"
+                CurrentEnvPath = Join-Path $base $envFileName
             }
         }
         "shop-operator-env" {
@@ -171,9 +156,7 @@ function Get-TypeInfo {
                 Kind = "File"
                 Label = "ShopOperator env"
                 ActivePath = Join-Path $base ".env"
-                StoredPath = Join-Path $base $envFileName
-                WinPath = Join-Path $base "win.env"
-                WslPath = Join-Path $base "wsl.env"
+                CurrentEnvPath = Join-Path $base $envFileName
             }
         }
         default {
@@ -182,94 +165,73 @@ function Get-TypeInfo {
     }
 }
 
-function Write-Usage {
-    $platform = Get-CurrentPlatform
+function Get-TypeGroupInfo {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$TypeName
+    )
 
+    switch ($TypeName) {
+        { $_ -like "root-*" } {
+            return @{ Order = 1; Label = "repo root" }
+        }
+        { $_ -like "frontend-*" } {
+            return @{ Order = 2; Label = "frontend" }
+        }
+        { $_ -like "system-tests-*" } {
+            return @{ Order = 3; Label = "system-tests" }
+        }
+        { $_ -like "infrastructure-tests-*" } {
+            return @{ Order = 4; Label = "infrastructure/tests" }
+        }
+        "scripts-env" {
+            return @{ Order = 5; Label = "scripts" }
+        }
+        "lint-env" {
+            return @{ Order = 6; Label = "lint" }
+        }
+        "shop-api-env" {
+            return @{ Order = 7; Label = "backend/apps/ShopAPI" }
+        }
+        "shop-operator-env" {
+            return @{ Order = 8; Label = "backend/apps/ShopOperator" }
+        }
+        default {
+            return @{ Order = 999; Label = "other" }
+        }
+    }
+}
+
+function Write-Usage {
     Write-Host "USAGE"
-    Write-Host "  swap-env.ps1 [validate] [--dry-run] [--type <type> ...]"
-    Write-Host "  swap-env.ps1 save --type <type> [--type <type> ...]"
-    Write-Host "  swap-env.ps1 load --type <type> [--type <type> ...]"
+    Write-Host "  swap-env.ps1 [validate] [--dry-run] [-t <type> ...]"
+    Write-Host "  swap-env.ps1 save [--dry-run] [-t <type> ...]"
+    Write-Host "  swap-env.ps1 load [--dry-run] [-t <type> ...]"
+    Write-Host "  swap-env.ps1 status [-t <type> ...]"
     Write-Host "  swap-env.ps1 --help"
     Write-Host ""
     Write-Host "Описание"
-    Write-Host "  Скрипт определяет текущее окружение запуска ($platform) и работает"
-    Write-Host "  только с артефактами этого окружения. Автоматического переключения"
-    Write-Host "  между win и wsl нет."
+    Write-Host "  Скрипт работает только с артефактами текущей среды запуска."
+    Write-Host "  Если типы не указаны, любая команда работает как '-t *'."
     Write-Host ""
     Write-Host "Команды"
-    Write-Host "  validate  Проверяет active-артефакты против текущего окружения."
-    Write-Host "  save      Перезаписывает env-specific артефакт текущего окружения"
-    Write-Host "            из active-артефакта."
-    Write-Host "  load      Перезаписывает active-артефакт из env-specific артефакта"
-    Write-Host "            текущего окружения."
+    Write-Host "  validate  Проверяет active против current-env."
+    Write-Host "  save      Копирует active -> current-env, если замена нужна."
+    Write-Host "  load      Копирует current-env -> active, если замена нужна."
+    Write-Host "  status    Показывает текущую среду, статусы и пути по группам."
     Write-Host ""
     Write-Host "Флаги"
-    Write-Host "  --type <type>  Повторяемый тип для обработки."
-    Write-Host "  --dry-run      Разрешён только для validate."
-    Write-Host "  --help         Показать эту справку."
+    Write-Host "  -t, --type <type>  Повторяемый тип для обработки. '*' означает все типы."
+    Write-Host "  --dry-run          Для validate/save/load: ничего не меняет, только показывает результат."
+    Write-Host "  -h, --help         Показать эту справку."
     Write-Host ""
-    Write-Host "Типы и пути"
-
-    foreach ($typeName in $allTypes) {
-        $info = Get-TypeInfo -TypeName $typeName -Platform $platform
-        Write-Host "  $typeName"
-        Write-Host "    active: $($info.ActivePath)"
-        Write-Host "    win:    $($info.WinPath)"
-        Write-Host "    wsl:    $($info.WslPath)"
-    }
-}
-
-function Add-ErrorMessage {
-    param(
-        [Parameter(Mandatory = $true)]
-        [string]$Message,
-        [switch]$DryRun
-    )
-
-    if ($DryRun) {
-        $script:ErrorsFound.Add("[swap-env] dry-run: $Message")
-        return
-    }
-
-    $script:ErrorsFound.Add("[swap-env] $Message")
-}
-
-function Add-MissingError {
-    param(
-        [Parameter(Mandatory = $true)]
-        [string]$Message,
-        [switch]$DryRun
-    )
-
-    $script:HasMissing = $true
-    Add-ErrorMessage -Message $Message -DryRun:$DryRun
-}
-
-function Add-MismatchError {
-    param(
-        [Parameter(Mandatory = $true)]
-        [string]$Message,
-        [switch]$DryRun
-    )
-
-    $script:HasMismatch = $true
-    Add-ErrorMessage -Message $Message -DryRun:$DryRun
+    Write-Host "Подробные пути и статусы доступны через '$(Get-ScriptCommandPrefix) status'."
 }
 
 function Write-Stderr {
     param([string]$Message)
 
     [Console]::Error.WriteLine($Message)
-}
-
-function Get-MaxParallelJobs {
-    $cpuCount = [Environment]::ProcessorCount
-    $maxJobs = [Math]::Floor($cpuCount * 0.8)
-    if ($maxJobs -lt 1) {
-        return 1
-    }
-
-    return [int]$maxJobs
 }
 
 function Ensure-KnownType {
@@ -283,131 +245,277 @@ function Ensure-KnownType {
     }
 }
 
-function Ensure-FileReadable {
+function Resolve-RequestedTypes {
     param(
         [Parameter(Mandatory = $true)]
-        [string]$Path,
-        [Parameter(Mandatory = $true)]
-        [string]$Label,
-        [switch]$DryRun
+        [string[]]$RequestedTypes
     )
 
-    if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) {
-        Add-MissingError -Message "${Label}: ожидался файл '$Path', но он не найден или не читается." -DryRun:$DryRun
-        return $false
+    $resolvedTypes = New-Object System.Collections.Generic.List[string]
+
+    foreach ($typeName in $RequestedTypes) {
+        if ($typeName -eq "*") {
+            foreach ($knownType in $allTypes) {
+                if (-not $resolvedTypes.Contains($knownType)) {
+                    $resolvedTypes.Add($knownType)
+                }
+            }
+            continue
+        }
+
+        Ensure-KnownType -TypeName $typeName
+        if (-not $resolvedTypes.Contains($typeName)) {
+            $resolvedTypes.Add($typeName)
+        }
     }
 
-    try {
-        Get-Content -LiteralPath $Path -Raw -ErrorAction Stop | Out-Null
-        return $true
-    }
-    catch {
-        Add-MissingError -Message "${Label}: ожидался читаемый файл '$Path', но его не удалось прочитать." -DryRun:$DryRun
-        return $false
-    }
+    return $resolvedTypes
 }
 
-function Ensure-DirectoryReadable {
-    param(
-        [Parameter(Mandatory = $true)]
-        [string]$Path,
-        [Parameter(Mandatory = $true)]
-        [string]$Label,
-        [switch]$DryRun
-    )
-
-    if (-not (Test-Path -LiteralPath $Path -PathType Container)) {
-        Add-MissingError -Message "${Label}: ожидалась директория '$Path', но она не найдена или не читается." -DryRun:$DryRun
-        return $false
-    }
-
-    try {
-        [System.IO.Directory]::EnumerateDirectories($Path, "*", [System.IO.SearchOption]::AllDirectories) |
-            Select-Object -First 1 | Out-Null
-        return $true
-    }
-    catch {
-        Add-MissingError -Message "${Label}: ожидалась читаемая директория '$Path', но её не удалось прочитать." -DryRun:$DryRun
-        return $false
-    }
-}
-
-function Get-NormalizedDirectoryList {
+function Try-ReadFileContent {
     param(
         [Parameter(Mandatory = $true)]
         [string]$Path
     )
 
-    $basePath = [System.IO.Path]::GetFullPath($Path)
-    $prefixLength = $basePath.Length + 1
+    if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) {
+        return @{ Ok = $false; Status = "missing" }
+    }
 
-    return [System.IO.Directory]::EnumerateDirectories($basePath, "*", [System.IO.SearchOption]::AllDirectories) |
-        ForEach-Object {
-            $_.Substring($prefixLength)
-        } |
-        Sort-Object
+    try {
+        $content = Get-Content -LiteralPath $Path -Raw -ErrorAction Stop
+        return @{ Ok = $true; Status = "ok"; Content = $content }
+    }
+    catch {
+        return @{ Ok = $false; Status = "unreadable" }
+    }
 }
 
-function Validate-Type {
+function Try-ReadDirectoryList {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Path
+    )
+
+    if (-not (Test-Path -LiteralPath $Path -PathType Container)) {
+        return @{ Ok = $false; Status = "missing" }
+    }
+
+    try {
+        $basePath = [System.IO.Path]::GetFullPath($Path)
+        $prefixLength = $basePath.Length + 1
+        $items = [System.IO.Directory]::EnumerateDirectories($basePath, "*", [System.IO.SearchOption]::AllDirectories) |
+            ForEach-Object {
+                $_.Substring($prefixLength)
+            } |
+            Sort-Object
+        return @{ Ok = $true; Status = "ok"; Items = @($items) }
+    }
+    catch {
+        return @{ Ok = $false; Status = "unreadable" }
+    }
+}
+
+function Get-TypeState {
     param(
         [Parameter(Mandatory = $true)]
         [string]$TypeName,
         [Parameter(Mandatory = $true)]
         [ValidateSet("win", "wsl")]
-        [string]$Platform,
-        [switch]$DryRun
+        [string]$Platform
     )
 
     $info = Get-TypeInfo -TypeName $TypeName -Platform $Platform
+    $group = Get-TypeGroupInfo -TypeName $TypeName
+    $activeResult = if ($info.Kind -eq "File") { Try-ReadFileContent -Path $info.ActivePath } else { Try-ReadDirectoryList -Path $info.ActivePath }
+    $envResult = if ($info.Kind -eq "File") { Try-ReadFileContent -Path $info.CurrentEnvPath } else { Try-ReadDirectoryList -Path $info.CurrentEnvPath }
 
-    if ($info.Kind -eq "File") {
-        if (-not (Ensure-FileReadable -Path $info.ActivePath -Label "$($info.Label) active" -DryRun:$DryRun)) {
+    $status = "same"
+    if (-not $activeResult.Ok) {
+        $status = if ($activeResult.Status -eq "missing") { "missing-active" } else { "unreadable-active" }
+    }
+    elseif (-not $envResult.Ok) {
+        $status = if ($envResult.Status -eq "missing") { "missing-env" } else { "unreadable-env" }
+    }
+    elseif ($info.Kind -eq "File") {
+        if ($activeResult.Content -ne $envResult.Content) {
+            $status = "different"
+        }
+    }
+    else {
+        $activeJoined = [string]::Join("`n", $activeResult.Items)
+        $envJoined = [string]::Join("`n", $envResult.Items)
+        if ($activeJoined -ne $envJoined) {
+            $status = "different"
+        }
+    }
+
+    return [pscustomobject]@{
+        TypeName = $TypeName
+        Kind = $info.Kind
+        Label = $info.Label
+        GroupOrder = $group.Order
+        GroupLabel = $group.Label
+        ActivePath = $info.ActivePath
+        CurrentEnvPath = $info.CurrentEnvPath
+        Status = $status
+    }
+}
+
+function Add-SummaryHintAction {
+    param(
+        [Parameter(Mandatory = $true)]
+        [ValidateSet("save", "load")]
+        [string]$ActionName
+    )
+
+    if (-not $script:SummaryHintActions.Contains($ActionName)) {
+        $script:SummaryHintActions.Add($ActionName)
+    }
+}
+
+function Format-TypeArguments {
+    param(
+        [string[]]$TypeNames
+    )
+
+    if (-not $TypeNames -or $TypeNames.Count -eq 0) {
+        return ""
+    }
+
+    $parts = foreach ($typeName in $TypeNames) {
+        "-t $typeName"
+    }
+
+    return " " + ([string]::Join(" ", $parts))
+}
+
+function Get-CommandTemplate {
+    param(
+        [Parameter(Mandatory = $true)]
+        [ValidateSet("save", "load", "status", "validate")]
+        [string]$ActionName,
+        [string[]]$TypeNames
+    )
+
+    $base = "$(Get-ScriptCommandPrefix) $ActionName"
+    return $base + (Format-TypeArguments -TypeNames $TypeNames)
+}
+
+function Get-HelpHint {
+    return "См. $(Get-ScriptCommandPrefix) -h."
+}
+
+function Get-HintText {
+    param(
+        [string[]]$ActionNames,
+        [string[]]$TypeNames
+    )
+
+    if (-not $ActionNames -or $ActionNames.Count -eq 0) {
+        return ""
+    }
+
+    if ($script:AggregateHints) {
+        foreach ($actionName in $ActionNames) {
+            Add-SummaryHintAction -ActionName $actionName
+        }
+        return ""
+    }
+
+    $commands = foreach ($actionName in $ActionNames) {
+        Get-CommandTemplate -ActionName $actionName -TypeNames $TypeNames
+    }
+
+    if ($commands.Count -eq 1) {
+        return " Команда: $($commands[0])."
+    }
+
+    return " Команды: $([string]::Join('; ', $commands))."
+}
+
+function Write-SummaryHints {
+    if (-not $script:AggregateHints -or $script:SummaryHintShown -or $script:SummaryHintActions.Count -eq 0) {
+        return
+    }
+
+    foreach ($actionName in $script:SummaryHintActions) {
+        Write-Stderr "[swap-env] Для всего набора: $(Get-CommandTemplate -ActionName $actionName)."
+    }
+
+    $script:SummaryHintShown = $true
+}
+
+function Add-OperationalError {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$TypeName,
+        [Parameter(Mandatory = $true)]
+        [string]$Message,
+        [string[]]$HintActions,
+        [switch]$Missing,
+        [switch]$Mismatch,
+        [switch]$DryRun
+    )
+
+    $hint = Get-HintText -ActionNames $HintActions -TypeNames @($TypeName)
+    if ($Missing) {
+        $script:HasMissing = $true
+    }
+    if ($Mismatch) {
+        $script:HasMismatch = $true
+    }
+
+    $prefix = if ($DryRun) { "[swap-env] dry-run: " } else { "[swap-env] " }
+    $script:ErrorsFound.Add("${prefix}${TypeName}: ${Message}${hint}")
+}
+
+function Get-ValidateHintActions {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Status
+    )
+
+    switch ($Status) {
+        "missing-active" { return @("load") }
+        "unreadable-active" { return @("load") }
+        "missing-env" { return @("save") }
+        "unreadable-env" { return @("save") }
+        "different" { return @("load", "save") }
+        default { return @() }
+    }
+}
+
+function Validate-Type {
+    param(
+        [Parameter(Mandatory = $true)]
+        [pscustomobject]$State,
+        [switch]$DryRun
+    )
+
+    switch ($State.Status) {
+        "same" { return }
+        "missing-active" {
+            Add-OperationalError -TypeName $State.TypeName -Message "active-артефакт отсутствует." -HintActions (Get-ValidateHintActions -Status $State.Status) -Missing -DryRun:$DryRun
             return
         }
-        if (-not (Ensure-FileReadable -Path $info.StoredPath -Label "$TypeName ($Platform)" -DryRun:$DryRun)) {
+        "unreadable-active" {
+            Add-OperationalError -TypeName $State.TypeName -Message "active-артефакт не читается." -HintActions (Get-ValidateHintActions -Status $State.Status) -Missing -DryRun:$DryRun
             return
         }
-
-        $activeContent = Get-Content -LiteralPath $info.ActivePath -Raw -ErrorAction Stop
-        $storedContent = Get-Content -LiteralPath $info.StoredPath -Raw -ErrorAction Stop
-        if ($activeContent -ne $storedContent) {
-            Add-MismatchError -Message "${TypeName}: active '$($info.ActivePath)' не совпадает с '$($info.StoredPath)'. Синхронизируйте файлы вручную." -DryRun:$DryRun
+        "missing-env" {
+            Add-OperationalError -TypeName $State.TypeName -Message "артефакт текущей среды отсутствует." -HintActions (Get-ValidateHintActions -Status $State.Status) -Missing -DryRun:$DryRun
             return
         }
-
-        return
+        "unreadable-env" {
+            Add-OperationalError -TypeName $State.TypeName -Message "артефакт текущей среды не читается." -HintActions (Get-ValidateHintActions -Status $State.Status) -Missing -DryRun:$DryRun
+            return
+        }
+        "different" {
+            Add-OperationalError -TypeName $State.TypeName -Message "active и current-env различаются." -HintActions (Get-ValidateHintActions -Status $State.Status) -Mismatch -DryRun:$DryRun
+            return
+        }
     }
-
-    if (-not (Ensure-DirectoryReadable -Path $info.ActivePath -Label "$($info.Label) active" -DryRun:$DryRun)) {
-        return
-    }
-    if (-not (Ensure-DirectoryReadable -Path $info.StoredPath -Label "$TypeName ($Platform)" -DryRun:$DryRun)) {
-        return
-    }
-
-    try {
-        $activeListing = @(Get-NormalizedDirectoryList -Path $info.ActivePath)
-    }
-    catch {
-        Add-MissingError -Message "${TypeName}: не удалось прочитать структуру директорий '$($info.ActivePath)'." -DryRun:$DryRun
-        return
-    }
-
-    try {
-        $storedListing = @(Get-NormalizedDirectoryList -Path $info.StoredPath)
-    }
-    catch {
-        Add-MissingError -Message "${TypeName}: не удалось прочитать структуру директорий '$($info.StoredPath)'." -DryRun:$DryRun
-        return
-    }
-
-    $activeJoined = [string]::Join("`n", $activeListing)
-    $storedJoined = [string]::Join("`n", $storedListing)
-    if ($activeJoined -ne $storedJoined) {
-        Add-MismatchError -Message "${TypeName}: структура директорий '$($info.ActivePath)' не совпадает с '$($info.StoredPath)'. Синхронизируйте директории вручную." -DryRun:$DryRun
-        return
-    }
-
 }
 
 function Copy-FileForce {
@@ -449,27 +557,28 @@ function Copy-DirectoryForce {
                     $windowsPath = & $wslPathCmd.Source -w $DestinationPath
                     & $cmdExe.Source /d /c "rd /s /q `"$windowsPath`""
                     if ($LASTEXITCODE -ne 0) {
-                        throw "Не удалось удалить директорию '$DestinationPath' через rm -rf и cmd.exe."
+                        throw "delete-failed"
                     }
                 }
                 else {
-                    throw "Не удалось удалить директорию '$DestinationPath' через rm -rf."
+                    throw "delete-failed"
                 }
             }
         }
+
         New-Item -ItemType Directory -Path $DestinationPath -Force | Out-Null
         $rsyncCmd = Get-Command rsync -ErrorAction SilentlyContinue
         if ($rsyncCmd) {
             & $rsyncCmd.Source -a --delete "$SourcePath/" "$DestinationPath/"
             if ($LASTEXITCODE -ne 0) {
-                throw "Не удалось скопировать директорию '$SourcePath' в '$DestinationPath' через rsync."
+                throw "copy-failed"
             }
             return
         }
 
         & /bin/sh -c 'cp -a -- "$1"/. "$2"/' sh $SourcePath $DestinationPath
         if ($LASTEXITCODE -ne 0) {
-            throw "Не удалось скопировать директорию '$SourcePath' в '$DestinationPath' через cp -a."
+            throw "copy-failed"
         }
         return
     }
@@ -481,216 +590,137 @@ function Copy-DirectoryForce {
     Copy-Item -LiteralPath $SourcePath -Destination $DestinationPath -Recurse -Force
 }
 
-function Save-Type {
+function Invoke-SaveOrLoadType {
     param(
         [Parameter(Mandatory = $true)]
-        [string]$TypeName,
+        [ValidateSet("save", "load")]
+        [string]$ActionName,
         [Parameter(Mandatory = $true)]
-        [ValidateSet("win", "wsl")]
-        [string]$Platform
-    )
-
-    $info = Get-TypeInfo -TypeName $TypeName -Platform $Platform
-    if ($info.Kind -eq "File") {
-        if (-not (Ensure-FileReadable -Path $info.ActivePath -Label "$($info.Label) active")) {
-            return
-        }
-
-        Copy-FileForce -SourcePath $info.ActivePath -DestinationPath $info.StoredPath
-        Write-Host "[swap-env] ${TypeName}: сохранено '$($info.ActivePath)' -> '$($info.StoredPath)'"
-        return
-    }
-
-    if (-not (Ensure-DirectoryReadable -Path $info.ActivePath -Label "$($info.Label) active")) {
-        return
-    }
-
-    Copy-DirectoryForce -SourcePath $info.ActivePath -DestinationPath $info.StoredPath
-    Write-Host "[swap-env] ${TypeName}: сохранено '$($info.ActivePath)' -> '$($info.StoredPath)'"
-}
-
-function Load-Type {
-    param(
-        [Parameter(Mandatory = $true)]
-        [string]$TypeName,
-        [Parameter(Mandatory = $true)]
-        [ValidateSet("win", "wsl")]
-        [string]$Platform
-    )
-
-    $info = Get-TypeInfo -TypeName $TypeName -Platform $Platform
-    if ($info.Kind -eq "File") {
-        if (-not (Ensure-FileReadable -Path $info.StoredPath -Label "$TypeName ($Platform)")) {
-            return
-        }
-
-        Copy-FileForce -SourcePath $info.StoredPath -DestinationPath $info.ActivePath
-        Write-Host "[swap-env] ${TypeName}: загружено '$($info.StoredPath)' -> '$($info.ActivePath)'"
-        return
-    }
-
-    if (-not (Ensure-DirectoryReadable -Path $info.StoredPath -Label "$TypeName ($Platform)")) {
-        return
-    }
-
-    Copy-DirectoryForce -SourcePath $info.StoredPath -DestinationPath $info.ActivePath
-    Write-Host "[swap-env] ${TypeName}: загружено '$($info.StoredPath)' -> '$($info.ActivePath)'"
-}
-
-function Invoke-ParallelValidate {
-    param(
-        [string[]]$TypeNames,
-        [ValidateSet("win", "wsl")]
-        [string]$Platform,
+        [pscustomobject]$State,
         [switch]$DryRun
     )
 
-    $directoryTypes = @($TypeNames | Where-Object { (Get-TypeInfo -TypeName $_ -Platform $Platform).Kind -eq "Directory" })
-    $fileTypes = @($TypeNames | Where-Object { (Get-TypeInfo -TypeName $_ -Platform $Platform).Kind -eq "File" })
-    $orderedTypes = @($directoryTypes + $fileTypes)
-    $maxJobs = Get-MaxParallelJobs
-    $pwshPath = (Get-Process -Id $PID).Path
-    $tempDir = Join-Path ([System.IO.Path]::GetTempPath()) ("swap-env-" + [Guid]::NewGuid().ToString("N"))
-    $running = New-Object System.Collections.Generic.List[object]
-    $hasMissing = $false
-    $hasMismatch = $false
-    $hasInternalError = $false
+    $typeName = $State.TypeName
+    $sameHint = Get-HintText -ActionNames @($ActionName) -TypeNames @($typeName)
 
-    [System.IO.Directory]::CreateDirectory($tempDir) | Out-Null
+    if ($ActionName -eq "save") {
+        switch ($State.Status) {
+            "missing-active" {
+                Add-OperationalError -TypeName $typeName -Message "active-артефакт отсутствует." -HintActions @("load") -Missing
+                return
+            }
+            "unreadable-active" {
+                Add-OperationalError -TypeName $typeName -Message "active-артефакт не читается." -HintActions @("load") -Missing
+                return
+            }
+            "same" {
+                Write-Host "[swap-env] ${typeName}: active и current-env уже совпадают, замена не нужна.${sameHint}"
+                return
+            }
+            default {
+                if ($DryRun) {
+                    Write-Host "[swap-env] dry-run: ${typeName}: будет выполнено active -> current-env."
+                    return
+                }
 
-    $collectResult = {
-        param($JobInfo)
-
-        $JobInfo.Process.WaitForExit()
-        $JobInfo.Process.Refresh()
-        $status = $JobInfo.Process.ExitCode
-
-        if (Test-Path -LiteralPath $JobInfo.StdOut) {
-            $stdout = Get-Content -LiteralPath $JobInfo.StdOut -Raw
-            if (-not [string]::IsNullOrWhiteSpace($stdout)) {
-                Write-Host $stdout.TrimEnd()
+                try {
+                    if ($State.Kind -eq "File") {
+                        Copy-FileForce -SourcePath $State.ActivePath -DestinationPath $State.CurrentEnvPath
+                    }
+                    else {
+                        Copy-DirectoryForce -SourcePath $State.ActivePath -DestinationPath $State.CurrentEnvPath
+                    }
+                    Write-Host "[swap-env] ${typeName}: active -> current-env выполнено."
+                }
+                catch {
+                    Add-OperationalError -TypeName $typeName -Message "не удалось заменить артефакт current-env." -HintActions @("save") -Mismatch
+                }
+                return
             }
         }
+    }
 
-        if (Test-Path -LiteralPath $JobInfo.StdErr) {
-            $stderr = Get-Content -LiteralPath $JobInfo.StdErr -Raw
-            if (-not [string]::IsNullOrWhiteSpace($stderr)) {
-                Write-Stderr $stderr.TrimEnd()
+    switch ($State.Status) {
+        "missing-env" {
+            Add-OperationalError -TypeName $typeName -Message "артефакт текущей среды отсутствует." -HintActions @("save") -Missing
+            return
+        }
+        "unreadable-env" {
+            Add-OperationalError -TypeName $typeName -Message "артефакт текущей среды не читается." -HintActions @("save") -Missing
+            return
+        }
+        "same" {
+            Write-Host "[swap-env] ${typeName}: active и current-env уже совпадают, замена не нужна.${sameHint}"
+            return
+        }
+        default {
+            if ($DryRun) {
+                Write-Host "[swap-env] dry-run: ${typeName}: будет выполнено active <- current-env."
+                return
             }
-        }
 
-        switch ($status) {
-            0 { return }
-            1 { $script:parallelHasMismatch = $true; return }
-            3 { $script:parallelHasMissing = $true; return }
-            default { $script:parallelHasInternalError = $true; return }
-        }
-    }
-
-    $script:parallelHasMissing = $false
-    $script:parallelHasMismatch = $false
-    $script:parallelHasInternalError = $false
-
-    for ($index = 0; $index -lt $orderedTypes.Count; $index++) {
-        $typeName = $orderedTypes[$index]
-        $stdoutPath = Join-Path $tempDir "$index.stdout"
-        $stderrPath = Join-Path $tempDir "$index.stderr"
-        $arguments = @("-NoProfile", "-File", $PSCommandPath, "__validate-type", $typeName)
-        if ($DryRun) {
-            $arguments += "--dry-run"
-        }
-
-        $process = Start-Process `
-            -FilePath $pwshPath `
-            -ArgumentList $arguments `
-            -PassThru `
-            -RedirectStandardOutput $stdoutPath `
-            -RedirectStandardError $stderrPath
-
-        $running.Add([pscustomobject]@{
-            Process = $process
-            StdOut = $stdoutPath
-            StdErr = $stderrPath
-        }) | Out-Null
-
-        if ($running.Count -ge $maxJobs) {
-            & $collectResult $running[0]
-            $running.RemoveAt(0)
+            try {
+                if ($State.Kind -eq "File") {
+                    Copy-FileForce -SourcePath $State.CurrentEnvPath -DestinationPath $State.ActivePath
+                }
+                else {
+                    Copy-DirectoryForce -SourcePath $State.CurrentEnvPath -DestinationPath $State.ActivePath
+                }
+                Write-Host "[swap-env] ${typeName}: active <- current-env выполнено."
+            }
+            catch {
+                Add-OperationalError -TypeName $typeName -Message "не удалось заменить active-артефакт." -HintActions @("load") -Mismatch
+            }
+            return
         }
     }
+}
 
-    while ($running.Count -gt 0) {
-        & $collectResult $running[0]
-        $running.RemoveAt(0)
-    }
+function Write-StatusReport {
+    param(
+        [Parameter(Mandatory = $true)]
+        [pscustomobject[]]$States,
+        [Parameter(Mandatory = $true)]
+        [ValidateSet("win", "wsl")]
+        [string]$Platform
+    )
 
-    Remove-Item -LiteralPath $tempDir -Recurse -Force
+    Write-Host "[swap-env] status: среда '$Platform'"
+    Write-Host "[swap-env] validate: active <-> current-env"
+    Write-Host "[swap-env] save: active -> current-env"
+    Write-Host "[swap-env] load: active <- current-env"
 
-    $hasMissing = $script:parallelHasMissing
-    $hasMismatch = $script:parallelHasMismatch
-    $hasInternalError = $script:parallelHasInternalError
-
-    if ($hasInternalError) {
-        exit 2
+    foreach ($group in ($States | Group-Object GroupLabel | Sort-Object { ($_.Group | Select-Object -First 1).GroupOrder })) {
+        Write-Host "[swap-env] group: $($group.Name)"
+        foreach ($state in ($group.Group | Sort-Object TypeName)) {
+            Write-Host "  $($state.TypeName) [$($state.Status)]"
+            Write-Host "    active: $($state.ActivePath)"
+            Write-Host "    current-env: $($state.CurrentEnvPath)"
+        }
     }
-    if ($hasMissing) {
-        exit 3
-    }
-    if ($hasMismatch) {
-        exit 1
-    }
-
-    if ($DryRun) {
-        Write-Host "[swap-env] dry-run: все запрошенные типы синхронизированы для среды '$Platform'."
-    }
-    else {
-        Write-Host "[swap-env] validate: все запрошенные типы синхронизированы для среды '$Platform'."
-    }
-
-    exit 0
 }
 
 $commandName = "validate"
-$selectedTypes = New-Object System.Collections.Generic.List[string]
+$requestedTypes = New-Object System.Collections.Generic.List[string]
 $dryRun = $false
 
 if ($Arguments.Count -gt 0) {
     switch ($Arguments[0]) {
-        "__validate-type" {
-            $commandName = "__validate-type"
-            if ($Arguments.Count -gt 1) {
-                $Arguments = $Arguments[1..($Arguments.Count - 1)]
-            }
-            else {
-                $Arguments = @()
-            }
-        }
         "validate" {
             $commandName = "validate"
-            if ($Arguments.Count -gt 1) {
-                $Arguments = $Arguments[1..($Arguments.Count - 1)]
-            }
-            else {
-                $Arguments = @()
-            }
+            $Arguments = if ($Arguments.Count -gt 1) { $Arguments[1..($Arguments.Count - 1)] } else { @() }
         }
         "save" {
             $commandName = "save"
-            if ($Arguments.Count -gt 1) {
-                $Arguments = $Arguments[1..($Arguments.Count - 1)]
-            }
-            else {
-                $Arguments = @()
-            }
+            $Arguments = if ($Arguments.Count -gt 1) { $Arguments[1..($Arguments.Count - 1)] } else { @() }
         }
         "load" {
             $commandName = "load"
-            if ($Arguments.Count -gt 1) {
-                $Arguments = $Arguments[1..($Arguments.Count - 1)]
-            }
-            else {
-                $Arguments = @()
-            }
+            $Arguments = if ($Arguments.Count -gt 1) { $Arguments[1..($Arguments.Count - 1)] } else { @() }
+        }
+        "status" {
+            $commandName = "status"
+            $Arguments = if ($Arguments.Count -gt 1) { $Arguments[1..($Arguments.Count - 1)] } else { @() }
         }
         "--help" {
             Write-Usage
@@ -703,53 +733,12 @@ if ($Arguments.Count -gt 0) {
     }
 }
 
-if ($commandName -eq "__validate-type") {
-    if ($Arguments.Count -lt 1 -or $Arguments.Count -gt 2) {
-        Write-Stderr "[swap-env] Внутренняя команда __validate-type ожидает type и опциональный --dry-run."
-        exit 2
-    }
-
-    $internalType = $Arguments[0]
-    try {
-        Ensure-KnownType -TypeName $internalType
-    }
-    catch {
-        Write-Stderr "[swap-env] Неподдерживаемый тип: $internalType"
-        exit 2
-    }
-
-    if ($Arguments.Count -eq 2) {
-        if ($Arguments[1] -notin @("--dry-run", "-DryRun")) {
-            Write-Stderr "[swap-env] Внутренняя команда __validate-type поддерживает только --dry-run."
-            exit 2
-        }
-        $dryRun = $true
-    }
-
-    $platform = Get-CurrentPlatform
-    Validate-Type -TypeName $internalType -Platform $platform -DryRun:$dryRun
-
-    if ($script:ErrorsFound.Count -gt 0) {
-        foreach ($message in $script:ErrorsFound) {
-            Write-Stderr $message
-        }
-    }
-
-    if ($script:HasMissing) {
-        exit 3
-    }
-    if ($script:HasMismatch) {
-        exit 1
-    }
-
-    exit 0
-}
-
 for ($index = 0; $index -lt $Arguments.Count; $index++) {
     $argument = $Arguments[$index]
     if ([string]::IsNullOrWhiteSpace($argument)) {
         continue
     }
+
     switch ($argument) {
         "--help" {
             Write-Usage
@@ -767,73 +756,72 @@ for ($index = 0; $index -lt $Arguments.Count; $index++) {
         }
         "--type" {
             if ($index + 1 -ge $Arguments.Count) {
-                Write-Stderr "[swap-env] После --type ожидается значение."
+                Write-Stderr "[swap-env] После --type ожидается значение. $(Get-HelpHint)"
                 exit 2
             }
 
-            $typeName = $Arguments[$index + 1]
-            try {
-                Ensure-KnownType -TypeName $typeName
-            }
-            catch {
-                Write-Stderr "[swap-env] Неподдерживаемый тип: $typeName"
+            $requestedTypes.Add($Arguments[$index + 1])
+            $index++
+        }
+        "-t" {
+            if ($index + 1 -ge $Arguments.Count) {
+                Write-Stderr "[swap-env] После -t ожидается значение. $(Get-HelpHint)"
                 exit 2
             }
-            $selectedTypes.Add($typeName)
+
+            $requestedTypes.Add($Arguments[$index + 1])
             $index++
         }
         { $_ -like "--type=*" } {
-            $typeName = $argument.Substring(7)
-            try {
-                Ensure-KnownType -TypeName $typeName
-            }
-            catch {
-                Write-Stderr "[swap-env] Неподдерживаемый тип: $typeName"
-                exit 2
-            }
-            $selectedTypes.Add($typeName)
+            $requestedTypes.Add($argument.Substring(7))
         }
-        "-Help" {
-            Write-Usage
-            exit 0
+        { $_ -like "-t=*" } {
+            $requestedTypes.Add($argument.Substring(3))
         }
         default {
-            Write-Stderr "[swap-env] Неподдерживаемый аргумент: $argument"
+            Write-Stderr "[swap-env] Неподдерживаемый аргумент: $argument. $(Get-HelpHint)"
             exit 2
         }
     }
 }
 
-if ($commandName -ne "validate" -and $dryRun) {
-    Write-Stderr "[swap-env] --dry-run поддерживается только для validate."
+if ($requestedTypes.Count -eq 0) {
+    $requestedTypes.Add("*")
+}
+
+try {
+    $selectedTypes = @(Resolve-RequestedTypes -RequestedTypes $requestedTypes.ToArray())
+}
+catch {
+    $unknownType = $_.Exception.Message -replace "^Unknown type:\s*", ""
+    Write-Stderr "[swap-env] Неподдерживаемый тип: $unknownType. $(Get-HelpHint)"
     exit 2
 }
 
-if ($selectedTypes.Count -eq 0) {
-    if ($commandName -eq "validate") {
-        foreach ($typeName in $allTypes) {
-            $selectedTypes.Add($typeName)
-        }
-    }
-    else {
-        Write-Stderr "[swap-env] Для команды $commandName нужен хотя бы один --type."
-        exit 2
-    }
-}
-
+$script:AggregateHints = ($selectedTypes.Count -eq $allTypes.Count)
 $platform = Get-CurrentPlatform
-
-if ($commandName -eq "validate") {
-    Invoke-ParallelValidate -TypeNames $selectedTypes -Platform $platform -DryRun:$dryRun
+$states = foreach ($typeName in $selectedTypes) {
+    Get-TypeState -TypeName $typeName -Platform $platform
 }
 
-foreach ($typeName in $selectedTypes) {
-    switch ($commandName) {
-        "save" {
-            Save-Type -TypeName $typeName -Platform $platform
+switch ($commandName) {
+    "status" {
+        Write-StatusReport -States $states -Platform $platform
+        exit 0
+    }
+    "validate" {
+        foreach ($state in $states) {
+            Validate-Type -State $state -DryRun:$dryRun
         }
-        "load" {
-            Load-Type -TypeName $typeName -Platform $platform
+    }
+    "save" {
+        foreach ($state in $states) {
+            Invoke-SaveOrLoadType -ActionName "save" -State $state -DryRun:$dryRun
+        }
+    }
+    "load" {
+        foreach ($state in $states) {
+            Invoke-SaveOrLoadType -ActionName "load" -State $state -DryRun:$dryRun
         }
     }
 }
@@ -844,6 +832,8 @@ if ($script:ErrorsFound.Count -gt 0) {
     }
 }
 
+Write-SummaryHints
+
 if ($script:HasMissing) {
     exit 3
 }
@@ -852,12 +842,24 @@ if ($script:HasMismatch) {
     exit 1
 }
 
-if ($commandName -eq "validate") {
-    if ($dryRun) {
-        Write-Host "[swap-env] dry-run: все запрошенные типы синхронизированы для среды '$platform'."
+switch ($commandName) {
+    "validate" {
+        if ($dryRun) {
+            Write-Host "[swap-env] dry-run: все запрошенные типы синхронизированы для среды '$platform'."
+        }
+        else {
+            Write-Host "[swap-env] validate: все запрошенные типы синхронизированы для среды '$platform'."
+        }
     }
-    else {
-        Write-Host "[swap-env] validate: все запрошенные типы синхронизированы для среды '$platform'."
+    "save" {
+        if ($dryRun) {
+            Write-Host "[swap-env] dry-run: обработка save завершена для среды '$platform'."
+        }
+    }
+    "load" {
+        if ($dryRun) {
+            Write-Host "[swap-env] dry-run: обработка load завершена для среды '$platform'."
+        }
     }
 }
 

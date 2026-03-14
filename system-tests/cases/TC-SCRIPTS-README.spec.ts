@@ -75,12 +75,16 @@ describe("TC-SCRIPTS-README-007", () => {
 });
 
 describe("TC-SCRIPTS-README-010", () => {
-  it("README фиксирует команды validate/save/load, --help и validate по умолчанию", () => {
+  it("README фиксирует status, -t/-h, default all-types и dry-run для validate/save/load", () => {
     expect(SCRIPTS_README).toMatch(/`validate`/);
     expect(SCRIPTS_README).toMatch(/`save`/);
     expect(SCRIPTS_README).toMatch(/`load`/);
-    expect(SCRIPTS_README).toMatch(/`--help`/);
+    expect(SCRIPTS_README).toMatch(/`status`/);
+    expect(SCRIPTS_README).toMatch(/`--help` \/ `-h`/);
+    expect(SCRIPTS_README).toMatch(/`-t` \/ `--type`/);
     expect(SCRIPTS_README).toMatch(/команда по умолчанию/i);
+    expect(SCRIPTS_README).toMatch(/По умолчанию любая команда работает как `-t \*`/);
+    expect(SCRIPTS_README).toMatch(/`--dry-run` — поддерживается у `validate`, `save` и `load`/);
   });
 });
 

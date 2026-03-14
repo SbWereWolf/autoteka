@@ -100,54 +100,35 @@ npm run test:ui:mock   # offline UI на mock-данных
 npm run test:e2e       # online e2e (нужен backend)
 ```
 
-### Явная работа с platform env между Windows и WSL
+### Переключение настроек работу между Windows и WSL
 
-`swap-env` больше не переключает окружение автоматически. Скрипт
-определяет текущее окружение запуска (`win` или `wsl`) и работает только
-с его env-specific артефактами.
+В Системе есть платформенно зависимые настройки:
 
-Проверка текущего active-набора:
+- пути к файлам SQLite
+- node js модули для тестирования с использованием браузера
+- инструменты автоматического форматирования текстовых файлов
+- путь к версии PHP для локального запуска тестов (не docker container)
+
+Чтобы все эти инструменты уживались в одном проекте, для переключения
+между ними разработан скрипт `swap-env`.
+
+Для начала определите, подходят ли ваши файлы текущей среде выполнения:
 
 ```powershell
 pwsh ./scripts/swap-env.ps1
-pwsh ./scripts/swap-env.ps1 validate
-pwsh ./scripts/swap-env.ps1 validate --dry-run
-```
+``` 
 
-```bash
-bash ./scripts/swap-env.sh
-bash ./scripts/swap-env.sh validate
-bash ./scripts/swap-env.sh validate --dry-run
-```
-
-Сохранение active-артефакта в env-specific storage текущей среды:
+Если нет, то загрузите ранее созданный набор файлов
 
 ```powershell
-pwsh ./scripts/swap-env.ps1 save --type scripts-env --type root-lock
+pwsh ./scripts/swap-env.ps1 load
 ```
 
-```bash
-bash ./scripts/swap-env.sh save --type scripts-env --type root-lock
-```
-
-Загрузка active-артефакта из env-specific storage текущей среды:
+Если у вас нет набора файлов для текущей среды выполнения, то создайте
+его обычным образом и запишите для будущего использования:
 
 ```powershell
-pwsh ./scripts/swap-env.ps1 load --type scripts-env --type root-lock
-```
-
-```bash
-bash ./scripts/swap-env.sh load --type scripts-env --type root-lock
-```
-
-Полная справка со всеми типами и путями:
-
-```powershell
-pwsh ./scripts/swap-env.ps1 --help
-```
-
-```bash
-bash ./scripts/swap-env.sh --help
+pwsh ./scripts/swap-env.ps1 save
 ```
 
 ### Backend и back office
