@@ -75,6 +75,7 @@ flock -n 9 || exit 0
   check_sqlite_write_access
 
   DEPLOY_STAGE="compose_up_web"
+  ensure_package_lock_for_deploy
   compose up -d --build --remove-orphans web
 
   DEPLOY_STAGE="admin_smoke_check"

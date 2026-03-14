@@ -80,6 +80,7 @@ wait_for_php_exec_ready "${PHP_READY_TIMEOUT:-60}"
 prepare_laravel_runtime
 admin_artisan_in_php 'migrate --force'
 admin_artisan_in_php 'db:seed --class=AdminUserSeeder --force'
+ensure_package_lock_for_deploy
 compose up -d --build --remove-orphans web
 systemctl enable --now autoteka.service
 systemctl enable --now watch-changes.timer
