@@ -15,10 +15,8 @@ formulation, the agent must choose Russian.
 Always follow this sequence:
 
 1. preflight
-2. journal (if structural change), UserMessage and ProposedPlan
 3. implement change
 4. verify
-5. journal (if structural change), FinalAnswer
 
 Never bypass scripts under [scripts](scripts/agent/).
 
