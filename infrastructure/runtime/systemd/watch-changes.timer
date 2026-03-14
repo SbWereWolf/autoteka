@@ -3,7 +3,7 @@ Description=Run Autoteka watch-changes timer every 5 minutes
 
 [Timer]
 OnBootSec=2min
-OnUnitActiveSec=5min
+OnUnitInactiveSec=5min
 RandomizedDelaySec=20
 Persistent=true
 Unit=watch-changes.service

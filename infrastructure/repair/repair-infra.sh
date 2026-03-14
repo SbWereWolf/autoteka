@@ -18,9 +18,14 @@ fi
 echo "=== repair-infra: восстановление таймеров и состояния ==="
 
 # Таймеры — включить и запустить
-systemctl enable --now server-watchdog.timer
-systemctl enable --now server-maintenance.timer
-systemctl enable --now watch-changes.timer
+systemctl enable --now \
+  server-watchdog.timer \
+  server-maintenance.timer \
+  watch-changes.timer
+systemctl restart \
+  server-watchdog.timer \
+  server-maintenance.timer \
+  watch-changes.timer
 
 # Счётчик watchdog — сброс
 mkdir -p /var/lib /var/lib/server-watchdog/health

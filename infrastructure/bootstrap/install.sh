@@ -83,9 +83,17 @@ admin_artisan_in_php 'db:seed --class=AdminUserSeeder --force'
 ensure_package_lock_for_deploy
 compose up -d --build --remove-orphans web
 systemctl enable --now autoteka.service
-systemctl enable --now watch-changes.timer
-systemctl enable --now server-watchdog.timer
-systemctl enable --now server-maintenance.timer
+
+systemctl enable --now \
+  watch-changes.timer \
+  server-watchdog.timer \
+  server-maintenance.timer
+
+systemctl restart \
+  watch-changes.timer \
+  server-watchdog.timer \
+  server-maintenance.timer
+
 mkdir -p /var/lib /var/lib/server-watchdog/health
 printf '0
 ' > /var/lib/server-watchdog.state
