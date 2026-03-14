@@ -77,6 +77,7 @@ if ! is_dry_run; then
   ensure_public_storage_link
   clear_laravel_optimizations
   check_sqlite_write_access
+  ensure_package_lock_for_deploy
   compose up -d --build --remove-orphans web
 else
   dry_run_log "wait_for_php_exec_ready $PHP_READY_TIMEOUT"
@@ -84,6 +85,7 @@ else
   dry_run_log "ensure_public_storage_link"
   dry_run_log "clear_laravel_optimizations"
   dry_run_log "check_sqlite_write_access"
+  dry_run_log "ensure_package_lock_for_deploy"
   dry_run_log "/usr/bin/docker compose -f $INFRA_ROOT/runtime/docker-compose.yml up -d --build --remove-orphans web"
 fi
 

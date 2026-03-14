@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1.7
 
-FROM php:8.2-fpm-alpine AS php-base
+FROM php:8.4-fpm-alpine3.23 AS php-base
 RUN apk add --no-cache     bash     fcgi     gettext     git     icu-dev     libxml2-dev     linux-headers     oniguruma-dev     sqlite     sqlite-dev     unzip  && docker-php-ext-install pdo pdo_sqlite intl mbstring xml opcache  && rm -rf /var/cache/apk/*
 COPY --from=composer:2.8 /usr/bin/composer /usr/bin/composer
 WORKDIR /var/www/backend

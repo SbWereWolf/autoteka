@@ -107,6 +107,22 @@ if [ -z "${AUTOTEKA_LIB_LARAVEL_RUNTIME_SH:-}" ]; then
     '
   }
 
+  ensure_package_lock_for_deploy() {
+    local root="${AUTOTEKA_ROOT:?}"
+    local pair src dest
+    for pair in \
+      "package-lock.wsl.json:package-lock.json" \
+      "frontend/package-lock.wsl.json:frontend/package-lock.json" \
+      "system-tests/package-lock.wsl.json:system-tests/package-lock.json" \
+      "infrastructure/tests/package-lock.wsl.json:infrastructure/tests/package-lock.json"; do
+      src="${pair%%:*}"
+      dest="${pair##*:}"
+      if [ -f "$root/$src" ] && [ ! -f "$root/$dest" ]; then
+        cp "$root/$src" "$root/$dest"
+      fi
+    done
+  }
+
   api_artisan_in_php() {
     local command="$1"
 
