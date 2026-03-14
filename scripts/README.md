@@ -45,16 +45,20 @@
 
 ### Команды
 
-- `validate` — сверяет active-артефакт с env-specific артефактом текущей
-  среды. Это команда по умолчанию.
-- `save` — полностью перезаписывает env-specific артефакт текущей среды
-  из active-артефакта.
-- `load` — полностью перезаписывает active-артефакт из env-specific
-  артефакта текущей среды.
-- `--help` — показывает `USAGE`, список типов и связанные пути.
+- `validate` — сверяет `active` и `current-env`. Это команда по
+  умолчанию.
+- `save` — заменяет `current-env` из `active`, только если замена нужна.
+- `load` — заменяет `active` из `current-env`, только если замена нужна.
+- `status` — показывает текущую среду, статусы и полные пути по
+  группам папок.
+- `--help` / `-h` — краткая справка без путей.
 
-`--dry-run` поддерживается только у `validate` и показывает, на каких
-парах будет ошибка, не меняя файлы и каталоги.
+По умолчанию любая команда работает как `-t *`.
+
+- `-t` / `--type` — повторяемый фильтр типов.
+- `--type *` — сокращение для всех поддерживаемых типов сразу.
+- `--dry-run` — поддерживается у `validate`, `save` и `load`; ничего не
+  меняет, только показывает результат.
 
 ### Что проверяется и сохраняется
 
@@ -92,8 +96,8 @@
 
 Если обязательный источник для текущей среды не найден или не читается,
 `swap-env` завершится с кодом `3`. Если источник найден, но содержимое
-или структура не совпадают, `swap-env` завершится с кодом `1` и
-попросит пользователя синхронизировать артефакты вручную.
+или структура не совпадают, `validate` завершится с кодом `1`, а
+`save`/`load` либо выполнят замену, либо сообщат, что замена не нужна.
 
 ### Примеры
 
@@ -101,54 +105,62 @@
 
 ```powershell
 pwsh ./scripts/swap-env.ps1
+pwsh ./scripts/swap-env.ps1 validate
+pwsh ./scripts/swap-env.ps1 validate --type *
 pwsh ./scripts/swap-env.ps1 validate --dry-run
 ```
 
 ```bash
 bash ./scripts/swap-env.sh
+bash ./scripts/swap-env.sh validate
+bash ./scripts/swap-env.sh validate --type '*'
 bash ./scripts/swap-env.sh validate --dry-run
 ```
 
-Сохранение активных артефактов текущей среды:
+Сохранение active-артефактов текущей среды:
 
 ```powershell
-pwsh ./scripts/swap-env.ps1 save `
-  --type scripts-env `
-  --type lint-env `
-  --type root-lock
+pwsh ./scripts/swap-env.ps1 save
+pwsh ./scripts/swap-env.ps1 save --dry-run -t scripts-env
 ```
 
 ```bash
-bash ./scripts/swap-env.sh save \
-  --type scripts-env \
-  --type lint-env \
-  --type root-lock
+bash ./scripts/swap-env.sh save
+bash ./scripts/swap-env.sh save --dry-run -t scripts-env
 ```
 
-Загрузка сохранённых артефактов текущей среды в active-пути:
+Загрузка current-env в active-пути:
 
 ```powershell
-pwsh ./scripts/swap-env.ps1 load `
-  --type scripts-env `
-  --type lint-env `
-  --type root-lock
+pwsh ./scripts/swap-env.ps1 load
+pwsh ./scripts/swap-env.ps1 load --dry-run -t scripts-env
 ```
 
 ```bash
-bash ./scripts/swap-env.sh load \
-  --type scripts-env \
-  --type lint-env \
-  --type root-lock
+bash ./scripts/swap-env.sh load
+bash ./scripts/swap-env.sh load --dry-run -t scripts-env
 ```
 
-Полная справка:
+Подробные пути и статусы:
 
 ```powershell
-pwsh ./scripts/swap-env.ps1 --help
+pwsh ./scripts/swap-env.ps1 status
+pwsh ./scripts/swap-env.ps1 status -t scripts-env
 ```
 
 ```bash
-bash ./scripts/swap-env.sh --help
+bash ./scripts/swap-env.sh status
+bash ./scripts/swap-env.sh status -t scripts-env
+```
+
+Краткая справка:
+
+```powershell
+pwsh ./scripts/swap-env.ps1 -h
+```
+
+```bash
+bash ./scripts/swap-env.sh -h
 ```
 
 ## Примеры helper-коммита
