@@ -142,11 +142,9 @@
       <excludeFolder url="file://$MODULE_DIR$/backend/vendor/voku/portable-ascii" />
       <excludeFolder url="file://$MODULE_DIR$/backend/public/storage" />
       <excludeFolder url="file://$MODULE_DIR$/backend/storage/app/import-backups" />
-      <excludeFolder url="file://$MODULE_DIR$/backend/storage/app/public/shops" />
       <excludeFolder url="file://$MODULE_DIR$/frontend/test-results" />
       <excludeFolder url="file://$MODULE_DIR$/inbox" />
       <excludeFolder url="file://$MODULE_DIR$/tasks" />
-      <excludeFolder url="file://$MODULE_DIR$/backend/storage/app" />
       <excludeFolder url="file://$MODULE_DIR$/backend/storage/framework" />
       <excludeFolder url="file://$MODULE_DIR$/backend/storage/app/public/generated111" />
       <excludeFolder url="file://$MODULE_DIR$/backup" />
@@ -426,6 +424,10 @@
       <excludeFolder url="file://$MODULE_DIR$/infrastructure/tests/node_modules.wsl" />
       <excludeFolder url="file://$MODULE_DIR$/node_modules.wsl" />
       <excludeFolder url="file://$MODULE_DIR$/system-tests/node_modules.wsl" />
+      <excludeFolder url="file://$MODULE_DIR$/frontend/node_modules.win" />
+      <excludeFolder url="file://$MODULE_DIR$/infrastructure/tests/node_modules.win" />
+      <excludeFolder url="file://$MODULE_DIR$/system-tests/node_modules.win" />
+      <excludeFolder url="file://$MODULE_DIR$/backend/storage" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
