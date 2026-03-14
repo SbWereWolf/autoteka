@@ -1,4 +1,5 @@
 
+/infrastructure/.env
 /infrastructure/observability/application/metrics/data.json
 /vendor/
 

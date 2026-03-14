@@ -366,8 +366,10 @@ watchdog/maintenance и серверные runbook-процедуры описа
 
 ### 6.3. Env и source of truth
 
-- `/etc/autoteka/deploy.env` — источник `AUTOTEKA_ROOT`, `BRANCH`,
-  `REMOTE`, `HTTP_PORT`
+- `/etc/autoteka/options.env` — источник `AUTOTEKA_ROOT`, `INFRA_ROOT`,
+  `BRANCH`, `REMOTE`, `HTTP_PORT`. Скрипты берут пути только из env или
+  аргументов, не из расположения (см. [DEPLOY § Контракты
+  путей](../../infrastructure/DEPLOY.md#контракты-путей)).
 - `/etc/autoteka/telegram.env` — optional Telegram secrets
 - `backend/.env` — backend runtime config
 

@@ -1,20 +1,32 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-INFRA_SCRIPT_ROOT="$(cd "$SCRIPT_DIR" && while [ ! -f "DEPLOY.md" ] && [ "$PWD" != "/" ]; do cd ..; done; pwd)"
+# INFRA_ROOT и AUTOTEKA_ROOT — только из аргументов или переменных окружения
+if [ -f /etc/autoteka/options.env ]; then
+  set -a
+  # shellcheck disable=SC1090
+  source /etc/autoteka/options.env || true
+  set +a
+fi
+export INFRA_ROOT="${INFRA_ROOT:-}"
+export AUTOTEKA_ROOT="${AUTOTEKA_ROOT:-}"
+if [ -z "${INFRA_ROOT}" ] || [[ "${INFRA_ROOT}" != /* ]] || \
+   [ -z "${AUTOTEKA_ROOT}" ] || [[ "${AUTOTEKA_ROOT}" != /* ]]; then
+  echo "INFRA_ROOT и AUTOTEKA_ROOT должны быть заданы абсолютными путями." >&2
+  exit 2
+fi
 # shellcheck disable=SC1090
-source "$INFRA_SCRIPT_ROOT/lib/laravel-runtime.sh"
+source "$INFRA_ROOT/lib/laravel-runtime.sh"
 # shellcheck disable=SC1090
-source "$INFRA_SCRIPT_ROOT/lib/health-state.sh"
+source "$INFRA_ROOT/lib/health-state.sh"
 load_autoteka_env
 
 DRY_RUN=0
 PRESERVE_HEALTH_STATE=0
-PHP_READY_TIMEOUT="${PHP_READY_TIMEOUT:-60}"
-BACKEND_SMOKE_URL="${BACKEND_SMOKE_URL:-http://127.0.0.1/up}"
-API_SMOKE_URL="${API_SMOKE_URL:-http://127.0.0.1/api/v1/category-list}"
-ADMIN_SMOKE_URL="${ADMIN_SMOKE_URL:-http://127.0.0.1/admin/login}"
+PHP_READY_TIMEOUT="${PHP_READY_TIMEOUT}"
+BACKEND_SMOKE_URL="${BACKEND_SMOKE_URL}"
+API_SMOKE_URL="${API_SMOKE_URL}"
+ADMIN_SMOKE_URL="${ADMIN_SMOKE_URL}"
 SCRIPT_ID="server-watchdog"
 
 usage() {

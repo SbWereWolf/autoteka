@@ -229,25 +229,20 @@ deploy создаст его из `frontend/example.env`.
 
 ### 6.3. Серверные env-файлы
 
-- `/etc/autoteka/deploy.env` — `AUTOTEKA_ROOT`, `BRANCH`, `REMOTE`,
-  `HTTP_PORT` (см.
-  [DEPLOY §5.1](../../infrastructure/DEPLOY.md#51-etcautotekadeployenv))
+- `/etc/autoteka/options.env` — `AUTOTEKA_ROOT`, `INFRA_ROOT`, `BRANCH`,
+  `REMOTE`, `HTTP_PORT` (см. [DEPLOY](../../infrastructure/DEPLOY.md)).
+  Скрипты берут пути только из env или аргументов, не из расположения.
 - `/etc/autoteka/telegram.env` — Telegram-уведомления watchdog (см.
-  [DEPLOY §5.2](../../infrastructure/DEPLOY.md#52-etcautotekatelegramenv))
+  [DEPLOY](../../infrastructure/DEPLOY.md))
 
 **Шаблоны в репозитории:**
 
-- `$INFRA_ROOT/bootstrap/config/deploy.example.env` — шаблон для
-  `/etc/autoteka/deploy.env`. Устанавливается `install.sh` при первом
-  запуске, если файл отсутствует. Содержит параметры `AUTOTEKA_ROOT`,
-  `BRANCH`, `REMOTE`, `HTTP_PORT`, `STORAGE_BACKUP_DIR`,
-  `STORAGE_BACKUP_RETENTION_DAYS`. Подробности см.
-  [DEPLOY §5.5](../../infrastructure/DEPLOY.md#55-deployconfigdeployexampleenv).
+- `$INFRA_ROOT/prod.env` — шаблон для production. Перед install создайте
+  `$INFRA_ROOT/.env` копированием: `cp -n "$INFRA_ROOT/prod.env" "$INFRA_ROOT/.env"`.
+  install.sh копирует .env в `/etc/autoteka/options.env`. После установки
+  изменяйте только options.env.
 - `$INFRA_ROOT/bootstrap/config/telegram.example.env` — шаблон для
-  `/etc/autoteka/telegram.env`. Устанавливается `install.sh`
-  опционально, если файл отсутствует. Содержит `TELEGRAM_TOKEN` и
-  `TELEGRAM_CHAT`. Подробности см.
-  [DEPLOY §5.6](../../infrastructure/DEPLOY.md#56-deployconfigtelegramenvexample).
+  `/etc/autoteka/telegram.env`. Содержит `TELEGRAM_TOKEN` и `TELEGRAM_CHAT`.
 
 ## 7. Запуск и рабочие инструкции администратора
 
@@ -257,8 +252,8 @@ deploy создаст его из `frontend/example.env`.
 
 - `backend/example.env`;
 - `frontend/example.env`;
-- `$INFRA_ROOT/bootstrap/config/deploy.example.env`;
-- `$INFRA_ROOT/bootstrap/config/dev.example.env`;
+- `$INFRA_ROOT/prod.env`;
+- `$INFRA_ROOT/dev.env`;
 - `$INFRA_ROOT/bootstrap/config/telegram.example.env`.
 
 Рабочие env-файлы:
@@ -276,10 +271,18 @@ apt update && apt install -y git
 mkdir -p /opt/vue-app
 cd /opt/vue-app
 git clone <YOUR_REPO_URL> .
-chmod +x ./$INFRA_ROOT/bootstrap/install.sh
-sudo ./$INFRA_ROOT/bootstrap/install.sh
+export INFRA_ROOT=/opt/vue-app/infrastructure
+export AUTOTEKA_ROOT=/opt/vue-app
+cp -n "$INFRA_ROOT/prod.env" "$INFRA_ROOT/.env"
+# при необходимости отредактировать .env
+chmod +x ./infrastructure/bootstrap/install.sh
+sudo -E ./infrastructure/bootstrap/install.sh
 autoteka deploy
 ```
+
+`INFRA_ROOT` и `AUTOTEKA_ROOT` обязательны: задайте их через env или
+аргументы `--infra-root=` и `--autoteka-root=`. См. [DEPLOY § Контракты
+путей](../../infrastructure/DEPLOY.md#контракты-путей).
 
 Повторная ручная раскатка текущего `HEAD`:
 
@@ -340,12 +343,12 @@ docker exec autoteka-dev-php sh
 
 По умолчанию приложение доступно по адресу `http://127.0.0.1:8081`.
 Адрес и порты управляются через
-`$INFRA_ROOT/bootstrap/config/dev.example.env` и локальный `$INFRA_ROOT/.env`.
+`$INFRA_ROOT/dev.env` и локальный `$INFRA_ROOT/.env`.
 
 Подробности по локальным runtime-командам и env:
 
 - [README: Dev runtime с выбором php target](../../README.md#dev-runtime-с-выбором-php-target-override);
-- [DEPLOY §5](../../infrastructure/DEPLOY.md#5-настройки-окружения).
+- [DEPLOY](../../infrastructure/DEPLOY.md).
 
 ### 7.4. Режимы frontend в dev/debug
 

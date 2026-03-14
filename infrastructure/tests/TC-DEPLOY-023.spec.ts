@@ -59,25 +59,25 @@ describe("TC-DEPLOY-023", () => {
 
   it("ключевые скрипты подключают предметные библиотеки по назначению", () => {
     expect(read("maintenance/backup.sh")).toMatch(
-      /source "\$INFRA_SCRIPT_ROOT\/lib\/bootstrap\.sh"/,
+      /source "\$INFRA_ROOT\/lib\/bootstrap\.sh"/,
     );
     expect(read("runtime/deploy.sh")).toMatch(
-      /source "\$INFRA_SCRIPT_ROOT\/lib\/laravel-runtime\.sh"/,
+      /source "\$INFRA_ROOT\/lib\/laravel-runtime\.sh"/,
     );
     expect(read("runtime/deploy.sh")).toMatch(
-      /source "\$INFRA_SCRIPT_ROOT\/lib\/telegram\.sh"/,
+      /source "\$INFRA_ROOT\/lib\/telegram\.sh"/,
     );
     expect(read("runtime/watch-changes.sh")).toMatch(
-      /source "\$INFRA_SCRIPT_ROOT\/lib\/bootstrap\.sh"/,
+      /source "\$INFRA_ROOT\/lib\/bootstrap\.sh"/,
     );
     expect(read("runtime/watch-changes.sh")).toMatch(
-      /source "\$INFRA_SCRIPT_ROOT\/lib\/telegram\.sh"/,
+      /source "\$INFRA_ROOT\/lib\/telegram\.sh"/,
     );
     expect(
       read("observability/infrastructure/server-watchdog.sh"),
-    ).toMatch(/source "\$INFRA_SCRIPT_ROOT\/lib\/laravel-runtime\.sh"/);
+    ).toMatch(/source "\$INFRA_ROOT\/lib\/laravel-runtime\.sh"/);
     expect(
       read("observability/infrastructure/server-watchdog.sh"),
-    ).toMatch(/source "\$INFRA_SCRIPT_ROOT\/lib\/health-state\.sh"/);
+    ).toMatch(/source "\$INFRA_ROOT\/lib\/health-state\.sh"/);
   });
 });

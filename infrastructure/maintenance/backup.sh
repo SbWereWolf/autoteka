@@ -5,10 +5,35 @@ set -euo pipefail
 # Creates tar.gz archive with deploy configuration affecting app and Docker services.
 # Runtime health incident state is intentionally NOT included.
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-INFRA_SCRIPT_ROOT="$(cd "$SCRIPT_DIR" && while [ ! -f "DEPLOY.md" ] && [ "$PWD" != "/" ]; do cd ..; done; pwd)"
+# INFRA_ROOT и AUTOTEKA_ROOT — только из аргументов или переменных окружения
+if [ -f /etc/autoteka/options.env ]; then
+  set -a
+  # shellcheck disable=SC1090
+  source /etc/autoteka/options.env || true
+  set +a
+fi
+_INFRA_ARGS=()
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --infra-root=*) INFRA_ROOT="${1#--infra-root=}"; shift ;;
+    --autoteka-root=*) AUTOTEKA_ROOT="${1#--autoteka-root=}"; shift ;;
+    *) _INFRA_ARGS+=("$1"); shift ;;
+  esac
+done
+set -- "${_INFRA_ARGS[@]}"
+export INFRA_ROOT="${INFRA_ROOT:-}"
+export AUTOTEKA_ROOT="${AUTOTEKA_ROOT:-}"
+if [ -z "${INFRA_ROOT}" ] || [[ "${INFRA_ROOT}" != /* ]] || \
+   [ -z "${AUTOTEKA_ROOT}" ] || [[ "${AUTOTEKA_ROOT}" != /* ]]; then
+  echo "INFRA_ROOT и AUTOTEKA_ROOT должны быть заданы абсолютными путями." >&2
+  echo "Пример: export INFRA_ROOT=/opt/vue-app/infrastructure" >&2
+  echo "        export AUTOTEKA_ROOT=/opt/vue-app" >&2
+  echo "  sudo $0" >&2
+  echo "  sudo $0 --infra-root=/opt/vue-app/infrastructure --autoteka-root=/opt/vue-app" >&2
+  exit 2
+fi
 # shellcheck disable=SC1090
-source "$INFRA_SCRIPT_ROOT/lib/bootstrap.sh"
+source "$INFRA_ROOT/lib/bootstrap.sh"
 load_autoteka_env
 
 OUTPUT_DIR="/root"
@@ -24,7 +49,7 @@ Purpose:
   data required for restore on the same or another host.
 
 Included in backup:
-  - /etc/autoteka/deploy.env
+  - /etc/autoteka/options.env
   - /etc/autoteka/telegram.env
   - backend/.env and frontend/.env from AUTOTEKA_ROOT
   - backend/database and backend/storage from AUTOTEKA_ROOT
@@ -147,7 +172,7 @@ mkdir -p "$BACKUP_ROOT"
 say "Collecting runtime configuration and data..."
 
 # /etc/autoteka
-copy_if_exists /etc/autoteka/deploy.env "$BACKUP_ROOT/etc/autoteka/deploy.env" || true
+copy_if_exists /etc/autoteka/options.env "$BACKUP_ROOT/etc/autoteka/options.env" || true
 copy_if_exists /etc/autoteka/telegram.env "$BACKUP_ROOT/etc/autoteka/telegram.env" || true
 
 # project env
