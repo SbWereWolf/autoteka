@@ -87,7 +87,7 @@
 
 - Утверждение: `AUTOTEKA_ROOT`, `BRANCH`, `REMOTE`, `HTTP_PORT`,
   `PHP_READY_TIMEOUT`, `ADMIN_SMOKE_URL` задаются через
-  `/etc/autoteka/deploy.env`.
+  `/etc/autoteka/options.env`.
 - Проверка:
   1. Проверить чтение переменных в deploy wrapper/скриптах.
   2. Проверить реакцию системы на изменение значений.

@@ -5,9 +5,33 @@ set -euo pipefail
 # Restore recreates configuration, optionally restores project data, then resets
 # watchdog/health runtime state so monitoring starts from a clean baseline.
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-INFRA_SCRIPT_ROOT="$(cd "$SCRIPT_DIR" && while [ ! -f "DEPLOY.md" ] && [ "$PWD" != "/" ]; do cd ..; done; pwd)"
-REPO_ROOT="$(cd "$INFRA_SCRIPT_ROOT/.." && pwd)"
+# INFRA_ROOT и AUTOTEKA_ROOT — только из аргументов или переменных окружения
+if [ -f /etc/autoteka/options.env ]; then
+  set -a
+  # shellcheck disable=SC1090
+  source /etc/autoteka/options.env || true
+  set +a
+fi
+_INFRA_ARGS=()
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --infra-root=*) INFRA_ROOT="${1#--infra-root=}"; shift ;;
+    --autoteka-root=*) AUTOTEKA_ROOT="${1#--autoteka-root=}"; shift ;;
+    *) _INFRA_ARGS+=("$1"); shift ;;
+  esac
+done
+set -- "${_INFRA_ARGS[@]}"
+export INFRA_ROOT="${INFRA_ROOT:-}"
+export AUTOTEKA_ROOT="${AUTOTEKA_ROOT:-}"
+if [ -z "${INFRA_ROOT}" ] || [[ "${INFRA_ROOT}" != /* ]] || \
+   [ -z "${AUTOTEKA_ROOT}" ] || [[ "${AUTOTEKA_ROOT}" != /* ]]; then
+  echo "INFRA_ROOT и AUTOTEKA_ROOT должны быть заданы абсолютными путями." >&2
+  echo "Пример: export INFRA_ROOT=/opt/vue-app/infrastructure" >&2
+  echo "        export AUTOTEKA_ROOT=/opt/vue-app" >&2
+  echo "  sudo $0 <archive>" >&2
+  echo "  sudo $0 <archive> --infra-root=/opt/vue-app/infrastructure --autoteka-root=/opt/vue-app" >&2
+  exit 2
+fi
 
 DRY_RUN="no"
 FORCE="no"
@@ -40,7 +64,7 @@ Options:
                            No files, timers, or runtime state will be changed.
   --force                  Skip interactive confirmation.
   --target-root=PATH       Restore project files into PATH.
-                           If provided explicitly, AUTOTEKA_ROOT in deploy.env
+                           If provided explicitly, AUTOTEKA_ROOT in options.env
                            is rewritten to this PATH.
   -h, --help               Show this help.
 
@@ -258,22 +282,22 @@ fi
 
 # Resolve TARGET_ROOT for project files
 if [ -z "$TARGET_ROOT" ]; then
-  if [ -f "$BACKUP_ROOT/etc/autoteka/deploy.env" ]; then
+  if [ -f "$BACKUP_ROOT/etc/autoteka/options.env" ]; then
     # shellcheck disable=SC1090
     set -a
-    source "$BACKUP_ROOT/etc/autoteka/deploy.env" || true
+    source "$BACKUP_ROOT/etc/autoteka/options.env" || true
     set +a
     TARGET_ROOT="${AUTOTEKA_ROOT:-}"
   fi
-  if [ -z "$TARGET_ROOT" ] && [ -f /etc/autoteka/deploy.env ]; then
+  if [ -z "$TARGET_ROOT" ] && [ -f /etc/autoteka/options.env ]; then
     set -a
-    source /etc/autoteka/deploy.env 2>/dev/null || true
+    source /etc/autoteka/options.env 2>/dev/null || true
     set +a
     TARGET_ROOT="${AUTOTEKA_ROOT:-}"
   fi
   if [ -z "$TARGET_ROOT" ]; then
-    TARGET_ROOT="$REPO_ROOT"
-    say "Using repo root as target: $TARGET_ROOT"
+    TARGET_ROOT="$AUTOTEKA_ROOT"
+    say "Using AUTOTEKA_ROOT as target: $TARGET_ROOT"
   fi
 fi
 
@@ -285,18 +309,18 @@ fi
 confirm_or_exit "Restore profile '$PROFILE' will overwrite existing runtime configuration and reset active watchdog incident state."
 
 say "Restoring /etc/autoteka..."
-restore_file_private "$BACKUP_ROOT/etc/autoteka/deploy.env" /etc/autoteka/deploy.env
+restore_file_private "$BACKUP_ROOT/etc/autoteka/options.env" /etc/autoteka/options.env
 restore_file_private "$BACKUP_ROOT/etc/autoteka/telegram.env" /etc/autoteka/telegram.env
 
-# Update AUTOTEKA_ROOT in deploy.env if --target-root was explicitly specified
-if [ "$EXPLICIT_TARGET_ROOT" = "yes" ] && [ -f /etc/autoteka/deploy.env ]; then
-  if grep -qE '^AUTOTEKA_ROOT=' /etc/autoteka/deploy.env; then
-    sed -i -E "s|^AUTOTEKA_ROOT=.*$|AUTOTEKA_ROOT=$TARGET_ROOT|" /etc/autoteka/deploy.env
+# Update AUTOTEKA_ROOT in options.env if --target-root was explicitly specified
+if [ "$EXPLICIT_TARGET_ROOT" = "yes" ] && [ -f /etc/autoteka/options.env ]; then
+  if grep -qE '^AUTOTEKA_ROOT=' /etc/autoteka/options.env; then
+    sed -i -E "s|^AUTOTEKA_ROOT=.*$|AUTOTEKA_ROOT=$TARGET_ROOT|" /etc/autoteka/options.env
   else
-    echo "AUTOTEKA_ROOT=$TARGET_ROOT" >> /etc/autoteka/deploy.env
+    echo "AUTOTEKA_ROOT=$TARGET_ROOT" >> /etc/autoteka/options.env
   fi
-  chmod 600 /etc/autoteka/deploy.env
-  say "updated AUTOTEKA_ROOT in deploy.env to $TARGET_ROOT"
+  chmod 600 /etc/autoteka/options.env
+  say "updated AUTOTEKA_ROOT in options.env to $TARGET_ROOT"
 fi
 
 say "Restoring project .env..."
@@ -313,14 +337,7 @@ if [ "$PROFILE" = "full" ]; then
     cp -a "$BACKUP_ROOT/project/ignored"/. "$TARGET_ROOT"/
   fi
 
-  restore_infra_root="${INFRA_ROOT:-$INFRA_SCRIPT_ROOT}"
-  if [ -f /etc/autoteka/deploy.env ]; then
-    # shellcheck disable=SC1090
-    set -a
-    source /etc/autoteka/deploy.env 2>/dev/null || true
-    set +a
-    restore_infra_root="${INFRA_ROOT:-$restore_infra_root}"
-  fi
+  restore_infra_root="$INFRA_ROOT"
   if [ -n "${restore_infra_root:-}" ]; then
     restore_file "$BACKUP_ROOT/project/backup-ignored-allowlist.txt" \
       "$restore_infra_root/maintenance/config/backup-ignored-allowlist.txt"

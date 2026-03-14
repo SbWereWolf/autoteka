@@ -4,23 +4,43 @@ set -euo pipefail
 if [ -z "${AUTOTEKA_LIB_BOOTSTRAP_SH:-}" ]; then
   AUTOTEKA_LIB_BOOTSTRAP_SH=1
 
-  ENV_FILE_DEFAULT="/etc/autoteka/deploy.env"
+  ENV_FILE_DEFAULT="/etc/autoteka/options.env"
 
-  resolve_infra_root_from_script_location() {
-    local script_dir=""
-    local search_root=""
-
-    script_dir="$(cd "$(dirname "${BASH_SOURCE[1]}")" && pwd)"
-    search_root="$script_dir"
-    while [ "$search_root" != "/" ]; do
-      if [ -f "$search_root/DEPLOY.md" ] && [ -d "$search_root/lib" ] && [ -d "$search_root/runtime" ]; then
-        printf '%s\n' "$search_root"
-        return 0
-      fi
-      search_root="$(dirname "$search_root")"
-    done
-
-    return 1
+  validate_required_paths() {
+    local missing=""
+    if [ -z "${AUTOTEKA_ROOT:-}" ]; then
+      missing="AUTOTEKA_ROOT"
+    elif [[ "${AUTOTEKA_ROOT}" != /* ]]; then
+      missing="AUTOTEKA_ROOT (относительный путь не допускается)"
+    fi
+    if [ -z "${INFRA_ROOT:-}" ]; then
+      [ -n "$missing" ] && missing="$missing, "
+      missing="${missing}INFRA_ROOT"
+    elif [[ "${INFRA_ROOT}" != /* ]]; then
+      [ -n "$missing" ] && missing="$missing, "
+      missing="${missing}INFRA_ROOT (относительный путь не допускается)"
+    fi
+    if [ -n "$missing" ]; then
+      echo "$missing не задан или задан относительным путём." >&2
+      echo "Задайте абсолютные пути одним из способов:" >&2
+      echo "" >&2
+      echo "Через переменные окружения:" >&2
+      echo "  export AUTOTEKA_ROOT=/opt/vue-app" >&2
+      echo "  export INFRA_ROOT=/opt/vue-app/infrastructure" >&2
+      echo "  autoteka deploy" >&2
+      echo "" >&2
+      echo "Через аргументы (если поддерживаются):" >&2
+      echo "  autoteka deploy --autoteka-root=/opt/vue-app --infra-root=/opt/vue-app/infrastructure" >&2
+      exit 2
+    fi
+    if [ ! -d "$AUTOTEKA_ROOT" ]; then
+      echo "AUTOTEKA_ROOT=$AUTOTEKA_ROOT не существует или не является каталогом." >&2
+      exit 1
+    fi
+    if [ ! -d "$INFRA_ROOT" ]; then
+      echo "INFRA_ROOT=$INFRA_ROOT не существует или не является каталогом." >&2
+      exit 1
+    fi
   }
 
   load_autoteka_env() {
@@ -33,22 +53,6 @@ if [ -z "${AUTOTEKA_LIB_BOOTSTRAP_SH:-}" ]; then
       set +a
     fi
 
-    if [ -z "${AUTOTEKA_ROOT:-}" ] || [ ! -d "$AUTOTEKA_ROOT" ]; then
-      echo "AUTOTEKA_ROOT is not set or does not exist. Set it in $ENV_FILE_DEFAULT or export AUTOTEKA_ROOT." >&2
-      exit 1
-    fi
-
-    if [ -z "${INFRA_ROOT:-}" ]; then
-      local inferred_infra_root=""
-      if inferred_infra_root="$(resolve_infra_root_from_script_location)"; then
-        INFRA_ROOT="$inferred_infra_root"
-      fi
-      export INFRA_ROOT
-    fi
-
-    if [ -z "${INFRA_ROOT:-}" ] || [ ! -d "$INFRA_ROOT" ]; then
-      echo "INFRA_ROOT is not set or does not exist. Set it in $ENV_FILE_DEFAULT or export INFRA_ROOT." >&2
-      exit 1
-    fi
+    validate_required_paths
   }
 fi

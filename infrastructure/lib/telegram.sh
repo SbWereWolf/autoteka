@@ -4,9 +4,9 @@ set -euo pipefail
 if [ -z "${AUTOTEKA_LIB_TELEGRAM_SH:-}" ]; then
   AUTOTEKA_LIB_TELEGRAM_SH=1
 
-  AUTOTEKA_LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  # INFRA_ROOT должен быть задан вызывающим скриптом (env или args)
   # shellcheck disable=SC1090
-  source "$AUTOTEKA_LIB_DIR/dry-run.sh"
+  source "$INFRA_ROOT/lib/dry-run.sh"
 
   TELEGRAM_ENV_FILE_DEFAULT="/etc/autoteka/telegram.env"
   TELEGRAM_LOCK_DIR_DEFAULT="${TMPDIR:-/tmp}/autoteka-telegram-locks"

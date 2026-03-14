@@ -4,9 +4,9 @@ set -euo pipefail
 if [ -z "${AUTOTEKA_LIB_LARAVEL_RUNTIME_SH:-}" ]; then
   AUTOTEKA_LIB_LARAVEL_RUNTIME_SH=1
 
-  AUTOTEKA_LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  # INFRA_ROOT должен быть задан вызывающим скриптом (env или args)
   # shellcheck disable=SC1090
-  source "$AUTOTEKA_LIB_DIR/bootstrap.sh"
+  source "$INFRA_ROOT/lib/bootstrap.sh"
 
   compose() {
     /usr/bin/docker compose -f "$INFRA_ROOT/runtime/docker-compose.yml" "$@"
@@ -183,8 +183,8 @@ if [ -z "${AUTOTEKA_LIB_LARAVEL_RUNTIME_SH:-}" ]; then
 
   http_smoke_check() {
     local url="$1"
-    local retries="${HTTP_SMOKE_RETRIES:-20}"
-    local delay="${HTTP_SMOKE_DELAY_SEC:-2}"
+    local retries="${HTTP_SMOKE_RETRIES}"
+    local delay="${HTTP_SMOKE_DELAY_SEC}"
     local attempt=1
 
     while [ "$attempt" -le "$retries" ]; do

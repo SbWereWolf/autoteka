@@ -12,10 +12,36 @@
 - Нельзя выводить `AUTOTEKA_ROOT` из `INFRA_ROOT` и нельзя выводить
   `INFRA_ROOT` из `AUTOTEKA_ROOT`.
 
+### Откуда берутся INFRA_ROOT и AUTOTEKA_ROOT
+
+Значения задаются **только** одним из способов:
+
+1. Переменные окружения (например, `export INFRA_ROOT=...`).
+2. Аргументы запуска (если скрипт поддерживает `--infra-root=` и `--autoteka-root=`).
+
+Скрипты **не определяют** эти пути по своему расположению. При пустых или
+относительных путях скрипт завершается с кодом 2 и выводит примеры запуска.
+
+Пример для install.sh:
+
+```bash
+export INFRA_ROOT=/opt/vue-app/infrastructure
+export AUTOTEKA_ROOT=/opt/vue-app
+sudo ./infrastructure/bootstrap/install.sh
+```
+
+или:
+
+```bash
+sudo ./infrastructure/bootstrap/install.sh --infra-root=/opt/vue-app/infrastructure --autoteka-root=/opt/vue-app
+```
+
 ## Основные файлы
 
-- `/etc/autoteka/deploy.env` — host env с `AUTOTEKA_ROOT`, `INFRA_ROOT`
-  и runtime-настройками.
+- `$INFRA_ROOT/prod.env` — шаблон переменных для production.
+- `$INFRA_ROOT/dev.env` — шаблон переменных для dev-среды.
+- `$INFRA_ROOT/.env` — создаётся из prod.env перед install, используется только install.sh.
+- `/etc/autoteka/options.env` — рабочий конфиг после установки; все изменения вносить в options.env.
 - `/etc/autoteka/telegram.env` — токен и chat id для уведомлений.
 - `$INFRA_ROOT/bootstrap/` — install/uninstall и host-конфиги.
 - `$INFRA_ROOT/runtime/` — compose, rollout и watch-changes.
@@ -42,13 +68,19 @@
 - `autoteka restore <archive>` — restore конфигов и данных.
 - `autoteka uninstall <mode>` — удаление установленного контура.
 
-При прямом запуске используйте путь внутри `INFRA_ROOT`, например:
+При прямом запуске скриптов `INFRA_ROOT` и `AUTOTEKA_ROOT` должны быть уже
+заданы (env или options.env). Пример:
 
 ```bash
+export INFRA_ROOT=/opt/vue-app/infrastructure
+export AUTOTEKA_ROOT=/opt/vue-app
 "$INFRA_ROOT"/bootstrap/install.sh
 "$INFRA_ROOT"/maintenance/backup.sh
 "$INFRA_ROOT"/runtime/deploy.sh
 ```
+
+Скрипты backup, restore и др. поддерживают аргументы `--infra-root=` и
+`--autoteka-root=` для переопределения.
 
 ## Runtime и сборка контейнеров
 
@@ -79,11 +111,31 @@ docker compose \
   up --build -d
 ```
 
+## Подготовка к развёртыванию
+
+Перед первым запуском install.sh:
+
+1. Задайте `INFRA_ROOT` и `AUTOTEKA_ROOT` (env или аргументы).
+2. Создайте .env из prod.env:
+
+```bash
+export INFRA_ROOT=/opt/vue-app/infrastructure
+export AUTOTEKA_ROOT=/opt/vue-app
+cp -n "$INFRA_ROOT/prod.env" "$INFRA_ROOT/.env"
+```
+
+3. Отредактируйте .env при необходимости.
+4. Запустите install: `sudo ./infrastructure/bootstrap/install.sh` (или с
+   `--infra-root=` и `--autoteka-root=`).
+
+install.sh скопирует .env в /etc/autoteka/options.env. После установки
+изменяйте значения только в /etc/autoteka/options.env.
+
 ## Backup и restore
 
 `autoteka backup` сохраняет:
 
-- `/etc/autoteka/deploy.env`;
+- `/etc/autoteka/options.env`;
 - `/etc/autoteka/telegram.env`;
 - systemd units и host-конфиги, устанавливаемые infra-контуром;
 - `backend/.env`, `frontend/.env`;

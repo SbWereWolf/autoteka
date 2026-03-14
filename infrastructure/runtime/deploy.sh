@@ -1,20 +1,35 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-INFRA_SCRIPT_ROOT="$(cd "$SCRIPT_DIR" && while [ ! -f "DEPLOY.md" ] && [ "$PWD" != "/" ]; do cd ..; done; pwd)"
+# INFRA_ROOT и AUTOTEKA_ROOT — только из аргументов или переменных окружения
+if [ -f /etc/autoteka/options.env ]; then
+  set -a
+  # shellcheck disable=SC1090
+  source /etc/autoteka/options.env || true
+  set +a
+fi
+export INFRA_ROOT="${INFRA_ROOT:-}"
+export AUTOTEKA_ROOT="${AUTOTEKA_ROOT:-}"
+if [ -z "${INFRA_ROOT}" ] || [[ "${INFRA_ROOT}" != /* ]] || \
+   [ -z "${AUTOTEKA_ROOT}" ] || [[ "${AUTOTEKA_ROOT}" != /* ]]; then
+  echo "INFRA_ROOT и AUTOTEKA_ROOT должны быть заданы абсолютными путями." >&2
+  echo "Пример: export INFRA_ROOT=/opt/vue-app/infrastructure" >&2
+  echo "        export AUTOTEKA_ROOT=/opt/vue-app" >&2
+  echo "  autoteka deploy" >&2
+  exit 2
+fi
 # shellcheck disable=SC1090
-source "$INFRA_SCRIPT_ROOT/lib/laravel-runtime.sh"
+source "$INFRA_ROOT/lib/laravel-runtime.sh"
 # shellcheck disable=SC1090
-source "$INFRA_SCRIPT_ROOT/lib/telegram.sh"
+source "$INFRA_ROOT/lib/telegram.sh"
 load_autoteka_env
 load_telegram_env
 
 LOG="/var/log/autoteka-deploy.log"
 LOCK="/var/lock/autoteka-deploy.lock"
 STATE_DIR="/var/lib"
-PHP_READY_TIMEOUT="${PHP_READY_TIMEOUT:-60}"
-ADMIN_SMOKE_URL="${ADMIN_SMOKE_URL:-http://127.0.0.1/admin/login}"
+PHP_READY_TIMEOUT="${PHP_READY_TIMEOUT}"
+ADMIN_SMOKE_URL="${ADMIN_SMOKE_URL}"
 SCRIPT_ID="deploy"
 DEPLOY_ACTION="обновление приложения"
 DEPLOY_STAGE="init"

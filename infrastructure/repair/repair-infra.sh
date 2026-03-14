@@ -4,10 +4,22 @@ set -euo pipefail
 # Починка инфраструктуры: таймеры, счётчик watchdog.
 # Запускать вручную после перезагрузки или когда метрики не обновляются.
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-INFRA_SCRIPT_ROOT="$(cd "$SCRIPT_DIR" && while [ ! -f "DEPLOY.md" ] && [ "$PWD" != "/" ]; do cd ..; done; pwd)"
+# INFRA_ROOT и AUTOTEKA_ROOT — только из аргументов или переменных окружения
+if [ -f /etc/autoteka/options.env ]; then
+  set -a
+  # shellcheck disable=SC1090
+  source /etc/autoteka/options.env || true
+  set +a
+fi
+export INFRA_ROOT="${INFRA_ROOT:-}"
+export AUTOTEKA_ROOT="${AUTOTEKA_ROOT:-}"
+if [ -z "${INFRA_ROOT}" ] || [[ "${INFRA_ROOT}" != /* ]] || \
+   [ -z "${AUTOTEKA_ROOT}" ] || [[ "${AUTOTEKA_ROOT}" != /* ]]; then
+  echo "INFRA_ROOT и AUTOTEKA_ROOT должны быть заданы абсолютными путями." >&2
+  exit 2
+fi
 # shellcheck disable=SC1090
-source "$INFRA_SCRIPT_ROOT/lib/bootstrap.sh"
+source "$INFRA_ROOT/lib/bootstrap.sh"
 load_autoteka_env
 
 if [ "$(id -u)" -ne 0 ]; then

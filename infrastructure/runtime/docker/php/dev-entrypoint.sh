@@ -39,7 +39,7 @@ if ! grep -qE '^APP_KEY=base64:' .env; then
 fi
 (cd apps/ShopAPI && php artisan optimize:clear --ansi >/dev/null 2>&1 || true)
 (cd apps/ShopOperator && php artisan optimize:clear --ansi >/dev/null 2>&1 || true)
-if [ "${RUN_MIGRATIONS:-false}" = "true" ]; then
+if [ "${RUN_MIGRATIONS}" = "true" ]; then
   (cd apps/ShopOperator && php artisan migrate --force --ansi)
   (cd apps/ShopOperator && php artisan db:seed --class=AdminUserSeeder --force --ansi)
 fi

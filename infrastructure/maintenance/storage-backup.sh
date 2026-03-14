@@ -1,10 +1,22 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-INFRA_SCRIPT_ROOT="$(cd "$SCRIPT_DIR" && while [ ! -f "DEPLOY.md" ] && [ "$PWD" != "/" ]; do cd ..; done; pwd)"
+# INFRA_ROOT и AUTOTEKA_ROOT — только из аргументов или переменных окружения
+if [ -f /etc/autoteka/options.env ]; then
+  set -a
+  # shellcheck disable=SC1090
+  source /etc/autoteka/options.env || true
+  set +a
+fi
+export INFRA_ROOT="${INFRA_ROOT:-}"
+export AUTOTEKA_ROOT="${AUTOTEKA_ROOT:-}"
+if [ -z "${INFRA_ROOT}" ] || [[ "${INFRA_ROOT}" != /* ]] || \
+   [ -z "${AUTOTEKA_ROOT}" ] || [[ "${AUTOTEKA_ROOT}" != /* ]]; then
+  echo "INFRA_ROOT и AUTOTEKA_ROOT должны быть заданы абсолютными путями." >&2
+  exit 2
+fi
 # shellcheck disable=SC1090
-source "$INFRA_SCRIPT_ROOT/lib/bootstrap.sh"
+source "$INFRA_ROOT/lib/bootstrap.sh"
 load_autoteka_env
 
 DRY_RUN="no"
@@ -22,7 +34,7 @@ Purpose:
   Create backup archive for Laravel storage and SQLite database from php container
   and remove old archives by retention policy.
 
-Environment (/etc/autoteka/deploy.env):
+Environment (/etc/autoteka/options.env):
   STORAGE_BACKUP_DIR             Target directory for archives.
                                  Default: /root/autoteka-storage-backups
   STORAGE_BACKUP_RETENTION_DAYS  Delete archives older than this number of days.
@@ -36,8 +48,8 @@ if [ $# -gt 0 ]; then
   exit 2
 fi
 
-BACKUP_DIR="${STORAGE_BACKUP_DIR:-/root/autoteka-storage-backups}"
-RETENTION_DAYS="${STORAGE_BACKUP_RETENTION_DAYS:-7}"
+BACKUP_DIR="${STORAGE_BACKUP_DIR}"
+RETENTION_DAYS="${STORAGE_BACKUP_RETENTION_DAYS}"
 TS="$(date +%Y%m%d-%H%M%S)"
 ARCHIVE="$BACKUP_DIR/storage-db-$TS.tar.gz"
 COMPOSE_FILE="$INFRA_ROOT/runtime/docker-compose.yml"

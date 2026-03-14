@@ -11,8 +11,8 @@ if [ ! -d node_modules ] || [ -z "$(ls -A node_modules 2>/dev/null || true)" ]; 
   npm ci
 fi
 
-MODE="${FRONTEND_MODE:-source}"
-PORT="${FRONTEND_PORT:-5173}"
+MODE="${FRONTEND_MODE}"
+PORT="${FRONTEND_PORT}"
 
 case "$MODE" in
   source)

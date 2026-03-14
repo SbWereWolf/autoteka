@@ -3,7 +3,7 @@ services:
   php:
     image: autoteka/runtime-php:dev
     build:
-      context: ${AUTOTEKA_ROOT:-../..}
+      context: ${AUTOTEKA_ROOT}
       dockerfile: ${INFRA_ROOT:?INFRA_ROOT must be set}/runtime/docker/php/Dockerfile
       additional_contexts:
         infra: ${INFRA_ROOT:?INFRA_ROOT must be set}
@@ -11,23 +11,23 @@ services:
     container_name: autoteka-dev-php
     working_dir: /workspace/backend
     environment:
-      APP_ENV: ${APP_ENV:-local}
-      APP_DEBUG: ${APP_DEBUG:-true}
-      APP_URL: ${APP_URL:-http://127.0.0.1:8081}
-      DB_CONNECTION: ${DB_CONNECTION:-sqlite}
-      SESSION_DRIVER: ${SESSION_DRIVER:-file}
-      CACHE_STORE: ${CACHE_STORE:-file}
-      QUEUE_CONNECTION: ${QUEUE_CONNECTION:-database}
-      RUN_MIGRATIONS: ${RUN_MIGRATIONS:-false}
-      XDEBUG_MODE: ${BACKEND_XDEBUG_MODE:-debug,develop}
-      XDEBUG_START_WITH_REQUEST: ${BACKEND_XDEBUG_START_WITH_REQUEST:-yes}
-      XDEBUG_CLIENT_HOST: ${BACKEND_XDEBUG_CLIENT_HOST:-host.docker.internal}
-      XDEBUG_CLIENT_PORT: ${BACKEND_XDEBUG_CLIENT_PORT:-9003}
-      XDEBUG_IDEKEY: ${BACKEND_XDEBUG_IDEKEY:-VSCODE}
+      APP_ENV: ${APP_ENV}
+      APP_DEBUG: ${APP_DEBUG}
+      APP_URL: ${APP_URL}
+      DB_CONNECTION: ${DB_CONNECTION}
+      SESSION_DRIVER: ${SESSION_DRIVER}
+      CACHE_STORE: ${CACHE_STORE}
+      QUEUE_CONNECTION: ${QUEUE_CONNECTION}
+      RUN_MIGRATIONS: ${RUN_MIGRATIONS}
+      XDEBUG_MODE: ${BACKEND_XDEBUG_MODE}
+      XDEBUG_START_WITH_REQUEST: ${BACKEND_XDEBUG_START_WITH_REQUEST}
+      XDEBUG_CLIENT_HOST: ${BACKEND_XDEBUG_CLIENT_HOST}
+      XDEBUG_CLIENT_PORT: ${BACKEND_XDEBUG_CLIENT_PORT}
+      XDEBUG_IDEKEY: ${BACKEND_XDEBUG_IDEKEY}
     extra_hosts:
       - "host.docker.internal:host-gateway"
     volumes:
-      - ${AUTOTEKA_ROOT:-../..}/backend:/workspace/backend
+      - ${AUTOTEKA_ROOT}/backend:/workspace/backend
       - autoteka_api_vendor:/workspace/backend/apps/ShopAPI/vendor
       - autoteka_admin_vendor:/workspace/backend/apps/ShopOperator/vendor
       - autoteka_shopapi_bootstrap_cache:/workspace/backend/apps/ShopAPI/bootstrap/cache
@@ -39,22 +39,22 @@ services:
   frontend:
     image: autoteka/runtime-frontend:dev
     build:
-      context: ${AUTOTEKA_ROOT:-../..}
+      context: ${AUTOTEKA_ROOT}
       dockerfile: ${INFRA_ROOT:?INFRA_ROOT must be set}/runtime/docker/dev/frontend/Dockerfile
       additional_contexts:
         infra: ${INFRA_ROOT:?INFRA_ROOT must be set}
     container_name: autoteka-dev-frontend
     working_dir: /workspace/frontend
     environment:
-      FRONTEND_MODE: ${FRONTEND_MODE:-source}
-      FRONTEND_PORT: ${FRONTEND_PORT:-5173}
-      FRONTEND_HMR_PROTOCOL: ${FRONTEND_HMR_PROTOCOL:-ws}
-      FRONTEND_HMR_HOST: ${FRONTEND_HMR_HOST:-localhost}
-      FRONTEND_HMR_PORT: ${FRONTEND_HMR_PORT:-8081}
-      VITE_API_BASE_URL: ${VITE_API_BASE_URL:-/api/v1}
-      VITE_BUILD_SOURCEMAP: ${VITE_BUILD_SOURCEMAP:-true}
+      FRONTEND_MODE: ${FRONTEND_MODE}
+      FRONTEND_PORT: ${FRONTEND_PORT}
+      FRONTEND_HMR_PROTOCOL: ${FRONTEND_HMR_PROTOCOL}
+      FRONTEND_HMR_HOST: ${FRONTEND_HMR_HOST}
+      FRONTEND_HMR_PORT: ${FRONTEND_HMR_PORT}
+      VITE_API_BASE_URL: ${VITE_API_BASE_URL}
+      VITE_BUILD_SOURCEMAP: ${VITE_BUILD_SOURCEMAP}
     volumes:
-      - ${AUTOTEKA_ROOT:-../..}/frontend:/workspace/frontend
+      - ${AUTOTEKA_ROOT}/frontend:/workspace/frontend
       - autoteka_frontend_node_modules:/workspace/frontend/node_modules
       - autoteka_frontend_dist:/workspace/frontend/dist
     restart: unless-stopped
@@ -62,7 +62,7 @@ services:
   web:
     image: autoteka/runtime-web:dev
     build:
-      context: ${AUTOTEKA_ROOT:-../..}
+      context: ${AUTOTEKA_ROOT}
       dockerfile: ${INFRA_ROOT:?INFRA_ROOT must be set}/runtime/docker/dev/nginx/Dockerfile
       additional_contexts:
         infra: ${INFRA_ROOT:?INFRA_ROOT must be set}
@@ -88,11 +88,11 @@ services:
       API_CACHE_CONTROL_MUTATION:
         ${API_CACHE_CONTROL_MUTATION:-no-store,no-cache,must-revalidate,max-age=0}
     volumes:
-      - ${AUTOTEKA_ROOT:-../..}/frontend:/workspace/frontend:ro
+      - ${AUTOTEKA_ROOT}/frontend:/workspace/frontend:ro
       - autoteka_frontend_dist:/workspace/frontend/dist:ro
-      - ${AUTOTEKA_ROOT:-../..}/backend:/workspace/backend:ro
+      - ${AUTOTEKA_ROOT}/backend:/workspace/backend:ro
     ports:
-      - "${DEV_BIND_HOST:-127.0.0.1}:${DEV_WEB_PORT:-8081}:80"
+      - "${DEV_BIND_HOST}:${DEV_WEB_PORT}:80"
     restart: unless-stopped
 
 volumes:

@@ -1,6 +1,33 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# INFRA_ROOT и AUTOTEKA_ROOT — только из аргументов или переменных окружения
+if [ -f /etc/autoteka/options.env ]; then
+  set -a
+  # shellcheck disable=SC1090
+  source /etc/autoteka/options.env || true
+  set +a
+fi
+_INFRA_ARGS=()
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --infra-root=*) INFRA_ROOT="${1#--infra-root=}"; shift ;;
+    --autoteka-root=*) AUTOTEKA_ROOT="${1#--autoteka-root=}"; shift ;;
+    *) _INFRA_ARGS+=("$1"); shift ;;
+  esac
+done
+set -- "${_INFRA_ARGS[@]}"
+export INFRA_ROOT="${INFRA_ROOT:-}"
+export AUTOTEKA_ROOT="${AUTOTEKA_ROOT:-}"
+if [ -z "${INFRA_ROOT}" ] || [[ "${INFRA_ROOT}" != /* ]] || \
+   [ -z "${AUTOTEKA_ROOT}" ] || [[ "${AUTOTEKA_ROOT}" != /* ]]; then
+  echo "INFRA_ROOT и AUTOTEKA_ROOT должны быть заданы абсолютными путями." >&2
+  echo "Пример: export INFRA_ROOT=/opt/vue-app/infrastructure" >&2
+  echo "        export AUTOTEKA_ROOT=/opt/vue-app" >&2
+  echo "  sudo autoteka uninstall <mode>" >&2
+  exit 2
+fi
+
 MODE="${1:-soft}"
 shift || true
 
@@ -45,10 +72,8 @@ if [ "$(id -u)" -ne 0 ]; then
   exit 1
 fi
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-INFRA_SCRIPT_ROOT="$(cd "$SCRIPT_DIR" && while [ ! -f "DEPLOY.md" ] && [ "$PWD" != "/" ]; do cd ..; done; pwd)"
 # shellcheck disable=SC1090
-source "$INFRA_SCRIPT_ROOT/lib/laravel-runtime.sh"
+source "$INFRA_ROOT/lib/laravel-runtime.sh"
 load_autoteka_env
 
 UNITS=(
@@ -86,7 +111,7 @@ APP_STATE=(
   /var/lock/autoteka-server-watchdog.lock
 )
 
-STORAGE_BACKUP_DIR_PATH="${STORAGE_BACKUP_DIR:-/root/autoteka-storage-backups}"
+STORAGE_BACKUP_DIR_PATH="${STORAGE_BACKUP_DIR}"
 
 SYSTEM_FILES=(
   /etc/docker/daemon.json
@@ -172,7 +197,7 @@ purge() {
 
   if [ "$RM_ETC_VUE_APP" = "yes" ]; then
     confirm_or_exit "REMOVE /etc/autoteka/* (secrets)"
-    rm -f /etc/autoteka/deploy.env /etc/autoteka/telegram.env 2>/dev/null || true
+    rm -f /etc/autoteka/options.env /etc/autoteka/telegram.env 2>/dev/null || true
     rmdir /etc/autoteka 2>/dev/null || true
   fi
 

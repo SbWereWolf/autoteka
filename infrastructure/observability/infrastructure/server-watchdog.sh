@@ -8,48 +8,63 @@ REBOOT_STATE="/var/lib/server-watchdog.reboot"
 LOCK_FILE="/var/lock/autoteka-server-watchdog.lock"
 
 # ===== host/resource settings =====
-LOAD_LIMIT="${WATCHDOG_LOAD_LIMIT:-2.0}"
-RAM_LIMIT="${WATCHDOG_RAM_LIMIT:-90}"
-BOOT_GRACE="${WATCHDOG_BOOT_GRACE:-180}"
-MAX_STAGE1="${WATCHDOG_STAGE1_MAX_FAILS:-2}"
-MAX_STAGE2="${WATCHDOG_STAGE2_MAX_FAILS:-4}"
-REBOOT_COOLDOWN="${WATCHDOG_REBOOT_COOLDOWN:-3600}"
+LOAD_LIMIT="${WATCHDOG_LOAD_LIMIT}"
+RAM_LIMIT="${WATCHDOG_RAM_LIMIT}"
+BOOT_GRACE="${WATCHDOG_BOOT_GRACE}"
+MAX_STAGE1="${WATCHDOG_STAGE1_MAX_FAILS}"
+MAX_STAGE2="${WATCHDOG_STAGE2_MAX_FAILS}"
+REBOOT_COOLDOWN="${WATCHDOG_REBOOT_COOLDOWN}"
 
 # ===== health domains =====
-NGINX_FAIL_THRESHOLD="${WATCHDOG_NGINX_FAIL_THRESHOLD:-2}"
-PHP_FAIL_THRESHOLD="${WATCHDOG_PHP_FAIL_THRESHOLD:-2}"
-BACKEND_FAIL_THRESHOLD="${WATCHDOG_BACKEND_FAIL_THRESHOLD:-2}"
-ADMIN_FAIL_THRESHOLD="${WATCHDOG_ADMIN_FAIL_THRESHOLD:-2}"
-API_FAIL_THRESHOLD="${WATCHDOG_API_FAIL_THRESHOLD:-2}"
+NGINX_FAIL_THRESHOLD="${WATCHDOG_NGINX_FAIL_THRESHOLD}"
+PHP_FAIL_THRESHOLD="${WATCHDOG_PHP_FAIL_THRESHOLD}"
+BACKEND_FAIL_THRESHOLD="${WATCHDOG_BACKEND_FAIL_THRESHOLD}"
+ADMIN_FAIL_THRESHOLD="${WATCHDOG_ADMIN_FAIL_THRESHOLD}"
+API_FAIL_THRESHOLD="${WATCHDOG_API_FAIL_THRESHOLD}"
 
-NGINX_REPAIR_COOLDOWN="${WATCHDOG_NGINX_REPAIR_COOLDOWN:-600}"
-PHP_REPAIR_COOLDOWN="${WATCHDOG_PHP_REPAIR_COOLDOWN:-600}"
-BACKEND_REPAIR_COOLDOWN="${WATCHDOG_BACKEND_REPAIR_COOLDOWN:-1800}"
-ADMIN_REPAIR_COOLDOWN="${WATCHDOG_ADMIN_REPAIR_COOLDOWN:-1800}"
-API_REPAIR_COOLDOWN="${WATCHDOG_API_REPAIR_COOLDOWN:-0}"
+NGINX_REPAIR_COOLDOWN="${WATCHDOG_NGINX_REPAIR_COOLDOWN}"
+PHP_REPAIR_COOLDOWN="${WATCHDOG_PHP_REPAIR_COOLDOWN}"
+BACKEND_REPAIR_COOLDOWN="${WATCHDOG_BACKEND_REPAIR_COOLDOWN}"
+ADMIN_REPAIR_COOLDOWN="${WATCHDOG_ADMIN_REPAIR_COOLDOWN}"
+API_REPAIR_COOLDOWN="${WATCHDOG_API_REPAIR_COOLDOWN}"
 
-NGINX_MAX_REPAIRS="${WATCHDOG_NGINX_MAX_REPAIRS:-2}"
-PHP_MAX_REPAIRS="${WATCHDOG_PHP_MAX_REPAIRS:-2}"
-BACKEND_MAX_REPAIRS="${WATCHDOG_BACKEND_MAX_REPAIRS:-2}"
-ADMIN_MAX_REPAIRS="${WATCHDOG_ADMIN_MAX_REPAIRS:-2}"
-API_MAX_REPAIRS="${WATCHDOG_API_MAX_REPAIRS:-0}"
+NGINX_MAX_REPAIRS="${WATCHDOG_NGINX_MAX_REPAIRS}"
+PHP_MAX_REPAIRS="${WATCHDOG_PHP_MAX_REPAIRS}"
+BACKEND_MAX_REPAIRS="${WATCHDOG_BACKEND_MAX_REPAIRS}"
+ADMIN_MAX_REPAIRS="${WATCHDOG_ADMIN_MAX_REPAIRS}"
+API_MAX_REPAIRS="${WATCHDOG_API_MAX_REPAIRS}"
 
 WEB_CONTAINER="vue-app"
 PHP_CONTAINER="autoteka-php"
 COMPOSE_UNIT="autoteka.service"
-NGINX_REPAIR_VERIFY_TIMEOUT="${WATCHDOG_NGINX_REPAIR_VERIFY_TIMEOUT:-75}"
-PHP_REPAIR_VERIFY_TIMEOUT="${WATCHDOG_PHP_REPAIR_VERIFY_TIMEOUT:-75}"
-CONTAINER_REPAIR_VERIFY_INTERVAL="${WATCHDOG_CONTAINER_REPAIR_VERIFY_INTERVAL:-3}"
-BACKEND_UP_URL="${BACKEND_UP_URL:-http://127.0.0.1/up}"
-API_HEALTH_URL="${API_HEALTH_URL:-http://127.0.0.1/api/v1/category-list}"
-ADMIN_HEALTH_URL="${ADMIN_HEALTH_URL:-http://127.0.0.1/admin/login}"
+NGINX_REPAIR_VERIFY_TIMEOUT="${WATCHDOG_NGINX_REPAIR_VERIFY_TIMEOUT}"
+PHP_REPAIR_VERIFY_TIMEOUT="${WATCHDOG_PHP_REPAIR_VERIFY_TIMEOUT}"
+CONTAINER_REPAIR_VERIFY_INTERVAL="${WATCHDOG_CONTAINER_REPAIR_VERIFY_INTERVAL}"
+BACKEND_UP_URL="${BACKEND_UP_URL}"
+API_HEALTH_URL="${API_HEALTH_URL}"
+ADMIN_HEALTH_URL="${ADMIN_HEALTH_URL}"
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-INFRA_SCRIPT_ROOT="$(cd "$SCRIPT_DIR" && while [ ! -f "DEPLOY.md" ] && [ "$PWD" != "/" ]; do cd ..; done; pwd)"
+# INFRA_ROOT и AUTOTEKA_ROOT — только из аргументов или переменных окружения
+if [ -f /etc/autoteka/options.env ]; then
+  set -a
+  # shellcheck disable=SC1090
+  source /etc/autoteka/options.env || true
+  set +a
+fi
+export INFRA_ROOT="${INFRA_ROOT:-}"
+export AUTOTEKA_ROOT="${AUTOTEKA_ROOT:-}"
+if [ -z "${INFRA_ROOT}" ] || [[ "${INFRA_ROOT}" != /* ]] || \
+   [ -z "${AUTOTEKA_ROOT}" ] || [[ "${AUTOTEKA_ROOT}" != /* ]]; then
+  echo "INFRA_ROOT и AUTOTEKA_ROOT должны быть заданы абсолютными путями." >&2
+  echo "Пример: export INFRA_ROOT=/opt/vue-app/infrastructure" >&2
+  echo "        export AUTOTEKA_ROOT=/opt/vue-app" >&2
+  echo "  autoteka watchdog" >&2
+  exit 2
+fi
 # shellcheck disable=SC1090
-source "$INFRA_SCRIPT_ROOT/lib/laravel-runtime.sh"
+source "$INFRA_ROOT/lib/laravel-runtime.sh"
 # shellcheck disable=SC1090
-source "$INFRA_SCRIPT_ROOT/lib/health-state.sh"
+source "$INFRA_ROOT/lib/health-state.sh"
 load_autoteka_env
 load_telegram_env
 
@@ -290,7 +305,7 @@ probe_domain() {
 
 run_domain_repair() {
   local domain="$1"
-  local args=("$INFRA_SCRIPT_ROOT/repair/repair-health.sh" "$domain")
+  local args=("$INFRA_ROOT/repair/repair-health.sh" "$domain")
 
   if [ "$DRY_RUN" = "1" ]; then
     args+=(--dry-run)
@@ -535,8 +550,8 @@ OVERALL_HEALTH="healthy"
 if [ -n "$HOST_REASON" ]; then
   OVERALL_HEALTH="degraded"
   append_metrics "$(now_iso) load=$LOAD ram=$RAM health=$OVERALL_HEALTH nginx=$NGINX_STATUS php=$PHP_STATUS backend=$BACKEND_STATUS admin=$ADMIN_STATUS api=$API_STATUS host=resource-failure"
-  if [ -x "$INFRA_SCRIPT_ROOT/observability/application/metrics-export.sh" ]; then
-    if ! "$INFRA_SCRIPT_ROOT/observability/application/metrics-export.sh" >/dev/null 2>&1; then
+  if [ -x "$INFRA_ROOT/observability/application/metrics-export.sh" ]; then
+    if ! "$INFRA_ROOT/observability/application/metrics-export.sh" >/dev/null 2>&1; then
       log_action "notify metrics export failed"
       notify_info "$SCRIPT_ID" "$WATCHDOG_ACTION" "WATCHDOG_METRICS_EXPORT_FAILED" "не удалось обновить infrastructure/observability/application/metrics/data.json"
     fi
@@ -557,8 +572,8 @@ fi
 
 if [ "$NGINX_STATUS" != "healthy" ]; then
   append_metrics "$(now_iso) load=$LOAD ram=$RAM health=$OVERALL_HEALTH nginx=$NGINX_STATUS php=$PHP_STATUS backend=$BACKEND_STATUS admin=$ADMIN_STATUS api=$API_STATUS"
-  if [ -x "$INFRA_SCRIPT_ROOT/observability/application/metrics-export.sh" ]; then
-    if ! "$INFRA_SCRIPT_ROOT/observability/application/metrics-export.sh" >/dev/null 2>&1; then
+  if [ -x "$INFRA_ROOT/observability/application/metrics-export.sh" ]; then
+    if ! "$INFRA_ROOT/observability/application/metrics-export.sh" >/dev/null 2>&1; then
       log_action "notify metrics export failed"
       notify_info "$SCRIPT_ID" "$WATCHDOG_ACTION" "WATCHDOG_METRICS_EXPORT_FAILED" "не удалось обновить infrastructure/observability/application/metrics/data.json"
     fi
@@ -576,8 +591,8 @@ fi
 
 if [ "$PHP_STATUS" != "healthy" ]; then
   append_metrics "$(now_iso) load=$LOAD ram=$RAM health=$OVERALL_HEALTH nginx=$NGINX_STATUS php=$PHP_STATUS backend=$BACKEND_STATUS admin=$ADMIN_STATUS api=$API_STATUS"
-  if [ -x "$INFRA_SCRIPT_ROOT/observability/application/metrics-export.sh" ]; then
-    if ! "$INFRA_SCRIPT_ROOT/observability/application/metrics-export.sh" >/dev/null 2>&1; then
+  if [ -x "$INFRA_ROOT/observability/application/metrics-export.sh" ]; then
+    if ! "$INFRA_ROOT/observability/application/metrics-export.sh" >/dev/null 2>&1; then
       log_action "notify metrics export failed"
       notify_info "$SCRIPT_ID" "$WATCHDOG_ACTION" "WATCHDOG_METRICS_EXPORT_FAILED" "не удалось обновить infrastructure/observability/application/metrics/data.json"
     fi
@@ -595,8 +610,8 @@ fi
 
 if [ "$BACKEND_STATUS" != "healthy" ]; then
   append_metrics "$(now_iso) load=$LOAD ram=$RAM health=$OVERALL_HEALTH nginx=$NGINX_STATUS php=$PHP_STATUS backend=$BACKEND_STATUS admin=$ADMIN_STATUS api=$API_STATUS"
-  if [ -x "$INFRA_SCRIPT_ROOT/observability/application/metrics-export.sh" ]; then
-    if ! "$INFRA_SCRIPT_ROOT/observability/application/metrics-export.sh" >/dev/null 2>&1; then
+  if [ -x "$INFRA_ROOT/observability/application/metrics-export.sh" ]; then
+    if ! "$INFRA_ROOT/observability/application/metrics-export.sh" >/dev/null 2>&1; then
       log_action "notify metrics export failed"
       notify_info "$SCRIPT_ID" "$WATCHDOG_ACTION" "WATCHDOG_METRICS_EXPORT_FAILED" "не удалось обновить infrastructure/observability/application/metrics/data.json"
     fi
@@ -621,8 +636,8 @@ else
 fi
 
 append_metrics "$(now_iso) load=$LOAD ram=$RAM health=$OVERALL_HEALTH nginx=$NGINX_STATUS php=$PHP_STATUS backend=$BACKEND_STATUS admin=$ADMIN_STATUS api=$API_STATUS"
-if [ -x "$INFRA_SCRIPT_ROOT/observability/application/metrics-export.sh" ]; then
-  if ! "$INFRA_SCRIPT_ROOT/observability/application/metrics-export.sh" >/dev/null 2>&1; then
+if [ -x "$INFRA_ROOT/observability/application/metrics-export.sh" ]; then
+  if ! "$INFRA_ROOT/observability/application/metrics-export.sh" >/dev/null 2>&1; then
     log_action "notify metrics export failed"
     notify_info "$SCRIPT_ID" "$WATCHDOG_ACTION" "WATCHDOG_METRICS_EXPORT_FAILED" "не удалось обновить infrastructure/observability/application/metrics/data.json"
   fi

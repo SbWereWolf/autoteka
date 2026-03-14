@@ -4,11 +4,11 @@ set -euo pipefail
 if [ -z "${AUTOTEKA_LIB_HEALTH_STATE_SH:-}" ]; then
   AUTOTEKA_LIB_HEALTH_STATE_SH=1
 
-  AUTOTEKA_LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  # INFRA_ROOT должен быть задан вызывающим скриптом (env или args)
   # shellcheck disable=SC1090
-  source "$AUTOTEKA_LIB_DIR/dry-run.sh"
+  source "$INFRA_ROOT/lib/dry-run.sh"
   # shellcheck disable=SC1090
-  source "$AUTOTEKA_LIB_DIR/telegram.sh"
+  source "$INFRA_ROOT/lib/telegram.sh"
 
   HEALTH_STATE_DIR_DEFAULT="/var/lib/server-watchdog/health"
 

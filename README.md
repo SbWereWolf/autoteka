@@ -209,9 +209,10 @@ docker exec autoteka-dev-php sh -lc "cd /workspace/backend/apps/ShopOperator && 
   `cp backend/example.env backend/.env`. Подробности:
   [ADMIN_MANUAL §6.2](docs/manual/ADMIN_MANUAL.md),
   [DEPLOY §5.3](infrastructure/DEPLOY.md).
-- `/etc/autoteka/deploy.env` — server-side deployment config для
-  `AUTOTEKA_ROOT`, `BRANCH`, `REMOTE`, `HTTP_PORT`. Подробности:
-  [DEPLOY §5.1](infrastructure/DEPLOY.md).
+- `/etc/autoteka/options.env` — server-side deployment config для
+  `AUTOTEKA_ROOT`, `INFRA_ROOT`, `BRANCH`, `REMOTE`, `HTTP_PORT`.
+  Пути задаются только через env или аргументы. Подробности:
+  [DEPLOY](infrastructure/DEPLOY.md).
 - `/etc/autoteka/telegram.env` — server-side Telegram config для
   rollout/watchdog/maintenance уведомлений. Подробности:
   [DEPLOY §5.2](infrastructure/DEPLOY.md),

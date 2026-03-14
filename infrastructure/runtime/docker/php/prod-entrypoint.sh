@@ -36,7 +36,7 @@ if ! grep -qE '^APP_KEY=base64:' .env; then
 fi
 (cd apps/ShopAPI && php artisan optimize:clear --ansi >/dev/null 2>&1 || true)
 (cd apps/ShopOperator && php artisan optimize:clear --ansi >/dev/null 2>&1 || true)
-if [ "${RUN_LARAVEL_OPTIMIZE:-true}" = "true" ]; then
+if [ "${RUN_LARAVEL_OPTIMIZE}" = "true" ]; then
   (cd apps/ShopAPI && php artisan config:cache --ansi || true)
   (cd apps/ShopAPI && php artisan route:cache --ansi || true)
   (cd apps/ShopAPI && php artisan view:cache --ansi || true)
