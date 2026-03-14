@@ -84,10 +84,13 @@ ensure_package_lock_for_deploy
 compose up -d --build --remove-orphans web
 systemctl enable --now autoteka.service
 
+
 systemctl enable --now \
   watch-changes.timer \
   server-watchdog.timer \
   server-maintenance.timer
+
+systemctl start server-watchdog.service watch-changes.service || true
 
 systemctl restart \
   watch-changes.timer \
