@@ -4,11 +4,34 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
+if ($null -eq $Arguments) {
+    $Arguments = @()
+} elseif ($Arguments -is [string]) {
+    $Arguments = @($Arguments)
+}
+$Arguments = @($Arguments | Where-Object { $_ -ne "" })
 
-$repoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
+. (Join-Path $PSScriptRoot "read-scripts-env.ps1")
+$scriptsEnvPath = Join-Path $PSScriptRoot ".env"
+if (-not (Test-Path -LiteralPath $scriptsEnvPath -PathType Leaf)) {
+    Write-Stderr "[swap-env] Отсутствует scripts/.env или переменные AUTOTEKA_ROOT, INFRA_ROOT. Скопируйте scripts/example.env в scripts/.env и задайте пути."
+    exit 3
+}
+$scriptsEnv = Read-ScriptsEnv -Path $scriptsEnvPath
+if (-not $scriptsEnv["AUTOTEKA_ROOT"]) {
+    Write-Stderr "[swap-env] Отсутствует scripts/.env или переменные AUTOTEKA_ROOT, INFRA_ROOT. Скопируйте scripts/example.env в scripts/.env и задайте пути."
+    exit 3
+}
+if (-not $scriptsEnv["INFRA_ROOT"]) {
+    Write-Stderr "[swap-env] Отсутствует scripts/.env или переменные AUTOTEKA_ROOT, INFRA_ROOT. Скопируйте scripts/example.env в scripts/.env и задайте пути."
+    exit 3
+}
+$repoRoot = $scriptsEnv["AUTOTEKA_ROOT"]
+$script:InfraRoot = $scriptsEnv["INFRA_ROOT"]
 $allTypes = @(
     "root-lock",
     "frontend-lock",
+    "system-tests-env",
     "system-tests-lock",
     "infrastructure-tests-lock",
     "root-node-modules",
@@ -21,7 +44,7 @@ $allTypes = @(
     "shop-operator-env"
 )
 
-$script:ErrorsFound = New-Object System.Collections.Generic.List[string]
+$script:ErrorsFound = New-Object System.Collections.ArrayList
 $script:HasMismatch = $false
 $script:HasMissing = $false
 $script:AggregateHints = $false
@@ -30,11 +53,13 @@ $script:SummaryHintShown = $false
 $Arguments = @($Arguments | Where-Object { $_ -ne "" })
 
 function Get-CurrentPlatform {
-    if ($env:WSL_DISTRO_NAME -or $env:WSL_INTEROP) {
-        return "wsl"
+    if ($env:PWD -and $env:PWD.StartsWith("/")) {
+        return "nix"
     }
-
-    return "win"
+    if ($env:OS -and $env:OS -match "Windows") {
+        return "win"
+    }
+    throw "Не удалось определить платформу: задайте переменную окружения OS (со значением, содержащим Windows) или PWD (начинается с /)"
 }
 
 function Get-ScriptCommandPrefix {
@@ -46,11 +71,11 @@ function Get-TypeInfo {
         [Parameter(Mandatory = $true)]
         [string]$TypeName,
         [Parameter(Mandatory = $true)]
-        [ValidateSet("win", "wsl")]
+        [ValidateSet("win", "nix")]
         [string]$Platform
     )
 
-    $envFileName = if ($Platform -eq "win") { "win.env" } else { "wsl.env" }
+    $envFileName = if ($Platform -eq "win") { "win.env" } else { "nix.env" }
 
     switch ($TypeName) {
         "root-lock" {
@@ -80,7 +105,7 @@ function Get-TypeInfo {
             }
         }
         "infrastructure-tests-lock" {
-            $base = Join-Path $repoRoot "infrastructure/tests"
+            $base = Join-Path $script:InfraRoot "tests"
             return @{
                 Kind = "File"
                 Label = "infrastructure/tests package-lock"
@@ -105,6 +130,15 @@ function Get-TypeInfo {
                 CurrentEnvPath = Join-Path $base "node_modules.$Platform"
             }
         }
+        "system-tests-env" {
+            $base = Join-Path $repoRoot "system-tests"
+            return @{
+                Kind = "File"
+                Label = "system-tests env"
+                ActivePath = Join-Path $base ".env"
+                CurrentEnvPath = Join-Path $base $envFileName
+            }
+        }
         "system-tests-node-modules" {
             $base = Join-Path $repoRoot "system-tests"
             return @{
@@ -115,7 +149,7 @@ function Get-TypeInfo {
             }
         }
         "infrastructure-tests-node-modules" {
-            $base = Join-Path $repoRoot "infrastructure/tests"
+            $base = Join-Path $script:InfraRoot "tests"
             return @{
                 Kind = "Directory"
                 Label = "infrastructure/tests node_modules"
@@ -178,23 +212,29 @@ function Get-TypeGroupInfo {
         { $_ -like "frontend-*" } {
             return @{ Order = 2; Label = "frontend" }
         }
-        { $_ -like "system-tests-*" } {
+        "system-tests-env" {
             return @{ Order = 3; Label = "system-tests" }
         }
+        "system-tests-lock" {
+            return @{ Order = 4; Label = "system-tests" }
+        }
+        { $_ -like "system-tests-node-modules" } {
+            return @{ Order = 5; Label = "system-tests" }
+        }
         { $_ -like "infrastructure-tests-*" } {
-            return @{ Order = 4; Label = "infrastructure/tests" }
+            return @{ Order = 6; Label = "infrastructure/tests" }
         }
         "scripts-env" {
-            return @{ Order = 5; Label = "scripts" }
+            return @{ Order = 7; Label = "scripts" }
         }
         "lint-env" {
-            return @{ Order = 6; Label = "lint" }
+            return @{ Order = 8; Label = "lint" }
         }
         "shop-api-env" {
-            return @{ Order = 7; Label = "backend/apps/ShopAPI" }
+            return @{ Order = 9; Label = "backend/apps/ShopAPI" }
         }
         "shop-operator-env" {
-            return @{ Order = 8; Label = "backend/apps/ShopOperator" }
+            return @{ Order = 10; Label = "backend/apps/ShopOperator" }
         }
         default {
             return @{ Order = 999; Label = "other" }
@@ -232,6 +272,65 @@ function Write-Stderr {
     param([string]$Message)
 
     [Console]::Error.WriteLine($Message)
+}
+
+$script:StatusMaxLen = 17
+$script:LabelMaxLen = 11
+
+function Get-StatusColor {
+    param([string]$Status)
+
+    if ($env:NO_COLOR) {
+        return ""
+    }
+    if (-not (Get-Variable -Name PSStyle -Scope Global -ErrorAction SilentlyContinue)) {
+        return ""
+    }
+
+    $map = @{
+        "same"              = $PSStyle.Foreground.FromRgb(0x4C, 0xAF, 0x50)
+        "missing-active"    = $PSStyle.Foreground.FromRgb(0xFF, 0xC1, 0x07)
+        "unreadable-active" = $PSStyle.Foreground.FromRgb(0xC0, 0x84, 0xFC)
+        "missing-current-env"       = $PSStyle.Foreground.FromRgb(0xFF, 0xC1, 0x07)
+        "unreadable-current-env"    = $PSStyle.Foreground.FromRgb(0xC0, 0x84, 0xFC)
+        "different"         = $PSStyle.Foreground.FromRgb(0xFF, 0xC1, 0x07)
+    }
+    $fg = $map[$Status]
+    if (-not $fg) {
+        return ""
+    }
+    return $fg
+}
+
+function Get-RelativePath {
+    param(
+        [string]$Path,
+        [string]$BasePath
+    )
+
+    $infraNorm = $script:InfraRoot.TrimEnd('\', '/')
+    $pathNorm = $Path.TrimEnd('\', '/')
+    $sep = [System.IO.Path]::DirectorySeparatorChar
+    if ($pathNorm.StartsWith($infraNorm + $sep) -or $pathNorm -eq $infraNorm) {
+        $suffix = if ($pathNorm.Length -gt $infraNorm.Length) {
+            $pathNorm.Substring($infraNorm.Length + 1)
+        } else {
+            ""
+        }
+        $rel = "infrastructure" + $sep + $suffix
+        return $rel.Replace('\', '/')
+    }
+
+    try {
+        return [System.IO.Path]::GetRelativePath($BasePath, $Path).Replace('\', '/')
+    }
+    catch {
+        $norm = $BasePath.TrimEnd('\', '/')
+        if ($Path.StartsWith($norm + $sep)) {
+            return $Path.Substring($norm.Length + 1).Replace('\', '/')
+        }
+        return $Path
+    }
 }
 
 function Ensure-KnownType {
@@ -321,7 +420,7 @@ function Get-TypeState {
         [Parameter(Mandatory = $true)]
         [string]$TypeName,
         [Parameter(Mandatory = $true)]
-        [ValidateSet("win", "wsl")]
+        [ValidateSet("win", "nix")]
         [string]$Platform
     )
 
@@ -330,23 +429,26 @@ function Get-TypeState {
     $activeResult = if ($info.Kind -eq "File") { Try-ReadFileContent -Path $info.ActivePath } else { Try-ReadDirectoryList -Path $info.ActivePath }
     $envResult = if ($info.Kind -eq "File") { Try-ReadFileContent -Path $info.CurrentEnvPath } else { Try-ReadDirectoryList -Path $info.CurrentEnvPath }
 
-    $status = "same"
+    $statusActive = "same"
+    $statusCurrentEnv = "same"
     if (-not $activeResult.Ok) {
-        $status = if ($activeResult.Status -eq "missing") { "missing-active" } else { "unreadable-active" }
+        $statusActive = if ($activeResult.Status -eq "missing") { "missing-active" } else { "unreadable-active" }
     }
-    elseif (-not $envResult.Ok) {
-        $status = if ($envResult.Status -eq "missing") { "missing-env" } else { "unreadable-env" }
+    if (-not $envResult.Ok) {
+        $statusCurrentEnv = if ($envResult.Status -eq "missing") { "missing-current-env" } else { "unreadable-current-env" }
     }
-    elseif ($info.Kind -eq "File") {
-        if ($activeResult.Content -ne $envResult.Content) {
-            $status = "different"
+    if ($activeResult.Ok -and $envResult.Ok) {
+        $contentDiffers = $false
+        if ($info.Kind -eq "File") {
+            $contentDiffers = $activeResult.Content -ne $envResult.Content
+        } else {
+            $activeJoined = [string]::Join("`n", $activeResult.Items)
+            $envJoined = [string]::Join("`n", $envResult.Items)
+            $contentDiffers = $activeJoined -ne $envJoined
         }
-    }
-    else {
-        $activeJoined = [string]::Join("`n", $activeResult.Items)
-        $envJoined = [string]::Join("`n", $envResult.Items)
-        if ($activeJoined -ne $envJoined) {
-            $status = "different"
+        if ($contentDiffers) {
+            $statusActive = "different"
+            $statusCurrentEnv = "different"
         }
     }
 
@@ -358,7 +460,8 @@ function Get-TypeState {
         GroupLabel = $group.Label
         ActivePath = $info.ActivePath
         CurrentEnvPath = $info.CurrentEnvPath
-        Status = $status
+        StatusActive = $statusActive
+        StatusCurrentEnv = $statusCurrentEnv
     }
 }
 
@@ -423,9 +526,9 @@ function Get-HintText {
         return ""
     }
 
-    $commands = foreach ($actionName in $ActionNames) {
+    $commands = @(foreach ($actionName in $ActionNames) {
         Get-CommandTemplate -ActionName $actionName -TypeNames $TypeNames
-    }
+    })
 
     if ($commands.Count -eq 1) {
         return " Команда: $($commands[0])."
@@ -450,7 +553,8 @@ function Add-OperationalError {
     param(
         [Parameter(Mandatory = $true)]
         [string]$TypeName,
-        [Parameter(Mandatory = $true)]
+        [string]$StatusActive = "same",
+        [string]$StatusCurrentEnv = "same",
         [string]$Message,
         [string[]]$HintActions,
         [switch]$Missing,
@@ -466,24 +570,30 @@ function Add-OperationalError {
         $script:HasMismatch = $true
     }
 
-    $prefix = if ($DryRun) { "[swap-env] dry-run: " } else { "[swap-env] " }
-    $script:ErrorsFound.Add("${prefix}${TypeName}: ${Message}${hint}")
+    [void]$script:ErrorsFound.Add([pscustomobject]@{
+        TypeName         = $TypeName
+        StatusActive     = $StatusActive
+        StatusCurrentEnv = $StatusCurrentEnv
+        Message          = $Message
+        Hint             = $hint
+        DryRun           = $DryRun
+    })
 }
 
 function Get-ValidateHintActions {
     param(
-        [Parameter(Mandatory = $true)]
-        [string]$Status
+        [string]$StatusActive,
+        [string]$StatusCurrentEnv
     )
 
-    switch ($Status) {
-        "missing-active" { return @("load") }
-        "unreadable-active" { return @("load") }
-        "missing-env" { return @("save") }
-        "unreadable-env" { return @("save") }
-        "different" { return @("load", "save") }
-        default { return @() }
+    $actions = [System.Collections.Generic.List[string]]::new()
+    if ($StatusActive -in @("missing-active", "unreadable-active") -and -not $actions.Contains("load")) { $actions.Add("load") | Out-Null }
+    if ($StatusCurrentEnv -in @("missing-current-env", "unreadable-current-env") -and -not $actions.Contains("save")) { $actions.Add("save") | Out-Null }
+    if ($StatusActive -eq "different" -or $StatusCurrentEnv -eq "different") {
+        if (-not $actions.Contains("load")) { $actions.Add("load") | Out-Null }
+        if (-not $actions.Contains("save")) { $actions.Add("save") | Out-Null }
     }
+    return @($actions)
 }
 
 function Validate-Type {
@@ -493,29 +603,13 @@ function Validate-Type {
         [switch]$DryRun
     )
 
-    switch ($State.Status) {
-        "same" { return }
-        "missing-active" {
-            Add-OperationalError -TypeName $State.TypeName -Message "active-артефакт отсутствует." -HintActions (Get-ValidateHintActions -Status $State.Status) -Missing -DryRun:$DryRun
-            return
-        }
-        "unreadable-active" {
-            Add-OperationalError -TypeName $State.TypeName -Message "active-артефакт не читается." -HintActions (Get-ValidateHintActions -Status $State.Status) -Missing -DryRun:$DryRun
-            return
-        }
-        "missing-env" {
-            Add-OperationalError -TypeName $State.TypeName -Message "артефакт текущей среды отсутствует." -HintActions (Get-ValidateHintActions -Status $State.Status) -Missing -DryRun:$DryRun
-            return
-        }
-        "unreadable-env" {
-            Add-OperationalError -TypeName $State.TypeName -Message "артефакт текущей среды не читается." -HintActions (Get-ValidateHintActions -Status $State.Status) -Missing -DryRun:$DryRun
-            return
-        }
-        "different" {
-            Add-OperationalError -TypeName $State.TypeName -Message "active и current-env различаются." -HintActions (Get-ValidateHintActions -Status $State.Status) -Mismatch -DryRun:$DryRun
-            return
-        }
-    }
+    if ($State.StatusActive -eq "same" -and $State.StatusCurrentEnv -eq "same") { return }
+
+    $isMissing = $State.StatusActive -in @("missing-active", "unreadable-active") -or $State.StatusCurrentEnv -in @("missing-current-env", "unreadable-current-env")
+    $isMismatch = $State.StatusActive -eq "different" -or $State.StatusCurrentEnv -eq "different"
+    $hintActions = Get-ValidateHintActions -StatusActive $State.StatusActive -StatusCurrentEnv $State.StatusCurrentEnv
+    $statusDisplay = "$($State.StatusActive) $($State.StatusCurrentEnv)"
+    Add-OperationalError -TypeName $State.TypeName -StatusActive $State.StatusActive -StatusCurrentEnv $State.StatusCurrentEnv -HintActions $hintActions -Missing:$isMissing -Mismatch:$isMismatch -DryRun:$DryRun
 }
 
 function Copy-FileForce {
@@ -547,22 +641,11 @@ function Copy-DirectoryForce {
         New-Item -ItemType Directory -Path $parent -Force | Out-Null
     }
 
-    if ((Get-CurrentPlatform) -eq "wsl" -and (Test-Path -LiteralPath "/bin/sh")) {
+    if ((Get-CurrentPlatform) -eq "nix" -and (Test-Path -LiteralPath "/bin/sh")) {
         if (Test-Path -LiteralPath $DestinationPath) {
             & /bin/sh -c 'rm -rf -- "$1"' sh $DestinationPath
             if ($LASTEXITCODE -ne 0) {
-                $cmdExe = Get-Command cmd.exe -ErrorAction SilentlyContinue
-                $wslPathCmd = Get-Command wslpath -ErrorAction SilentlyContinue
-                if ($cmdExe -and $wslPathCmd -and $DestinationPath -match '^/mnt/[a-zA-Z]/') {
-                    $windowsPath = & $wslPathCmd.Source -w $DestinationPath
-                    & $cmdExe.Source /d /c "rd /s /q `"$windowsPath`""
-                    if ($LASTEXITCODE -ne 0) {
-                        throw "delete-failed"
-                    }
-                }
-                else {
-                    throw "delete-failed"
-                }
+                throw "delete-failed"
             }
         }
 
@@ -604,75 +687,56 @@ function Invoke-SaveOrLoadType {
     $sameHint = Get-HintText -ActionNames @($ActionName) -TypeNames @($typeName)
 
     if ($ActionName -eq "save") {
-        switch ($State.Status) {
-            "missing-active" {
-                Add-OperationalError -TypeName $typeName -Message "active-артефакт отсутствует." -HintActions @("load") -Missing
-                return
-            }
-            "unreadable-active" {
-                Add-OperationalError -TypeName $typeName -Message "active-артефакт не читается." -HintActions @("load") -Missing
-                return
-            }
-            "same" {
-                Write-Host "[swap-env] ${typeName}: active и current-env уже совпадают, замена не нужна.${sameHint}"
-                return
-            }
-            default {
-                if ($DryRun) {
-                    Write-Host "[swap-env] dry-run: ${typeName}: будет выполнено active -> current-env."
-                    return
-                }
-
-                try {
-                    if ($State.Kind -eq "File") {
-                        Copy-FileForce -SourcePath $State.ActivePath -DestinationPath $State.CurrentEnvPath
-                    }
-                    else {
-                        Copy-DirectoryForce -SourcePath $State.ActivePath -DestinationPath $State.CurrentEnvPath
-                    }
-                    Write-Host "[swap-env] ${typeName}: active -> current-env выполнено."
-                }
-                catch {
-                    Add-OperationalError -TypeName $typeName -Message "не удалось заменить артефакт current-env." -HintActions @("save") -Mismatch
-                }
-                return
-            }
-        }
-    }
-
-    switch ($State.Status) {
-        "missing-env" {
-            Add-OperationalError -TypeName $typeName -Message "артефакт текущей среды отсутствует." -HintActions @("save") -Missing
+        if ($State.StatusActive -in @("missing-active", "unreadable-active")) {
+            Add-OperationalError -TypeName $typeName -StatusActive $State.StatusActive -StatusCurrentEnv $State.StatusCurrentEnv -HintActions @("load") -Missing
             return
         }
-        "unreadable-env" {
-            Add-OperationalError -TypeName $typeName -Message "артефакт текущей среды не читается." -HintActions @("save") -Missing
-            return
-        }
-        "same" {
+        if ($State.StatusActive -eq "same" -and $State.StatusCurrentEnv -eq "same") {
             Write-Host "[swap-env] ${typeName}: active и current-env уже совпадают, замена не нужна.${sameHint}"
             return
         }
-        default {
-            if ($DryRun) {
-                Write-Host "[swap-env] dry-run: ${typeName}: будет выполнено active <- current-env."
-                return
-            }
-
-            try {
-                if ($State.Kind -eq "File") {
-                    Copy-FileForce -SourcePath $State.CurrentEnvPath -DestinationPath $State.ActivePath
-                }
-                else {
-                    Copy-DirectoryForce -SourcePath $State.CurrentEnvPath -DestinationPath $State.ActivePath
-                }
-                Write-Host "[swap-env] ${typeName}: active <- current-env выполнено."
-            }
-            catch {
-                Add-OperationalError -TypeName $typeName -Message "не удалось заменить active-артефакт." -HintActions @("load") -Mismatch
-            }
+        if ($DryRun) {
+            Write-Host "[swap-env] dry-run: ${typeName}: будет выполнено active -> current-env."
             return
         }
+        try {
+            if ($State.Kind -eq "File") {
+                Copy-FileForce -SourcePath $State.ActivePath -DestinationPath $State.CurrentEnvPath
+            }
+            else {
+                Copy-DirectoryForce -SourcePath $State.ActivePath -DestinationPath $State.CurrentEnvPath
+            }
+            Write-Host "[swap-env] ${typeName}: active -> current-env выполнено."
+        }
+        catch {
+            Add-OperationalError -TypeName $typeName -Message "не удалось заменить артефакт current-env." -HintActions @("save") -Mismatch
+        }
+        return
+    }
+
+    if ($State.StatusCurrentEnv -in @("missing-current-env", "unreadable-current-env")) {
+        Add-OperationalError -TypeName $typeName -StatusActive $State.StatusActive -StatusCurrentEnv $State.StatusCurrentEnv -HintActions @("save") -Missing
+        return
+    }
+    if ($State.StatusActive -eq "same" -and $State.StatusCurrentEnv -eq "same") {
+        Write-Host "[swap-env] ${typeName}: active и current-env уже совпадают, замена не нужна.${sameHint}"
+        return
+    }
+    if ($DryRun) {
+        Write-Host "[swap-env] dry-run: ${typeName}: будет выполнено active <- current-env."
+        return
+    }
+    try {
+        if ($State.Kind -eq "File") {
+            Copy-FileForce -SourcePath $State.CurrentEnvPath -DestinationPath $State.ActivePath
+        }
+        else {
+            Copy-DirectoryForce -SourcePath $State.CurrentEnvPath -DestinationPath $State.ActivePath
+        }
+        Write-Host "[swap-env] ${typeName}: active <- current-env выполнено."
+    }
+    catch {
+        Add-OperationalError -TypeName $typeName -Message "не удалось заменить active-артефакт." -HintActions @("load") -Mismatch
     }
 }
 
@@ -681,21 +745,38 @@ function Write-StatusReport {
         [Parameter(Mandatory = $true)]
         [pscustomobject[]]$States,
         [Parameter(Mandatory = $true)]
-        [ValidateSet("win", "wsl")]
+        [ValidateSet("win", "nix")]
         [string]$Platform
     )
 
-    Write-Host "[swap-env] status: среда '$Platform'"
+    $reset = if (Get-Variable -Name PSStyle -Scope Global -ErrorAction SilentlyContinue) { $PSStyle.Reset } else { "" }
+
+    Write-Host "[swap-env] status:   '$Platform'"
     Write-Host "[swap-env] validate: active <-> current-env"
-    Write-Host "[swap-env] save: active -> current-env"
-    Write-Host "[swap-env] load: active <- current-env"
+    Write-Host "[swap-env] save:     active  -> current-env"
+    Write-Host "[swap-env] load:     active <-  current-env"
+    Write-Host "[swap-env] AUTOTEKA_ROOT: $repoRoot"
+    Write-Host "[swap-env] INFRA_ROOT:    $script:InfraRoot"
 
     foreach ($group in ($States | Group-Object GroupLabel | Sort-Object { ($_.Group | Select-Object -First 1).GroupOrder })) {
+        Write-Host ""
         Write-Host "[swap-env] group: $($group.Name)"
         foreach ($state in ($group.Group | Sort-Object TypeName)) {
-            Write-Host "  $($state.TypeName) [$($state.Status)]"
-            Write-Host "    active: $($state.ActivePath)"
-            Write-Host "    current-env: $($state.CurrentEnvPath)"
+            $colorActive = Get-StatusColor -Status $state.StatusActive
+            $colorEnv = Get-StatusColor -Status $state.StatusCurrentEnv
+            $padActive = " " * [Math]::Max(0, $script:StatusMaxLen - $state.StatusActive.Length)
+            $padEnv = " " * [Math]::Max(0, $script:StatusMaxLen - $state.StatusCurrentEnv.Length)
+            $partActive = if ($colorActive) { "$colorActive$($state.StatusActive)$reset" } else { $state.StatusActive }
+            $partEnv = if ($colorEnv) { "$colorEnv$($state.StatusCurrentEnv)$reset" } else { $state.StatusCurrentEnv }
+            $activeRel = Get-RelativePath -Path $state.ActivePath -BasePath $repoRoot
+            $envRel = Get-RelativePath -Path $state.CurrentEnvPath -BasePath $repoRoot
+            $activeLabel = "active".PadRight($script:LabelMaxLen)
+            $envLabel = "current-env".PadRight($script:LabelMaxLen)
+
+            Write-Host ""
+            Write-Host "  $partActive$padActive $partEnv$padEnv $($state.TypeName)"
+            Write-Host "    ${activeLabel}: $activeRel"
+            Write-Host "    ${envLabel}: $envRel"
         }
     }
 }
@@ -704,23 +785,24 @@ $commandName = "validate"
 $requestedTypes = New-Object System.Collections.Generic.List[string]
 $dryRun = $false
 
-if ($Arguments.Count -gt 0) {
+$argsCount = @($Arguments).Count
+if ($argsCount -gt 0) {
     switch ($Arguments[0]) {
         "validate" {
             $commandName = "validate"
-            $Arguments = if ($Arguments.Count -gt 1) { $Arguments[1..($Arguments.Count - 1)] } else { @() }
+            $Arguments = if ($argsCount -gt 1) { @($Arguments)[1..($argsCount - 1)] } else { @() }
         }
         "save" {
             $commandName = "save"
-            $Arguments = if ($Arguments.Count -gt 1) { $Arguments[1..($Arguments.Count - 1)] } else { @() }
+            $Arguments = if ($argsCount -gt 1) { @($Arguments)[1..($argsCount - 1)] } else { @() }
         }
         "load" {
             $commandName = "load"
-            $Arguments = if ($Arguments.Count -gt 1) { $Arguments[1..($Arguments.Count - 1)] } else { @() }
+            $Arguments = if ($argsCount -gt 1) { @($Arguments)[1..($argsCount - 1)] } else { @() }
         }
         "status" {
             $commandName = "status"
-            $Arguments = if ($Arguments.Count -gt 1) { $Arguments[1..($Arguments.Count - 1)] } else { @() }
+            $Arguments = if ($argsCount -gt 1) { @($Arguments)[1..($argsCount - 1)] } else { @() }
         }
         "--help" {
             Write-Usage
@@ -733,8 +815,9 @@ if ($Arguments.Count -gt 0) {
     }
 }
 
-for ($index = 0; $index -lt $Arguments.Count; $index++) {
-    $argument = $Arguments[$index]
+$argumentsArray = @($Arguments)
+for ($index = 0; $index -lt $argumentsArray.Count; $index++) {
+    $argument = $argumentsArray[$index]
     if ([string]::IsNullOrWhiteSpace($argument)) {
         continue
     }
@@ -755,21 +838,21 @@ for ($index = 0; $index -lt $Arguments.Count; $index++) {
             $dryRun = $true
         }
         "--type" {
-            if ($index + 1 -ge $Arguments.Count) {
+            if ($index + 1 -ge $argumentsArray.Count) {
                 Write-Stderr "[swap-env] После --type ожидается значение. $(Get-HelpHint)"
                 exit 2
             }
 
-            $requestedTypes.Add($Arguments[$index + 1])
+            $requestedTypes.Add($argumentsArray[$index + 1])
             $index++
         }
         "-t" {
-            if ($index + 1 -ge $Arguments.Count) {
+            if ($index + 1 -ge $argumentsArray.Count) {
                 Write-Stderr "[swap-env] После -t ожидается значение. $(Get-HelpHint)"
                 exit 2
             }
 
-            $requestedTypes.Add($Arguments[$index + 1])
+            $requestedTypes.Add($argumentsArray[$index + 1])
             $index++
         }
         { $_ -like "--type=*" } {
@@ -800,13 +883,13 @@ catch {
 
 $script:AggregateHints = ($selectedTypes.Count -eq $allTypes.Count)
 $platform = Get-CurrentPlatform
-$states = foreach ($typeName in $selectedTypes) {
+$states = @(foreach ($typeName in $selectedTypes) {
     Get-TypeState -TypeName $typeName -Platform $platform
-}
+})
 
 switch ($commandName) {
     "status" {
-        Write-StatusReport -States $states -Platform $platform
+        Write-StatusReport -States @($states) -Platform $platform
         exit 0
     }
     "validate" {
@@ -826,9 +909,29 @@ switch ($commandName) {
     }
 }
 
+if ($commandName -eq "validate") {
+    Write-Host "[swap-env] среда: '$platform'"
+}
+
 if ($script:ErrorsFound.Count -gt 0) {
-    foreach ($message in $script:ErrorsFound) {
-        Write-Stderr $message
+    $maxTypeLen = ($script:ErrorsFound | ForEach-Object { $_.TypeName.Length } | Measure-Object -Maximum).Maximum
+    $reset = if (Get-Variable -Name PSStyle -Scope Global -ErrorAction SilentlyContinue) { $PSStyle.Reset } else { "" }
+    Write-Stderr "[swap-env] Ниже список различий. Для полной информации: $(Get-ScriptCommandPrefix) status"
+    foreach ($err in $script:ErrorsFound) {
+        $prefix = if ($err.DryRun) { "[swap-env] dry-run: " } else { "[swap-env] " }
+        $padded = $err.TypeName.PadRight($maxTypeLen)
+        if ($err.Message) {
+            [Console]::Error.WriteLine("${prefix}${padded}: $($err.Message)$($err.Hint)")
+        }
+        else {
+            $colorActive = Get-StatusColor -Status $err.StatusActive
+            $colorEnv = Get-StatusColor -Status $err.StatusCurrentEnv
+            $padActive = " " * [Math]::Max(0, $script:StatusMaxLen - $err.StatusActive.Length)
+            $padEnv = " " * [Math]::Max(0, $script:StatusMaxLen - $err.StatusCurrentEnv.Length)
+            $partActive = if ($colorActive) { "$colorActive$($err.StatusActive)$reset" } else { $err.StatusActive }
+            $partEnv = if ($colorEnv) { "$colorEnv$($err.StatusCurrentEnv)$reset" } else { $err.StatusCurrentEnv }
+            [Console]::Error.WriteLine("${prefix}${padded}: $partActive$padActive $partEnv$padEnv$($err.Hint)")
+        }
     }
 }
 
@@ -845,10 +948,10 @@ if ($script:HasMismatch) {
 switch ($commandName) {
     "validate" {
         if ($dryRun) {
-            Write-Host "[swap-env] dry-run: все запрошенные типы синхронизированы для среды '$platform'."
+            Write-Host "[swap-env] dry-run: различий нет."
         }
         else {
-            Write-Host "[swap-env] validate: все запрошенные типы синхронизированы для среды '$platform'."
+            Write-Host "[swap-env] validate: различий нет."
         }
     }
     "save" {
