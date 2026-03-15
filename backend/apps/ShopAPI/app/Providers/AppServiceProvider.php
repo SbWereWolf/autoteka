@@ -18,8 +18,10 @@ class AppServiceProvider extends ServiceProvider
             return;
         }
 
+/*
         DB::statement('PRAGMA foreign_keys = ON');
         DB::statement('PRAGMA busy_timeout = 5000');
         DB::statement('PRAGMA journal_mode = WAL');
+        */
     }
 }

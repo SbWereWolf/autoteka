@@ -34,15 +34,26 @@ return [
         'sqlite' => [
             'driver' => 'sqlite',
             'url' => env('DB_URL'),
-            'database' => env('DB_DATABASE', (function (): string {
-                $shared = realpath(base_path('../../database/database.sqlite'));
+            'database' => realpath(
+                env(
+                    'DB_DATABASE',
+                    (function (): string {
+                        $shared = realpath(
+                            base_path(
+                                '../../database/database.sqlite'
+                            )
+                        );
 
-                return $shared === false ? base_path('../../database/database.sqlite') : $shared;
-            })()),
+                        return $shared === false ? base_path(
+                            '../../database/database.sqlite'
+                        ) : $shared;
+                    })()
+                )
+            ),
             'prefix' => '',
-            'foreign_key_constraints' => env('DB_FOREIGN_KEYS', true),
-            'busy_timeout' => null,
-            'journal_mode' => null,
+            'foreign_key_constraints' => true,
+            'busy_timeout' => 5000,
+            'journal_mode' => 'WAL',
             'synchronous' => null,
             'transaction_mode' => 'DEFERRED',
         ],
