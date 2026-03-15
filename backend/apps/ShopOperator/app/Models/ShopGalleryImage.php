@@ -10,6 +10,14 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @property int $id
+ * @property int $shop_id
+ * @property string $file_path
+ * @property string|null $original_name
+ * @property int $sort
+ * @property bool $is_published
+ */
 class ShopGalleryImage extends Model
 {
     use HasFactory;

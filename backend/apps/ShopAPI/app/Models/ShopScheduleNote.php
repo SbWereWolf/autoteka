@@ -10,6 +10,13 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @property int $id
+ * @property int $shop_id
+ * @property string $text
+ * @property int $sort
+ * @property bool $is_published
+ */
 class ShopScheduleNote extends Model
 {
     use HasFactory;

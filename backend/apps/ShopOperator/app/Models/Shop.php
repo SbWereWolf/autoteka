@@ -14,6 +14,31 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+/**
+ * @property int $id
+ * @property string $code
+ * @property string $title
+ * @property int $sort
+ * @property int $city_id
+ * @property string $description
+ * @property string|null $site_url
+ * @property string|null $thumb_path
+ * @property string|null $thumb_original_name
+ * @property bool $is_published
+ * @property array<int, array{category_id: int}> $category_links
+ * @property array<int, array{feature_id: int}> $feature_links
+ * @property array<int, array{id: int, contact_type_id: int, value: string, sort: int, is_published: bool}> $contact_entries
+ * @property array<int, array{id: int, file_path: string, sort: int, is_published: bool}> $gallery_entries
+ * @property array<int, array{id: int, weekday: int, time_from: string, time_to: string, sort: int, is_published: bool}> $schedule_entries
+ * @property string $schedule_note_text
+ * @property \Illuminate\Database\Eloquent\Collection<int, Category> $categories
+ * @property \Illuminate\Database\Eloquent\Collection<int, Feature> $features
+ * @property \Illuminate\Database\Eloquent\Collection<int, ShopContact> $contacts
+ * @property \Illuminate\Database\Eloquent\Collection<int, ShopGalleryImage> $galleryImages
+ * @property \Illuminate\Database\Eloquent\Collection<int, ShopSchedule> $schedules
+ * @property \Illuminate\Database\Eloquent\Collection<int, ShopScheduleNote> $scheduleNotes
+ * @property City|null $city
+ */
 class Shop extends Model
 {
     use HasFactory;

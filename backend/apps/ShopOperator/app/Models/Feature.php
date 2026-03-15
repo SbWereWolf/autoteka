@@ -11,6 +11,13 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
+/**
+ * @property int $id
+ * @property string $code
+ * @property string $title
+ * @property int $sort
+ * @property bool $is_published
+ */
 class Feature extends Model
 {
     use HasFactory;

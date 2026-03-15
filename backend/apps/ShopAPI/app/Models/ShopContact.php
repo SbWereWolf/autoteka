@@ -10,6 +10,14 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @property int $id
+ * @property int $shop_id
+ * @property int $contact_type_id
+ * @property string $value
+ * @property int $sort
+ * @property bool $is_published
+ */
 class ShopContact extends Model
 {
     use HasFactory;
