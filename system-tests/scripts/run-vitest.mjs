@@ -34,6 +34,8 @@ if (!profileMap[profile]) {
 
 const profileInfo = profileMap[profile];
 const repoRoot = fileURLToPath(new URL("../..", import.meta.url));
+const systemTestsDir = path.join(repoRoot, "system-tests");
+const systemTestsEnvPath = path.join(systemTestsDir, ".env");
 
 const parseEnvFile = (filePath) => {
   if (!fs.existsSync(filePath)) return {};
@@ -52,35 +54,41 @@ const parseEnvFile = (filePath) => {
   return parsed;
 };
 
-const deployEnvPath =
-  process.env.AUTOTEKA_DEPLOY_ENV_FILE ??
-  path.join(repoRoot, "deploy", "runtime", ".env");
-const devEnvPath =
-  process.env.AUTOTEKA_DEV_ENV_FILE ??
-  path.join(repoRoot, "deploy", "runtime", ".env");
+if (!fs.existsSync(systemTestsEnvPath)) {
+  console.error(
+    "[run-vitest] Не найден system-tests/.env. Создайте: 1) скопируйте system-tests/example.env в system-tests/win.env и system-tests/nix.env; 2) заполните INFRA_ROOT; 3) выполните: pwsh ./scripts/swap-env.ps1 load -t system-tests-env",
+  );
+  process.exit(3);
+}
 
-const deployEnvFallback = path.join(
-  repoRoot,
-  "deploy",
-  "bootstrap",
-  "config",
-  "deploy.example.env",
-);
-const devEnvFallback = path.join(
-  repoRoot,
-  "deploy",
-  "bootstrap",
-  "config",
-  "dev.example.env",
-);
+const systemTestsEnv = parseEnvFile(systemTestsEnvPath);
+const infraRoot = systemTestsEnv.INFRA_ROOT?.trim();
 
-const resolvedDeployEnvPath = fs.existsSync(deployEnvPath)
-  ? deployEnvPath
-  : deployEnvFallback;
-const resolvedDevEnvPath = fs.existsSync(devEnvPath) ? devEnvPath : devEnvFallback;
+if (!infraRoot) {
+  console.error(
+    "[run-vitest] В system-tests/.env не задан INFRA_ROOT. Задайте абсолютный путь к каталогу infrastructure (например: INFRA_ROOT=C:\\path\\to\\infrastructure).",
+  );
+  process.exit(3);
+}
 
-const deployEnv = parseEnvFile(resolvedDeployEnvPath);
-const devEnv = parseEnvFile(resolvedDevEnvPath);
+const deployEnvPath = path.join(infraRoot, "prod.test.env");
+const devEnvPath = path.join(infraRoot, "dev.test.env");
+
+if (profileInfo.stack === "dev" && !fs.existsSync(devEnvPath)) {
+  console.error(
+    `[run-vitest] Не найден ${devEnvPath}. Создайте копию: cp ${path.join(infraRoot, "dev.env")} ${devEnvPath} (или аналог для Windows).`,
+  );
+  process.exit(3);
+}
+if (profileInfo.stack === "prod" && !fs.existsSync(deployEnvPath)) {
+  console.error(
+    `[run-vitest] Не найден ${deployEnvPath}. Создайте копию: cp ${path.join(infraRoot, "prod.env")} ${deployEnvPath} (или аналог для Windows).`,
+  );
+  process.exit(3);
+}
+
+const deployEnv = parseEnvFile(deployEnvPath);
+const devEnv = parseEnvFile(devEnvPath);
 
 const stackDefaultBaseUrl = {
   local: "http://127.0.0.1:8081",
@@ -109,8 +117,8 @@ const resolveBaseUrl = () => {
 };
 
 const composeFileForStack = (stack) => {
-  if (stack === "prod") return path.join(repoRoot, "deploy", "runtime", "docker-compose.yml");
-  if (stack === "dev") return path.join(repoRoot, "deploy", "runtime", "docker-compose.dev.yml");
+  if (stack === "prod") return path.join(infraRoot, "runtime", "docker-compose.yml");
+  if (stack === "dev") return path.join(infraRoot, "runtime", "docker-compose.dev.yml");
   return null;
 };
 

@@ -2,6 +2,25 @@
 
 Единый набор системных тест-кейсов для quick и UI профилей.
 
+## Локальная конфигурация
+
+1. Скопируйте `system-tests/example.env` в `system-tests/win.env` и
+   `system-tests/nix.env`.
+2. Заполните `INFRA_ROOT` — абсолютный путь к каталогу infrastructure
+   (для Win и nix — разные пути).
+3. Выполните: `pwsh ./scripts/swap-env.ps1 load -t system-tests-env`
+   (или `bash ./scripts/swap-env.sh load -t system-tests-env`).
+
+Для профилей `quick-dev`, `ui-headless-dev`, `ui-headless-prod`,
+`ui-headed-prod` дополнительно нужны:
+
+- `infrastructure/dev.test.env` — копия из `infrastructure/dev.env`
+  (для dev-профилей).
+- `infrastructure/prod.test.env` — копия из `infrastructure/prod.env`
+  (для prod-профилей).
+
+Эти файлы не коммитятся (в `.gitignore`).
+
 ## Профили запуска
 
 - `quick-local`: без Docker, HTTP к локальному серверу (например
