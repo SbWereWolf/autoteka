@@ -1,48 +1,16 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# INFRA_ROOT и AUTOTEKA_ROOT — только из аргументов или переменных окружения
-while [ $# -gt 0 ]; do
-  case "$1" in
-    --infra-root=*)
-      INFRA_ROOT="${1#--infra-root=}"
-      shift
-      ;;
-    --autoteka-root=*)
-      AUTOTEKA_ROOT="${1#--autoteka-root=}"
-      shift
-      ;;
-    *)
-      shift
-      ;;
-  esac
-done
-
-export INFRA_ROOT="${INFRA_ROOT:-}"
-export AUTOTEKA_ROOT="${AUTOTEKA_ROOT:-}"
-
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/../init-roots.sh"
+autoteka_init_roots "$@"
+set -- "${AUTOTEKA_ARGS[@]}"
 if [ "$(id -u)" -ne 0 ]; then
   echo "Run as root: sudo $0" >&2
   exit 1
 fi
 
-# Проверка INFRA_ROOT для поиска .env (до загрузки)
-if [ -z "${INFRA_ROOT}" ]; then
-  echo "INFRA_ROOT не задан. Задайте абсолютный путь." >&2
-  echo "Пример через переменные окружения:" >&2
-  echo "  export INFRA_ROOT=/opt/vue-app/infrastructure" >&2
-  echo "  export AUTOTEKA_ROOT=/opt/vue-app" >&2
-  echo "  sudo $0" >&2
-  echo "" >&2
-  echo "Пример через аргументы:" >&2
-  echo "  sudo $0 --infra-root=/opt/vue-app/infrastructure --autoteka-root=/opt/vue-app" >&2
-  exit 2
-fi
-if [[ "${INFRA_ROOT}" != /* ]]; then
-  echo "INFRA_ROOT задан относительным путём. Требуется абсолютный путь." >&2
-  echo "Пример: export INFRA_ROOT=/opt/vue-app/infrastructure" >&2
-  exit 2
-fi
+# INFRA_ROOT и AUTOTEKA_ROOT уже проверены в autoteka_init_roots; здесь только ищем .env.
 
 INFRA_ENV="$INFRA_ROOT/.env"
 if [ ! -f "$INFRA_ENV" ]; then
@@ -52,15 +20,11 @@ if [ ! -f "$INFRA_ENV" ]; then
 fi
 
 set -a
-# shellcheck disable=SC1090
 source "$INFRA_ENV" || { echo "Ошибка загрузки $INFRA_ENV" >&2; exit 1; }
 set +a
 
-# shellcheck disable=SC1090
-source "$INFRA_ROOT/lib/bootstrap.sh"
 validate_required_paths
 
-# shellcheck disable=SC1090
 source "$INFRA_ROOT/lib/laravel-runtime.sh"
 export DOCKER_BUILDKIT="${DOCKER_BUILDKIT:-1}"
 export COMPOSE_DOCKER_CLI_BUILD="${COMPOSE_DOCKER_CLI_BUILD:-1}"

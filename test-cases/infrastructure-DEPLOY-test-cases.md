@@ -296,7 +296,7 @@
   библиотеки `$INFRA_ROOT/lib/*.sh`, монолитный `$INFRA_ROOT/lib/_common.sh`
   удалён, а скрипты подключают только нужные зависимости.
 - Проверка:
-  1. Проверить наличие `bootstrap.sh`, `laravel-runtime.sh`,
+  1. Проверить наличие `laravel-runtime.sh`,
      `dry-run.sh`, `telegram.sh`, `health-state.sh`.
   2. Убедиться, что `_common.sh` отсутствует.
   3. Проверить `source`-подключения в deploy-скриптах.

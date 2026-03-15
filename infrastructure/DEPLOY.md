@@ -18,11 +18,12 @@
 
 1. Переменные окружения (например, `export INFRA_ROOT=...`).
 2. Аргументы запуска (если скрипт поддерживает `--infra-root=` и `--autoteka-root=`).
+3. Загрузка из файла (например, `source prod.env`).
 
-Скрипты **не определяют** эти пути по своему расположению. При пустых или
+При пустых или
 относительных путях скрипт завершается с кодом 2 и выводит примеры запуска.
 
-Пример для install.sh:
+Пример для install.sh (переменные окружения):
 
 ```bash
 export INFRA_ROOT=/opt/vue-app/infrastructure
@@ -30,7 +31,16 @@ export AUTOTEKA_ROOT=/opt/vue-app
 sudo ./infrastructure/bootstrap/install.sh
 ```
 
-или:
+или загрузка из файла (prod.env содержит INFRA_ROOT и AUTOTEKA_ROOT):
+
+```bash
+set -a
+source ./infrastructure/prod.env
+set +a
+sudo -E ./infrastructure/bootstrap/install.sh
+```
+
+или аргументы:
 
 ```bash
 sudo ./infrastructure/bootstrap/install.sh --infra-root=/opt/vue-app/infrastructure --autoteka-root=/opt/vue-app
@@ -115,18 +125,29 @@ docker compose \
 
 Перед первым запуском install.sh:
 
-1. Задайте `INFRA_ROOT` и `AUTOTEKA_ROOT` (env или аргументы).
+1. Задайте `INFRA_ROOT` и `AUTOTEKA_ROOT` (env, аргументы или загрузка из файла).
 2. Создайте .env из prod.env:
 
 ```bash
-export INFRA_ROOT=/opt/vue-app/infrastructure
-export AUTOTEKA_ROOT=/opt/vue-app
+export INFRA_ROOT=/opt/autoteka/infrastructure
+export AUTOTEKA_ROOT=/opt/autoteka
 cp -n "$INFRA_ROOT/prod.env" "$INFRA_ROOT/.env"
 ```
 
 3. Отредактируйте .env при необходимости.
-4. Запустите install: `sudo ./infrastructure/bootstrap/install.sh` (или с
-   `--infra-root=` и `--autoteka-root=`).
+4. Запустите install. Варианты:
+
+   Через env:
+   `sudo ./infrastructure/bootstrap/install.sh` (после export INFRA_ROOT и AUTOTEKA_ROOT).
+
+   Через загрузку из файла:
+   `set -a \
+   && source ./infrastructure/prod.env \
+   && set +a \
+   && sudo -E ./infrastructure/bootstrap/install.sh`
+
+   Через аргументы:
+   `sudo ./infrastructure/bootstrap/install.sh --infra-root=/opt/vue-app/infrastructure --autoteka-root=/opt/vue-app`
 
 install.sh скопирует .env в /etc/autoteka/options.env. После установки
 изменяйте значения только в /etc/autoteka/options.env.

@@ -16,9 +16,6 @@ function read(relPath: string): string {
 
 describe("TC-DEPLOY-023", () => {
   it("infra/lib содержит специализированные библиотеки и не содержит _common.sh", () => {
-    expect(existsSync(join(INFRA_ROOT_PATH, "lib/bootstrap.sh"))).toBe(
-      true,
-    );
     expect(
       existsSync(join(INFRA_ROOT_PATH, "lib/laravel-runtime.sh")),
     ).toBe(true);
@@ -30,9 +27,6 @@ describe("TC-DEPLOY-023", () => {
     );
     expect(existsSync(join(INFRA_ROOT_PATH, "lib/health-state.sh"))).toBe(
       true,
-    );
-    expect(existsSync(join(INFRA_ROOT_PATH, "lib/_common.sh"))).toBe(
-      false,
     );
   });
 

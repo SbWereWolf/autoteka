@@ -271,16 +271,18 @@ apt update && apt install -y git
 mkdir -p /opt/vue-app
 cd /opt/vue-app
 git clone <YOUR_REPO_URL> .
-export INFRA_ROOT=/opt/vue-app/infrastructure
-export AUTOTEKA_ROOT=/opt/vue-app
-cp -n "$INFRA_ROOT/prod.env" "$INFRA_ROOT/.env"
+cp -n ./infrastructure/prod.env ./infrastructure/.env
 # при необходимости отредактировать .env
 chmod +x ./infrastructure/bootstrap/install.sh
+set -a
+source ./infrastructure/prod.env
+set +a
 sudo -E ./infrastructure/bootstrap/install.sh
 autoteka deploy
 ```
 
-`INFRA_ROOT` и `AUTOTEKA_ROOT` обязательны: задайте их через env или
+`INFRA_ROOT` и `AUTOTEKA_ROOT` обязательны: задайте их через env,
+загрузку из файла (`set -a; source prod.env; set +a; sudo -E ...`) или
 аргументы `--infra-root=` и `--autoteka-root=`. См. [DEPLOY § Контракты
 путей](../../infrastructure/DEPLOY.md#контракты-путей).
 

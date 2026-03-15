@@ -5,8 +5,7 @@ ENV_FILE="/etc/autoteka/options.env"
 
 load_env_if_present() {
   if [ -f "$ENV_FILE" ]; then
-    # shellcheck disable=SC1090
-    set -a
+        set -a
     source "$ENV_FILE" || true
     set +a
   fi

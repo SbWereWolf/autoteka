@@ -1,33 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# INFRA_ROOT и AUTOTEKA_ROOT — только из аргументов или переменных окружения
-if [ -f /etc/autoteka/options.env ]; then
-  set -a
-  # shellcheck disable=SC1090
-  source /etc/autoteka/options.env || true
-  set +a
-fi
-_INFRA_ARGS=()
-while [ $# -gt 0 ]; do
-  case "$1" in
-    --infra-root=*) INFRA_ROOT="${1#--infra-root=}"; shift ;;
-    --autoteka-root=*) AUTOTEKA_ROOT="${1#--autoteka-root=}"; shift ;;
-    *) _INFRA_ARGS+=("$1"); shift ;;
-  esac
-done
-set -- "${_INFRA_ARGS[@]}"
-export INFRA_ROOT="${INFRA_ROOT:-}"
-export AUTOTEKA_ROOT="${AUTOTEKA_ROOT:-}"
-if [ -z "${INFRA_ROOT}" ] || [[ "${INFRA_ROOT}" != /* ]] || \
-   [ -z "${AUTOTEKA_ROOT}" ] || [[ "${AUTOTEKA_ROOT}" != /* ]]; then
-  echo "INFRA_ROOT и AUTOTEKA_ROOT должны быть заданы абсолютными путями." >&2
-  echo "Пример: export INFRA_ROOT=/opt/vue-app/infrastructure" >&2
-  echo "        export AUTOTEKA_ROOT=/opt/vue-app" >&2
-  echo "  sudo autoteka uninstall <mode>" >&2
-  exit 2
-fi
-
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/../init-roots.sh"
+autoteka_init_roots "$@"
+set -- "${AUTOTEKA_ARGS[@]}"
 MODE="${1:-soft}"
 shift || true
 
@@ -72,9 +49,7 @@ if [ "$(id -u)" -ne 0 ]; then
   exit 1
 fi
 
-# shellcheck disable=SC1090
 source "$INFRA_ROOT/lib/laravel-runtime.sh"
-load_autoteka_env
 
 UNITS=(
   autoteka.service

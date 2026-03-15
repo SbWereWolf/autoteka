@@ -7,6 +7,18 @@ RESOURCE_STATE="/var/lib/server-watchdog.state"
 REBOOT_STATE="/var/lib/server-watchdog.reboot"
 LOCK_FILE="/var/lock/autoteka-server-watchdog.lock"
 
+WEB_CONTAINER="vue-app"
+PHP_CONTAINER="autoteka-php"
+COMPOSE_UNIT="autoteka.service"
+
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/../../init-roots.sh"
+autoteka_init_roots "$@"
+set -- "${AUTOTEKA_ARGS[@]}"
+source "$INFRA_ROOT/lib/laravel-runtime.sh"
+source "$INFRA_ROOT/lib/health-state.sh"
+load_telegram_env
+
 # ===== host/resource settings =====
 LOAD_LIMIT="${WATCHDOG_LOAD_LIMIT}"
 RAM_LIMIT="${WATCHDOG_RAM_LIMIT}"
@@ -34,39 +46,12 @@ BACKEND_MAX_REPAIRS="${WATCHDOG_BACKEND_MAX_REPAIRS}"
 ADMIN_MAX_REPAIRS="${WATCHDOG_ADMIN_MAX_REPAIRS}"
 API_MAX_REPAIRS="${WATCHDOG_API_MAX_REPAIRS}"
 
-WEB_CONTAINER="vue-app"
-PHP_CONTAINER="autoteka-php"
-COMPOSE_UNIT="autoteka.service"
 NGINX_REPAIR_VERIFY_TIMEOUT="${WATCHDOG_NGINX_REPAIR_VERIFY_TIMEOUT}"
 PHP_REPAIR_VERIFY_TIMEOUT="${WATCHDOG_PHP_REPAIR_VERIFY_TIMEOUT}"
 CONTAINER_REPAIR_VERIFY_INTERVAL="${WATCHDOG_CONTAINER_REPAIR_VERIFY_INTERVAL}"
 BACKEND_UP_URL="${BACKEND_UP_URL}"
 API_HEALTH_URL="${API_HEALTH_URL}"
 ADMIN_HEALTH_URL="${ADMIN_HEALTH_URL}"
-
-# INFRA_ROOT и AUTOTEKA_ROOT — только из аргументов или переменных окружения
-if [ -f /etc/autoteka/options.env ]; then
-  set -a
-  # shellcheck disable=SC1090
-  source /etc/autoteka/options.env || true
-  set +a
-fi
-export INFRA_ROOT="${INFRA_ROOT:-}"
-export AUTOTEKA_ROOT="${AUTOTEKA_ROOT:-}"
-if [ -z "${INFRA_ROOT}" ] || [[ "${INFRA_ROOT}" != /* ]] || \
-   [ -z "${AUTOTEKA_ROOT}" ] || [[ "${AUTOTEKA_ROOT}" != /* ]]; then
-  echo "INFRA_ROOT и AUTOTEKA_ROOT должны быть заданы абсолютными путями." >&2
-  echo "Пример: export INFRA_ROOT=/opt/vue-app/infrastructure" >&2
-  echo "        export AUTOTEKA_ROOT=/opt/vue-app" >&2
-  echo "  autoteka watchdog" >&2
-  exit 2
-fi
-# shellcheck disable=SC1090
-source "$INFRA_ROOT/lib/laravel-runtime.sh"
-# shellcheck disable=SC1090
-source "$INFRA_ROOT/lib/health-state.sh"
-load_autoteka_env
-load_telegram_env
 
 DRY_RUN=0
 SCRIPT_ID="server-watchdog"

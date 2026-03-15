@@ -5,8 +5,7 @@ if [ -z "${AUTOTEKA_LIB_TELEGRAM_SH:-}" ]; then
   AUTOTEKA_LIB_TELEGRAM_SH=1
 
   # INFRA_ROOT должен быть задан вызывающим скриптом (env или args)
-  # shellcheck disable=SC1090
-  source "$INFRA_ROOT/lib/dry-run.sh"
+    source "$INFRA_ROOT/lib/dry-run.sh"
 
   TELEGRAM_ENV_FILE_DEFAULT="/etc/autoteka/telegram.env"
   TELEGRAM_LOCK_DIR_DEFAULT="${TMPDIR:-/tmp}/autoteka-telegram-locks"
@@ -34,8 +33,7 @@ if [ -z "${AUTOTEKA_LIB_TELEGRAM_SH:-}" ]; then
 
     if [ -z "${TELEGRAM_TOKEN:-}" ] || [ -z "${TELEGRAM_CHAT:-}" ]; then
       if [ -f "$env_file" ]; then
-        # shellcheck disable=SC1090
-        set -a
+                set -a
         source "$env_file" || true
         set +a
       fi

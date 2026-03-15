@@ -1,23 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# INFRA_ROOT и AUTOTEKA_ROOT — только из аргументов или переменных окружения
-if [ -f /etc/autoteka/options.env ]; then
-  set -a
-  # shellcheck disable=SC1090
-  source /etc/autoteka/options.env || true
-  set +a
-fi
-export INFRA_ROOT="${INFRA_ROOT:-}"
-export AUTOTEKA_ROOT="${AUTOTEKA_ROOT:-}"
-if [ -z "${INFRA_ROOT}" ] || [[ "${INFRA_ROOT}" != /* ]] || \
-   [ -z "${AUTOTEKA_ROOT}" ] || [[ "${AUTOTEKA_ROOT}" != /* ]]; then
-  echo "INFRA_ROOT и AUTOTEKA_ROOT должны быть заданы абсолютными путями." >&2
-  exit 2
-fi
-# shellcheck disable=SC1090
-source "$INFRA_ROOT/lib/bootstrap.sh"
-load_autoteka_env
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/../init-roots.sh"
+autoteka_init_roots "$@"
+set -- "${AUTOTEKA_ARGS[@]}"
 
 DRY_RUN="no"
 if [ "${1:-}" = "--dry-run" ] || [ "${1:-}" = "-n" ]; then

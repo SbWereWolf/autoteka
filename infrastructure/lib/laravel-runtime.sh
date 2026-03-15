@@ -4,9 +4,7 @@ set -euo pipefail
 if [ -z "${AUTOTEKA_LIB_LARAVEL_RUNTIME_SH:-}" ]; then
   AUTOTEKA_LIB_LARAVEL_RUNTIME_SH=1
 
-  # INFRA_ROOT должен быть задан вызывающим скриптом (env или args)
-  # shellcheck disable=SC1090
-  source "$INFRA_ROOT/lib/bootstrap.sh"
+  # INFRA_ROOT должен быть задан и провалидирован вызывающим скриптом.
 
   compose() {
     /usr/bin/docker compose -f "$INFRA_ROOT/runtime/docker-compose.yml" "$@"

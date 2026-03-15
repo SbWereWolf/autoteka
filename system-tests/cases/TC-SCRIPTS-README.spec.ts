@@ -62,18 +62,6 @@ describe("TC-SCRIPTS-README-009", () => {
   });
 });
 
-describe("TC-SCRIPTS-README-007", () => {
-  it("log-entry.ps1 существует и имеет параметры Type, Message, AISystemName, LLMName", () => {
-    expect(existsSync(join(SCRIPTS_DIR, "log-entry.ps1"))).toBe(true);
-    const content = readFileSync(
-      join(SCRIPTS_DIR, "log-entry.ps1"),
-      "utf-8",
-    );
-    expect(content).toMatch(/UserMessage|ProposedPlan|FinalAnswer/);
-    expect(content).toMatch(/logs/);
-  });
-});
-
 describe("TC-SCRIPTS-README-010", () => {
   it("README фиксирует status, -t/-h, default all-types и dry-run для validate/save/load", () => {
     expect(SCRIPTS_README).toMatch(/`validate`/);

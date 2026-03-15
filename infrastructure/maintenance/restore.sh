@@ -5,34 +5,10 @@ set -euo pipefail
 # Restore recreates configuration, optionally restores project data, then resets
 # watchdog/health runtime state so monitoring starts from a clean baseline.
 
-# INFRA_ROOT и AUTOTEKA_ROOT — только из аргументов или переменных окружения
-if [ -f /etc/autoteka/options.env ]; then
-  set -a
-  # shellcheck disable=SC1090
-  source /etc/autoteka/options.env || true
-  set +a
-fi
-_INFRA_ARGS=()
-while [ $# -gt 0 ]; do
-  case "$1" in
-    --infra-root=*) INFRA_ROOT="${1#--infra-root=}"; shift ;;
-    --autoteka-root=*) AUTOTEKA_ROOT="${1#--autoteka-root=}"; shift ;;
-    *) _INFRA_ARGS+=("$1"); shift ;;
-  esac
-done
-set -- "${_INFRA_ARGS[@]}"
-export INFRA_ROOT="${INFRA_ROOT:-}"
-export AUTOTEKA_ROOT="${AUTOTEKA_ROOT:-}"
-if [ -z "${INFRA_ROOT}" ] || [[ "${INFRA_ROOT}" != /* ]] || \
-   [ -z "${AUTOTEKA_ROOT}" ] || [[ "${AUTOTEKA_ROOT}" != /* ]]; then
-  echo "INFRA_ROOT и AUTOTEKA_ROOT должны быть заданы абсолютными путями." >&2
-  echo "Пример: export INFRA_ROOT=/opt/vue-app/infrastructure" >&2
-  echo "        export AUTOTEKA_ROOT=/opt/vue-app" >&2
-  echo "  sudo $0 <archive>" >&2
-  echo "  sudo $0 <archive> --infra-root=/opt/vue-app/infrastructure --autoteka-root=/opt/vue-app" >&2
-  exit 2
-fi
-
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/../init-roots.sh"
+autoteka_init_roots "$@"
+set -- "${AUTOTEKA_ARGS[@]}"
 DRY_RUN="no"
 FORCE="no"
 PROFILE="full"
@@ -283,8 +259,7 @@ fi
 # Resolve TARGET_ROOT for project files
 if [ -z "$TARGET_ROOT" ]; then
   if [ -f "$BACKUP_ROOT/etc/autoteka/options.env" ]; then
-    # shellcheck disable=SC1090
-    set -a
+        set -a
     source "$BACKUP_ROOT/etc/autoteka/options.env" || true
     set +a
     TARGET_ROOT="${AUTOTEKA_ROOT:-}"

@@ -5,10 +5,8 @@ if [ -z "${AUTOTEKA_LIB_HEALTH_STATE_SH:-}" ]; then
   AUTOTEKA_LIB_HEALTH_STATE_SH=1
 
   # INFRA_ROOT должен быть задан вызывающим скриптом (env или args)
-  # shellcheck disable=SC1090
-  source "$INFRA_ROOT/lib/dry-run.sh"
-  # shellcheck disable=SC1090
-  source "$INFRA_ROOT/lib/telegram.sh"
+    source "$INFRA_ROOT/lib/dry-run.sh"
+    source "$INFRA_ROOT/lib/telegram.sh"
 
   HEALTH_STATE_DIR_DEFAULT="/var/lib/server-watchdog/health"
 
