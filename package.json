@@ -8,8 +8,6 @@
     "lint:strict": "bash ./lint/lint.sh -Path . -Mode Strict",
     "lint:dry": "bash ./lint/lint.sh -Path . -Mode DryRun",
     "format": "bash ./lint/lint.sh -Path . -Mode Warn",
-    "quality:phpstan": "pwsh ./scripts/phpstan-check.ps1",
-    "quality:phpstan:bash": "bash ./scripts/phpstan-check.sh",
     "test:frontend:parallel": "cd frontend && npm run test:unit:parallel",
     "test:backend:parallel": "npx concurrently --kill-others-on-fail --names \"shop-api,shop-operator\" \"cd backend/apps/ShopAPI && composer test:parallel\" \"cd backend/apps/ShopOperator && composer test:parallel\"",
     "test:backend:pest:parallel": "npx concurrently --kill-others-on-fail --names \"shop-api-pest,shop-operator-pest\" \"cd backend/apps/ShopAPI && composer test:pest:parallel\" \"cd backend/apps/ShopOperator && composer test:pest:parallel\"",
