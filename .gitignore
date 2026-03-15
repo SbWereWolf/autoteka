@@ -15,16 +15,23 @@
 !backup/README.md
 
 /lint/.env
-/lint/wsl.env
+/lint/nix.env
 /lint/win.env
 
 scripts/.env
-/scripts/wsl.env
+/scripts/nix.env
 /scripts/win.env
+
+/system-tests/.env
+/system-tests/win.env
+/system-tests/wsl.env
+
+/infrastructure/dev.test.env
+/infrastructure/prod.test.env
 
 node_modules
 **/node_modules.win/
-**/node_modules.wsl/
+**/node_modules.nix/
 
 /package-lock.json
 /frontend/package-lock.json
