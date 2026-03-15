@@ -88,7 +88,9 @@ final class AdminHttpCrudCreateValidationTest extends TestCase
                 'is_published' => '1',
             ])->assertStatus(302);
 
-            $model = $case['model']::query()->where('title', $case['title'])->firstOrFail();
+            /** @var class-string<\Illuminate\Database\Eloquent\Model> $modelClass */
+            $modelClass = $case['model'];
+            $model = $modelClass::query()->where('title', $case['title'])->firstOrFail();
             $this->assertNotSame($invalidCode, $model->code);
             $this->assertMatchesRegularExpression('/^[A-Za-z0-9_-]+$/', $model->code);
         }
