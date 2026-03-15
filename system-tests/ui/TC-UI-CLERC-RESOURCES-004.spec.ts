@@ -124,12 +124,6 @@ describe("TC-UI-CLERC-RESOURCES-004", () => {
         }
         const html = await page.content();
         expect(html.trim().length).toBeGreaterThan(0);
-        const hasLoginFallback =
-          html.includes('name="email"') &&
-          html.includes('name="password"');
-        if (hasLoginFallback) {
-          continue;
-        }
       }
     } finally {
       await closeWithTimeout(() => context.close(), 5000);

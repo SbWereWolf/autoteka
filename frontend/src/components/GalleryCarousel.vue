@@ -95,7 +95,7 @@
       class="absolute bottom-2 left-0 right-0 flex justify-center gap-1"
     >
       <div
-        v-for="(_g, i) in items"
+        v-for="(_, i) in items"
         :key="'dot' + i"
         class="h-1.5 w-1.5 rounded-full"
         :style="{

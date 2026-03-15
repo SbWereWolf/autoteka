@@ -155,24 +155,9 @@ async function copyJson() {
     null,
     2,
   );
-  try {
-    await navigator.clipboard.writeText(payload);
-    copied.value = true;
-    window.setTimeout(() => (copied.value = false), 900);
-  } catch {
-    const ta = document.createElement("textarea");
-    ta.value = payload;
-    ta.style.display = "none";
-    document.body.appendChild(ta);
-    ta.select();
-    try {
-      document.execCommand("copy");
-      copied.value = true;
-      window.setTimeout(() => (copied.value = false), 900);
-    } finally {
-      ta.remove();
-    }
-  }
+  await navigator.clipboard.writeText(payload);
+  copied.value = true;
+  window.setTimeout(() => (copied.value = false), 900);
 }
 
 onMounted(() => {
