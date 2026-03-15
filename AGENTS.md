@@ -178,10 +178,10 @@ If a skill instruction conflicts with this file:
 
 ## 8. Script exit codes policy (mandatory)
 
-0 = ok
-1 = error
-2 = arguments validation failed
-3 = missing dependency
+- 0 = ok
+- 1 = error
+- 2 = arguments validation failed
+- 3 = missing dependency
 
 ---
 

@@ -13,6 +13,8 @@
 - Перед запуском verify/linters active `lint/.env` должно быть
   синхронизировано с env-specific storage текущей среды через
   `scripts/swap-env.ps1` / `scripts/swap-env.sh`.
+- Перед запуском system-tests active `system-tests/.env` должно быть
+  синхронизировано через `swap-env load -t system-tests-env`.
 - Сам `swap-env` больше не выполняет авто-переключение: он либо
   проверяет состояние (`validate`), либо явно сохраняет (`save`) /
   загружает (`load`) артефакты текущей среды.
@@ -30,6 +32,11 @@
 
 - Конфиг раннера: `system-tests/scripts/run-vitest.mjs`.
 - Конфиг Vitest: `system-tests/vitest.config.ts`.
+- Env для раннера: `system-tests/.env` (содержит `INFRA_ROOT`).
+  Синхронизация через `swap-env load -t system-tests-env`.
+- Для dev/prod профилей нужны `infrastructure/dev.test.env` и
+  `infrastructure/prod.test.env` (копии из `dev.env`/`prod.env`,
+  gitignored).
 - Базовый URL задаётся:
   - через `BASE_URL` в окружении;
   - или через CLI-override: `--base-url=http://127.0.0.1:8081`

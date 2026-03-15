@@ -209,12 +209,13 @@
 
 ### TC-DEPLOY-017
 
-- Утверждение: success deploy (`DEPLOY_SUCCESS`) отправляет сообщение
-  с hash и `subject` раскатанного commit.
+- Утверждение: любое Telegram-уведомление содержит hash и `subject`
+  (первую строку коммита) в блоке version.
 - Проверка:
   1. Выполнить успешный deploy.
-  2. Проверить payload сообщения и записи в telegram log.
-- Ожидаемый результат: success-уведомление содержит hash и `subject`.
+  2. Проверить формат сообщений в format_telegram_message.
+  3. При успешном deploy — payload и записи в telegram log.
+- Ожидаемый результат: каждое уведомление содержит hash и `subject`.
 - Тип: automated
 - Каталог тестов: `infrastructure/tests`
 

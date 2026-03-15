@@ -117,7 +117,7 @@ cd backend && php artisan test && php artisan test --configuration=phpunit.reald
 | TC-DEPLOY-010       | Проверка `autoteka.service`, timer'ов, compose `ps`        | `systemctl` и `docker compose` на реальном хосте  |
 | TC-DEPLOY-014       | `/metrics/data.json` из watchdog + metrics-export          | Нужен запущенный deploy-контур и watchdog         |
 | TC-DEPLOY-016       | Telegram lock-механизм                                     | Внешняя зависимость Telegram API                  |
-| TC-DEPLOY-017       | Success deploy → Telegram                                  | Внешняя зависимость Telegram API                  |
+| TC-DEPLOY-017       | Любое Telegram-уведомление (hash + subject)                   | Внешняя зависимость Telegram API                  |
 | TC-DEPLOY-022       | `uninstall.sh` режимы soft/purge/nuke                      | Деструктивные операции, нужен изолированный стенд |
 | TC-CLERC-MANUAL-013 | Эскалация: оператор передаёт code/scope и вывод            | Процессный сценарий, не runtime                   |
 

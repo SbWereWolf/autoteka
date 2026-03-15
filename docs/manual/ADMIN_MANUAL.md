@@ -233,7 +233,8 @@ deploy создаст его из `frontend/example.env`.
   `REMOTE`, `HTTP_PORT` (см. [DEPLOY](../../infrastructure/DEPLOY.md)).
   Скрипты берут пути только из env или аргументов, не из расположения.
 - `/etc/autoteka/telegram.env` — Telegram-уведомления watchdog (см.
-  [DEPLOY](../../infrastructure/DEPLOY.md))
+  [DEPLOY](../../infrastructure/DEPLOY.md)). Каждое уведомление содержит hash
+  и subject коммита в блоке version.
 
 **Шаблоны в репозитории:**
 
@@ -242,7 +243,8 @@ deploy создаст его из `frontend/example.env`.
   install.sh копирует .env в `/etc/autoteka/options.env`. После установки
   изменяйте только options.env.
 - `$INFRA_ROOT/bootstrap/config/telegram.example.env` — шаблон для
-  `/etc/autoteka/telegram.env`. Содержит `TELEGRAM_TOKEN` и `TELEGRAM_CHAT`.
+  `/etc/autoteka/telegram.env`. Содержит `TELEGRAM_TOKEN`, `TELEGRAM_CHAT`,
+  `TELEGRAM_LOG_FILE`. В options.env — только `TELEGRAM_ENV_FILE`.
 
 ## 7. Запуск и рабочие инструкции администратора
 

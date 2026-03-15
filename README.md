@@ -100,7 +100,7 @@ npm run test:ui:mock   # offline UI на mock-данных
 npm run test:e2e       # online e2e (нужен backend)
 ```
 
-### Переключение настроек работу между Windows и WSL
+### Переключение настроек между Windows и nix
 
 В Системе есть платформенно зависимые настройки:
 
