@@ -13,7 +13,7 @@
 - `resolve-bash-runtime.ps1` — выбор bash-интерпретатора через
   `scripts/.env` и PATH.
 - `swap-env.ps1` / `swap-env.sh` — явная проверка, сохранение и загрузка
-  platform-specific артефактов для `win` и `wsl`.
+  platform-specific артефактов для `win` и `nix`.
 - `check-bash-runtime.ps1` — проверка запуска bash и синтаксиса
   `commit-with-message.sh`.
 - `log-entry.ps1` — запись журнала работ в `logs/` по правилам из
@@ -38,7 +38,7 @@
 ## Работа с platform env
 
 `swap-env.ps1` и `swap-env.sh` определяют текущую среду запуска (`win`
-или `wsl`) и работают только с артефактами этой среды. Автоматического
+или `nix`) и работают только с артефактами этой среды. Автоматического
 переключения нет: пользователь сам решает, когда проверять активное
 состояние, когда сохранять его в platform-specific storage и когда
 загружать сохранённый набор обратно в active-пути.
@@ -66,6 +66,7 @@
 
 - `root-lock`
 - `frontend-lock`
+- `system-tests-env`
 - `system-tests-lock`
 - `infrastructure-tests-lock`
 - `scripts-env`
@@ -82,11 +83,11 @@
 
 Сопоставление путей:
 
-- `*-env` — active `.env` и `win.env` / `wsl.env`
+- `*-env` — active `.env` и `win.env` / `nix.env`
 - `*-lock` — active `package-lock.json` и
-  `package-lock.win.json` / `package-lock.wsl.json`
+  `package-lock.win.json` / `package-lock.nix.json`
 - `*-node-modules` — active `node_modules` и
-  `node_modules.win` / `node_modules.wsl`
+  `node_modules.win` / `node_modules.nix`
 
 `validate` сравнивает:
 
