@@ -34,8 +34,8 @@ return [
         'sqlite' => [
             'driver' => 'sqlite',
             'url' => env('DB_URL'),
-            'database' => realpath(
-                env(
+            'database' => (function (): string {
+                $path = env(
                     'DB_DATABASE',
                     (function (): string {
                         $shared = realpath(
@@ -48,8 +48,10 @@ return [
                             '../../database/database.sqlite'
                         ) : $shared;
                     })()
-                )
-            ),
+                );
+
+                return realpath($path) ?: $path;
+            })(),
             'prefix' => '',
             'foreign_key_constraints' => true,
             'busy_timeout' => 5000,
