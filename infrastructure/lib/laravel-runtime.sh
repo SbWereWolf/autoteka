@@ -109,10 +109,10 @@ if [ -z "${AUTOTEKA_LIB_LARAVEL_RUNTIME_SH:-}" ]; then
     local root="${AUTOTEKA_ROOT:?}"
     local pair src dest
     for pair in \
-      "package-lock.wsl.json:package-lock.json" \
-      "frontend/package-lock.wsl.json:frontend/package-lock.json" \
-      "system-tests/package-lock.wsl.json:system-tests/package-lock.json" \
-      "infrastructure/tests/package-lock.wsl.json:infrastructure/tests/package-lock.json"; do
+      "package-lock.nix.json:package-lock.json" \
+      "frontend/package-lock.nix.json:frontend/package-lock.json" \
+      "system-tests/package-lock.nix.json:system-tests/package-lock.json" \
+      "infrastructure/tests/package-lock.nix.json:infrastructure/tests/package-lock.json"; do
       src="${pair%%:*}"
       dest="${pair##*:}"
       if [ -f "$root/$src" ] && [ ! -f "$root/$dest" ]; then

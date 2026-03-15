@@ -52,7 +52,9 @@ sudo ./infrastructure/bootstrap/install.sh --infra-root=/opt/vue-app/infrastruct
 - `$INFRA_ROOT/dev.env` — шаблон переменных для dev-среды.
 - `$INFRA_ROOT/.env` — создаётся из prod.env перед install, используется только install.sh.
 - `/etc/autoteka/options.env` — рабочий конфиг после установки; все изменения вносить в options.env.
-- `/etc/autoteka/telegram.env` — токен и chat id для уведомлений.
+- `/etc/autoteka/telegram.env` — `TELEGRAM_TOKEN`, `TELEGRAM_CHAT`,
+  `TELEGRAM_LOG_FILE`. В options.env — только `TELEGRAM_ENV_FILE` (путь к этому
+  файлу). Каждое уведомление содержит hash и subject в блоке version.
 - `$INFRA_ROOT/bootstrap/` — install/uninstall и host-конфиги.
 - `$INFRA_ROOT/runtime/` — compose, rollout и watch-changes.
 - `$INFRA_ROOT/repair/` — сценарии починки runtime и infra.

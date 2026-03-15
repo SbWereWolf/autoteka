@@ -5,7 +5,7 @@ SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/../init-roots.sh"
 autoteka_init_roots "$@"
 set -- "${AUTOTEKA_ARGS[@]}"
-source "$INFRA_ROOT/lib/laravel-runtime.sh"
+source "$INFRA_ROOT/lib/deploy-flow.sh"
 source "$INFRA_ROOT/lib/telegram.sh"
 load_telegram_env
 
@@ -48,40 +48,11 @@ flock -n 9 || exit 0
   CURRENT_SUBJECT="$(git log -1 --format=%s "$CURRENT_HEAD")"
   echo "$(date -Is) rolling out HEAD $CURRENT_HEAD"
 
-  DEPLOY_STAGE="compose_up_php"
-  compose up -d --build --remove-orphans php
+  DEPLOY_STAGE="init"
 
-  DEPLOY_STAGE="wait_for_php"
-  wait_for_php_exec_ready "$PHP_READY_TIMEOUT"
+  autoteka_run_deploy_flow --mode=deploy
 
-  DEPLOY_STAGE="laravel_prepare"
-  prepare_laravel_runtime
-
-  DEPLOY_STAGE="artisan_check"
-  api_artisan_in_php '--version >/dev/null'
-  admin_artisan_in_php '--version >/dev/null'
-
-  DEPLOY_STAGE="artisan_keygen"
-  ensure_app_key
-
-  DEPLOY_STAGE="artisan_migrate"
-  admin_artisan_in_php 'migrate --force'
-
-  DEPLOY_STAGE="artisan_seed"
-  admin_artisan_in_php 'db:seed --class=AdminUserSeeder --force'
-
-  DEPLOY_STAGE="sqlite_write_check"
-  check_sqlite_write_access
-
-  DEPLOY_STAGE="compose_up_web"
-  ensure_package_lock_for_deploy
-  compose up -d --build --remove-orphans web
-
-  DEPLOY_STAGE="admin_smoke_check"
-  http_smoke_check "$ADMIN_SMOKE_URL"
-
-  printf '%s
-' "$CURRENT_HEAD" > "$STATE_DIR/vue-app-last-good" || true
+  printf '%s\n' "$CURRENT_HEAD" > "$STATE_DIR/vue-app-last-good" || true
   clear_script_notification_locks "$SCRIPT_ID"
   notify_info "$SCRIPT_ID" "$DEPLOY_ACTION завершено успешно" "DEPLOY_SUCCESS" "версия $CURRENT_HEAD, commit $CURRENT_SUBJECT"
   echo "$(date -Is) deploy success ($CURRENT_HEAD)"

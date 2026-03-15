@@ -7,9 +7,7 @@ if [ -z "${AUTOTEKA_LIB_TELEGRAM_SH:-}" ]; then
   # INFRA_ROOT должен быть задан вызывающим скриптом (env или args)
     source "$INFRA_ROOT/lib/dry-run.sh"
 
-  TELEGRAM_ENV_FILE_DEFAULT="/etc/autoteka/telegram.env"
-  TELEGRAM_LOCK_DIR_DEFAULT="${TMPDIR:-/tmp}/autoteka-telegram-locks"
-  TELEGRAM_LOG_DEFAULT="/var/log/autoteka-telegram.log"
+  TELEGRAM_LOCK_DIR="${TMPDIR:-/tmp}/autoteka-telegram-locks"
   TELEGRAM_APP_VERSION_CACHE=""
 
   app_version_short() {
@@ -19,7 +17,16 @@ if [ -z "${AUTOTEKA_LIB_TELEGRAM_SH:-}" ]; then
     fi
 
     if [ -n "${AUTOTEKA_ROOT:-}" ] && [ -d "$AUTOTEKA_ROOT/.git" ]; then
-      TELEGRAM_APP_VERSION_CACHE="$(git -C "$AUTOTEKA_ROOT" rev-parse --short=12 HEAD 2>/dev/null || true)"
+      local hash subject
+      hash="$(git -C "$AUTOTEKA_ROOT" log -1 --format='%h' HEAD 2>/dev/null || true)"
+      subject="$(git -C "$AUTOTEKA_ROOT" log -1 --format='%s' HEAD 2>/dev/null | head -1 | tr '\n\t' ' ' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | cut -c1-60)"
+      if [ -n "$hash" ]; then
+        if [ -n "$subject" ]; then
+          TELEGRAM_APP_VERSION_CACHE="${hash} — ${subject}"
+        else
+          TELEGRAM_APP_VERSION_CACHE="$hash"
+        fi
+      fi
     fi
     if [ -z "$TELEGRAM_APP_VERSION_CACHE" ]; then
       TELEGRAM_APP_VERSION_CACHE="unknown"
@@ -29,12 +36,16 @@ if [ -z "${AUTOTEKA_LIB_TELEGRAM_SH:-}" ]; then
   }
 
   load_telegram_env() {
-    local env_file="${1:-$TELEGRAM_ENV_FILE_DEFAULT}"
+    if [ -z "${TELEGRAM_ENV_FILE:-}" ]; then
+      echo "TELEGRAM_ENV_FILE не задан. Задайте в options.env или в переменных окружения. Пример: TELEGRAM_ENV_FILE=/etc/autoteka/telegram.env" >&2
+      exit 3
+    fi
+    local env_file="${1:-$TELEGRAM_ENV_FILE}"
 
     if [ -z "${TELEGRAM_TOKEN:-}" ] || [ -z "${TELEGRAM_CHAT:-}" ]; then
       if [ -f "$env_file" ]; then
-                set -a
-        source "$env_file" || true
+        set -a
+        source "$env_file" || { echo "Сбой загрузки '$env_file'" >&2; exit 3; }
         set +a
       fi
     fi
@@ -47,14 +58,20 @@ if [ -z "${AUTOTEKA_LIB_TELEGRAM_SH:-}" ]; then
   telegram_log() {
     local message="$1"
 
-    mkdir -p "$(dirname "$TELEGRAM_LOG_DEFAULT")"
-    printf '%s %s\n' "$(date -u '+%Y-%m-%d %H:%M')" "$message" >> "$TELEGRAM_LOG_DEFAULT"
+    if [ -z "${TELEGRAM_LOG_FILE:-}" ]; then
+      echo "TELEGRAM_LOG_FILE не задан. Задайте в файле, указанном TELEGRAM_ENV_FILE (telegram.env), или в options.env. Пример: TELEGRAM_LOG_FILE=/var/log/autoteka-telegram.log" >&2
+      exit 3
+    fi
+    mkdir -p "$(dirname "$TELEGRAM_LOG_FILE")"
+    printf '%s %s\n' "$(date -u '+%Y-%m-%d %H:%M')" "$message" >> "$TELEGRAM_LOG_FILE"
   }
 
   telegram_send() {
     local message="$1"
 
-    telegram_enabled || return 1
+    telegram_enabled \
+    || telegram_log "Не могу отправить сообщение - нет реквизитов" \
+    && return 3
 
     telegram_log "Для отправки подготовлено сообщение: $message"
 
@@ -71,8 +88,8 @@ if [ -z "${AUTOTEKA_LIB_TELEGRAM_SH:-}" ]; then
   }
 
   telegram_lock_dir() {
-    mkdir -p "$TELEGRAM_LOCK_DIR_DEFAULT"
-    printf '%s\n' "$TELEGRAM_LOCK_DIR_DEFAULT"
+    mkdir -p "$TELEGRAM_LOCK_DIR"
+    printf '%s\n' "$TELEGRAM_LOCK_DIR"
   }
 
   telegram_lock_path() {
@@ -128,7 +145,7 @@ if [ -z "${AUTOTEKA_LIB_TELEGRAM_SH:-}" ]; then
     local reason_text="$4"
 
     if is_dry_run; then
-      dry_run_log "telegram info [$script_id][$reason_code] $reason_text"
+      dry_run_log "telegram info [$script_id][$reason_code][$action] $reason_text"
       return 0
     fi
 
@@ -144,7 +161,7 @@ if [ -z "${AUTOTEKA_LIB_TELEGRAM_SH:-}" ]; then
     local lock_path
 
     if is_dry_run; then
-      dry_run_log "telegram info once [$script_id][$reason_code] $reason_text"
+      dry_run_log "telegram info once [$script_id][$reason_code][$action] $reason_text"
       return 0
     fi
 

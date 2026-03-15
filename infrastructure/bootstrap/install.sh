@@ -15,7 +15,7 @@ fi
 INFRA_ENV="$INFRA_ROOT/.env"
 if [ ! -f "$INFRA_ENV" ]; then
   echo "Файл $INFRA_ENV не найден. Создайте его перед развёртыванием." >&2
-  echo "Пример: cp -n \"$INFRA_ROOT/prod.env\" \"$INFRA_ROOT/.env\"" >&2
+  echo "Пример: cp -n \"$INFRA_ROOT/prod.env\" \"$INFRA_ENV\"" >&2
   exit 3
 fi
 
@@ -23,9 +23,7 @@ set -a
 source "$INFRA_ENV" || { echo "Ошибка загрузки $INFRA_ENV" >&2; exit 1; }
 set +a
 
-validate_required_paths
-
-source "$INFRA_ROOT/lib/laravel-runtime.sh"
+source "$INFRA_ROOT/lib/deploy-flow.sh"
 export DOCKER_BUILDKIT="${DOCKER_BUILDKIT:-1}"
 export COMPOSE_DOCKER_CLI_BUILD="${COMPOSE_DOCKER_CLI_BUILD:-1}"
 export DEBIAN_FRONTEND=noninteractive
@@ -50,6 +48,12 @@ touch "$INFRA_ROOT/observability/application/metrics/data.json" || true
 
 mkdir -p /etc/systemd/journald.conf.d /etc/fail2ban/jail.d /etc/systemd/system/docker.service.d /etc/autoteka
 install -m 0600 "$INFRA_ENV" /etc/autoteka/options.env
+# Telegram-переменные только в telegram.env, не в options.env
+sed -i '/^TELEGRAM_TOKEN=/d;/^TELEGRAM_CHAT=/d;/^TELEGRAM_LOG_FILE=/d' /etc/autoteka/options.env
+
+if [ ! -f /etc/autoteka/telegram.env ]; then
+  install -m 0600 "$INFRA_ROOT/bootstrap/config/telegram.example.env" /etc/autoteka/telegram.env
+fi
 
 install -m 0755 "$INFRA_ROOT/bootstrap/bin/autoteka" /usr/local/bin/autoteka
 install -m 0644 "$INFRA_ROOT/runtime/systemd/autoteka.service" /etc/systemd/system/autoteka.service
@@ -69,13 +73,8 @@ systemctl restart docker || true
 systemctl restart systemd-journald || true
 systemctl restart fail2ban >/dev/null 2>&1 || true
 
-compose up -d --build --remove-orphans php
-wait_for_php_exec_ready "${PHP_READY_TIMEOUT}"
-prepare_laravel_runtime
-admin_artisan_in_php 'migrate --force'
-admin_artisan_in_php 'db:seed --class=AdminUserSeeder --force'
-ensure_package_lock_for_deploy
-compose up -d --build --remove-orphans web
+autoteka_run_deploy_flow --mode=install
+
 systemctl enable --now autoteka.service
 
 systemctl enable --now \

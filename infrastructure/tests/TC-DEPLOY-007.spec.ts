@@ -19,11 +19,8 @@ const EXPECTED_VARS = [
 ];
 
 describe("TC-DEPLOY-007", () => {
-  it("deploy.example.env содержит переменные окружения runtime", () => {
-    const path = join(
-      INFRA_ROOT_PATH,
-      "bootstrap/config/deploy.example.env",
-    );
+  it("prod.env содержит переменные окружения runtime", () => {
+    const path = join(INFRA_ROOT_PATH, "prod.env");
     expect(existsSync(path)).toBe(true);
     const content = readFileSync(path, "utf-8");
     for (const v of EXPECTED_VARS) {
