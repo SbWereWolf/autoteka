@@ -78,7 +78,7 @@ cleanup() {
 }
 trap cleanup EXIT
 
-say() { echo -e ">>> $*"; }
+say() { printf '>>> %s\n' "$*"; }
 
 copy_if_exists() {
   local src="$1" dest="$2"
@@ -149,14 +149,6 @@ say "Collecting runtime configuration and data..."
 copy_if_exists /etc/autoteka/options.env "$BACKUP_ROOT/etc/autoteka/options.env" || true
 copy_if_exists /etc/autoteka/telegram.env "$BACKUP_ROOT/etc/autoteka/telegram.env" || true
 
-# project env
-copy_if_exists "$AUTOTEKA_ROOT/backend/.env" "$BACKUP_ROOT/project/backend/.env" || true
-copy_if_exists "$AUTOTEKA_ROOT/frontend/.env" "$BACKUP_ROOT/project/frontend/.env" || true
-
-# project data
-copy_if_exists "$AUTOTEKA_ROOT/backend/database" "$BACKUP_ROOT/project/backend/database" || true
-copy_if_exists "$AUTOTEKA_ROOT/backend/storage" "$BACKUP_ROOT/project/backend/storage" || true
-
 # curated ignored allowlist
 copy_allowlisted_ignored "$IGNORE_ALLOWLIST_FILE"
 
@@ -189,8 +181,6 @@ copy_if_exists /etc/logrotate.d/server-watchdog \
   "$BACKUP_ROOT/etc/logrotate.d/server-watchdog" || true
 copy_if_exists /etc/logrotate.d/autoteka-telegram \
   "$BACKUP_ROOT/etc/logrotate.d/autoteka-telegram" || true
-copy_if_exists /etc/logrotate.d/autoteka-backend \
-  "$BACKUP_ROOT/etc/logrotate.d/autoteka-backend" || true
 
 Path="$BACKUP_ROOT/BACKUP_NOTES.txt"
 cat > "$Path" <<NOTES
