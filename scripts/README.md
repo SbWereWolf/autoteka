@@ -10,14 +10,8 @@
   (bash).
 - `read-scripts-env.ps1` — чтение локального `scripts/.env` в
   key/value-словарь.
-- `resolve-bash-runtime.ps1` — выбор bash-интерпретатора через
-  `scripts/.env` и PATH.
 - `swap-env.ps1` / `swap-env.sh` — явная проверка, сохранение и загрузка
   platform-specific артефактов для `win` и `nix`.
-- `check-bash-runtime.ps1` — проверка запуска bash и синтаксиса
-  `commit-with-message.sh`.
-- `log-entry.ps1` — запись журнала работ в `logs/` по правилам из
-  `rules/logging-rules.md`.
 - `example.env` — пример формата `scripts/.env`.
 
 Фронтовые `.mjs` утилиты переехали в `frontend/scripts/`.
@@ -30,8 +24,6 @@
 Поддерживаемые переменные:
 
 - `SCRIPT_BASH_PATH` — путь к интерпретатору `bash`.
-- `SCRIPT_NODE_PATH` — путь к исполняемому файлу `node`.
-- `SCRIPT_NPX_PATH` — путь к исполняемому файлу `npx`.
 - `SCRIPT_PHP_PATH` — путь к исполняемому файлу `php` для репозиторных
   PowerShell-скриптов, включая `scripts/agent/verify.ps1`.
 
@@ -47,8 +39,10 @@
 
 - `validate` — сверяет `active` и `current-env`. Это команда по
   умолчанию.
-- `save` — заменяет `current-env` из `active`, только если замена нужна.
-- `load` — заменяет `active` из `current-env`, только если замена нужна.
+- `save` — записывает из `active` в `current-env`,
+  только если замена нужна.
+- `load` — загружает из `current-env` в `active`, 
+  только если замена нужна.
 - `status` — показывает текущую среду, статусы и полные пути по
   группам папок.
 - `--help` / `-h` — краткая справка без путей.

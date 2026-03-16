@@ -206,35 +206,35 @@ function Get-TypeGroupInfo {
     )
 
     switch ($TypeName) {
-        { $_ -like "root-*" } {
-            return @{ Order = 1; Label = "repo root" }
-        }
-        { $_ -like "frontend-*" } {
-            return @{ Order = 2; Label = "frontend" }
-        }
-        "system-tests-env" {
-            return @{ Order = 3; Label = "system-tests" }
-        }
-        "system-tests-lock" {
-            return @{ Order = 4; Label = "system-tests" }
-        }
-        { $_ -like "system-tests-node-modules" } {
-            return @{ Order = 5; Label = "system-tests" }
-        }
-        { $_ -like "infrastructure-tests-*" } {
-            return @{ Order = 6; Label = "infrastructure/tests" }
-        }
         "scripts-env" {
-            return @{ Order = 7; Label = "scripts" }
+            return @{ Order = 1; Label = "scripts" }
         }
         "lint-env" {
-            return @{ Order = 8; Label = "lint" }
+            return @{ Order = 2; Label = "lint" }
         }
         "shop-api-env" {
-            return @{ Order = 9; Label = "backend/apps/ShopAPI" }
+            return @{ Order = 3; Label = "shop-api" }
         }
         "shop-operator-env" {
-            return @{ Order = 10; Label = "backend/apps/ShopOperator" }
+            return @{ Order = 4; Label = "shop-operator" }
+        }
+        { $_ -like "root-*" } {
+            return @{ Order = 5; Label = "root" }
+        }
+        "system-tests-env" {
+            return @{ Order = 6; Label = "system-tests" }
+        }
+        "system-tests-lock" {
+            return @{ Order = 6; Label = "system-tests" }
+        }
+        { $_ -like "system-tests-node-modules" } {
+            return @{ Order = 6; Label = "system-tests" }
+        }
+        { $_ -like "infrastructure-tests-*" } {
+            return @{ Order = 7; Label = "infrastructure-tests" }
+        }
+        { $_ -like "frontend-*" } {
+            return @{ Order = 8; Label = "frontend" }
         }
         default {
             return @{ Order = 999; Label = "other" }
@@ -302,6 +302,26 @@ function Get-StatusColor {
     return $fg
 }
 
+function Format-StatusLine {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$StatusActive,
+        [Parameter(Mandatory = $true)]
+        [string]$StatusCurrentEnv,
+        [Parameter(Mandatory = $true)]
+        [string]$TypeName
+    )
+
+    $reset = if (Get-Variable -Name PSStyle -Scope Global -ErrorAction SilentlyContinue) { $PSStyle.Reset } else { "" }
+    $colorActive = Get-StatusColor -Status $StatusActive
+    $colorEnv = Get-StatusColor -Status $StatusCurrentEnv
+    $padActive = " " * [Math]::Max(0, $script:StatusMaxLen - $StatusActive.Length)
+    $padEnv = " " * [Math]::Max(0, $script:StatusMaxLen - $StatusCurrentEnv.Length)
+    $partActive = if ($colorActive) { "$colorActive$StatusActive$reset" } else { $StatusActive }
+    $partEnv = if ($colorEnv) { "$colorEnv$StatusCurrentEnv$reset" } else { $StatusCurrentEnv }
+    return "  $partActive$padActive $partEnv$padEnv $TypeName"
+}
+
 function Get-RelativePath {
     param(
         [string]$Path,
@@ -342,6 +362,15 @@ function Ensure-KnownType {
     if ($allTypes -notcontains $TypeName) {
         throw "Unknown type: $TypeName"
     }
+}
+
+function Sort-StatesByGroupOrder {
+    param(
+        [Parameter(Mandatory = $true)]
+        [pscustomobject[]]$States
+    )
+
+    return @($States | Sort-Object { (Get-TypeGroupInfo -TypeName $_.TypeName).Order }, TypeName)
 }
 
 function Resolve-RequestedTypes {
@@ -684,7 +713,6 @@ function Invoke-SaveOrLoadType {
     )
 
     $typeName = $State.TypeName
-    $sameHint = Get-HintText -ActionNames @($ActionName) -TypeNames @($typeName)
 
     if ($ActionName -eq "save") {
         if ($State.StatusActive -in @("missing-active", "unreadable-active")) {
@@ -692,11 +720,18 @@ function Invoke-SaveOrLoadType {
             return
         }
         if ($State.StatusActive -eq "same" -and $State.StatusCurrentEnv -eq "same") {
-            Write-Host "[swap-env] ${typeName}: active и current-env уже совпадают, замена не нужна.${sameHint}"
             return
         }
+        $actionLine = "  active  -> current-env выполнено."
         if ($DryRun) {
-            Write-Host "[swap-env] dry-run: ${typeName}: будет выполнено active -> current-env."
+            $actionLine = "  active  -> current-env будет выполнено."
+        }
+        Write-Host (Format-StatusLine -StatusActive $State.StatusActive -StatusCurrentEnv $State.StatusCurrentEnv -TypeName $typeName)
+        if (-not $DryRun) {
+            Write-Host "[swap-env] ${typeName}: копирование..."
+        }
+        if ($DryRun) {
+            Write-Host $actionLine
             return
         }
         try {
@@ -706,7 +741,7 @@ function Invoke-SaveOrLoadType {
             else {
                 Copy-DirectoryForce -SourcePath $State.ActivePath -DestinationPath $State.CurrentEnvPath
             }
-            Write-Host "[swap-env] ${typeName}: active -> current-env выполнено."
+            Write-Host $actionLine
         }
         catch {
             Add-OperationalError -TypeName $typeName -Message "не удалось заменить артефакт current-env." -HintActions @("save") -Mismatch
@@ -719,11 +754,18 @@ function Invoke-SaveOrLoadType {
         return
     }
     if ($State.StatusActive -eq "same" -and $State.StatusCurrentEnv -eq "same") {
-        Write-Host "[swap-env] ${typeName}: active и current-env уже совпадают, замена не нужна.${sameHint}"
         return
     }
+    $actionLine = "  active <-  current-env выполнено."
     if ($DryRun) {
-        Write-Host "[swap-env] dry-run: ${typeName}: будет выполнено active <- current-env."
+        $actionLine = "  active <-  current-env будет выполнено."
+    }
+    Write-Host (Format-StatusLine -StatusActive $State.StatusActive -StatusCurrentEnv $State.StatusCurrentEnv -TypeName $typeName)
+    if (-not $DryRun) {
+        Write-Host "[swap-env] ${typeName}: копирование..."
+    }
+    if ($DryRun) {
+        Write-Host $actionLine
         return
     }
     try {
@@ -733,7 +775,7 @@ function Invoke-SaveOrLoadType {
         else {
             Copy-DirectoryForce -SourcePath $State.CurrentEnvPath -DestinationPath $State.ActivePath
         }
-        Write-Host "[swap-env] ${typeName}: active <- current-env выполнено."
+        Write-Host $actionLine
     }
     catch {
         Add-OperationalError -TypeName $typeName -Message "не удалось заменить active-артефакт." -HintActions @("load") -Mismatch
@@ -758,9 +800,11 @@ function Write-StatusReport {
     Write-Host "[swap-env] AUTOTEKA_ROOT: $repoRoot"
     Write-Host "[swap-env] INFRA_ROOT:    $script:InfraRoot"
 
+    $groupColor = Get-StatusColor -Status "different"
     foreach ($group in ($States | Group-Object GroupLabel | Sort-Object { ($_.Group | Select-Object -First 1).GroupOrder })) {
         Write-Host ""
-        Write-Host "[swap-env] group: $($group.Name)"
+        $groupLine = "[swap-env] group: $($group.Name)"
+        if ($groupColor) { Write-Host "$groupColor$groupLine$reset" } else { Write-Host $groupLine }
         foreach ($state in ($group.Group | Sort-Object TypeName)) {
             $colorActive = Get-StatusColor -Status $state.StatusActive
             $colorEnv = Get-StatusColor -Status $state.StatusCurrentEnv
@@ -886,6 +930,7 @@ $platform = Get-CurrentPlatform
 $states = @(foreach ($typeName in $selectedTypes) {
     Get-TypeState -TypeName $typeName -Platform $platform
 })
+$states = Sort-StatesByGroupOrder -States $states
 
 switch ($commandName) {
     "status" {
@@ -898,13 +943,43 @@ switch ($commandName) {
         }
     }
     "save" {
-        foreach ($state in $states) {
-            Invoke-SaveOrLoadType -ActionName "save" -State $state -DryRun:$dryRun
+        $performedAny = @($states | Where-Object { $_.StatusActive -ne "same" -or $_.StatusCurrentEnv -ne "same" })
+        if ($performedAny.Count -eq 0) {
+            Write-Host "[swap-env] Совпадение полное, запись active  -> current-env не требуется."
+        } else {
+            $reset = if (Get-Variable -Name PSStyle -Scope Global -ErrorAction SilentlyContinue) { $PSStyle.Reset } else { "" }
+            $groupColor = Get-StatusColor -Status "different"
+            $grouped = $states | Group-Object { (Get-TypeGroupInfo -TypeName $_.TypeName).Label }
+            foreach ($group in $grouped) {
+                $performedInGroup = @($group.Group | Where-Object { $_.StatusActive -ne "same" -or $_.StatusCurrentEnv -ne "same" })
+                if ($performedInGroup.Count -eq 0) { continue }
+                Write-Host ""
+                $groupLine = "[swap-env] group: $($group.Name)"
+                if ($groupColor) { Write-Host "$groupColor$groupLine$reset" } else { Write-Host $groupLine }
+                foreach ($state in ($group.Group | Sort-Object TypeName)) {
+                    Invoke-SaveOrLoadType -ActionName "save" -State $state -DryRun:$dryRun
+                }
+            }
         }
     }
     "load" {
-        foreach ($state in $states) {
-            Invoke-SaveOrLoadType -ActionName "load" -State $state -DryRun:$dryRun
+        $performedAny = @($states | Where-Object { $_.StatusActive -ne "same" -or $_.StatusCurrentEnv -ne "same" })
+        if ($performedAny.Count -eq 0) {
+            Write-Host "[swap-env] Совпадение полное, запись active <-  current-env не требуется."
+        } else {
+            $reset = if (Get-Variable -Name PSStyle -Scope Global -ErrorAction SilentlyContinue) { $PSStyle.Reset } else { "" }
+            $groupColor = Get-StatusColor -Status "different"
+            $grouped = $states | Group-Object { (Get-TypeGroupInfo -TypeName $_.TypeName).Label }
+            foreach ($group in $grouped) {
+                $performedInGroup = @($group.Group | Where-Object { $_.StatusActive -ne "same" -or $_.StatusCurrentEnv -ne "same" })
+                if ($performedInGroup.Count -eq 0) { continue }
+                Write-Host ""
+                $groupLine = "[swap-env] group: $($group.Name)"
+                if ($groupColor) { Write-Host "$groupColor$groupLine$reset" } else { Write-Host $groupLine }
+                foreach ($state in ($group.Group | Sort-Object TypeName)) {
+                    Invoke-SaveOrLoadType -ActionName "load" -State $state -DryRun:$dryRun
+                }
+            }
         }
     }
 }

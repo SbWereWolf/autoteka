@@ -93,6 +93,31 @@ get_status_color() {
   esac
 }
 
+format_status_line() {
+  local status_active="$1"
+  local status_current_env="$2"
+  local type_name="$3"
+  local pad_active pad_env
+  pad_active=$(printf '%*s' $((status_max_len - ${#status_active})) "")
+  pad_env=$(printf '%*s' $((status_max_len - ${#status_current_env})) "")
+  local fg_active fg_env
+  fg_active="$(get_status_color "$status_active")"
+  fg_env="$(get_status_color "$status_current_env")"
+  printf "  "
+  if [[ -n "$fg_active" ]]; then
+    printf "%b%s%b" "$fg_active" "$status_active" "$color_reset"
+  else
+    printf "%s" "$status_active"
+  fi
+  printf "%s " "$pad_active"
+  if [[ -n "$fg_env" ]]; then
+    printf "%b%s%b" "$fg_env" "$status_current_env" "$color_reset"
+  else
+    printf "%s" "$status_current_env"
+  fi
+  printf "%s %s\n" "$pad_env" "$type_name"
+}
+
 get_relative_path() {
   local path="$1"
   local base="${repo_root%/}"
@@ -165,31 +190,28 @@ get_type_variant_path() {
 
 get_type_group_label() {
   case "$1" in
-    root-*) printf "repo root" ;;
-    frontend-*) printf "frontend" ;;
-    system-tests-env) printf "system-tests" ;;
-    system-tests-*) printf "system-tests" ;;
-    infrastructure-tests-*) printf "infrastructure/tests" ;;
     scripts-env) printf "scripts" ;;
     lint-env) printf "lint" ;;
-    shop-api-env) printf "backend/apps/ShopAPI" ;;
-    shop-operator-env) printf "backend/apps/ShopOperator" ;;
+    shop-api-env) printf "shop-api" ;;
+    shop-operator-env) printf "shop-operator" ;;
+    root-*) printf "root" ;;
+    system-tests-env|system-tests-lock|system-tests-node-modules) printf "system-tests" ;;
+    infrastructure-tests-*) printf "infrastructure-tests" ;;
+    frontend-*) printf "frontend" ;;
     *) printf "other" ;;
   esac
 }
 
 get_type_group_order() {
   case "$1" in
-    root-*) printf "1" ;;
-    frontend-*) printf "2" ;;
-    system-tests-env) printf "3" ;;
-    system-tests-lock) printf "4" ;;
-    system-tests-node-modules) printf "5" ;;
-    infrastructure-tests-*) printf "6" ;;
-    scripts-env) printf "7" ;;
-    lint-env) printf "8" ;;
-    shop-api-env) printf "9" ;;
-    shop-operator-env) printf "10" ;;
+    scripts-env) printf "1" ;;
+    lint-env) printf "2" ;;
+    shop-api-env) printf "3" ;;
+    shop-operator-env) printf "4" ;;
+    root-*) printf "5" ;;
+    system-tests-env|system-tests-lock|system-tests-node-modules) printf "6" ;;
+    infrastructure-tests-*) printf "7" ;;
+    frontend-*) printf "8" ;;
     *) printf "999" ;;
   esac
 }
@@ -531,12 +553,8 @@ save_or_load_from_state() {
   local current_env_path="$7"
 
   current_type_for_hint="$type_name"
-  local no_op_hint
   if [[ "$aggregate_hints" -eq 1 ]]; then
     register_hint_actions "$action_name"
-    no_op_hint=""
-  else
-    no_op_hint="$(get_hint_text "$action_name")"
   fi
 
   if [[ "$action_name" == "save" ]]; then
@@ -545,15 +563,16 @@ save_or_load_from_state() {
       return
     fi
     if [[ "$status_active" == "same" && "$status_current_env" == "same" ]]; then
-      printf "[swap-env] %s: active и current-env уже совпадают, замена не нужна.%s\n" "$type_name" "$no_op_hint"
       return
     fi
 
+    format_status_line "$status_active" "$status_current_env" "$type_name"
     if [[ "$dry_run" -eq 1 ]]; then
-      printf "[swap-env] dry-run: %s: будет выполнено active -> current-env.\n" "$type_name"
+      printf "  active  -> current-env будет выполнено.\n"
       return
     fi
 
+    printf "[swap-env] %s: копирование...\n" "$type_name"
     if ! remove_destination_path "$current_env_path"; then
       add_operational_error "$type_name" "same" "same" "не удалось заменить артефакт current-env." 0 1 "save"
       return
@@ -571,7 +590,7 @@ save_or_load_from_state() {
       fi
     fi
 
-    printf "[swap-env] %s: active -> current-env выполнено.\n" "$type_name"
+    printf "  active  -> current-env выполнено.\n"
     return
   fi
 
@@ -580,15 +599,16 @@ save_or_load_from_state() {
     return
   fi
   if [[ "$status_active" == "same" && "$status_current_env" == "same" ]]; then
-    printf "[swap-env] %s: active и current-env уже совпадают, замена не нужна.%s\n" "$type_name" "$no_op_hint"
     return
   fi
 
+  format_status_line "$status_active" "$status_current_env" "$type_name"
   if [[ "$dry_run" -eq 1 ]]; then
-    printf "[swap-env] dry-run: %s: будет выполнено active <- current-env.\n" "$type_name"
+    printf "  active <-  current-env будет выполнено.\n"
     return
   fi
 
+  printf "[swap-env] %s: копирование...\n" "$type_name"
   if ! remove_destination_path "$active_path"; then
     add_operational_error "$type_name" "same" "same" "не удалось заменить active-артефакт." 0 1 "load"
     return
@@ -606,7 +626,7 @@ save_or_load_from_state() {
     fi
   fi
 
-  printf "[swap-env] %s: active <- current-env выполнено.\n" "$type_name"
+  printf "  active <-  current-env выполнено.\n"
 }
 
 print_status_report() {
@@ -620,11 +640,18 @@ print_status_report() {
   printf "[swap-env] AUTOTEKA_ROOT: %s\n" "$repo_root"
   printf "[swap-env] INFRA_ROOT:    %s\n" "$infra_root"
 
+  local group_color
+  group_color="$(get_status_color "different")"
   local current_group=""
   while IFS='|' read -r type_name kind status_active status_current_env group_order group_label active_path current_env_path; do
     if [[ "$group_label" != "$current_group" ]]; then
       current_group="$group_label"
-      printf "\n[swap-env] group: %s\n" "$group_label"
+      printf "\n"
+      if [[ -n "$group_color" ]]; then
+        printf "%b[swap-env] group: %s%b\n" "$group_color" "$group_label" "$color_reset"
+      else
+        printf "[swap-env] group: %s\n" "$group_label"
+      fi
     fi
 
     local pad_active pad_env
@@ -716,19 +743,48 @@ if [[ "$subcommand" == "status" ]]; then
   exit 0
 fi
 
-while IFS='|' read -r type_name kind status_active status_current_env group_order group_label active_path current_env_path; do
-  case "$subcommand" in
-    validate)
-      validate_single_state "$type_name" "$status_active" "$status_current_env"
-      ;;
-    save)
-      save_or_load_from_state "save" "$type_name" "$kind" "$status_active" "$status_current_env" "$active_path" "$current_env_path"
-      ;;
-    load)
-      save_or_load_from_state "load" "$type_name" "$kind" "$status_active" "$status_current_env" "$active_path" "$current_env_path"
-      ;;
-  esac
-done <"$states_file"
+if [[ "$subcommand" == "validate" ]]; then
+  while IFS='|' read -r type_name kind status_active status_current_env group_order group_label active_path current_env_path; do
+    validate_single_state "$type_name" "$status_active" "$status_current_env"
+  done <"$states_file"
+elif [[ "$subcommand" == "save" || "$subcommand" == "load" ]]; then
+  performed_any=0
+  performed_groups=""
+  while IFS='|' read -r type_name kind status_active status_current_env group_order group_label active_path current_env_path; do
+    if [[ "$status_active" != "same" || "$status_current_env" != "same" ]]; then
+      performed_any=1
+      if [[ " $performed_groups " != *" $group_label "* ]]; then
+        performed_groups="${performed_groups} ${group_label}"
+      fi
+    fi
+  done <"$states_file"
+
+  if [[ "$performed_any" -eq 0 ]]; then
+    if [[ "$subcommand" == "save" ]]; then
+      printf "[swap-env] Совпадение полное, запись active  -> current-env не требуется.\n"
+    else
+      printf "[swap-env] Совпадение полное, запись active <-  current-env не требуется.\n"
+    fi
+  else
+    init_status_colors
+    group_color="$(get_status_color "different")"
+    current_group=""
+    while IFS='|' read -r type_name kind status_active status_current_env group_order group_label active_path current_env_path; do
+      if [[ " $performed_groups " == *" $group_label "* ]]; then
+        if [[ "$group_label" != "$current_group" ]]; then
+          current_group="$group_label"
+          printf "\n"
+          if [[ -n "$group_color" ]]; then
+            printf "%b[swap-env] group: %s%b\n" "$group_color" "$group_label" "$color_reset"
+          else
+            printf "[swap-env] group: %s\n" "$group_label"
+          fi
+        fi
+        save_or_load_from_state "$subcommand" "$type_name" "$kind" "$status_active" "$status_current_env" "$active_path" "$current_env_path"
+      fi
+    done <"$states_file"
+  fi
+fi
 
 if [[ "$subcommand" == "validate" ]]; then
   printf "[swap-env] среда: '%s'\n" "$current_platform"
