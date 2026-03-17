@@ -24,10 +24,14 @@ scripts/.env
 
 /system-tests/.env
 /system-tests/win.env
-/system-tests/wsl.env
+/system-tests/nix.env
 
 /infrastructure/dev.test.env
 /infrastructure/prod.test.env
+
+/infrastructure/maintenance/config/backup-rules-root.txt
+/infrastructure/maintenance/config/backup-rules-autoteka.txt
+/infrastructure/maintenance/config/backup-rules-infra.txt
 
 node_modules
 **/node_modules.win/
