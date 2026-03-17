@@ -2,9 +2,9 @@
 
 This directory is formatted for repo-local Codex skill discovery.
 
-## Included skills
+## Inventory
 
-### Meta and utility
+### Meta and utility skills
 
 - `exec-plan`
 - `preflight`
@@ -14,60 +14,51 @@ This directory is formatted for repo-local Codex skill discovery.
 ### Primary domain skills
 
 - `frontend`
+- `layout-and-design`
 - `backend`
 - `system-tests`
 - `infrastructure`
 - `repo-tooling`
-- `layout-and-design`
 - `tech-writer`
 
-## Why this layout works for this repo
+## Repository routing model
 
-- Each skill is narrow and task-specific.
-- Each `SKILL.md` starts with `name` and `description` metadata.
-- Skill descriptions are explicit about when they should and should not
-  trigger.
-- Long standards live in `references/` so metadata stays sharp and the
-  full rules load only when the skill is chosen.
-- Reusable scaffolds live in `assets/`.
+- `exec-plan` owns durable planning and task records under
+  `tasks/<task-slug>/`.
+- `preflight` snapshots repository state before structural or ambiguous
+  work.
+- `verify` owns the mandatory baseline gate plus direct-check
+  discipline.
+- `safe-commit` owns the commit-policy-compliant commit path.
+- Exactly one primary domain skill should own implementation unless the
+  task genuinely spans multiple specializations.
 
-## Routing model used in this repo
+## Inventory integrity rules
 
-- `exec-plan` is a planning meta-skill for complex work.
-- One primary domain skill should own implementation.
-- Utility skills support repository workflow and do not replace the
-  primary skill.
-- `system-tests` owns behavioral test surfaces.
-- `repo-tooling` owns repo workflow mechanics, scripts, and agent
-  configuration.
+- Every skill named in root `AGENTS.md` must physically exist here.
+- Every `SKILL.md` reference path must exist or be removed.
+- Skill descriptions must be specific enough to route implicitly.
+- Long standards belong in `references/`; reusable scaffolds belong in
+  `assets/`.
 
 ## Practical routing hints
 
 - `frontend/` runtime change -> `frontend`
-- a11y or semantic structure first -> `layout-and-design`
+- semantic/a11y/keyboard/focus work -> `layout-and-design`
 - `backend/apps/*` or `backend/packages/*` -> `backend`
-- `system-tests/` -> `system-tests`
+- `system-tests/` or cross-runtime behavior checks -> `system-tests`
 - `infrastructure/` -> `infrastructure`
 - `scripts/`, `.agents/`, `.codex/`, `lint/` -> `repo-tooling`
-- docs/manuals/IMPLEMENTATION/DEPLOY -> `tech-writer`
+- docs/manuals/runbooks/implementation docs -> `tech-writer`
 
-## How to verify in Codex CLI
+## Verification reminder
 
-1. Put `.agents/skills/` at the repository root.
-2. Start Codex CLI in the repo.
-3. Run `/skills` and confirm the skills are listed.
-4. Test explicit invocation with prompts such as:
-   - `$exec-plan plan a structural backend refactor`
-   - `$backend review this Laravel controller`
-   - `$frontend refactor this Vue page`
-   - `$system-tests tighten this smoke test`
-   - `$repo-tooling review verify.ps1`
-   - `$layout-and-design audit this modal`
-   - `$infrastructure review this runtime script`
-   - `$tech-writer rewrite this IMPLEMENTATION section`
+Skill presence does not replace repo invariants. Root `AGENTS.md`
+still owns:
 
-## Notes
-
-- Keep repo-wide invariants in `AGENTS.md`.
-- Keep specialist workflows in these skills.
-- Keep task-specific execution records under `tasks/<task-slug>/`.
+- instruction precedence
+- code-change loop
+- verification contract
+- commit policy
+- forbidden paths
+- environment readiness
