@@ -3,7 +3,7 @@
 ## Stack
 
 - Laravel 12+
-- PHP 8.2+
+- PHP 8.4+
 - MoonShine 4.8+
 - SQLite 3.35+
 - Composer path packages
@@ -91,11 +91,14 @@ It must not contain use cases or domain rules.
 
 ## Working hours
 
-Generation of working hours is package logic, not MoonShine resource logic and not API controller logic.
+Generation of working hours is package logic, not MoonShine resource 
+logic and not API controller logic.
 
 ## Code generation
 
-Generation of `code` may stay in runtime/infrastructure only when it is purely technical normalization. If it becomes a reusable rule or part of data meaning, move it into a shared package.
+Generation of `code` may stay in runtime/infrastructure only when it 
+is purely technical normalization. If it becomes a reusable rule or 
+part of data meaning, move it into a shared package.
 
 ## Testing
 
@@ -106,4 +109,5 @@ For new business logic, write the package test first.
 
 ## Transactions
 
-Start a transaction in the use case that owns the business operation, not in controller or MoonShine resource.
+Start a transaction in the use case that owns the business operation, 
+not in controller or MoonShine resource.

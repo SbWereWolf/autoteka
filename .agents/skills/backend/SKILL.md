@@ -12,7 +12,7 @@ Apply this skill for `backend/` work.
 Work only inside this stack:
 
 - Laravel 12+
-- PHP 8.2+
+- PHP 8.4+
 - MoonShine 4.8+
 - SQLite 3.35+
 - Composer path packages
@@ -62,8 +62,8 @@ then it stays in the runtime module.
 
 ## Test selection
 
-- `backend/apps/ShopAPI/**` -> `cd backend/apps/ShopAPI && php artisan test`
-- `backend/apps/ShopOperator/**` -> `cd backend/apps/ShopOperator && php artisan test`
+- `backend/apps/ShopAPI/**` -> `cd backend/apps/ShopAPI && php artisan test:parallel`
+- `backend/apps/ShopOperator/**` -> `cd backend/apps/ShopOperator && php artisan test:parallel`
 - `backend/packages/SchemaDefinition/**` -> run both runtime suites
 - shared package or contract change -> run every affected runtime suite
 - API route/serialization/HTTP behavior -> add `npm --prefix system-tests run test:quick-local` or the closest supported profile
