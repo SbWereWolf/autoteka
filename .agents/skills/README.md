@@ -4,6 +4,15 @@ This directory is formatted for repo-local Codex skill discovery.
 
 ## Included skills
 
+### Meta and utility
+
+- `exec-plan`
+- `preflight`
+- `verify`
+- `safe-commit`
+
+### Primary domain skills
+
 - `frontend`
 - `backend`
 - `infrastructure`
@@ -14,14 +23,26 @@ This directory is formatted for repo-local Codex skill discovery.
 
 - Each skill is narrow and task-specific.
 - Each `SKILL.md` starts with `name` and `description` metadata.
-- Long standards live in `references/` so metadata stays sharp and the full rules load only when the skill is chosen.
+- Skill descriptions are explicit about when they should and should
+  not trigger.
+- Long standards live in `references/` so metadata stays sharp and the
+  full rules load only when the skill is chosen.
+- Reusable scaffolds live in `assets/`.
+
+## Routing model used in this repo
+
+- `exec-plan` is a planning meta-skill for complex work.
+- One primary domain skill should own implementation.
+- Utility skills support repository workflow and do not replace the
+  primary skill.
 
 ## How to verify in Codex CLI
 
 1. Put `.agents/skills/` at the repository root.
 2. Start Codex CLI in the repo.
-3. Run `/skills` and confirm the five skills are listed.
+3. Run `/skills` and confirm the skills are listed.
 4. Test explicit invocation with prompts such as:
+   - `$exec-plan plan a structural backend refactor`
    - `$backend review this Laravel controller`
    - `$frontend refactor this Vue page`
    - `$layout-and-design audit this modal`
@@ -32,4 +53,4 @@ This directory is formatted for repo-local Codex skill discovery.
 
 - Keep repo-wide invariants in `AGENTS.md`.
 - Keep specialist workflows in these skills.
-- If one task spans multiple areas, Codex can use more than one skill.
+- Keep task-specific execution records under `tasks/<task-slug>/`.

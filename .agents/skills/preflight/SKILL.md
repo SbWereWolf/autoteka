@@ -1,9 +1,9 @@
 ---
 name: preflight
-description: Snapshot repository state before planning changes
+description: Use before structural, ambiguous, or multi-step repository work to snapshot repo state, detect blockers, and establish a clean baseline before planning or implementation.
 ---
 
-Use this skill before structural changes.
+Use this skill before planning structural changes.
 
 Run:
 
@@ -14,4 +14,5 @@ Interpret exit codes strictly:
 3 = missing dependency
 4 = not a git repo
 
-Do not narrate findings — summarize in one line.
+Do not narrate raw output. Summarize only the decision-relevant
+baseline or blocker.

@@ -1,9 +1,10 @@
 ---
 name: verify
-description: Deterministic verification gate (lint + tests)
+description: Use after meaningful code changes and after each major milestone to run the repository verification gate deterministically (lint + tests) and stop on failure.
 ---
 
-Use before commit or after significant refactor.
+Use after significant changes, after major milestones, and before any
+requested commit.
 
 Command:
 

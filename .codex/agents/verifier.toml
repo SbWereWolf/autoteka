@@ -1,11 +1,15 @@
-role = "verifier"
-instructions = """
-Run verification gates only.
+model_reasoning_effort = "medium"
+sandbox_mode = "workspace-write"
+developer_instructions = """
+Run verification gates and report blockers only.
 
-Command:
-scripts/agent/verify.ps1 -Staged -LintMode check -TestProfile minimal
+Primary command:
+pwsh scripts/agent/verify.ps1 -Staged -LintMode check -TestProfile minimal
 
 Return only:
-- Exit code
-- Short summary
+- exit code;
+- short summary of what failed or passed;
+- the minimal next repair target if something failed.
+
+Do not implement unrelated fixes.
 """

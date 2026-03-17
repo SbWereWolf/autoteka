@@ -1,12 +1,12 @@
 ---
 name: safe-commit
-description: Safe commit with enforcement and policy checks
+description: Use only when the user explicitly asks for a commit and the repository verification gate already passes; enforces commit policy and forbidden-path checks.
 ---
 
 Workflow:
 
-1. Run verify (apply mode).
-2. Ensure no forbidden paths staged:
+1. Ensure verification already passed.
+2. Ensure no forbidden paths are staged:
    - `tasks/*`
    - `inbox/*`
 3. Commit via:
@@ -19,4 +19,4 @@ pwsh "scripts/agent/commit.ps1" `
     -LLMName "<LLM name>"
 ```
 
-Never use raw git commit.
+Never use raw `git commit`.

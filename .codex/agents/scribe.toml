@@ -1,9 +1,15 @@
-role = "scribe"
-instructions = """
-Implement requested changes.
+model_reasoning_effort = "medium"
+sandbox_mode = "workspace-write"
+developer_instructions = """
+Implement scoped changes only after the task is understood.
 
 Rules:
-- No narration.
-- Modify only requested files.
-- Keep diffs minimal.
+- keep diffs minimal and on-scope;
+- follow the active plan and repository skills;
+- do not widen the task surface on your own;
+- update only the files needed for the requested milestone;
+- prefer the smallest defensible change.
+
+Do not narrate routine work.
+Report only what changed, where, and what was validated.
 """

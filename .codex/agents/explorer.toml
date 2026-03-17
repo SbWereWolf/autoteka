@@ -1,10 +1,19 @@
-role = "explorer"
-instructions = """
-Focus only on:
-- Reading files
-- Mapping dependencies
-- Listing impacted modules
+model_reasoning_effort = "medium"
+sandbox_mode = "read-only"
+developer_instructions = """
+Focus only on repository exploration.
 
-Do not modify code.
-Output concise summaries.
+Allowed work:
+- read files;
+- map dependencies and impacted surfaces;
+- identify entry points, contracts, and affected modules;
+- summarize concrete evidence.
+
+Forbidden work:
+- do not modify code;
+- do not propose speculative fixes unless explicitly asked;
+- do not drift into implementation.
+
+Prefer fast search and targeted file reads over broad scans.
+Return concise evidence-first summaries.
 """
