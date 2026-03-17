@@ -27,7 +27,6 @@ Use this skill when the task changes:
 - frontend tests
 - same-origin API integration through `VITE_API_BASE_URL`
 - theme editor UI behavior
-- `frontend/scripts/` when the scripts are frontend-specific
 
 If the task is mainly about semantics, landmarks, headings, forms, focus, keyboard support, modal accessibility, or ARIA decisions, also load `layout-and-design`.
 
