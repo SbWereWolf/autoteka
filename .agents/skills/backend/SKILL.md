@@ -1,93 +1,83 @@
 ---
-name: "backend"
-description: "Use for Laravel/PHP backend work in this repo: ShopAPI, ShopOperator, backend/packages, Eloquent, migrations usage, backend tests, and architecture decisions about where backend code belongs. Do not use for infrastructure Bash/systemd/docker work; use infrastructure for that."
+name: backend
+description: Use this skill for backend application and package changes in PHP or related backend runtime surfaces, especially under backend/apps/ShopAPI, backend/apps/ShopOperator, backend/packages, backend routes, controllers, services, policies, jobs, events, database, API contracts, and backend tests.
 ---
 
-# Backend
+# Backend skill
 
-Apply this skill for `backend/` work.
+Use this skill for backend changes in PHP and adjacent backend surfaces.
 
-## Stack
+Typical scope:
 
-Work only inside this stack:
+- `backend/apps/ShopAPI/**`
+- `backend/apps/ShopOperator/**`
+- `backend/packages/**`
+- backend routes, controllers, requests, policies, services, jobs,
+  listeners, events, DTOs, resources, migrations, seeders, and CLI
+  commands;
+- backend contracts consumed by frontend, system tests, or external
+  integrations.
 
-- Laravel 12+
-- PHP 8.4+
-- MoonShine 4.8+
-- SQLite 3.35+
-- Composer path packages
+Do not use this skill as a substitute for the `exec-plan` meta-skill
+when the task is structural, ambiguous, cross-cutting, or multi-step.
 
-## Repo architecture
+## Implementation focus
 
-Treat the backend as four responsibility zones:
+When using this skill:
 
-- `backend/packages/SchemaDefinition` -> schema only
-- `backend/packages/*` -> shared business packages
-- `backend/apps/ShopOperator` -> MoonShine runtime
-- `backend/apps/ShopAPI` -> API runtime
-
-`ShopOperator` and `ShopAPI` are separate runtimes, not two layers inside one Laravel app.
-
-## Main placement rule
-
-If logic must work the same from:
-
-- ShopOperator
-- ShopAPI
-- CLI
-- jobs
-- tests
-
-then it belongs in `backend/packages/*`.
-
-If logic is only about:
-
-- MoonShine resource/form configuration
-- HTTP request/response shape
-- JSON serialization
-- route/policy/auth glue
-
-then it stays in the runtime module.
-
-## Rules
-
-1. `SchemaDefinition` contains schema truth only.
-2. Shared business logic lives in `backend/packages/*`.
-3. Do not duplicate one use case in ShopOperator and ShopAPI.
-4. Do not keep business orchestration inside controllers, `ModelResource`, `Request`, or Eloquent models.
-5. Treat Eloquent as persistence/infrastructure, not as the domain.
-6. For new business logic: test first, then implementation.
-7. Open transactions where the use case runs, not in the interface layer.
-8. Design for SQLite as the real target database.
+1. identify the backend application or package that owns the changed
+   behavior;
+2. keep changes aligned with the nearest nested `AGENTS.md`;
+3. preserve public contracts unless the task explicitly changes them;
+4. prefer the narrowest safe change before broad refactoring;
+5. update tests and related documentation together with code.
 
 ## Test selection
 
-- `backend/apps/ShopAPI/**` -> `cd backend/apps/ShopAPI && php artisan test:parallel`
-- `backend/apps/ShopOperator/**` -> `cd backend/apps/ShopOperator && php artisan test:parallel`
-- `backend/packages/SchemaDefinition/**` -> run both runtime suites
-- shared package or contract change -> run every affected runtime suite
-- API route/serialization/HTTP behavior -> add `npm --prefix system-tests run test:quick-local` or the closest supported profile
+Choose direct checks that match the changed backend surface instead of
+assuming the baseline gate is sufficient.
 
-Do not treat root `verify.ps1` as sufficient evidence when backend tests, phpunit setup, schema contracts, or runtime contracts changed.
+At minimum:
+
+- for `backend/apps/ShopAPI/**`, run the relevant ShopAPI tests;
+- for `backend/apps/ShopOperator/**`, run the relevant ShopOperator
+  tests;
+- for shared package changes under `backend/packages/**`, run the
+  package-adjacent tests plus every affected application-level test set;
+- for migrations, schema, policies, permissions, money flow, orders,
+  inventory, or public contracts, escalate to the strongest repository-
+  supported backend checks.
+
+Use repo-native commands from:
+
+- `docs/manual/TESTING.md`
+- the nearest nested `AGENTS.md`
+- `.agents/skills/exec-plan/references/repo-test-matrix.md`
+
+Always keep the distinction clear:
+
+- baseline gate = mandatory minimum;
+- direct backend checks = mandatory proof for the changed behavior.
 
 ## Documentation impact
 
-Review at least:
+When backend behavior, contracts, configuration, or operator workflows
+change, review and update the related documentation.
 
-- `backend/README.md`
-- `README.md`
-- `docs/foundations/IMPLEMENTATION.md`
-- `docs/manual/TESTING.md`
-- `docs/manual/ADMIN_MANUAL.md`
-- `docs/manual/CLERC_MANUAL.md`
+Typical documentation impact includes:
 
-## How to answer
+- API behavior or request/response contracts;
+- operator-facing workflows;
+- environment and configuration notes;
+- migration or rollout notes;
+- troubleshooting and verification instructions;
+- task records under `tasks/<task-slug>/` when `exec-plan` is active.
 
-When implementing or reviewing backend work:
+Use:
 
-- say where the code belongs first
-- separate package logic from runtime glue
-- keep examples small and package-oriented
-- call out the minimal required tests
+- `tasks/<task-slug>/DOC-IMPACT.md` when `exec-plan` is active;
+- `.agents/skills/exec-plan/references/repo-doc-map.md`;
+- the nearest nested `AGENTS.md`.
 
-Read `references/backend-standard.md` for the full repo-specific rules and examples.
+Do not mark the task complete while backend-facing documentation drift
+remains unresolved.

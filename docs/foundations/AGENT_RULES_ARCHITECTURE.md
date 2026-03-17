@@ -103,21 +103,7 @@ must not be delegated to skills:
 - default script exit-code interpretation when a script does not define
   a narrower contract.
 
-
-## 6. Inventory integrity
-
-A routing model is only valid when the physical package matches the
-written instructions.
-
-Rules:
-
-- every skill named in root `AGENTS.md` must physically exist under
-  `.agents/skills/`;
-- every path referenced from `SKILL.md` must exist or be removed;
-- inventory drift must be recorded in
-  `docs/foundations/AGENT_RULES_DRIFT_MATRIX.md` when discovered.
-
-## 7. Root-file design goal
+## 6. Root-file design goal
 
 The root `AGENTS.md` should stay short, strict, and accurate. Keep only
 repository-wide invariants there. Move local detail to nested
