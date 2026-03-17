@@ -439,13 +439,7 @@ autoteka backup
 Запустить restore:
 
 ```bash
-autoteka restore <backup-path>
-```
-
-Запустить storage+database backup вручную:
-
-```bash
-autoteka backup-storage
+autoteka restore --archive-root=/root/autoteka-backup-root-*.tar.gz --archive-autoteka=/root/autoteka-backup-autoteka-*.tar.gz
 ```
 
 Запустить maintenance вручную:
@@ -488,12 +482,10 @@ sudo systemctl start server-maintenance.service
   метрик из логов в `/metrics/data.json`.
 - `$INFRA_ROOT/maintenance/server-maintenance.sh` или
   `autoteka maintenance` — периодическое техобслуживание.
-- `$INFRA_ROOT/maintenance/storage-backup.sh` или `autoteka backup-storage`
-  — backup `backend/storage` и `database.sqlite`.
 - `$INFRA_ROOT/maintenance/backup.sh` или `autoteka backup` — backup
-  runtime-конфигурации и секретов.
-- `$INFRA_ROOT/maintenance/restore.sh` или `autoteka restore <archive>` —
-  восстановление runtime-конфига и сброс runtime health-state.
+  runtime-конфигурации и секретов (три архива по glob-правилам).
+- `$INFRA_ROOT/maintenance/restore.sh` или `autoteka restore` —
+  восстановление из архивов (`--archive-root`, `--archive-autoteka`, `--archive-infra`).
 - `$INFRA_ROOT/bootstrap/uninstall.sh` или `autoteka uninstall <mode>` —
   удаление установленной системы.
 
@@ -515,18 +507,15 @@ sudo systemctl start server-maintenance.service
 
 Основные команды администратора:
 
-- `autoteka backup` — backup runtime-настроек и секретов;
-- `autoteka backup-storage` — backup `backend/storage` и
-  `database/database.sqlite`;
-- `autoteka restore <archive>` — restore runtime-настроек;
+- `autoteka backup` — backup runtime-настроек и секретов (три архива по glob-правилам);
+- `autoteka restore` — restore из архивов (`--archive-root`, `--archive-autoteka`, `--archive-infra`);
 - `autoteka uninstall <mode>` — удаление установленной системы.
 
 Быстрые примеры:
 
 ```bash
 sudo autoteka backup
-sudo autoteka backup-storage
-sudo autoteka restore /root/autoteka-backup-YYYYMMDD-HHMMSS.tar.gz
+sudo autoteka restore --archive-root=/root/autoteka-backup-root-YYYYMMDD-HHMMSS.tar.gz --archive-autoteka=/root/autoteka-backup-autoteka-YYYYMMDD-HHMMSS.tar.gz
 sudo autoteka uninstall soft
 ```
 

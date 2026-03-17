@@ -156,19 +156,24 @@ install.sh скопирует .env в /etc/autoteka/options.env. После ус
 
 ## Backup и restore
 
-`autoteka backup` сохраняет:
+`autoteka backup` создаёт до трёх архивов по glob-правилам из
+`$INFRA_ROOT/maintenance/config/backup-rules-*.txt` (или `.example.txt`):
 
-- `/etc/autoteka/options.env`;
-- `/etc/autoteka/telegram.env`;
-- systemd units и host-конфиги, устанавливаемые infra-контуром;
-- `backend/.env`, `frontend/.env`;
-- `backend/database` и `backend/storage`;
-- ignored-файлы из allowlist
-  `$INFRA_ROOT/maintenance/config/backup-ignored-allowlist.txt`.
+- `autoteka-backup-root-*.tar.gz` — пути относительно `/`;
+- `autoteka-backup-autoteka-*.tar.gz` — пути относительно `$AUTOTEKA_ROOT`;
+- `autoteka-backup-infra-*.tar.gz` — пути относительно `$INFRA_ROOT`.
 
-`autoteka restore` восстанавливает конфиги и данные, затем очищает
-runtime health-state. Параметр `--target-root` переписывает только
-`AUTOTEKA_ROOT`; `INFRA_ROOT` остаётся отдельным контрактом.
+Правила: include — `pattern`, exclude — `!pattern`. Файлы `backup-rules-*.txt`
+исключены из git; в репозитории есть `backup-rules-*.example.txt`.
+
+При создании backup архивы старше `STORAGE_BACKUP_RETENTION_DAYS` дней (из
+`/etc/autoteka/options.env`, по умолчанию 7) удаляются.
+
+`autoteka restore` принимает 1–3 архива через `--archive-root`, `--archive-autoteka`,
+`--archive-infra`. Перед развёртыванием останавливает таймеры, после — запускает.
+Очищает runtime health-state.
+
+Дополнительно: `autoteka timers-stop`, `autoteka timers-start`.
 
 ## Обновление старой установки
 
