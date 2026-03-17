@@ -60,6 +60,27 @@ then it stays in the runtime module.
 7. Open transactions where the use case runs, not in the interface layer.
 8. Design for SQLite as the real target database.
 
+## Test selection
+
+- `backend/apps/ShopAPI/**` -> `cd backend/apps/ShopAPI && php artisan test`
+- `backend/apps/ShopOperator/**` -> `cd backend/apps/ShopOperator && php artisan test`
+- `backend/packages/SchemaDefinition/**` -> run both runtime suites
+- shared package or contract change -> run every affected runtime suite
+- API route/serialization/HTTP behavior -> add `npm --prefix system-tests run test:quick-local` or the closest supported profile
+
+Do not treat root `verify.ps1` as sufficient evidence when backend tests, phpunit setup, schema contracts, or runtime contracts changed.
+
+## Documentation impact
+
+Review at least:
+
+- `backend/README.md`
+- `README.md`
+- `docs/foundations/IMPLEMENTATION.md`
+- `docs/manual/TESTING.md`
+- `docs/manual/ADMIN_MANUAL.md`
+- `docs/manual/CLERC_MANUAL.md`
+
 ## How to answer
 
 When implementing or reviewing backend work:

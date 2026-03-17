@@ -63,6 +63,8 @@ is a living execution record.
 6. Validate after each meaningful milestone.
 7. Keep diffs scoped to the current milestone.
 8. Update documentation continuously; do not leave it all for the end.
+9. Use the repository test matrix and documentation map when choosing
+   evidence and doc updates.
 
 ## Code-change loop
 
@@ -181,13 +183,18 @@ If any detail feels underspecified, consult these skill resources:
 
 - `references/openai-execplan-reference.md`
 - `references/plan-mode-vs-exec-plan.md`
+- `references/repo-test-matrix.md`
+- `references/repo-doc-map.md`
 - `assets/execplan-template.md`
 - `assets/requirements-template.md`
 - `assets/test-spec-template.md`
+- `assets/test-selection-template.md`
 - `assets/doc-impact-template.md`
+- `assets/doc-update-checklist.md`
 - `assets/milestone-template.md`
 - `assets/decision-log-entry.md`
 - `assets/validation-log-template.md`
+- `assets/research-notes-template.md`
 - `assets/task-folder-layout.md`
 
 ## Completion standard

@@ -33,6 +33,24 @@ Respect the repo split:
 5. Prefer diagnostics and repair steps that are observable and reversible.
 6. When changing operational behavior, update the relevant runbook.
 7. Do not redesign the stack around tools outside the approved infra stack unless the user explicitly asks for it.
+8. Keep dev/prod target selection explicit when compose overrides matter.
+
+## Test selection
+
+- infrastructure test or infra logic change -> `npm --prefix infrastructure/tests test`
+- runtime/dev wiring change -> add `npm --prefix system-tests run test:quick-dev`
+- browser-visible runtime regression -> escalate to the smallest relevant UI/system profile
+
+Do not treat root `verify.ps1` as sufficient evidence when changing infrastructure tests, compose wiring, bootstrap scripts, maintenance scripts, or observability/repair flows.
+
+## Documentation impact
+
+Review at least:
+
+- `infrastructure/DEPLOY.md`
+- `docs/manual/ADMIN_MANUAL.md`
+- `docs/manual/TESTING.md`
+- `docs/foundations/IMPLEMENTATION.md`
 
 ## How to answer
 

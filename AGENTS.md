@@ -10,6 +10,23 @@ English is explicitly required by this document.
 If there is no loss of precision between a Russian and an English
 formulation, the agent must choose Russian.
 
+## Project map
+
+Use these repository zones consistently:
+
+- `frontend/` — Vue/Vite front office and frontend tests.
+- `backend/apps/ShopAPI/` — API runtime.
+- `backend/apps/ShopOperator/` — back office runtime.
+- `backend/packages/SchemaDefinition/` — shared schema source of truth.
+- `infrastructure/` — runtime, deploy, maintenance, observability.
+- `system-tests/` — system and UI verification profiles.
+- `docs/` and `README.md` — permanent documentation.
+- `scripts/agent/` — mandatory repo automation entrypoints.
+- `tasks/` — temporary task records for agent work only.
+
+Before changing code, identify the primary zone and stay inside its
+boundary rules.
+
 ## 1. Canonical Workflow (Mandatory)
 
 Always follow this sequence:
@@ -106,6 +123,27 @@ Pure documentation-only tasks are excluded from this loop.
 
 ---
 
+## 1.5 Environment and platform-artifact discipline (mandatory)
+
+This repository uses explicit platform-state management through:
+
+- `scripts/swap-env.ps1`
+- `scripts/swap-env.sh`
+
+The agent must not manually reshuffle platform-specific lockfiles,
+`node_modules`, active `.env` files, or env-specific storage just to
+"make verify pass" when the repository already provides a script.
+
+Use `swap-env` for validation, save, and load operations. If the task
+requires a different active env state, record that need explicitly in
+`PLAN.md` when `exec-plan` is active.
+
+When a task changes verification scripts, test runners, env files,
+package manifests, or test configuration, treat that as a verification
+surface change, not as a docs-only change.
+
+---
+
 ## 2. Verification Policy
 
 All changes must pass:
@@ -116,7 +154,7 @@ All changes must pass:
 pwsh scripts/agent/verify.ps1 -Staged -LintMode check -TestProfile minimal
 ```
 
-`minimal` profile is quick and must verify:
+`minimal` profile is the mandatory baseline quick gate and verifies:
 
 - frontend unit tests (no browser)
 - backend quick tests in [ShopAPI](backend/apps/ShopAPI)
@@ -142,11 +180,99 @@ the change touches:
 - money flow, checkout, orders, or inventory consistency;
 - shared packages or public contracts;
 - deployment, runtime wiring, or environment configuration;
-- cross-application integration points.
+- cross-application integration points;
+- test runners, test profiles, verification scripts, or test config.
 
 If stronger automated verification is not available, state that
 limitation explicitly in the final answer and record it in the active
 `PLAN.md` when `exec-plan` is in use.
+
+---
+
+## 2.2 Target-test selection rules (mandatory)
+
+`verify.ps1 -TestProfile minimal` is the minimum gate, not the full test
+selection logic.
+
+The agent must also run the most relevant direct checks for the changed
+surface:
+
+- `frontend/src`, `frontend/src/components`, `frontend/src/pages`,
+  `frontend/src/router`, `frontend/src/state.ts` ->
+  `npm --prefix frontend run test:unit`
+- `frontend/src/api`, API client behavior, request/response handling ->
+  `npm --prefix frontend run test:api:online` when backend availability
+  is part of the change; otherwise document why online verification was
+  not run
+- frontend user flow, interaction structure, accessibility, or visual
+  regression that depends on browser behavior ->
+  `npm --prefix frontend run test:ui:mock` and escalate to
+  `npm --prefix frontend run test:e2e` or the closest supported
+  `system-tests` profile when same-origin integration matters
+- `backend/apps/ShopAPI/**` ->
+  `cd backend/apps/ShopAPI && php artisan test --parallel --processes=2`
+- `backend/apps/ShopOperator/**` ->
+  `cd backend/apps/ShopOperator && php artisan test --parallel --processes=2`
+- `backend/packages/SchemaDefinition/**` or other shared backend package
+  changes -> run tests in every affected runtime, at minimum both
+  `ShopAPI` and `ShopOperator` when schema/contracts can propagate
+- API contract, route, serialization, or HTTP behavior changes ->
+  `npm --prefix system-tests run test:quick-local` or the closest
+  supported `system-tests` profile
+- `infrastructure/**` ->
+  `npm --prefix infrastructure/tests test` and the smallest relevant
+  runtime/system profile such as `npm --prefix system-tests run
+  test:quick-dev`
+- `system-tests/**`, `infrastructure/tests/**`, `frontend/tests/**`,
+  `frontend/e2e/**`, `frontend/ui-mock/**`, `scripts/agent/**`,
+  `lint/**`, or repository test configuration -> run the directly
+  affected test or script entrypoint, not only `verify.ps1`
+
+When several surfaces are touched, combine the relevant checks.
+
+---
+
+## 2.3 Minimal verify cache caveat (mandatory)
+
+`verify.ps1 -TestProfile minimal` uses a source fingerprint cache stored
+at `/.runtime/verify/minimal-src-cache.json` and only keys some quick
+blocks by selected source trees.
+
+Because of that, changes limited to tests, test configs, verification
+scripts, env files, or related tooling may not force all quick blocks
+to rerun.
+
+Therefore, when the task changes:
+
+- any test file;
+- any test runner or test config;
+- `scripts/agent/verify.*` or related repo verification scripts;
+- env/config files that affect tests;
+
+the agent must do both:
+
+1. run the directly affected test or verification command;
+2. avoid trusting a cache-hit-only result as the sole evidence.
+
+Deleting `/.runtime/verify/minimal-src-cache.json` before the final
+quick gate is allowed when the cache would otherwise hide a changed
+verification surface.
+
+---
+
+## 2.4 Review tasks
+
+For review-only tasks, use the relevant domain skill and follow:
+
+- `docs/foundations/CODE_REVIEW.md`
+
+Review conclusions must distinguish clearly between:
+
+- correctness bugs;
+- contract/regression risks;
+- missing tests or weak evidence;
+- missing documentation or broken traceability;
+- optional cleanup.
 
 ---
 
@@ -186,10 +312,10 @@ Never commit:
 
 Large refactors must use subagents:
 
-- `explorer` → map impact
-- `scribe` → implement
-- `verifier` → gate
-- `commit_curator` → finalize
+- `explorer` -> map impact
+- `scribe` -> implement
+- `verifier` -> gate
+- `commit_curator` -> finalize
 
 Keep subagents narrow and opinionated. Each subagent must have one
 clear job and must not drift into adjacent work.
@@ -258,67 +384,19 @@ active task folder current during the entire task.
 
 - If the task changes markup semantics, accessibility, form UX,
   keyboard/focus behavior, use `layout-and-design`.
-- If the task changes Vue/Tailwind/client code, use `frontend`.
-- If the task changes PHP/Laravel/MoonShine/API/business
-  logic/tests/migrations, use `backend`.
-- If the task changes Docker/Compose/Bash/runtime config/ops scripts,
-  use `infrastructure`.
-- If the task changes documentation structure, manuals, runbooks,
-  implementation docs, infra docs, or test-case linking, use
-  `tech-writer`.
+- If the task changes Vue components or frontend state, use
+  `frontend` as the primary skill and `layout-and-design` only for the
+  semantic/accessibility part.
+- If the task changes backend business logic, package boundaries,
+  runtime wiring inside Laravel, or API/back office behavior, use
+  `backend`.
+- If the task changes deploy/runtime scripts, docker/systemd,
+  observability, maintenance, or repair, use `infrastructure`.
+- If the task is documentation-first, runbook-first, or traceability
+  work, use `tech-writer`.
 
-### 7.4 Boundary rules
+### 7.4 Nested guidance
 
-- Do not use `frontend` for backend or infrastructure work.
-- Do not use `layout-and-design` as a substitute for frontend
-  component architecture.
-- Do not use `backend` for infrastructure-only tasks.
-- Do not use `tech-writer` for code implementation unless the task is
-  explicitly documentation-first.
-- Do not load all skills by default.
-
-### 7.5 Priority when task spans multiple areas
-
-Use this priority order to choose the primary skill:
-
-1. `tech-writer` for documentation deliverables
-2. `infrastructure` for runtime and operational changes
-3. `backend` for server/business changes
-4. `frontend` for client implementation
-5. `layout-and-design` for semantic/a11y refinement
-
-When a task spans code + docs, implement with the code skill first and
-use `tech-writer` only for the documentation part. When a task spans
-frontend + accessibility, use `frontend` as primary and
-`layout-and-design` for markup/a11y decisions.
-
----
-
-## 8. Conflict Resolution
-
-If a skill instruction conflicts with this file:
-
-1. safety and repository constraints from this file win;
-2. verification and commit rules from this file win;
-3. task-record and code-change-loop rules from this file win;
-4. domain-specific implementation rules come from the selected skill.
-
----
-
-## 9. Script exit codes policy (mandatory)
-
-- 0 = ok
-- 1 = error
-- 2 = arguments validation failed
-- 3 = missing dependency
-
----
-
-## 10. Environment setup policy
-
-If something required for the task is missing from the environment, do
-not search for workarounds and do not substitute other tools.
-
-Instead, clearly tell the user what must be installed or configured,
-provide exact steps, and stop until the user confirms the environment
-is ready.
+When working inside `frontend/`, `backend/`, `infrastructure/`,
+`system-tests/`, or `docs/`, also follow the closer local `AGENTS.md`
+file in that subtree if present.

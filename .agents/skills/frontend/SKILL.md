@@ -27,6 +27,7 @@ Use this skill when the task changes:
 - frontend tests
 - same-origin API integration through `VITE_API_BASE_URL`
 - theme editor UI behavior
+- `frontend/scripts/` when the scripts are frontend-specific
 
 If the task is mainly about semantics, landmarks, headings, forms, focus, keyboard support, modal accessibility, or ARIA decisions, also load `layout-and-design`.
 
@@ -46,7 +47,26 @@ If the task is mainly about semantics, landmarks, headings, forms, focus, keyboa
 - UI and local UI behavior -> component/page/composable in `frontend/src/`
 - API glue -> frontend API client layer
 - Shared visual tokens -> CSS vars / theme layer
-- Test for changed behavior -> `frontend/tests`, `frontend/e2e`, or matching frontend test area
+- Test for changed behavior -> `frontend/tests`, `frontend/e2e`, `frontend/ui-mock`, or matching system-test area
+
+## Test selection
+
+- local component/state behavior -> `npm --prefix frontend run test:unit`
+- browser-only behavior without real backend -> `npm --prefix frontend run test:ui:mock`
+- frontend/backend contract -> `npm --prefix frontend run test:api:online`
+- same-origin end-to-end user flow -> `npm --prefix frontend run test:e2e` or a matching `system-tests` profile
+
+Do not treat root `verify.ps1` as sufficient evidence when frontend test files, Playwright/Vitest config, or API contract surfaces changed.
+
+## Documentation impact
+
+Review at least:
+
+- `frontend/README.md`
+- `README.md`
+- `docs/manual/USER_MANUAL.md`
+- `docs/manual/TESTING.md`
+- `docs/foundations/IMPLEMENTATION.md`
 
 ## How to answer
 

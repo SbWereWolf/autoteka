@@ -28,6 +28,8 @@ This directory is formatted for repo-local Codex skill discovery.
 - Long standards live in `references/` so metadata stays sharp and the
   full rules load only when the skill is chosen.
 - Reusable scaffolds live in `assets/`.
+- Repo-wide invariants stay in `AGENTS.md`, while nested `AGENTS.md`
+  files sharpen local behavior near the working subtree.
 
 ## Routing model used in this repo
 
@@ -35,6 +37,8 @@ This directory is formatted for repo-local Codex skill discovery.
 - One primary domain skill should own implementation.
 - Utility skills support repository workflow and do not replace the
   primary skill.
+- Review work follows `docs/foundations/CODE_REVIEW.md` in addition to
+  the relevant domain skill.
 
 ## How to verify in Codex CLI
 
@@ -54,3 +58,5 @@ This directory is formatted for repo-local Codex skill discovery.
 - Keep repo-wide invariants in `AGENTS.md`.
 - Keep specialist workflows in these skills.
 - Keep task-specific execution records under `tasks/<task-slug>/`.
+- Keep local subtree-specific rules in nested `AGENTS.md` files rather
+  than bloating the root file indefinitely.
