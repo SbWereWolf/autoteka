@@ -52,18 +52,14 @@ describe("TC-DEPLOY-023", () => {
   });
 
   it("ключевые скрипты подключают предметные библиотеки по назначению", () => {
-    expect(read("maintenance/backup.sh")).toMatch(
-      /source "\$INFRA_ROOT\/lib\/bootstrap\.sh"/,
-    );
-    expect(read("runtime/deploy.sh")).toMatch(
+    expect(read("maintenance/backup.sh")).toMatch(/init-roots\.sh/);
+    expect(read("lib/deploy-flow.sh")).toMatch(
       /source "\$INFRA_ROOT\/lib\/laravel-runtime\.sh"/,
     );
     expect(read("runtime/deploy.sh")).toMatch(
       /source "\$INFRA_ROOT\/lib\/telegram\.sh"/,
     );
-    expect(read("runtime/watch-changes.sh")).toMatch(
-      /source "\$INFRA_ROOT\/lib\/bootstrap\.sh"/,
-    );
+    expect(read("runtime/watch-changes.sh")).toMatch(/init-roots\.sh/);
     expect(read("runtime/watch-changes.sh")).toMatch(
       /source "\$INFRA_ROOT\/lib\/telegram\.sh"/,
     );

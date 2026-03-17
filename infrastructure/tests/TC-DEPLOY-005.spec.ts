@@ -10,14 +10,19 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const INFRA_ROOT_PATH = join(__dirname, "..");
 
 describe("TC-DEPLOY-005", () => {
-  it("deploy.sh содержит шаги подготовки runtime, migrate, seed, admin/login", () => {
-    const content = readFileSync(
+  it("deploy содержит шаги подготовки runtime, migrate, seed, admin/login", () => {
+    const deployContent = readFileSync(
       join(INFRA_ROOT_PATH, "runtime/deploy.sh"),
       "utf-8",
     );
-    expect(content).toMatch(/prepare_laravel_runtime/);
-    expect(content).toMatch(/migrate/);
-    expect(content).toMatch(/seed/);
-    expect(content).toMatch(/admin\/login|ADMIN_SMOKE/);
+    const flowContent = readFileSync(
+      join(INFRA_ROOT_PATH, "lib/deploy-flow.sh"),
+      "utf-8",
+    );
+    expect(deployContent).toMatch(/deploy-flow\.sh/);
+    expect(flowContent).toMatch(/prepare_laravel_runtime/);
+    expect(flowContent).toMatch(/migrate/);
+    expect(flowContent).toMatch(/seed/);
+    expect(flowContent).toMatch(/admin\/login|ADMIN_SMOKE/);
   });
 });
