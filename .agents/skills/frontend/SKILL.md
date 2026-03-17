@@ -18,6 +18,26 @@ Typical scope:
 Do not use this skill as a substitute for the `exec-plan` meta-skill
 when the task is structural, ambiguous, cross-cutting, or multi-step.
 
+## Standards and references
+
+Use this skill together with:
+
+- `docs/foundations/frontend-standard.md` — stable frontend
+  conventions, UI behavior expectations, accessibility priorities, and
+  anti-pattern guidance.
+- `.agents/skills/frontend/references/frontend-standard.md` —
+  repository-specific frontend stack, component/state/style guidance,
+  implementation examples, and testing defaults.
+
+The foundations document defines stable domain-level frontend
+conventions. The local reference adds repository-specific operational
+frontend guidance and examples. These documents support this skill but
+do not override:
+1. root `AGENTS.md`;
+2. the nearest nested `AGENTS.md`;
+3. explicit verification, commit, task-record, or code-change-loop
+   rules.
+
 ## Implementation focus
 
 When using this skill:
@@ -68,7 +88,9 @@ Use:
 
 - `tasks/<task-slug>/DOC-IMPACT.md` when `exec-plan` is active;
 - `.agents/skills/exec-plan/references/repo-doc-map.md`;
-- the nearest nested `AGENTS.md`.
+- the nearest nested `AGENTS.md`;
+- `docs/foundations/frontend-standard.md` for stable frontend
+  conventions.
 
 Do not mark the task complete while frontend documentation drift
 remains unresolved.
