@@ -80,7 +80,7 @@ Create commits only when explicitly requested by the user.
 If a commit is requested, it must be created only via:
 
 ```powershell
-"scripts/agent/commit.ps1" `
+pwsh "scripts/agent/commit.ps1" `
     -Message "<a short summary of the changes>" `
     -Body "<Explain why the changes were made>" `
     -AISystemName "<AI system name>" `
@@ -100,8 +100,6 @@ Never push to origin or other remotes.
 
 Never commit:
 
-- `operational/*`
-- `logs/*`
 - `tasks/*`
 - `inbox/*`
 

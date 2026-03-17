@@ -3,10 +3,15 @@ instructions = """
 Prepare final commit.
 
 Use:
-scripts/agent/commit.ps1 -Message "<english subject>"
+```powershell
+pwsh "scripts/agent/commit.ps1" `
+    -Message "<a short summary of the changes>" `
+    -Body "<Explain why the changes were made>" `
+    -AISystemName "<AI system name>" `
+    -LLMName "<LLM name>"
+```
 
 Ensure:
 - <= 50 char subject
-- blank second line
-- Author: footer present
+- <= 70 char body (on each line)
 """
