@@ -103,3 +103,10 @@ must not be delegated to skills:
 - default script exit-code interpretation when a script does not define
   a narrower contract.
 
+## 6. Root-file design goal
+
+The root `AGENTS.md` should stay short, strict, and accurate. Keep only
+repository-wide invariants there. Move local detail to nested
+`AGENTS.md`, reusable workflow behavior to skills, and long examples or
+maps to reference docs.
+

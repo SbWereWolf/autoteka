@@ -8,22 +8,21 @@ command, flag, API, filename, library, technology name, or where
 English is explicitly required by this document.
 
 If there is no loss of precision between a Russian and an English
-formulation, the agent must choose Russian.
+formulation, choose Russian.
 
 ## 0. Instruction layering and precedence
 
 This root file defines repository-wide invariants.
 
-More specific instructions may appear in nested `AGENTS.md` files
-closer to the files being changed. When that happens:
+Instruction order:
 
-1. follow this root file first;
-2. then follow the nearest relevant nested `AGENTS.md`;
-3. then apply the selected skill instructions;
-4. use reference docs only as supporting guidance.
+1. this root `AGENTS.md`;
+2. the nearest relevant nested `AGENTS.md`;
+3. the selected skill;
+4. supporting references.
 
-If two instructions conflict, prefer the more specific instruction
-unless it would violate an explicit root invariant in this file.
+If two instructions conflict, prefer the more specific one unless it
+would violate an explicit root invariant.
 
 When a skill instruction conflicts with this root file:
 
@@ -33,7 +32,7 @@ When a skill instruction conflicts with this root file:
 4. domain-specific implementation rules come from the selected skill
    and the nearest relevant nested `AGENTS.md`.
 
-For the architecture of the ruleset, read:
+For the ruleset architecture, see:
 
 - `docs/foundations/AGENT_RULES_ARCHITECTURE.md`
 
@@ -50,21 +49,10 @@ Always follow this sequence:
 Never bypass scripts under `scripts/agent/` when a repository script for
 that phase exists.
 
-## 1.1 Structural change definition
+### 1.1 When planning is mandatory
 
-A change is structural if it does at least one of the following:
-
-- adds, removes, splits, or moves modules or packages;
-- changes public contracts, schemas, routes, or integration
-  boundaries;
-- changes build, runtime, operational, or environment wiring;
-- changes shared abstractions used by multiple areas of the system;
-- changes agent tooling, repository workflow, or verification logic.
-
-## 1.2 Planning trigger (mandatory)
-
-The agent must load the `exec-plan` meta-skill before implementation
-when at least one of the following is true:
+Load the `exec-plan` meta-skill before implementation when at least one
+of the following is true:
 
 - the change is structural;
 - the task is ambiguous, multi-step, or cross-cutting;
@@ -75,19 +63,22 @@ when at least one of the following is true:
 - the user explicitly asks for planning, a plan, an ExecPlan, or a
   task breakdown.
 
+A change is structural if it changes module boundaries, public
+contracts, schemas, routes, integration boundaries, build/runtime
+wiring, shared abstractions, agent tooling, repository workflow, or
+verification logic.
+
 For simple isolated low-risk edits, `exec-plan` is optional.
 
-## 1.3 Task records location (mandatory)
+### 1.2 Task records (mandatory when `exec-plan` is active)
 
-When `exec-plan` is used, create or update a dedicated task folder
-under:
+Create or update a dedicated task folder under:
 
 - `tasks/<task-slug>/`
 
 Use lowercase kebab-case for `<task-slug>`.
 
-The task folder is the canonical location for planning records.
-Required files are:
+Required files:
 
 - `tasks/<task-slug>/PLAN.md` — the living execution plan;
 - `tasks/<task-slug>/REQUIREMENTS.md` — required for code changes;
@@ -95,12 +86,12 @@ Required files are:
 - `tasks/<task-slug>/DOC-IMPACT.md` — required when docs or related
   documents must be updated.
 
-Optional files may be added only when they materially improve
+Optional files are allowed only when they materially improve
 traceability, for example research notes or validation logs.
 
 Never commit `tasks/*`.
 
-## 1.4 Code-change development loop (mandatory)
+### 1.3 Code-change loop (mandatory)
 
 For any change that adds or modifies code, scripts, migrations,
 queries, templates, or executable configuration in any language
@@ -120,14 +111,14 @@ queries, templates, or executable configuration in any language
 8. run repository verification and direct checks.
 
 If a true red-green cycle is not meaningful, not possible, or not
-supported by the environment, the agent must record the reason in both
-`PLAN.md` and `TEST-SPEC.md`, then use the strongest available
-alternative such as characterization tests, smoke tests, contract
-checks, or explicit manual verification steps.
+supported by the environment, record the reason in both `PLAN.md` and
+`TEST-SPEC.md`, then use the strongest available alternative such as
+characterization tests, smoke tests, contract checks, or explicit
+manual verification steps.
 
 Pure documentation-only tasks are excluded from this loop.
 
-## 1.5 Environment readiness policy
+### 1.4 Environment readiness
 
 If something required for the task is missing from the environment, do
 not invent workarounds and do not silently substitute other tools.
@@ -158,7 +149,7 @@ pwsh scripts/agent/verify.ps1 -Staged -LintMode check -TestProfile minimal
 Treat this command as a mandatory baseline gate, not as proof that all
 relevant surfaces were fully checked.
 
-Current behavior of `verify.ps1 -TestProfile minimal`:
+Current minimal-profile behavior:
 
 - validates platform artifacts via `scripts/swap-env.ps1`;
 - runs frontend quick unit tests from `frontend`;
@@ -166,16 +157,16 @@ Current behavior of `verify.ps1 -TestProfile minimal`:
 - runs quick backend tests in `backend/apps/ShopOperator`;
 - uses a local cache based on selected source trees.
 
-It does **not** currently provide a generic repository-wide lint pass,
-and it does **not** directly cover `system-tests/`,
-`infrastructure/tests/`, docs, or most repository tooling surfaces.
+It does **not** provide a generic repository-wide lint pass and does
+**not** directly cover `system-tests/`, `infrastructure/tests/`, docs,
+or most repository tooling surfaces.
 
 Exit code != 0 = stop.
 
-### 2.2 Direct checks are also mandatory when relevant
+### 2.2 Direct checks are also mandatory
 
-In addition to the baseline gate, the agent must run the strongest
-relevant direct checks for the changed surface.
+In addition to the baseline gate, run the strongest relevant direct
+checks for the changed surface.
 
 Use repo-native commands from:
 
@@ -183,28 +174,19 @@ Use repo-native commands from:
 - `.agents/skills/exec-plan/references/repo-test-matrix.md`
 - the nearest nested `AGENTS.md`
 
-Examples:
+Rules:
 
-- `frontend/src` behavior change -> baseline gate, plus targeted
-  frontend unit or browser/UI checks when behavior is not proven by unit
-  tests alone;
-- `backend/apps/ShopAPI` contract change -> baseline gate, plus a
-  direct HTTP or system-test check when the observable API behavior
-  changed;
-- `system-tests/` change -> baseline gate only as a baseline, plus
-  targeted `system-tests` commands;
-- `scripts/agent/*` change -> baseline gate, plus direct smoke checks of
-  the changed scripts;
-- docs-only change -> targeted documentation checks and linked behavior
-  checks when the changed document makes executable claims.
-
-Never claim full verification from the baseline gate alone when the
-changed surface is outside its direct coverage.
+- baseline gate alone is never enough for surfaces outside its direct
+  coverage;
+- `system-tests/`, `scripts/agent/*`, `.agents/`, `.codex/`,
+  `infrastructure/tests/`, and behavior-heavy doc changes always need
+  direct checks;
+- when observable runtime behavior changed, include at least one check
+  that proves that behavior directly.
 
 ### 2.3 Verification escalation
 
-Escalate verification to the strongest repository-supported level when
-at least one of the following is true:
+Escalate verification to the strongest repository-supported level when:
 
 - database schema or migrations changed;
 - authentication, authorization, or permissions changed;
@@ -214,16 +196,14 @@ at least one of the following is true:
 - cross-application integration points changed;
 - verification tooling or agent scripts changed.
 
-If stronger automated verification is not available, state that
+If stronger automated verification is unavailable, state that
 limitation explicitly in the final answer and record it in the active
 `PLAN.md` when `exec-plan` is in use.
 
 ### 2.4 Cache awareness
 
 `verify.ps1 -TestProfile minimal` uses a quick-cache keyed only to
-selected source trees.
-
-At minimum, the cache directly tracks:
+selected source trees. At minimum, it directly tracks:
 
 - `frontend/src`
 - `backend/apps/ShopAPI/app`
@@ -231,16 +211,16 @@ At minimum, the cache directly tracks:
 - `backend/packages/SchemaDefinition/src`
 
 Therefore changes in tests, docs, scripts, env/config, runtime wiring,
-or verification code can leave the baseline gate looking greener than it
-really is.
+or verification code can leave the baseline gate looking greener than
+it really is.
 
 When the task touches surfaces outside the tracked trees, direct checks
 are mandatory and must be called out explicitly.
 
-## 2.5 Script exit codes policy
+### 2.5 Script exit codes policy
 
-When repository or agent scripts define exit codes, interpret them as a
-contract rather than free-form output. The default policy is:
+When repository or agent scripts define exit codes, interpret them as 
+a contract. The default policy is:
 
 - `0` = ok
 - `1` = error
@@ -286,10 +266,10 @@ Never commit:
 
 Large refactors must use subagents:
 
-- `explorer` -> map impact and instruction layers
-- `scribe` -> implement scoped milestone work
-- `verifier` -> run baseline + direct checks and report blockers
-- `commit_curator` -> finalize only when a commit was requested
+- `explorer` -> map impact and instruction layers;
+- `scribe` -> implement scoped milestone work;
+- `verifier` -> run baseline + direct checks and report blockers;
+- `commit_curator` -> finalize only when a commit was requested.
 
 Keep subagents narrow and opinionated. Each subagent must have one
 clear job and must not drift into adjacent work.
@@ -314,20 +294,20 @@ After any write or update step, briefly restate:
 
 ## 7. Skill routing
 
-Before implementing any change, classify the task and load the
-matching skill from `.agents/skills/`.
+Before implementation, classify the task and load the matching skill
+from `.agents/skills/`.
 
 Use exactly one primary skill unless the task clearly spans multiple
-specializations. If multiple skills apply, choose one primary skill
-and use others only for narrow subordinate parts.
+specializations. If multiple skills apply, choose one primary skill and
+use others only for narrow subordinate parts.
 
 ### 7.1 Meta and utility skills
 
-The following skills do not replace the required primary domain skill:
+These skills do not replace the required primary domain skill:
 
 - `exec-plan` — planning and living task records for complex work;
 - `preflight` — repository state snapshot and blocker detection;
-- `verify` — baseline verification gate plus direct-check discipline;
+- `verify` — baseline gate plus direct-check discipline;
 - `safe-commit` — policy-compliant commit workflow.
 
 If `exec-plan` is active, load it before the primary skill and keep the
@@ -335,30 +315,24 @@ active task folder current during the entire task.
 
 ### 7.2 Primary skills
 
-- `frontend` — Vue 3.5+, Vite 5+, Tailwind 4.2+, component logic,
-  composables, state, forms, client UI behavior, frontend tests.
-- `layout-and-design` — semantic HTML, W3C/WHATWG, WCAG, ARIA,
-  landmarks, headings, focus, contrast, target size, modal/dialog
-  behavior.
-- `backend` — Laravel 12+, PHP 8.2+, MoonShine 4.8+, ShopAPI,
-  ShopOperator, shared business packages, tests, transactions,
-  placement of backend logic.
+- `frontend` — frontend logic, composables, state, forms, UI behavior,
+  frontend tests;
+- `layout-and-design` — semantics, accessibility, keyboard/focus,
+  modal/dialog behavior, UX-sensitive markup;
+- `backend` — Laravel/PHP runtime code, business logic, shared backend
+  packages, transactions, backend tests;
 - `system-tests` — end-to-end, HTTP smoke, Playwright/Vitest scenarios,
-  behavior checks spanning runtime boundaries, doc-linked behavior
-  checks.
-- `infrastructure` — Ubuntu 24+, Bash, Docker, Docker Compose,
-  deployment scripts, service wiring, runtime operations, environment
-  configuration.
-- `repo-tooling` — repository scripts, `scripts/agent`, lint tooling,
-  Codex skills, subagent configs, workflow mechanics, and instruction
-  hygiene.
-- `tech-writer` — docs, runbooks, manuals, IMPLEMENTATION, DEPLOY,
-  USER/CLERC/ADMIN manuals, TESTING docs, cross-links between docs and
-  checks.
+  cross-runtime behavior checks;
+- `infrastructure` — Docker, Compose, deployment scripts, service
+  wiring, runtime operations, environment configuration;
+- `repo-tooling` — repository scripts, `scripts/agent`, lint/tooling,
+  Codex skills, subagent configs, workflow mechanics;
+- `tech-writer` — docs, runbooks, manuals, implementation/deploy/user
+  docs, testing docs, cross-links.
 
 ### 7.3 Selection rules
 
-- If the task changes markup semantics, accessibility, form UX,
+- If the task changes markup semantics, accessibility, form UX, or
   keyboard/focus behavior, use `layout-and-design` as the primary skill
   when semantics drive the task; otherwise use it as a subordinate
   frontend aid.
@@ -377,10 +351,10 @@ Before reporting completion, review the diff against:
 
 - `docs/foundations/CODE_REVIEW.md`
 
-The agent must explicitly check for:
+Explicitly check for:
 
 - wrong skill selection or missing `exec-plan`;
 - missing direct checks for the changed surface;
 - stale docs or stale task records;
-- path/command references that no longer match the repo;
+- path or command references that no longer match the repo;
 - accidental widening of scope.
