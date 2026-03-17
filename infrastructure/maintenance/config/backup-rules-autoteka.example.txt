@@ -1,29 +1,12 @@
-# Curated allowlist for backup of ignored files.
-# Paths are relative to AUTOTEKA_ROOT.
-# This file is intentionally editable by operators.
-#
+# Назначение: пути относительно $AUTOTEKA_ROOT.
+# Скопируйте в backup-rules-autoteka.txt и настройте под свою среду.
 # Rules:
-# - comments and empty lines are ignored
-# - leading with no "/" is accepted and treated as repo-relative path
 # - glob patterns are supported
+# include — pattern, exclude — !pattern. См. backup.sh.
+# - comments and empty lines are ignored
 # - only server-relevant files should stay here
 
-/etc/autoteka/options.env
-/etc/autoteka/telegram.env
-
-/etc/systemd/system/*
-/etc/systemd/journald.conf.d/limits.conf
-/etc/systemd/system/docker.service.d/override.conf
-
-/etc/docker/daemon.json
-
-/etc/fail2ban/jail.d/sshd.local
-
-/etc/logrotate.d/vue-app-deploy
-/etc/logrotate.d/server-watchdog
-/etc/logrotate.d/autoteka-telegram
-
-$AUTOTEKA_ROOT/frontend/.env
+frontend/.env
 
 backend/database/*.sqlite*
 

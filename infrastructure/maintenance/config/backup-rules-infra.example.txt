@@ -1,0 +1,11 @@
+# Назначение: пути относительно $INFRA_ROOT.
+# Скопируйте в backup-rules-infra.txt и настройте под свою среду.
+# Rules:
+# - glob patterns are supported
+# include — pattern, exclude — !pattern. См. backup.sh.
+# - comments and empty lines are ignored
+# - only server-relevant files should stay here
+
+maintenance/config/backup-rules-root.txt
+maintenance/config/backup-rules-autoteka.txt
+maintenance/config/backup-rules-infra.txt

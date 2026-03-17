@@ -1,0 +1,38 @@
+# Назначение: пути для резервного копирования относительно корня ФС (/).
+# Скопируйте в backup-rules-root.txt и настройте под свою среду.
+# Rules:
+# - glob patterns are supported
+# include — pattern, exclude — !pattern. См. backup.sh.
+# - comments and empty lines are ignored
+# - only server-relevant files should stay here
+
+etc/autoteka/options.env
+etc/autoteka/telegram.env
+
+!var/lib/server-watchdog/health/**
+!var/lib/server-watchdog.state
+!var/lib/server-watchdog.reboot
+!tmp/autoteka-telegram-locks/**
+
+etc/systemd/system/autoteka.service
+
+etc/systemd/system/watch-changes.service
+etc/systemd/system/watch-changes.timer
+
+etc/systemd/system/server-watchdog.service
+etc/systemd/system/server-watchdog.timer
+
+etc/systemd/system/server-maintenance.service
+etc/systemd/system/server-maintenance.timer
+
+etc/systemd/system/docker.service.d/override.conf
+etc/docker/daemon.json
+
+etc/systemd/journald.conf.d/limits.conf
+
+
+etc/fail2ban/jail.d/sshd.local
+
+etc/logrotate.d/vue-app-deploy
+etc/logrotate.d/server-watchdog
+etc/logrotate.d/autoteka-telegram

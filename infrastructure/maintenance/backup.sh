@@ -2,44 +2,48 @@
 set -euo pipefail
 
 # Backup deploy settings: env, systemd, docker, fail2ban, logrotate + app data.
-# Creates tar.gz archive with deploy configuration affecting app and Docker services.
-# Runtime health incident state is intentionally NOT included.
+# Creates up to three tar.gz archives (root, autoteka, infra) from glob rules.
+# Runtime health incident state is intentionally NOT included (excluded via rules).
+
+# exit codes: 0=ok, 1=error, 2=args validation failed, 3=missing dependency
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/../init-roots.sh"
 autoteka_init_roots "$@"
 set -- "${AUTOTEKA_ARGS[@]}"
 
+# Загрузить options.env для STORAGE_BACKUP_RETENTION_DAYS
+if [ -f /etc/autoteka/options.env ]; then
+  set -a
+  source /etc/autoteka/options.env 2>/dev/null || true
+  set +a
+fi
+
 OUTPUT_DIR="/root"
-IGNORE_ALLOWLIST_FILE="$INFRA_ROOT/maintenance/config/backup-ignored-allowlist.txt"
+RETENTION_DAYS="${STORAGE_BACKUP_RETENTION_DAYS:-7}"
+DRY_RUN="no"
+CONFIG_DIR="$INFRA_ROOT/maintenance/config"
 
 usage() {
   cat <<'USAGE'
 Usage:
-  sudo "$INFRA_ROOT"/maintenance/backup.sh [--output-dir=PATH]
+  sudo "$INFRA_ROOT"/maintenance/backup.sh [--output-dir=PATH] [--dry-run]
 
 Purpose:
-  Create a backup archive with runtime configuration, project secrets and
-  data required for restore on the same or another host.
-
-Included in backup:
-  - /etc/autoteka/options.env
-  - /etc/autoteka/telegram.env
-  - backend/.env and frontend/.env from AUTOTEKA_ROOT
-  - backend/database and backend/storage from AUTOTEKA_ROOT
-  - ignored-files curated allowlist from INFRA_ROOT
-  - systemd units installed by the current infra install script
-  - docker/journald/fail2ban/logrotate configuration managed by this project
-
-Explicitly NOT included:
-  - active watchdog/health incident state in /var/lib/server-watchdog*
-  - Telegram notification dedup locks in ${TMPDIR:-/tmp}/autoteka-telegram-locks
-  - Docker images and unnamed temporary files
+  Create backup archives from glob rules (backup-rules-*.txt).
+  Up to three archives: root (/), autoteka ($AUTOTEKA_ROOT), infra ($INFRA_ROOT).
 
 Options:
-  --output-dir=PATH   Directory where the .tar.gz archive will be created.
-                      Default: /root
+  --output-dir=PATH   Directory for .tar.gz archives. Default: /root
+  --dry-run           List files only, do not create archives.
   -h, --help          Show this help.
+
+Archives created (when rules match):
+  autoteka-backup-root-YYYYMMDD-HHMMSS.tar.gz
+  autoteka-backup-autoteka-YYYYMMDD-HHMMSS.tar.gz
+  autoteka-backup-infra-YYYYMMDD-HHMMSS.tar.gz
+
+WARNING: Archives contain secrets. Store securely, do not commit to git.
 USAGE
 }
 
@@ -47,6 +51,10 @@ while [ "${1:-}" != "" ]; do
   case "$1" in
     --output-dir=*)
       OUTPUT_DIR="${1#--output-dir=}"
+      shift
+      ;;
+    --dry-run)
+      DRY_RUN="yes"
       shift
       ;;
     -h|--help)
@@ -67,145 +75,152 @@ if [ "$(id -u)" -ne 0 ]; then
 fi
 
 TIMESTAMP="$(date +%Y%m%d-%H%M%S)"
-BACKUP_NAME="autoteka-backup-$TIMESTAMP"
-TMP_DIR=""
-ARCHIVE=""
-
-cleanup() {
-  if [ -n "$TMP_DIR" ] && [ -d "$TMP_DIR" ]; then
-    rm -rf "$TMP_DIR"
-  fi
-}
-trap cleanup EXIT
-
 say() { printf '>>> %s\n' "$*"; }
 
-copy_if_exists() {
-  local src="$1" dest="$2"
-  if [ -e "$src" ]; then
-    mkdir -p "$(dirname "$dest")"
-    cp -a "$src" "$dest"
-    say "backed up: $src"
-    return 0
-  else
-    echo "  (skip, not found: $src)" >&2
-    return 1
-  fi
+# --- backup_glob logic (inlined) ---
+trim() {
+  local s="$1"
+  s="${s#"${s%%[![:space:]]*}"}"
+  s="${s%"${s##*[![:space:]]}"}"
+  printf '%s' "$s"
 }
 
-copy_allowlisted_ignored() {
-  local allowlist_file="$1"
+normalize_rule() {
+  local s="$1"
+  while [[ "$s" == /* ]]; do s="${s#/}"; done
+  printf '%s' "$s"
+}
 
-  if [ ! -f "$allowlist_file" ]; then
-    echo "  (skip, allowlist not found: $allowlist_file)" >&2
+backup_from_rules() {
+  local root="$1" rules_file="$2" archive_path="$3" dry="$4"
+  local -A selected=()
+  local -a order=()
+  local effective_rules=0 line mode rule m p
+  local -a matches=()
+  local saved_pwd="$PWD"
+
+  [[ -f "$rules_file" ]] || return 0
+  [[ -r "$rules_file" ]] || return 0
+
+  shopt -s extglob globstar nullglob dotglob globskipdots 2>/dev/null || true
+  cd "$root" || { cd "$saved_pwd" 2>/dev/null || true; return 1; }
+
+  while IFS= read -r raw_line || [[ -n "${raw_line:-}" ]]; do
+    raw_line="${raw_line%$'\r'}"
+    line=$(trim "$raw_line")
+    [[ -n "$line" ]] || continue
+
+    if [[ "${line:0:2}" == '\#' ]]; then
+      mode=include
+      rule="${line:1}"
+    elif [[ "${line:0:1}" == '#' ]]; then
+      continue
+    elif [[ "${line:0:2}" == '\!' ]]; then
+      mode=include
+      rule="${line:1}"
+    elif [[ "${line:0:2}" == '!(' ]]; then
+      mode=include
+      rule="$line"
+    elif [[ "${line:0:1}" == '!' ]]; then
+      mode=exclude
+      rule="${line:1}"
+    else
+      mode=include
+      rule="$line"
+    fi
+
+    rule=$(trim "$rule")
+    [[ -n "$rule" ]] || continue
+    rule=$(normalize_rule "$rule")
+    [[ -n "$rule" ]] || continue
+
+    ((effective_rules += 1)) || true
+    mapfile -t matches < <(compgen -G "$rule" 2>/dev/null || true)
+
+    if [[ "$mode" == "include" ]]; then
+      for m in "${matches[@]}"; do
+        selected["$m"]=1
+        order+=("$m")
+      done
+    else
+      for m in "${matches[@]}"; do
+        unset 'selected[$m]' 2>/dev/null || true
+      done
+    fi
+  done < "$rules_file"
+
+  shopt -u extglob globstar nullglob dotglob globskipdots 2>/dev/null || true
+  cd "$saved_pwd" 2>/dev/null || true
+
+  if (( effective_rules == 0 )); then
+    say "skip (no rules): $rules_file"
     return 0
   fi
 
-  mkdir -p "$BACKUP_ROOT/project"
-  cp -a "$allowlist_file" "$BACKUP_ROOT/project/backup-ignored-allowlist.txt"
+  if (( ${#selected[@]} == 0 )); then
+    say "skip (no matches): $rules_file"
+    return 0
+  fi
 
-  shopt -s nullglob dotglob globstar
-  while IFS= read -r line || [ -n "$line" ]; do
-    line="${line%%#*}"
-    line="${line#"${line%%[![:space:]]*}"}"
-    line="${line%"${line##*[![:space:]]}"}"
-    line="${line#./}"
-    line="${line#/}"
-    if [ -z "$line" ]; then
-      continue
-    fi
-    if [[ "$line" == "!"* ]]; then
-      continue
-    fi
-
-    local matches=( "$AUTOTEKA_ROOT"/$line )
-    if [ "${#matches[@]}" -eq 0 ]; then
-      echo "  (skip, allowlist miss: $line)" >&2
-      continue
-    fi
-
-    local src rel
-    for src in "${matches[@]}"; do
-      rel="${src#$AUTOTEKA_ROOT/}"
-      case "$rel" in
-        ""|../*|*/../*|*"/.."|..)
-          echo "  (skip, invalid allowlist path: $src)" >&2
-          continue
-          ;;
-      esac
-      copy_if_exists "$src" "$BACKUP_ROOT/project/ignored/$rel" || true
+  if [[ "$dry" == "yes" ]]; then
+    for p in "${order[@]}"; do
+      [[ -v selected["$p"] ]] || continue
+      printf '%s\n' "$p"
     done
-  done < "$allowlist_file"
-  shopt -u nullglob dotglob globstar
+    return 0
+  fi
+
+  mkdir -p "$(dirname "$archive_path")"
+  local -a tar_args=(--create --gzip --file "$archive_path" --directory "$root" --no-recursion --null --verbatim-files-from --files-from=-)
+
+  for p in "${order[@]}"; do
+    [[ -v selected["$p"] ]] || continue
+    printf '%s\0' "$p"
+  done | tar "${tar_args[@]}"
+  say "created: $archive_path"
+  return 0
 }
 
-TMP_DIR="$(mktemp -d)"
-BACKUP_ROOT="$TMP_DIR/$BACKUP_NAME"
-mkdir -p "$BACKUP_ROOT"
+# --- main ---
+say "Backup (dry-run=$DRY_RUN, output-dir=$OUTPUT_DIR)"
 
-say "Collecting runtime configuration and data..."
+rules_file() {
+  local base="$1"
+  if [[ -f "$CONFIG_DIR/$base.txt" ]]; then
+    printf '%s' "$CONFIG_DIR/$base.txt"
+  else
+    printf ''
+  fi
+}
 
-# /etc/autoteka
-copy_if_exists /etc/autoteka/options.env "$BACKUP_ROOT/etc/autoteka/options.env" || true
-copy_if_exists /etc/autoteka/telegram.env "$BACKUP_ROOT/etc/autoteka/telegram.env" || true
+RULES_ROOT=$(rules_file "backup-rules-root")
+RULES_AUTOTEKA=$(rules_file "backup-rules-autoteka")
+RULES_INFRA=$(rules_file "backup-rules-infra")
 
-# curated ignored allowlist
-copy_allowlisted_ignored "$IGNORE_ALLOWLIST_FILE"
+if [[ "$DRY_RUN" == "yes" ]]; then
+  [[ -n "$RULES_ROOT" ]] && { say "--- root (/) ---"; backup_from_rules "/" "$RULES_ROOT" "" "yes" || true; }
+  [[ -n "$RULES_AUTOTEKA" ]] && { say "--- autoteka ($AUTOTEKA_ROOT) ---"; backup_from_rules "$AUTOTEKA_ROOT" "$RULES_AUTOTEKA" "" "yes" || true; }
+  [[ -n "$RULES_INFRA" ]] && { say "--- infra ($INFRA_ROOT) ---"; backup_from_rules "$INFRA_ROOT" "$RULES_INFRA" "" "yes" || true; }
+  exit 0
+fi
 
-# systemd units
-for u in autoteka.service watch-changes.service watch-changes.timer \
-  server-watchdog.service server-watchdog.timer \
-  server-maintenance.service server-maintenance.timer; do
-  copy_if_exists "/etc/systemd/system/$u" "$BACKUP_ROOT/etc/systemd/system/$u" || true
-done
+ARCH_ROOT="$OUTPUT_DIR/autoteka-backup-root-$TIMESTAMP.tar.gz"
+ARCH_AUTOTEKA="$OUTPUT_DIR/autoteka-backup-autoteka-$TIMESTAMP.tar.gz"
+ARCH_INFRA="$OUTPUT_DIR/autoteka-backup-infra-$TIMESTAMP.tar.gz"
 
-# docker override
-copy_if_exists /etc/systemd/system/docker.service.d/override.conf \
-  "$BACKUP_ROOT/etc/systemd/system/docker.service.d/override.conf" || true
+[[ -n "$RULES_ROOT" ]] && backup_from_rules "/" "$RULES_ROOT" "$ARCH_ROOT" "no" || true
+[[ -n "$RULES_AUTOTEKA" ]] && backup_from_rules "$AUTOTEKA_ROOT" "$RULES_AUTOTEKA" "$ARCH_AUTOTEKA" "no" || true
+[[ -n "$RULES_INFRA" ]] && backup_from_rules "$INFRA_ROOT" "$RULES_INFRA" "$ARCH_INFRA" "no" || true
 
-# docker daemon
-copy_if_exists /etc/docker/daemon.json "$BACKUP_ROOT/etc/docker/daemon.json" || true
-
-# journald
-copy_if_exists /etc/systemd/journald.conf.d/limits.conf \
-  "$BACKUP_ROOT/etc/systemd/journald.conf.d/limits.conf" || true
-
-# fail2ban
-copy_if_exists /etc/fail2ban/jail.d/sshd.local \
-  "$BACKUP_ROOT/etc/fail2ban/jail.d/sshd.local" || true
-
-# logrotate
-copy_if_exists /etc/logrotate.d/vue-app-deploy \
-  "$BACKUP_ROOT/etc/logrotate.d/vue-app-deploy" || true
-copy_if_exists /etc/logrotate.d/server-watchdog \
-  "$BACKUP_ROOT/etc/logrotate.d/server-watchdog" || true
-copy_if_exists /etc/logrotate.d/autoteka-telegram \
-  "$BACKUP_ROOT/etc/logrotate.d/autoteka-telegram" || true
-
-Path="$BACKUP_ROOT/BACKUP_NOTES.txt"
-cat > "$Path" <<NOTES
-Autoteka backup created at: $(date -Is)
-AUTOTEKA_ROOT snapshot source: $AUTOTEKA_ROOT
-INFRA_ROOT snapshot source: $INFRA_ROOT
-
-This archive contains runtime configuration and selected project data:
-- env and system configs
-- backend/database and backend/storage
-- curated ignored allowlist content
-
-It intentionally does NOT include runtime watchdog/health incident state,
-Telegram deduplication locks, logs, or Docker images.
-
-After restore, restart monitoring from a clean state.
-NOTES
-
-# Create archive
-mkdir -p "$OUTPUT_DIR"
-ARCHIVE="$OUTPUT_DIR/${BACKUP_NAME}.tar.gz"
-say "Creating archive: $ARCHIVE"
-tar -czf "$ARCHIVE" -C "$TMP_DIR" "$BACKUP_NAME"
+# Удалить архивы старше RETENTION_DAYS дней (по дате модификации файла)
+if [ -d "$OUTPUT_DIR" ] && [ "$RETENTION_DAYS" -gt 0 ] 2>/dev/null; then
+  while IFS= read -r -d '' f; do
+    [ -f "$f" ] || continue
+    rm -f "$f"
+    say "removed old: $f"
+  done < <(find "$OUTPUT_DIR" -maxdepth 1 -name "autoteka-backup-*-*.tar.gz" -mtime "+${RETENTION_DAYS}" -print0 2>/dev/null || true)
+fi
 
 echo
-echo "Backup created: $ARCHIVE"
-echo "WARNING: Archive contains secrets. Store securely, do not commit to git."
-echo "NOTE: Runtime health incident state is intentionally excluded."
+echo "Backup completed. Archives in: $OUTPUT_DIR"
+echo "WARNING: Archives contain secrets. Store securely, do not commit to git."
