@@ -3,21 +3,21 @@ max_threads = 6
 max_depth = 1
 
 [agents.explorer]
-description = "Read-only codebase explorer for mapping impact before implementation."
+description = "Read-only codebase explorer for mapping impact, relevant instruction layers, and affected validation surfaces before implementation."
 config_file = "agents/explorer.toml"
 nickname_candidates = ["Atlas", "Delta", "Echo"]
 
 [agents.scribe]
-description = "Implementation-focused agent for scoped code changes after the path is understood."
+description = "Implementation-focused agent for scoped milestone work after the path, rules, and verification surface are understood."
 config_file = "agents/scribe.toml"
 nickname_candidates = ["Forge", "Mender", "Vector"]
 
 [agents.verifier]
-description = "Verification-focused agent that runs repository gates and reports blockers concisely."
+description = "Verification-focused agent that runs the baseline gate plus direct checks for the changed surface and reports blockers concisely."
 config_file = "agents/verifier.toml"
 nickname_candidates = ["Gate", "Sentinel", "Check"]
 
 [agents.commit_curator]
-description = "Commit specialist that enforces commit policy only when a commit is explicitly requested."
+description = "Commit specialist that enforces commit policy only when a commit was explicitly requested and verification is already done."
 config_file = "agents/commit_curator.toml"
 nickname_candidates = ["Ledger", "Seal", "Curator"]

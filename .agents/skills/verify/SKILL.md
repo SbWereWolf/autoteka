@@ -1,6 +1,6 @@
 ---
 name: verify
-description: Use after meaningful code changes and after each major milestone to run the repository verification gate deterministically, then add the strongest direct checks for the changed surface; do not rely on the quick gate alone when tests, configs, or verification scripts changed.
+description: Use after meaningful changes and after each major milestone to run the mandatory baseline verification gate, then add the strongest relevant direct checks for the changed surface. Do not treat the quick baseline gate as complete proof for system-tests, docs, tooling, or infrastructure changes.
 ---
 
 Use after significant changes, after major milestones, and before any
@@ -8,57 +8,58 @@ requested commit.
 
 ## Baseline gate
 
-Run:
+Always run:
 
-`pwsh scripts/agent/verify.ps1 -Staged -LintMode check -TestProfile minimal`
+```powershell
+pwsh scripts/agent/verify.ps1 -Staged -LintMode check -TestProfile minimal
+```
 
-`minimal` is the mandatory baseline quick gate and covers:
+Stop on non-zero exit code.
 
-- frontend unit tests
-- backend quick tests in `backend/apps/ShopAPI`
-- backend quick tests in `backend/apps/ShopOperator`
+## Important limits of the baseline gate
 
-If exit code != 0:
+The baseline gate currently validates platform artifacts and runs only a
+quick subset of frontend and backend tests.
 
-- Stop.
-- Fix.
-- Re-run.
+It does not by itself prove:
+
+- `system-tests/` changes;
+- `infrastructure/tests/` changes;
+- docs-only changes;
+- `scripts/agent/`, `.agents/`, `.codex/`, or `lint/` changes;
+- browser-only UI flows;
+- contract changes that require direct HTTP or end-to-end evidence.
+
+It also uses a cache over selected source trees, so changes in tests,
+docs, scripts, configs, and workflow files can evade direct coverage.
 
 ## Direct-check rule
 
-The quick gate is not enough when the changed surface has its own test
-entrypoint.
+After the baseline gate, run the strongest relevant direct checks for
+the changed surface.
 
-Also run the most relevant direct checks, for example:
+Choose commands from:
 
-- `npm --prefix frontend run test:unit`
-- `npm --prefix frontend run test:ui:mock`
-- `npm --prefix frontend run test:api:online`
-- `npm --prefix frontend run test:e2e`
-- `cd backend/apps/ShopAPI && php artisan test`
-- `cd backend/apps/ShopOperator && php artisan test`
-- `npm --prefix system-tests run test:quick-local`
-- `npm --prefix system-tests run test:quick-dev`
-- `npm --prefix infrastructure/tests test`
+- `docs/manual/TESTING.md`
+- `.agents/skills/exec-plan/references/repo-test-matrix.md`
+- the nearest nested `AGENTS.md`
 
-Choose the smallest sufficient set that matches the change.
+Examples:
 
-## Cache caveat
+- frontend behavior -> targeted unit or UI/browser checks;
+- backend contract -> direct HTTP or `system-tests` quick checks;
+- `system-tests/` change -> targeted `npm --prefix system-tests ...`;
+- repo-tooling change -> direct script smoke checks;
+- docs change -> lint/doc checks and linked behavior checks where the
+  doc makes executable claims.
 
-`verify.ps1 -TestProfile minimal` uses a fingerprint cache at:
+## Reporting format
 
-- `/.runtime/verify/minimal-src-cache.json`
+Return only:
 
-Do not trust a cache-hit-only result as the sole evidence when the task
-changes:
+- baseline gate result;
+- direct checks run;
+- short summary of what failed or passed;
+- the minimal next repair target if something failed.
 
-- test files
-- test configs
-- verification scripts
-- env files that affect tests
-- runner logic
-
-In those cases, run the directly affected command and clear the cache
-before the final quick gate if needed.
-
-Never bypass this skill.
+Do not implement unrelated fixes.

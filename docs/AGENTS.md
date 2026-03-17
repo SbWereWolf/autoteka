@@ -1,35 +1,28 @@
 # Docs local instructions
 
-Apply these rules when the current working area is inside `docs/`.
+These instructions refine the root `AGENTS.md` for `docs/`.
 
 ## Scope
 
-Primary skill: `tech-writer`.
+Use `tech-writer` as the primary skill for docs-first tasks.
 
-## Core rules
+## Document families
 
-- One document = one main axis.
-- Architecture docs explain structure and boundaries.
-- Manuals/runbooks explain operator or user actions.
-- Testing docs explain profiles, evidence, and launch rules.
-- Prefer cross-links over duplicated long explanations.
+- `docs/foundations/*` -> architecture, implementation, rule ownership,
+  and engineering standards
+- `docs/manual/*` -> operator, user, admin, and testing runbooks
+- `docs/initial-requirements/*` -> historical requirement sources; do
+  not silently rewrite intent without stating why
+- `docs/prompt/*` -> prompt/reference material, not product docs
+- `docs/research/*` -> exploratory notes only
 
-## Consistency checks
+## Rules
 
-When updating docs, confirm that names, paths, commands, and profile
-labels still match the codebase.
-
-If a document describes behavior that changed in code, confirm whether
-related test cases, manuals, or implementation docs also need updates.
-
-## Important companion docs
-
-Review these when the change crosses axes:
-
-- `README.md`
-- `docs/foundations/IMPLEMENTATION.md`
-- `docs/manual/TESTING.md`
-- `docs/manual/USER_MANUAL.md`
-- `docs/manual/CLERC_MANUAL.md`
-- `docs/manual/ADMIN_MANUAL.md`
-- `infrastructure/DEPLOY.md`
+1. Keep each document on one axis: architecture, runbook, requirement
+   history, or research.
+2. Do not bury executable command changes in architecture prose.
+3. When a doc claims a command, path, or observable behavior, verify it
+   directly or state the limit explicitly.
+4. Use `repo-doc-map.md` to choose which related docs must also change.
+5. Docs-only work does not require a fake red-green cycle, but it still
+   requires direct checks where the doc makes executable claims.

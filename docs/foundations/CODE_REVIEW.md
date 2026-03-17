@@ -1,118 +1,71 @@
-# CODE_REVIEW
+# CODE REVIEW
 
-Документ задаёт единый стандарт review для Codex и людей в этом
-репозитории. Использовать его для review-задач вместе с корневым
-`AGENTS.md` и локальным `AGENTS.md` нужной подсистемы.
+This document defines the minimum self-review standard for agent work in
+this repository.
 
-## 1. Что должен проверить reviewer
+## 1. Routing and planning
 
-Reviewer обязан проверить не только diff, но и соответствие change-set
-четырём вещам:
+Before accepting the diff, check:
 
-1. запросу или плану;
-2. архитектурным границам репозитория;
-3. достаточности тестового доказательства;
-4. необходимости обновления документации и трассировки.
+- the primary skill matches the changed surface;
+- `exec-plan` was used when the task was structural, ambiguous,
+  cross-cutting, or workflow-changing;
+- local `AGENTS.md` instructions closer to the changed files were
+  followed.
 
-## 2. Обязательные вопросы review
+## 2. Scope discipline
 
-### 2.1 Корректность
+Reject or rework the diff if it:
 
-- Реализовано ли именно то поведение, которое требовалось?
-- Нет ли явных багов, пропущенных веток, рассинхронизации состояний,
-  ошибок сериализации, неверных SQL/ORM допущений?
-- Нет ли скрытого изменения контракта без фиксации этого факта в плане
-  и документации?
+- changes unrelated files without a clear reason;
+- mixes workflow/tooling refactors into product changes without need;
+- hides documentation debt by postponing doc updates;
+- claims verification that was not actually run.
 
-### 2.2 Размещение кода
+## 3. Verification integrity
 
-- Лежит ли код в правильной зоне репозитория?
-- Для backend: не утёк ли reusable use case в контроллер,
-  `ModelResource`, request-класс или Eloquent-модель?
-- Для frontend: не смешаны ли в случайном компоненте сеть,
-  нормализация данных, прямые DOM-манипуляции и визуальный слой?
-- Для infrastructure: не появился ли ad-hoc ручной сценарий там, где
-  нужен повторяемый script/runbook?
+Check explicitly:
 
-### 2.3 Контракты и границы
+- the mandatory baseline gate was run when required;
+- direct checks were run for the changed surface;
+- the final answer distinguishes baseline gate from direct checks;
+- no one claimed that `verify.ps1 -TestProfile minimal` proves surfaces
+  it does not directly cover.
 
-- Если меняется `SchemaDefinition`, API-контракт, route, env wiring,
-  влияет ли это на оба runtime-модуля или соседние подсистемы?
-- Если меняется same-origin взаимодействие frontend/backend, отражено
-  ли это в тестах и документации?
-- Если меняется deploy/runtime логика, проверены ли dev/prod-профили,
-  rollback/repair и operator-facing документы?
+## 4. TDD-style discipline
 
-### 2.4 Тестовое доказательство
+For code and executable configuration changes, check:
 
-- Есть ли целевые тесты под изменённое поведение?
-- Была ли показана red phase или честно объяснено, почему она неуместна?
-- Запущены ли правильные тесты для изменённой поверхности, а не только
-  общий quick gate?
-- Не скрывает ли quick-cache тот факт, что изменились test/config/
-  verify surface?
+- `REQUIREMENTS.md` exists when `exec-plan` was required;
+- `TEST-SPEC.md` defines the intended red and green checks;
+- the red phase was observed or the exception was documented honestly;
+- implementation stayed close to the stated requirement.
 
-### 2.5 Документация и трассировка
+## 5. Documentation integrity
 
-- Нужно ли обновить `README`, `IMPLEMENTATION`, `TESTING`, `DEPLOY`,
-  manuals или другие документы?
-- Не появился ли новый operational step без runbook?
-- Не описано ли новое поведение в коде, но не отражено в документации?
+Check:
 
-## 3. Специальные проверки по зонам
+- changed behavior is reflected in the right doc family;
+- cross-links still make sense;
+- commands and paths in docs still match the repo;
+- `DOC-IMPACT.md` is current when `exec-plan` is active.
 
-### 3.1 Frontend
+## 6. Tooling and workflow changes
 
-Проверить:
+For changes in `scripts/`, `.agents/`, `.codex/`, `lint/`, or agent
+rules, review:
 
-- семантику HTML, landmarks, заголовки, формы, labels;
-- keyboard/focus поведение;
-- правильный выбор test surface:
-  - unit,
-  - ui-mock,
-  - api online,
-  - e2e,
-  - system-tests.
+- path correctness;
+- command correctness;
+- instruction precedence;
+- stale examples;
+- cache caveats and verification limits.
 
-### 3.2 Backend
+## 7. Completion standard
 
-Проверить:
+A task is not done if any of the following remain unclear:
 
-- границу `SchemaDefinition` vs shared package vs runtime;
-- отсутствие дублирования use case между `ShopAPI` и `ShopOperator`;
-- корректность транзакционных границ;
-- не смешаны ли domain/use-case правила с transport/admin glue.
-
-### 3.3 Infrastructure
-
-Проверить:
-
-- strict shell mode и явные compose/systemd target paths;
-- идемпотентность, безопасный rerun, rollback/repair;
-- наличие минимально достаточной диагностики;
-- обновление `DEPLOY.md` и `ADMIN_MANUAL.md`, если меняется операторский
-  процесс.
-
-### 3.4 Docs
-
-Проверить:
-
-- один документ = одна ось;
-- не смешаны ли architecture, runbook и checklist в одном разделе;
-- сохранены ли cross-links и test-case references.
-
-## 4. Формат review-ответа
-
-Предпочтительный формат:
-
-1. `Критично` — correctness/security/data-loss проблемы.
-2. `Нужно исправить` — regression risk, missing tests, broken contract,
-   missing docs.
-3. `Желательно` — cleanup и улучшения без прямой блокировки.
-4. `Подтверждено` — что проверено и каким evidence это подтверждено.
-
-Если замечаний нет, reviewer всё равно обязан явно указать:
-
-- какие риски проверялись;
-- какие тесты/доказательства были учтены;
-- почему diff считается безопасным.
+- what changed;
+- where it changed;
+- what was verified;
+- what remains unproven.

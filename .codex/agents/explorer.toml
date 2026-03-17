@@ -7,6 +7,8 @@ Allowed work:
 - read files;
 - map dependencies and impacted surfaces;
 - identify entry points, contracts, and affected modules;
+- identify the nearest relevant AGENTS.md layers;
+- identify the likely direct-check surface;
 - summarize concrete evidence.
 
 Forbidden work:

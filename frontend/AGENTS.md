@@ -1,43 +1,28 @@
 # Frontend local instructions
 
-Apply these rules when the current working area is `frontend/`.
+These instructions refine the root `AGENTS.md` for `frontend/`.
 
-## Scope
+## Primary skill
 
-Primary skill: `frontend`.
-Also use `layout-and-design` when semantics, focus, keyboard behavior,
-forms, headings, or ARIA are materially affected.
+Use `frontend` unless the task is primarily semantic or accessibility
+structure, in which case `layout-and-design` may be primary.
 
-## Test selection
+## Verification
 
-Choose the smallest sufficient test surface:
+The root baseline gate covers quick frontend unit checks for
+`frontend/src`, but it does not prove browser-only interaction,
+Playwright scenarios, or online API integration.
 
-- component/state/local UI behavior -> `npm run test:unit`
-- API client or frontend/backend contract -> `npm run test:api:online`
-  when backend availability is part of the change
-- browser-only interaction or visual flow -> `npm run test:ui:mock`
-- same-origin user flow with real backend -> `npm run test:e2e` or the
-  closest supported `system-tests` profile
+Use the smallest direct check that proves the changed behavior:
 
-Do not rely on root `verify.ps1` as the only evidence when frontend test
-files, Playwright config, Vitest config, or API integration tests change.
+- unit logic -> `npm run test:unit:parallel`
+- offline UI behavior -> `npm run test:ui:mock`
+- online API behavior -> `API_BASE_URL=... npm run test:api:online`
+- browser flow -> `PLAYWRIGHT_BASE_URL=... npm run test:e2e`
 
-## Repo-native placement
-
-- Presentational and local interaction logic -> components/pages/
-  composables in `frontend/src/`
-- Shared state -> `frontend/src/state.ts` or a narrow shared layer
-- API glue -> `frontend/src/api/`
-- Theme tokens -> CSS variables and theme layer
-- Frontend scripts -> `frontend/scripts/`
+Run from `frontend/`.
 
 ## Doc impact
 
-When behavior, startup, env usage, or test commands change, review at
-least these docs:
-
-- `frontend/README.md`
-- `README.md`
-- `docs/manual/USER_MANUAL.md`
-- `docs/manual/TESTING.md`
-- `docs/foundations/IMPLEMENTATION.md`
+When commands, routes, or API configuration assumptions change, update
+`frontend/README.md` and any affected manuals.

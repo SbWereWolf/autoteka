@@ -1,6 +1,6 @@
 ---
 name: exec-plan
-description: Use for structural, ambiguous, cross-cutting, or multi-step work that needs a living execution plan and task records before and during implementation; especially for refactors, migrations, public contract changes, shared abstractions, and repository-wide work. Do not use for tiny isolated low-risk edits where a short inline plan is enough.
+description: Use for structural, ambiguous, cross-cutting, or multi-step work that needs a living execution plan and task records before and during implementation; especially for refactors, migrations, public contract changes, shared abstractions, verification changes, and repository-wide work. Do not use for tiny isolated low-risk edits where a short inline plan is enough.
 ---
 
 # Exec Plan
@@ -32,6 +32,8 @@ Use this skill when at least one of the following is true:
 - the task spans multiple files, modules, or runtimes;
 - the task requires research before code changes;
 - the task changes requirements, contracts, or test strategy;
+- the task changes verification logic, agent tooling, or repository
+  workflow;
 - the user explicitly asks for a plan, ExecPlan, planning workflow,
   or task breakdown.
 
@@ -63,8 +65,7 @@ is a living execution record.
 6. Validate after each meaningful milestone.
 7. Keep diffs scoped to the current milestone.
 8. Update documentation continuously; do not leave it all for the end.
-9. Use the repository test matrix and documentation map when choosing
-   evidence and doc updates.
+9. Separate baseline verification from direct checks in the plan.
 
 ## Code-change loop
 
@@ -79,7 +80,7 @@ or executable configuration:
 5. implement the minimal change;
 6. rerun tests until they pass;
 7. update docs and record the doc impact;
-8. run repository verification.
+8. run repository verification and direct checks.
 
 If a true red-green cycle is not possible, record the reason in both
 `PLAN.md` and `TEST-SPEC.md` and use the strongest available
@@ -141,6 +142,8 @@ List exact commands, working directories, and concrete edits.
 ### Validation and Acceptance
 
 Describe how to prove the change works with observable behavior.
+Include both the mandatory baseline gate and the direct checks for the
+changed surface.
 
 ### Idempotence and Recovery
 
@@ -168,15 +171,6 @@ Record important decisions and why they were made.
 
 Summarize what shipped, what remains, and what was learned.
 
-## Writing style
-
-- Prefer prose over bullet dumps.
-- Be concrete.
-- Do not rely on unstated prior context.
-- Do not push key design decisions onto a future implementer when they
-  can be resolved now.
-- Keep the plan executable by a newcomer.
-
 ## References and templates
 
 If any detail feels underspecified, consult these skill resources:
@@ -185,16 +179,15 @@ If any detail feels underspecified, consult these skill resources:
 - `references/plan-mode-vs-exec-plan.md`
 - `references/repo-test-matrix.md`
 - `references/repo-doc-map.md`
+- `references/stress-test-scenarios.md`
 - `assets/execplan-template.md`
 - `assets/requirements-template.md`
 - `assets/test-spec-template.md`
-- `assets/test-selection-template.md`
 - `assets/doc-impact-template.md`
-- `assets/doc-update-checklist.md`
 - `assets/milestone-template.md`
 - `assets/decision-log-entry.md`
 - `assets/validation-log-template.md`
-- `assets/research-notes-template.md`
+- `assets/direct-check-template.md`
 - `assets/task-folder-layout.md`
 
 ## Completion standard
@@ -206,5 +199,7 @@ The task is complete only when:
 - requirements, tests, and doc impact are documented where required;
 - milestone validation has been run;
 - repository verification has been run;
+- direct checks for the changed surface have been run or their limits
+  are documented honestly;
 - the result is observably working or the remaining gap is documented
   honestly.

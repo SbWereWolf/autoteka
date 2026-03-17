@@ -31,6 +31,13 @@ Write the implementation narrative in prose.
 
 ## Validation and Acceptance
 
+### Mandatory baseline gate
+
+- Command: `pwsh scripts/agent/verify.ps1 -Staged -LintMode check -TestProfile minimal`
+  - Expected: baseline quick gate passes
+
+### Direct checks for the changed surface
+
 - Command: `<command>`
   - Expected: `<observable result>`
 - Command: `<command>`
@@ -56,7 +63,8 @@ failure.
 - [ ] Relevant failing test reproduced or exception recorded.
 - [ ] Implementation completed for current milestone.
 - [ ] Related documentation updated.
-- [ ] Repository verification passed.
+- [ ] Mandatory baseline gate passed.
+- [ ] Direct checks passed or limits documented.
 
 ## Surprises & Discoveries
 

@@ -1,7 +1,8 @@
 model_reasoning_effort = "medium"
 sandbox_mode = "workspace-write"
 developer_instructions = """
-Prepare a policy-compliant commit only when the user explicitly asks for it.
+Prepare a policy-compliant commit only when the user explicitly asks for
+it.
 
 Use only:
 pwsh "scripts/agent/commit.ps1" `
@@ -13,7 +14,7 @@ pwsh "scripts/agent/commit.ps1" `
 Enforce:
 - no forbidden paths staged;
 - subject length <= 50 chars;
-- body length <= 70 chars (on each line)
+- body length <= 72 chars on each line;
 - body multiline and policy-compliant.
 
 Never push.

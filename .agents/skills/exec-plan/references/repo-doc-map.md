@@ -1,70 +1,77 @@
-# Repository documentation map for ExecPlan work
+# Repo documentation map for agent work
 
-Use this map when filling `DOC-IMPACT.md`.
+Use this map when deciding what docs must change after code or workflow
+changes.
 
-## Core permanent docs
+## Foundations
 
-- `README.md` -> repo entrypoint, local setup, high-level testing,
-  runtime overview
-- `docs/foundations/IMPLEMENTATION.md` -> technical structure and
-  current implementation boundaries
-- `docs/manual/TESTING.md` -> test profiles, env isolation, how to run
-  evidence
-- `infrastructure/DEPLOY.md` -> deploy/runtime/maintenance mechanics
-- `docs/manual/ADMIN_MANUAL.md` -> operator-facing maintenance and
-  admin actions
-- `docs/manual/USER_MANUAL.md` -> front office user flows
-- `docs/manual/CLERC_MANUAL.md` -> clerk/back office data workflows
-- `backend/README.md` -> backend entrypoint
-- `frontend/README.md` -> frontend entrypoint
-- `scripts/README.md` -> repo-level scripting and environment helpers
+### `docs/foundations/IMPLEMENTATION.md`
 
-## Change -> likely docs to review
+Update when the task changes:
 
-### Frontend behavior or startup
+- architecture or responsibility boundaries;
+- how modules connect;
+- where logic belongs;
+- how frontend, backend, packages, or infra pieces relate.
 
-Review:
+## Manuals
 
-- `frontend/README.md`
-- `README.md`
-- `docs/manual/USER_MANUAL.md`
-- `docs/manual/TESTING.md`
-- `docs/foundations/IMPLEMENTATION.md`
+### `docs/manual/USER_MANUAL.md`
 
-### Backend contract, schema, or back office behavior
+Update when end users can do something new or differently.
 
-Review:
+### `docs/manual/CLERC_MANUAL.md`
 
-- `backend/README.md`
-- `README.md`
-- `docs/foundations/IMPLEMENTATION.md`
-- `docs/manual/TESTING.md`
-- `docs/manual/ADMIN_MANUAL.md`
-- `docs/manual/CLERC_MANUAL.md`
+Update when operator or clerk workflows change.
 
-### Infrastructure / deploy / maintenance
+### `docs/manual/ADMIN_MANUAL.md`
 
-Review:
+Update when admin workflows, setup, or theme editor operations change.
 
-- `infrastructure/DEPLOY.md`
-- `docs/manual/ADMIN_MANUAL.md`
-- `docs/manual/TESTING.md`
-- `docs/foundations/IMPLEMENTATION.md`
-- `README.md`
+### `docs/manual/TESTING.md`
 
-### Repo scripts / verification / env workflow
+Update when:
 
-Review:
+- test profiles change;
+- new test commands are added;
+- env/config rules for testing change;
+- quick-vs-heavy verification guidance changes.
 
-- `scripts/README.md`
-- `docs/manual/TESTING.md`
-- `README.md`
-- `docs/foundations/IMPLEMENTATION.md` when architecture or workflow
-  boundaries change
+## Runtime and infra docs
 
-## Rule
+### `backend/README.md`
 
-Do not assume a change is “self-documenting”. If the change alters how
-someone develops, verifies, deploys, operates, or uses the system,
-review the relevant permanent docs explicitly and record the result in
-`DOC-IMPACT.md`.
+Update when backend workspace structure or responsibility split changes.
+
+### `frontend/README.md`
+
+Update when frontend commands, test commands, routes, or runtime API
+configuration change.
+
+### `system-tests/README.md`
+
+Update when system-test profiles, structure, or usage changes.
+
+### `infrastructure/DEPLOY.md`
+
+Update when deployment, runtime, maintenance, repair, or operational
+procedures change.
+
+## Agent and workflow docs
+
+### `AGENTS.md` and nested `AGENTS.md`
+
+Update when:
+
+- repository workflow changes;
+- skill routing changes;
+- direct-check policy changes;
+- new local instruction layers are introduced.
+
+### `docs/foundations/CODE_REVIEW.md`
+
+Update when review policy or diff acceptance criteria change.
+
+### `docs/foundations/AGENT_RULES_ARCHITECTURE.md`
+
+Update when rule ownership or instruction layering changes.

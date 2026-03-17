@@ -1,0 +1,93 @@
+# AGENT RULES ARCHITECTURE
+
+This document explains how agent instructions are split in this
+repository.
+
+## 1. Rule ownership
+
+### Root `AGENTS.md`
+
+Owns repository-wide invariants:
+
+- language;
+- canonical workflow;
+- planning trigger;
+- task-record policy;
+- verification contract;
+- commit policy;
+- forbidden paths;
+- skill routing model.
+
+### Nested `AGENTS.md`
+
+Owns local instructions for a subtree, for example:
+
+- local placement rules;
+- local test selection;
+- local doc impact;
+- local operational caveats.
+
+A nested file should refine, not duplicate, the root invariants.
+
+### Skills
+
+Skills own reusable specialist behavior:
+
+- how to approach a frontend task;
+- how to approach backend placement;
+- how to approach `system-tests` selection;
+- how to approach repo tooling changes.
+
+A skill does not replace the root or local `AGENTS.md`.
+
+### Reference docs
+
+Reference docs explain details and examples. They support execution but
+should not become the only place where a critical invariant is defined.
+
+## 2. Execution layering
+
+When working on a file, the agent should think in this order:
+
+1. root `AGENTS.md`
+2. nearest relevant nested `AGENTS.md`
+3. selected skill
+4. supporting references
+
+## 3. Why this split exists
+
+This repo spans several distinct surfaces:
+
+- Vue frontend
+- two Laravel runtimes
+- shared backend package
+- system tests
+- infrastructure scripts
+- repository workflow tooling
+- multiple doc families
+
+One flat rule file becomes noisy and underspecified. The layered split
+keeps the root strict while letting local rules stay concrete.
+
+## 4. Drift prevention
+
+When a workflow changes, update the owning layer first and then update
+any supporting layers that mention the same behavior.
+
+Examples:
+
+- verification contract changed -> root `AGENTS.md`, relevant skill,
+  and supporting doc references
+- local backend placement changed -> nearest backend `AGENTS.md` and
+  relevant backend reference
+- doc family ownership changed -> root or docs `AGENTS.md` plus doc map
+
+## 5. Review expectation
+
+Every agent-rule change must be reviewed for:
+
+- ownership;
+- precedence;
+- stale references;
+- duplicated instructions;
+- contradictory examples.
