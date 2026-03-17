@@ -91,3 +91,15 @@ Every agent-rule change must be reviewed for:
 - stale references;
 - duplicated instructions;
 - contradictory examples.
+
+## Restored root invariants
+
+The root `AGENTS.md` also carries three explicit global invariants that
+must not be delegated to skills:
+
+- conflict resolution priority for safety, verification, commits, task
+  records, and the code-change loop;
+- environment readiness policy for blocked execution paths;
+- default script exit-code interpretation when a script does not define
+  a narrower contract.
+

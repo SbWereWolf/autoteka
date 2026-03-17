@@ -25,6 +25,14 @@ closer to the files being changed. When that happens:
 If two instructions conflict, prefer the more specific instruction
 unless it would violate an explicit root invariant in this file.
 
+When a skill instruction conflicts with this root file:
+
+1. safety and repository constraints from this file win;
+2. verification and commit rules from this file win;
+3. task-record and code-change-loop rules from this file win;
+4. domain-specific implementation rules come from the selected skill
+   and the nearest relevant nested `AGENTS.md`.
+
 For the architecture of the ruleset, read:
 
 - `docs/foundations/AGENT_RULES_ARCHITECTURE.md`
@@ -119,6 +127,24 @@ checks, or explicit manual verification steps.
 
 Pure documentation-only tasks are excluded from this loop.
 
+## 1.5 Environment readiness policy
+
+If something required for the task is missing from the environment, do
+not invent workarounds and do not silently substitute other tools.
+
+Instead, the agent must:
+
+1. state exactly what dependency, service, credential, binary, or
+   configuration is missing;
+2. provide exact setup steps when they are known from the repository or
+   from already-available instructions;
+3. stop any blocked execution path until the user confirms the
+   environment is ready.
+
+The agent may still perform non-blocked analysis, planning, diff review,
+or documentation work that does not depend on the missing requirement,
+but must not pretend that verification or execution succeeded.
+
 ## 2. Verification contract
 
 ### 2.1 Mandatory baseline gate
@@ -210,6 +236,23 @@ really is.
 
 When the task touches surfaces outside the tracked trees, direct checks
 are mandatory and must be called out explicitly.
+
+## 2.5 Script exit codes policy
+
+When repository or agent scripts define exit codes, interpret them as a
+contract rather than free-form output. The default policy is:
+
+- `0` = ok
+- `1` = error
+- `2` = arguments validation failed
+- `3` = missing dependency
+
+If a script documents a more specific exit-code mapping, follow the
+script-specific contract and report it accurately.
+
+Never treat a non-zero exit code as success, partial success, or a
+warning-only condition unless the script documentation explicitly says
+so.
 
 ## 3. Commit policy
 
