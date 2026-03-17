@@ -80,6 +80,8 @@ Commands:
   repair-health     Targeted auto-repair for one health domain.
   health-reset      Clear incident state and Telegram dedup locks.
   repair-infra      Re-enable timers and reset watchdog counters.
+  timers-stop       Stop all autoteka timers.
+  timers-start      Start all autoteka timers.
   maintenance       Run periodic maintenance tasks.
   backup            Create a configuration and data backup archive.
   backup-storage    Create storage+database backup archive.
@@ -272,6 +274,32 @@ Accepted values:
 USAGE
 }
 
+print_timers_stop_usage() {
+  cat <<'USAGE'
+Usage:
+  autoteka timers-stop
+
+Purpose:
+  Stop all autoteka timers (watch-changes, server-watchdog, server-maintenance).
+
+Arguments:
+  none
+USAGE
+}
+
+print_timers_start_usage() {
+  cat <<'USAGE'
+Usage:
+  autoteka timers-start
+
+Purpose:
+  Start all autoteka timers. Uses systemctl enable --now and restart.
+
+Arguments:
+  none
+USAGE
+}
+
 print_maintenance_usage() {
   cat <<'USAGE'
 Usage:
@@ -390,6 +418,8 @@ print_command_usage() {
     repair-health) print_repair_health_usage ;;
     health-reset) print_health_reset_usage ;;
     repair-infra) print_repair_infra_usage ;;
+    timers-stop) print_timers_stop_usage ;;
+    timers-start) print_timers_start_usage ;;
     maintenance) print_maintenance_usage ;;
     backup) print_backup_usage ;;
     backup-storage) print_backup_storage_usage ;;
@@ -499,6 +529,29 @@ case "$CMD" in
     ensure_infra_root
     validate_required_paths
     exec "$INFRA_ROOT/repair/repair-infra.sh" "$@"
+    ;;
+  timers-stop)
+    if [ "${1:-}" = "-h" ] || [ "${1:-}" = "--help" ]; then
+      print_timers_stop_usage
+      exit 0
+    fi
+    ensure_infra_root
+    systemctl stop watch-changes.timer 2>/dev/null || true
+    systemctl stop server-watchdog.timer 2>/dev/null || true
+    systemctl stop server-maintenance.timer 2>/dev/null || true
+    exit 0
+    ;;
+  timers-start)
+    if [ "${1:-}" = "-h" ] || [ "${1:-}" = "--help" ]; then
+      print_timers_start_usage
+      exit 0
+    fi
+    ensure_infra_root
+    systemctl enable --now watch-changes.timer 2>/dev/null || true
+    systemctl enable --now server-watchdog.timer 2>/dev/null || true
+    systemctl enable --now server-maintenance.timer 2>/dev/null || true
+    systemctl restart watch-changes.timer server-watchdog.timer server-maintenance.timer 2>/dev/null || true
+    exit 0
     ;;
   watchdog)
     if [ "${1:-}" = "-h" ] || [ "${1:-}" = "--help" ]; then
