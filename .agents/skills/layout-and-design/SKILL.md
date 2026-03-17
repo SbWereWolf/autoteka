@@ -5,7 +5,8 @@ description: Use for UI semantics, page structure, landmarks, headings, forms, a
 
 # Layout and design
 
-Apply this skill when the task is mainly about semantics, accessibility, interaction structure, and page/document layout.
+Apply this skill when the task is mainly about semantics, 
+accessibility, interaction structure, and page/document layout.
 
 ## Standards
 
@@ -36,4 +37,5 @@ When implementing or reviewing layout/design work:
 - provide the smallest correct markup example
 - mention focus/keyboard behavior whenever interaction changes
 
-Read `references/layout-and-design-standard.md` for the full repo-specific rules and examples.
+Read `references/layout-and-design-standard.md` for the full 
+repo-specific rules and examples.

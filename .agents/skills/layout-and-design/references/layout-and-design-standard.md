@@ -27,7 +27,8 @@ Choose correct HTML first. Then accessibility. Then behavior. Then styling.
 <a href="#" @click.prevent="save">Сохранить</a>
 ```
 
-If the element performs an action, it must be a `button`. If it changes URL, it must be an `a`.
+If the element performs an action, it must be a `button`. 
+If it changes URL, it must be an `a`.
 
 ## Landmarks and headings
 
@@ -90,4 +91,5 @@ Placeholder is not a label.
 
 ## Keyboard and focus
 
-Interactive UI must be operable without a mouse. Do not remove focus outline without a real replacement. Avoid positive `tabindex`.
+Interactive UI must be operable without a mouse. Do not remove focus 
+outline without a real replacement. Avoid positive `tabindex`.
