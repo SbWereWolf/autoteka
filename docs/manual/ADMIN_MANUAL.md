@@ -409,6 +409,12 @@ autoteka watchdog --dry-run
 autoteka repair-runtime --dry-run
 ```
 
+Общая картина и рекомендации:
+
+```bash
+autoteka diagnose
+```
+
 Точечные команды ремонта:
 
 ```bash
@@ -420,13 +426,7 @@ autoteka repair-infra
 autoteka health-reset all
 ```
 
-Подробные сценарии диагностики и починки:
-
-- [DEPLOY §7.1](../../infrastructure/DEPLOY.md#71-сайт-недоступен);
-- [DEPLOY §7.2](../../infrastructure/DEPLOY.md#72-backendapi-не-отвечает);
-- [DEPLOY §7.3](../../infrastructure/DEPLOY.md#73-контейнер-unhealthy-или-missing);
-- [DEPLOY §7.5](../../infrastructure/DEPLOY.md#75-не-обновляется-metrics);
-- [DEPLOY §7.6](../../infrastructure/DEPLOY.md#76-не-приходят-telegram-уведомления).
+Подробные сценарии диагностики и починки — см. [§12. Пошаговая диагностика](#12-пошаговая-диагностика).
 
 ### 7.6. Как обслуживать систему
 
@@ -455,6 +455,24 @@ sudo systemctl start server-maintenance.service
 Архитектурный контекст модулей см. в
 [IMPLEMENTATION](../foundations/IMPLEMENTATION.md).
 
+### 7.7. Журналы приложения
+
+При диагностике смотрите в следующие журналы:
+
+| Журнал | Что пишется | Когда смотреть |
+|--------|-------------|----------------|
+| `/var/log/autoteka-deploy.log` | deploy, watch-changes | Деплой не срабатывает |
+| `/var/log/server-watchdog.log` | healthcheck, repair | Сайт/API/админка, контейнеры |
+| `/var/log/server-metrics.log` | load, ram, health | Нет данных в /metrics |
+| `/var/log/server-maintenance.log` | apt, journalctl, docker prune, backup | Проблемы maintenance |
+| `/var/log/autoteka-telegram.log` | Попытки отправки в Telegram | Не приходят уведомления |
+| `backend/apps/ShopAPI/storage/logs/laravel.log`, `backend/apps/ShopOperator/storage/logs/laravel.log` | Laravel-логи приложений | Ошибки API, админки, БД |
+| `journalctl -u autoteka.service -u watch-changes.service` | systemd-юниты deploy | Деплой, таймеры |
+| `journalctl -u server-watchdog.service -u server-maintenance.service` | watchdog, maintenance | Здоровье системы |
+| `docker compose logs web`, `docker compose logs php` | nginx, php-fpm | Веб-сервер, PHP |
+
+Пути к Laravel-логам — относительно корня приложения в контейнере или на хосте.
+
 ## 8. Серверные скрипты deploy
 
 Ниже перечислены скрипты и основной способ запуска. Полное поведение,
@@ -469,6 +487,8 @@ sudo systemctl start server-maintenance.service
   текущего локального `HEAD`.
 - `$INFRA_ROOT/repair/repair-runtime.sh` или `autoteka repair-runtime` —
   тяжёлая починка runtime и smoke-check backend/admin/API.
+- `$INFRA_ROOT/repair/diagnose.sh` или `autoteka diagnose` — общая картина и
+  рекомендации по repair (read-only).
 - `$INFRA_ROOT/repair/repair-health.sh` или
   `autoteka repair-health <domain>` — точечная починка одного
   health-домена.
@@ -495,7 +515,7 @@ sudo systemctl start server-maintenance.service
   [DEPLOY §3](../../infrastructure/DEPLOY.md#3-что-делает-installsh) и
   [DEPLOY §4](../../infrastructure/DEPLOY.md#4-развёртывание-с-нуля);
 - диагностика и repair —
-  [DEPLOY §7](../../infrastructure/DEPLOY.md#7-диагностика-поломок);
+  [§12. Пошаговая диагностика](#12-пошаговая-диагностика);
 - maintenance —
   [DEPLOY §8](../../infrastructure/DEPLOY.md#8-техническое-обслуживание);
 - uninstall —
@@ -526,6 +546,24 @@ sudo autoteka uninstall soft
 - uninstall —
   [DEPLOY §9](../../infrastructure/DEPLOY.md#9-удаление-установленной-системы).
 
+### 9.1. Очистка после uninstall
+
+`autoteka uninstall` (soft, purge, nuke) не удаляет всё. После полного
+удаления остаётся:
+
+- **apt-пакеты** (docker, logrotate, fail2ban и т.д.) — установлены
+  через apt, uninstall их не трогает;
+- **Docker images и volumes** — `compose down` удаляет контейнеры, но
+  не образы и не volumes. Для их удаления при nuke используйте
+  `--prune-images` и `--prune-volumes`:
+  `sudo autoteka uninstall nuke --force --rm-root --prune-images --prune-volumes`;
+- **`/root/uninstall-backup-*`** — создаётся при nuke для бэкапа
+  SYSTEM_FILES; удалите вручную при необходимости.
+
+Флаги `--prune-images` и `--prune-volumes` действуют только в режиме
+nuke и по умолчанию выключены, чтобы не затрагивать образы и volumes
+других проектов.
+
 ## 10. Минимальный регламент администратора
 
 После изменений в данных:
@@ -553,8 +591,7 @@ sudo autoteka uninstall soft
 ## 11. Healthcheck и диагностика
 
 Полная матрица healthcheck, incident phases, repair-команд и кодов
-ошибок вынесена в
-[DEPLOY §7](../../infrastructure/DEPLOY.md#7-диагностика-поломок).
+ошибок — см. [§12. Пошаговая диагностика](#12-пошаговая-диагностика).
 
 ### 11.1. Набор проверок
 
@@ -617,12 +654,9 @@ autoteka health-reset all
 
 Подробности:
 
-- ручные команды —
-  [DEPLOY §7.3.3](../../infrastructure/DEPLOY.md#733-ручные-команды);
-- repair-infra —
-  [DEPLOY §7.5.2](../../infrastructure/DEPLOY.md#752-repair-infra--починка-инфраструктуры);
-- коды ошибок —
-  [DEPLOY §7.7](../../infrastructure/DEPLOY.md#77-коды-сообщений-причины-и-способы-исправления).
+- ручные команды — см. [§11.3. Что делать руками](#113-что-делать-руками);
+- repair-infra — `autoteka repair-infra`;
+- коды ошибок — см. [§12. Пошаговая диагностика](#12-пошаговая-диагностика).
 
 ### 11.4. Локальные файлы состояния
 
@@ -647,3 +681,106 @@ Telegram dedup lock'и хранятся отдельно в:
 ```
 
 Состояние одного домена не должно очищать lock'и соседнего домена.
+
+## 12. Пошаговая диагностика
+
+Ниже — пошаговые инструкции при типичных проблемах. Журналы — см.
+[§7.7. Журналы приложения](#77-журналы-приложения).
+
+### 12.1. Нет метрик в /metrics
+
+1. Проверить `tail -n 50 /var/log/server-metrics.log` — пишет ли watchdog.
+2. Проверить `ls -la $INFRA_ROOT/observability/application/metrics/data.json`.
+3. Выполнить вручную: `$INFRA_ROOT/observability/application/metrics-export.sh`.
+4. Проверить монтирование в nginx: `docker compose exec web ls /usr/share/nginx/html/metrics/`.
+5. При необходимости: `autoteka repair-infra`, перезапуск watchdog.
+
+### 12.2. Не приходят сообщения в Telegram
+
+1. Проверить `/etc/autoteka/telegram.env`: `TELEGRAM_TOKEN`, `TELEGRAM_CHAT`, `TELEGRAM_LOG_FILE`.
+2. Проверить `tail -n 50 /var/log/autoteka-telegram.log` — попытки отправки и ошибки.
+3. Проверить `ls /tmp/autoteka-telegram-locks/` — lock-файлы могут блокировать повторные уведомления.
+4. При необходимости: `autoteka health-reset all` — сброс lock'ов.
+5. Проверить доступность `api.telegram.org` с сервера.
+
+### 12.3. Не происходит деплой после push
+
+1. Проверить `systemctl status watch-changes.timer` — активен ли таймер.
+2. Проверить `tail -n 100 /var/log/autoteka-deploy.log` — логи watch-changes и deploy.
+3. Проверить `journalctl -u watch-changes.service -n 50`.
+4. Убедиться, что `BRANCH` и `REMOTE` в `/etc/autoteka/options.env` корректны.
+5. Запустить вручную: `autoteka watch-changes`.
+6. При необходимости: `autoteka repair-infra`.
+
+### 12.4. Сайт недоступен
+
+1. `docker compose -f $INFRA_ROOT/runtime/docker-compose.yml ps` — состояние контейнеров.
+2. `docker compose logs web` — логи nginx.
+3. `curl -i http://127.0.0.1/healthcheck` — ответ nginx.
+4. При необходимости: `autoteka repair-health nginx`, `autoteka repair-runtime`.
+
+### 12.5. Backend/API не отвечает
+
+1. `docker compose logs php` — логи PHP-FPM.
+2. `curl -i http://127.0.0.1/up` — backend.
+3. `curl -i http://127.0.0.1/api/v1/category-list` — API.
+4. При необходимости: `autoteka repair-health php`, `autoteka repair-health backend`, `autoteka repair-runtime`.
+
+### 12.6. Сервер (админка или API) отвечает 502
+
+1. Проверить `docker compose ps` — контейнер `php` в состоянии `Up` и `healthy`.
+2. `docker compose logs php` — ошибки PHP-FPM.
+3. `backend/apps/ShopAPI/storage/logs/laravel.log`, `backend/apps/ShopOperator/storage/logs/laravel.log` — ошибки приложения.
+4. При необходимости: `autoteka repair-health php`, `autoteka repair-health backend`, `autoteka repair-runtime`.
+
+### 12.7. Контейнер unhealthy или missing
+
+1. `docker compose ps -a` — полный список контейнеров.
+2. `autoteka watchdog --dry-run` — что видит watchdog.
+3. При необходимости: `autoteka repair-health <domain>`, `autoteka repair-runtime`.
+
+### 12.8. Медиа не отдаются (404 на /storage/*)
+
+1. Проверить `php artisan storage:link` в контейнере php.
+2. Проверить nginx-конфиг: location для `/storage/`.
+3. Проверить права на `storage/app/public`.
+
+### 12.9. Ошибки БД
+
+1. `backend/apps/ShopAPI/storage/logs/laravel.log`, `backend/apps/ShopOperator/storage/logs/laravel.log`.
+2. Проверить миграции: `php artisan migrate --force` в контейнере.
+3. Проверить подключение к БД в `backend/.env`.
+
+### 12.10. Таймеры не запускаются
+
+1. `systemctl status watch-changes.timer server-watchdog.timer server-maintenance.timer`.
+2. `journalctl -u watch-changes.timer -u server-watchdog.timer -u server-maintenance.timer -n 50`.
+3. При необходимости: `autoteka repair-infra`, `autoteka timers-start`.
+
+## 13. Инструкция по обновлению при изменении $INFRA_ROOT
+
+Пути к скриптам и `$INFRA_ROOT` жёстко записаны в systemd-юнитах и
+возможно в других конфигурационных файлах. При изменении пути
+`$INFRA_ROOT`, путей к скриптам внутри него или при изменении самих
+скриптов требуется обновление.
+
+### 13.1. Что обновлять
+
+- Файлы в `/etc/systemd/system/`: `autoteka.service`, `watch-changes.service`,
+  `watch-changes.timer`, `server-watchdog.service`, `server-watchdog.timer`,
+  `server-maintenance.service`, `server-maintenance.timer`.
+- `/etc/autoteka/options.env` — переменные `INFRA_ROOT`, `AUTOTEKA_ROOT`.
+- При необходимости — logrotate, cron, другие конфиги, ссылающиеся на пути.
+
+### 13.2. Порядок действий
+
+1. Остановить таймеры: `autoteka timers-stop`.
+2. Обновить `/etc/autoteka/options.env` — новые значения `INFRA_ROOT`, `AUTOTEKA_ROOT`.
+3. Переустановить systemd-юниты: скопировать актуальные unit-файлы из
+   `$INFRA_ROOT/runtime/systemd/`, `$INFRA_ROOT/observability/infrastructure/systemd/`,
+   `$INFRA_ROOT/maintenance/systemd/` в `/etc/systemd/system/` и выполнить
+   `systemctl daemon-reload`.
+4. Запустить таймеры: `autoteka timers-start`.
+5. Проверить: `systemctl status autoteka.service watch-changes.timer server-watchdog.timer server-maintenance.timer`.
+
+Подробности по структуре systemd — [DEPLOY §6.1](../../infrastructure/DEPLOY.md#61-systemd-и-timers).

@@ -12,7 +12,7 @@
 - `test-cases/` — трассировка документации и требований в тест-кейсы и
   checklists.
 - `system-tests/` — системные quick/ui тесты, включая `USER-UI` и
-  `CLERC-UI`.
+  `CLERK-UI`.
 - `operational/` — журнал текущей работы для LLM-агентов.
 - `backup/` — временные локальные резервные копии.
 - `inbox/` — временные файлы вложений для диалога с LLM-агентом.
@@ -59,7 +59,7 @@
 
 - [USER_MANUAL](docs/manual/USER_MANUAL.md) — работа с front office
   для получения информации картотеки;
-- [CLERC_MANUAL](docs/manual/CLERC_MANUAL.md) — работа с данными
+- [CLERK_MANUAL](docs/manual/CLERK_MANUAL.md) — работа с данными
   картотеки: способы ввода и редактирования (+требования качества);
 
 ### Разработка
@@ -203,20 +203,20 @@ docker exec autoteka-dev-php sh -lc "cd /workspace/backend/apps/ShopOperator && 
 
 - `frontend/example.env` — шаблон frontend-конфига. Локально:
   `cp frontend/example.env frontend/.env`. Подробности:
-  [ADMIN_MANUAL §6.1](docs/manual/ADMIN_MANUAL.md),
-  [DEPLOY §5](infrastructure/DEPLOY.md).
+  [ADMIN_MANUAL §6.1](docs/manual/ADMIN_MANUAL.md#61-frontend),
+  [DEPLOY §5](infrastructure/DEPLOY.md#5-настройки-окружения).
 - `backend/example.env` — шаблон Laravel-конфига. Локально:
   `cp backend/example.env backend/.env`. Подробности:
-  [ADMIN_MANUAL §6.2](docs/manual/ADMIN_MANUAL.md),
-  [DEPLOY §5.3](infrastructure/DEPLOY.md).
+  [ADMIN_MANUAL §6.2](docs/manual/ADMIN_MANUAL.md#62-backend),
+  [DEPLOY §5.3](infrastructure/DEPLOY.md#53-backend-env).
 - `/etc/autoteka/options.env` — server-side deployment config для
   `AUTOTEKA_ROOT`, `INFRA_ROOT`, `BRANCH`, `REMOTE`, `HTTP_PORT`.
   Пути задаются только через env или аргументы. Подробности:
   [DEPLOY](infrastructure/DEPLOY.md).
 - `/etc/autoteka/telegram.env` — server-side Telegram config для
   rollout/watchdog/maintenance уведомлений. Подробности:
-  [DEPLOY §5.2](infrastructure/DEPLOY.md),
-  [ADMIN_MANUAL §6.3](docs/manual/ADMIN_MANUAL.md).
+  [DEPLOY §5.2](infrastructure/DEPLOY.md#52-telegram-env),
+  [ADMIN_MANUAL §6.3](docs/manual/ADMIN_MANUAL.md#63-серверные-env-файлы).
 
 ## Профили тестирования
 

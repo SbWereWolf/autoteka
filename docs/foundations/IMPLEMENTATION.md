@@ -280,7 +280,7 @@ pivot/related таблицы (`shop_category`, `shop_feature`,
 Production (`$INFRA_ROOT/runtime/docker-compose.yml`):
 
 - `php` (`autoteka-php`) — backend runtime;
-- `web` (`vue-app`) — nginx + frontend build + proxy;
+- `web` (`autoteka-http`) — nginx + frontend build + proxy;
 - отдельные volume для `database`, `storage`, admin `public/vendor`.
 
 Dev (`$INFRA_ROOT/runtime/docker-compose.dev.yml`):
@@ -362,7 +362,7 @@ watchdog/maintenance и серверные runbook-процедуры описа
 `deploy.sh` для раскатки текущего `HEAD`.
 
 Подробности о параметрах units и timers см.
-[DEPLOY.md §6.1](../../infrastructure/DEPLOY.md#61-systemd).
+[DEPLOY §6.1](../../infrastructure/DEPLOY.md#61-systemd-и-timers).
 
 ### 6.3. Env и source of truth
 

@@ -1,5 +1,9 @@
 # AGENTS.md
 
+MANDATORY !! NEVER USE FALLBACK VALUES, NEVER USE DEFAULT VALUES.
+
+MANDATORY !! NEVER .env.example, ALWAYS example.env
+
 ## Language
 
 The agent must write in Russian. Project text artifacts must also be
@@ -261,6 +265,7 @@ Never commit:
 
 - `tasks/*`
 - `inbox/*`
+- *.env
 
 ## 5. Multi-agent use
 

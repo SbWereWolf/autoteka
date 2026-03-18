@@ -181,7 +181,7 @@ Docker DEV вариант:
   - smoke/health/readme/manual кейсы.
 - `system-tests/ui`:
   - `USER-UI` сценарии (`TC-UI-USER-*`);
-  - `CLERC-UI` сценарии (`TC-UI-CLERC-*`);
+  - `CLERK-UI` сценарии (`TC-UI-CLERK-*`);
   - `ADMIN-UI` сценарии управления пользователями
     (`TC-UI-ADMIN-USERS-*`).
 
@@ -212,3 +212,6 @@ PROD профили выполнять точечно как финальный 
 Сброс кэша выполняется только вручную: удалите
 `/.runtime/verify/minimal-src-cache.json`, если нужен полный rerun без
 использования старых fingerprints.
+
+На Windows verify использует ProcessStartInfo с CreateNoWindow — тесты
+запускаются без всплывающих консольных окон. Требуется pwsh.
