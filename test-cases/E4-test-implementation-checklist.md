@@ -112,7 +112,7 @@ cd backend && php artisan test && php artisan test --configuration=phpunit.reald
 
 | Тест-кейс           | Утверждение (кратко)                                       | Причина отложения                                 |
 | ------------------- | ---------------------------------------------------------- | ------------------------------------------------- |
-| TC-README-010       | Server-side env `/etc/autoteka/options.env`, `telegram.env` | Требуется целевой сервер с установленным deploy   |
+| TC-README-010       | Server-side env `/etc/autoteka/options.env`, файл по `TELEGRAM_ENV_FILE` | Требуется целевой сервер с установленным deploy   |
 | TC-DEPLOY-009       | `install.sh` устанавливает пакеты, unit'ы, timer'ы         | Полная установка на «чистый стенд»                |
 | TC-DEPLOY-010       | Проверка `autoteka.service`, timer'ов, compose `ps`        | `systemctl` и `docker compose` на реальном хосте  |
 | TC-DEPLOY-014       | `/metrics/data.json` из watchdog + metrics-export          | Нужен запущенный deploy-контур и watchdog         |

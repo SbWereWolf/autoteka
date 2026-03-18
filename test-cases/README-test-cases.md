@@ -135,7 +135,7 @@
 ### TC-README-010
 
 - Утверждение: server-side env-файлы для deploy:
-  `/etc/autoteka/options.env` и `/etc/autoteka/telegram.env`.
+  `/etc/autoteka/options.env` и файл по `TELEGRAM_ENV_FILE`.
 - Проверка:
   1. На целевом сервере проверить наличие обоих файлов.
   2. Проверить права чтения для пользователя, под которым выполняются

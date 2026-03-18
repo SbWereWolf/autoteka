@@ -132,7 +132,7 @@
 - Утверждение: env-настройки frontend/backend/server соответствуют
   разделу 6 (`VITE_API_BASE_URL`, `APP_URL`, `DB_*`,
   `MOONSHINE_ADMIN_*`, `/etc/autoteka/options.env`,
-  `/etc/autoteka/telegram.env`).
+  файл по `TELEGRAM_ENV_FILE`).
 - Проверка:
   1. Проверить наличие и чтение ключей в соответствующих env-файлах.
   2. Проверить использование ключей в runtime.

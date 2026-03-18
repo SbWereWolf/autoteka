@@ -370,7 +370,7 @@ watchdog/maintenance и серверные runbook-процедуры описа
   `BRANCH`, `REMOTE`, `HTTP_PORT`. Скрипты берут пути только из env или
   аргументов, не из расположения (см. [DEPLOY § Контракты
   путей](../../infrastructure/DEPLOY.md#контракты-путей)).
-- `/etc/autoteka/telegram.env` — optional Telegram secrets
+- Файл по `TELEGRAM_ENV_FILE` — optional Telegram secrets
 - `backend/.env` — backend runtime config
 
 ## 7. Проверки

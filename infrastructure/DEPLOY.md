@@ -52,9 +52,9 @@ sudo ./infrastructure/bootstrap/install.sh --infra-root=/opt/vue-app/infrastruct
 - `$INFRA_ROOT/dev.env` — шаблон переменных для dev-среды.
 - `$INFRA_ROOT/.env` — создаётся из prod.env перед install, используется только install.sh.
 - `/etc/autoteka/options.env` — рабочий конфиг после установки; все изменения вносить в options.env.
-- `/etc/autoteka/telegram.env` — `TELEGRAM_TOKEN`, `TELEGRAM_CHAT`,
-  `TELEGRAM_LOG_FILE`. В options.env — только `TELEGRAM_ENV_FILE` (путь к этому
-  файлу). Каждое уведомление содержит hash и subject в блоке version.
+- Файл по пути `TELEGRAM_ENV_FILE` — `TELEGRAM_TOKEN`, `TELEGRAM_CHAT`,
+  `TELEGRAM_LOG_FILE`. Путь задаётся в .env, install.sh копирует его в
+  options.env. Каждое уведомление содержит hash и subject в блоке version.
 - `$INFRA_ROOT/bootstrap/` — install/uninstall и host-конфиги.
 - `$INFRA_ROOT/runtime/` — compose, rollout и watch-changes.
 - `$INFRA_ROOT/repair/` — сценарии починки runtime и infra.
@@ -67,13 +67,19 @@ sudo ./infrastructure/bootstrap/install.sh --infra-root=/opt/vue-app/infrastruct
 
 - `/etc/autoteka/options.env` — `AUTOTEKA_ROOT`, `INFRA_ROOT`, `BRANCH`,
   `REMOTE`, `HTTP_PORT`. Скрипты берут пути только из env или аргументов.
-- `/etc/autoteka/telegram.env` — `TELEGRAM_TOKEN`, `TELEGRAM_CHAT`,
+- Файл по пути `TELEGRAM_ENV_FILE` — `TELEGRAM_TOKEN`, `TELEGRAM_CHAT`,
   `TELEGRAM_LOG_FILE` (см. выше в «Основные файлы»).
 
 ### 5.2. Telegram env
 
-В `options.env` задаётся только `TELEGRAM_ENV_FILE` (путь к telegram.env).
-Содержимое telegram.env — `TELEGRAM_TOKEN`, `TELEGRAM_CHAT`, `TELEGRAM_LOG_FILE`.
+Опции Telegram (`TELEGRAM_ENV_FILE`, `TELEGRAM_TOKEN`, `TELEGRAM_CHAT`,
+`TELEGRAM_LOG_FILE`) задаются в `$INFRA_ROOT/.env` перед install. install.sh
+копирует шаблон `bootstrap/config/telegram.example.env` по пути
+`TELEGRAM_ENV_FILE` и переписывает туда значения из .env. В `options.env` —
+`TELEGRAM_ENV_FILE` (путь задаётся в .env).
+
+`TELEGRAM_ENV_FILE` опционален: если не задан, watchdog, watch-changes и
+maintenance работают без Telegram-уведомлений.
 
 ### 5.3. Backend env
 
@@ -231,7 +237,7 @@ backup, исправление прав logrotate. Запускается тай
 ### install.sh
 
 Загружает `$INFRA_ROOT/.env`, устанавливает пакеты (docker, logrotate, fail2ban),
-создаёт `/etc/autoteka/options.env` и `telegram.env`, копирует systemd-юниты,
+создаёт `/etc/autoteka/options.env` и файл по `TELEGRAM_ENV_FILE`, копирует systemd-юниты,
 запускает deploy flow (сборка, compose up), включает таймеры.
 
 ### watch-changes.sh

@@ -232,9 +232,11 @@ deploy создаст его из `frontend/example.env`.
 - `/etc/autoteka/options.env` — `AUTOTEKA_ROOT`, `INFRA_ROOT`, `BRANCH`,
   `REMOTE`, `HTTP_PORT` (см. [DEPLOY](../../infrastructure/DEPLOY.md)).
   Скрипты берут пути только из env или аргументов, не из расположения.
-- `/etc/autoteka/telegram.env` — Telegram-уведомления watchdog (см.
-  [DEPLOY](../../infrastructure/DEPLOY.md)). Каждое уведомление содержит hash
-  и subject коммита в блоке version.
+- Файл по пути `TELEGRAM_ENV_FILE` — Telegram-уведомления watchdog (см.
+  [DEPLOY](../../infrastructure/DEPLOY.md)). Создаётся install.sh из
+  `telegram.example.env` по пути из .env, значения заполняются из
+  `$INFRA_ROOT/.env`. Опционально: при отсутствии `TELEGRAM_ENV_FILE` watchdog
+  и watch-changes работают без уведомлений.
 
 **Шаблоны в репозитории:**
 
@@ -242,9 +244,9 @@ deploy создаст его из `frontend/example.env`.
   `$INFRA_ROOT/.env` копированием: `cp -n "$INFRA_ROOT/prod.env" "$INFRA_ROOT/.env"`.
   install.sh копирует .env в `/etc/autoteka/options.env`. После установки
   изменяйте только options.env.
-- `$INFRA_ROOT/bootstrap/config/telegram.example.env` — шаблон для
-  `/etc/autoteka/telegram.env`. Содержит `TELEGRAM_TOKEN`, `TELEGRAM_CHAT`,
-  `TELEGRAM_LOG_FILE`. В options.env — только `TELEGRAM_ENV_FILE`.
+- `$INFRA_ROOT/bootstrap/config/telegram.example.env` — шаблон. install.sh
+  копирует его по пути `TELEGRAM_ENV_FILE` и заполняет значениями из
+  `$INFRA_ROOT/.env`. Путь задаётся в .env.
 
 ## 7. Запуск и рабочие инструкции администратора
 
@@ -697,7 +699,7 @@ Telegram dedup lock'и хранятся отдельно в:
 
 ### 12.2. Не приходят сообщения в Telegram
 
-1. Проверить `/etc/autoteka/telegram.env`: `TELEGRAM_TOKEN`, `TELEGRAM_CHAT`, `TELEGRAM_LOG_FILE`.
+1. Проверить файл по `TELEGRAM_ENV_FILE`: `TELEGRAM_TOKEN`, `TELEGRAM_CHAT`, `TELEGRAM_LOG_FILE`.
 2. Проверить `tail -n 50 /var/log/autoteka-telegram.log` — попытки отправки и ошибки.
 3. Проверить `ls /tmp/autoteka-telegram-locks/` — lock-файлы могут блокировать повторные уведомления.
 4. При необходимости: `autoteka health-reset all` — сброс lock'ов.
