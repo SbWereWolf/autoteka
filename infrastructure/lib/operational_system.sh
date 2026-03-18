@@ -45,3 +45,26 @@ autoteka_path_for_test() {
   # win: замена \ на / для надёжной работы [ -d ] в Git Bash
   printf '%s' "${path//\\//}"
 }
+
+# Временная папка ОС. Используется в install.sh для вычисления TELEGRAM_LOCK_DIR.
+# nix: TMPDIR; win: TEMP или TMP (обычно заданы ОС).
+autoteka_get_os_temp_dir() {
+  local platform
+  platform="$(autoteka_get_current_platform)"
+  if [[ "$platform" == "nix" ]]; then
+    if [ -z "${TMPDIR:-}" ]; then
+      echo "TMPDIR не задан. Добавьте в .env (prod.env/dev.env)." >&2
+      exit 3
+    fi
+    printf '%s' "$TMPDIR"
+  else
+    if [ -n "${TEMP:-}" ]; then
+      printf '%s' "$TEMP"
+    elif [ -n "${TMP:-}" ]; then
+      printf '%s' "$TMP"
+    else
+      echo "TEMP или TMP не заданы. Добавьте в .env." >&2
+      exit 3
+    fi
+  fi
+}
