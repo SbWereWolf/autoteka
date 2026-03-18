@@ -230,7 +230,13 @@ nuke() {
       say "docker volume prune -f"
       docker volume prune -f >/dev/null 2>&1 || true
     fi
+    say "docker network prune -f"
+    docker network prune -f >/dev/null 2>&1 || true
   fi
+
+  say "Removing empty directories..."
+  rmdir /var/log/autoteka 2>/dev/null || true
+  rmdir /etc/autoteka 2>/dev/null || true
 
   if [ "$RM_ROOT_DIR" = "yes" ]; then
     confirm_or_exit "REMOVE AUTOTEKA_ROOT and INFRA_ROOT: This will delete '$AUTOTEKA_ROOT' and '$INFRA_ROOT' recursively."
