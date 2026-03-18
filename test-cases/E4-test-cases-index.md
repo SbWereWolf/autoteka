@@ -15,7 +15,7 @@
 5. `tasks/artifacts/frontend-scripts-README-test-cases.md`
 6. `tasks/artifacts/scripts-README-test-cases.md`
 7. `tasks/artifacts/ADMIN_MANUAL-test-cases.md`
-8. `tasks/artifacts/CLERC_MANUAL-test-cases.md`
+8. `tasks/artifacts/CLERK_MANUAL-test-cases.md`
 9. `tasks/artifacts/IMPLEMENTATION-test-cases.md`
 10. `tasks/artifacts/USER_MANUAL-test-cases.md`
 

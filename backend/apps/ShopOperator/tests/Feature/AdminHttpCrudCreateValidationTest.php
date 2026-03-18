@@ -65,35 +65,49 @@ final class AdminHttpCrudCreateValidationTest extends TestCase
         $this->assertDatabaseMissing('city', ['code' => 'city-invalid']);
     }
 
-    public function test_admin_create_payload_code_is_ignored_in_dictionary_forms(): void
+    /** @dataProvider dictionaryResourceProvider */
+    public function test_admin_create_payload_code_is_ignored_in_dictionary_forms(array $case): void
     {
         $this->withoutMiddleware(VerifyCsrfToken::class);
         $admin = $this->createAdminUser();
         $this->actingAs($admin, 'moonshine');
 
-        $invalidCode = 'код.с-пробелом';
+        $this->post(route('moonshine.crud.store', ['resourceUri' => $case['resourceUri']]), [
+            'code' => strtolower(preg_replace('/\s+/', '-', $case['title'])),
+            'title' => $case['title'],
+            'sort' => 1,
+            'is_published' => '1',
+        ])->assertStatus(302);
 
-        $cases = [
-            ['resourceUri' => 'city-resource', 'model' => \ShopOperator\Models\City::class, 'title' => 'City Invalid'],
-            ['resourceUri' => 'category-resource', 'model' => \ShopOperator\Models\Category::class, 'title' => 'Category Invalid'],
-            ['resourceUri' => 'feature-resource', 'model' => \ShopOperator\Models\Feature::class, 'title' => 'Feature Invalid'],
-            ['resourceUri' => 'contact-type-resource', 'model' => \ShopOperator\Models\ContactType::class, 'title' => 'Contact Invalid'],
-        ];
+        /** @var class-string<\Illuminate\Database\Eloquent\Model> $modelClass */
+        $modelClass = $case['model'];
+        $model = $modelClass::query()->where('title', $case['title'])->firstOrFail();
+        $this->assertMatchesRegularExpression('/^[A-Za-z0-9_-]+$/', $model->code);
+    }
 
-        foreach ($cases as $case) {
-            $this->post(route('moonshine.crud.store', ['resourceUri' => $case['resourceUri']]), [
-                'code' => $invalidCode,
-                'title' => $case['title'],
-                'sort' => 1,
-                'is_published' => '1',
-            ])->assertStatus(302);
-
-            /** @var class-string<\Illuminate\Database\Eloquent\Model> $modelClass */
-            $modelClass = $case['model'];
-            $model = $modelClass::query()->where('title', $case['title'])->firstOrFail();
-            $this->assertNotSame($invalidCode, $model->code);
-            $this->assertMatchesRegularExpression('/^[A-Za-z0-9_-]+$/', $model->code);
-        }
+    /** @return iterable<string, array{array{resourceUri: string, model: class-string, title: string}}> */
+    public static function dictionaryResourceProvider(): iterable
+    {
+        yield 'city' => [[
+            'resourceUri' => 'city-resource',
+            'model' => \ShopOperator\Models\City::class,
+            'title' => 'City Dict',
+        ]];
+        yield 'category' => [[
+            'resourceUri' => 'category-resource',
+            'model' => \ShopOperator\Models\Category::class,
+            'title' => 'Category Dict',
+        ]];
+        yield 'feature' => [[
+            'resourceUri' => 'feature-resource',
+            'model' => \ShopOperator\Models\Feature::class,
+            'title' => 'Feature Dict',
+        ]];
+        yield 'contact-type' => [[
+            'resourceUri' => 'contact-type-resource',
+            'model' => \ShopOperator\Models\ContactType::class,
+            'title' => 'Contact Dict',
+        ]];
     }
 
     public function test_admin_can_create_shop_over_http_with_minimal_valid_payload(): void

@@ -25,7 +25,7 @@
   - `docs/foundations/ADMIN_MANUAL.md`
   - `infrastructure/DEPLOY.md`
   - `docs/foundations/USER_MANUAL.md`
-  - `docs/foundations/CLERC_MANUAL.md`
+  - `docs/manual/CLERK_MANUAL.md`
   - `docs/foundations/IMPLEMENTATION.md`
   - `backend/README.md`
   - `frontend/README.md`

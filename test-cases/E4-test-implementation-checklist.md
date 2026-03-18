@@ -43,8 +43,8 @@
 | TC-FSCRIPTS-README-001,009, validate/check | frontend/tests/TC-FSCRIPTS-README.spec.ts                                | `cd frontend && npm test -- tests/TC-FSCRIPTS`                                                     |
 | TC-SCRIPTS-README-001,002,003,007,008,009  | system-tests/TC-SCRIPTS-README.spec.ts                                   | `cd system-tests && npm test -- TC-SCRIPTS`                                                        |
 | TC-ADMIN-MANUAL-012                        | infrastructure/tests/TC-ADMIN-MANUAL-012.spec.ts                                 | `cd infrastructure/tests && npm test -- TC-ADMIN`                                                          |
-| TC-CLERC-MANUAL-001                        | system-tests/TC-CLERC-MANUAL-001.spec.ts                                 | `cd system-tests && npm test -- TC-CLERC`                                                          |
-| TC-CLERC-MANUAL-014                        | system-tests/TC-CLERC-MANUAL-014.spec.ts                                 | `cd system-tests && npm test -- TC-CLERC`                                                          |
+| TC-CLERK-MANUAL-001                        | system-tests/TC-CLERK-MANUAL-001.spec.ts                                 | `cd system-tests && npm test -- TC-CLERK`                                                          |
+| TC-CLERK-MANUAL-014                        | system-tests/TC-CLERK-MANUAL-014.spec.ts                                 | `cd system-tests && npm test -- TC-CLERK`                                                          |
 | TC-IMPLEMENTATION-001                      | system-tests/TC-IMPLEMENTATION-001.spec.ts                               | `cd system-tests && npm test -- TC-IMPLEMENTATION`                                                 |
 | TC-USER-MANUAL-012                         | system-tests/TC-USER-MANUAL-012.spec.ts                                  | `cd system-tests && npm test -- TC-USER`                                                           |
 
@@ -119,7 +119,7 @@ cd backend && php artisan test && php artisan test --configuration=phpunit.reald
 | TC-DEPLOY-016       | Telegram lock-механизм                                     | Внешняя зависимость Telegram API                  |
 | TC-DEPLOY-017       | Любое Telegram-уведомление (hash + subject)                   | Внешняя зависимость Telegram API                  |
 | TC-DEPLOY-022       | `uninstall.sh` режимы soft/purge/nuke                      | Деструктивные операции, нужен изолированный стенд |
-| TC-CLERC-MANUAL-013 | Эскалация: оператор передаёт code/scope и вывод            | Процессный сценарий, не runtime                   |
+| TC-CLERK-MANUAL-013 | Эскалация: оператор передаёт code/scope и вывод            | Процессный сценарий, не runtime                   |
 
 ## Список тест-кейсов (статус ☐/☑)
 
@@ -137,7 +137,7 @@ cd backend && php artisan test && php artisan test --configuration=phpunit.reald
 
 ### ADMIN_MANUAL.md: ☑ 82 | ☐ 71–81,83,84
 
-### CLERC_MANUAL.md: ☑ 85,98 | ☐ 86–97 | ОТЛОЖЕН 97
+### CLERK_MANUAL.md: ☑ 85,98 | ☐ 86–97 | ОТЛОЖЕН 97
 
 ### IMPLEMENTATION.md: ☑ 99 | ☐ 100–114
 

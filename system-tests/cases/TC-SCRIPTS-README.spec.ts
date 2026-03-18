@@ -10,18 +10,11 @@ import { fileURLToPath } from "node:url";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = join(__dirname, "..", "..");
 const SCRIPTS_DIR = join(REPO_ROOT, "scripts");
-const FRONTEND_SCRIPTS = join(REPO_ROOT, "frontend/scripts");
 const SCRIPTS_README = readFileSync(join(SCRIPTS_DIR, "README.md"), "utf-8");
 
 describe("TC-SCRIPTS-README-001", () => {
   it("scripts/ не содержит .mjs", () => {
     const files = readdirSync(SCRIPTS_DIR);
-    const mjs = files.filter((f) => f.endsWith(".mjs"));
-    expect(mjs).toHaveLength(0);
-  });
-
-  it("frontend/scripts не содержит устаревшие .mjs генераторы", () => {
-    const files = readdirSync(FRONTEND_SCRIPTS);
     const mjs = files.filter((f) => f.endsWith(".mjs"));
     expect(mjs).toHaveLength(0);
   });

@@ -134,7 +134,7 @@
 ### TC-IMPLEMENTATION-012
 
 - Утверждение: compose-контур поднимает `php` (`autoteka-php`) и `web`
-  (`vue-app`), а `web` публикует порт, имеет healthcheck, монтирует
+  (`autoteka-http`), а `web` публикует порт, имеет healthcheck, монтирует
   `$INFRA_ROOT/observability/application/metrics` и раздаёт `/storage/*`.
 - Проверка:
   1. Проверить `$INFRA_ROOT/runtime/docker-compose.yml` и nginx-конфиг.
