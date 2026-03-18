@@ -38,6 +38,27 @@ function failIfCommandNotFound(
   }
 }
 
+function failIfUnexpectedExit(
+  out: { status: number | null },
+  expectedStatus: number,
+  context?: string,
+): void {
+  if (out.status === 2) {
+    expect.fail(
+      "Скрипт вернул exit 2 (ошибка валидации аргументов/путей). " +
+        "Проверьте формат INFRA_ROOT, AUTOTEKA_ROOT." +
+        (context ? ` ${context}` : ""),
+    );
+  }
+  if (out.status === 3) {
+    expect.fail(
+      "Скрипт вернул exit 3 (отсутствует зависимость). " +
+        "Задайте BASH_PATH в infrastructure/tests/.env." +
+        (context ? ` ${context}` : ""),
+    );
+  }
+}
+
 describe("TC-DEPLOY-024 backup.sh (B1-B8)", () => {
   it("backup.sh содержит логику backup_glob (apply_rule или emit_selected)", () => {
     const content = read("maintenance/backup.sh");
@@ -85,6 +106,8 @@ describe("TC-DEPLOY-024 backup.sh (B1-B8)", () => {
   });
 
   it("B1: backup --dry-run выводит список и завершается с exit 0", () => {
+    if (process.platform === "win32") return; // root только в WSL/nix
+    if (typeof process.getuid === "function" && process.getuid() !== 0) return;
     const bash = requireBashPath();
     const out = spawnSync(bash, [join(INFRA_ROOT_PATH, "maintenance/backup.sh"), "--dry-run"], {
       env: {
@@ -95,6 +118,7 @@ describe("TC-DEPLOY-024 backup.sh (B1-B8)", () => {
       encoding: "utf-8",
     });
     failIfCommandNotFound(out);
+    failIfUnexpectedExit(out, 0);
     expect(out.status).toBe(0);
     expect(out.stdout).toBeDefined();
   });
@@ -107,6 +131,7 @@ describe("TC-DEPLOY-024 backup.sh (B1-B8)", () => {
       encoding: "utf-8",
     });
     failIfCommandNotFound(out);
+    failIfUnexpectedExit(out, 1);
     expect(out.status).toBe(1);
   });
 
@@ -148,6 +173,7 @@ describe("TC-DEPLOY-024 restore.sh (R1-R7)", () => {
   });
 
   it("R3: restore --dry-run выводит план", () => {
+    if (process.platform === "win32") return; // root только в WSL/nix
     if (typeof process.getuid === "function" && process.getuid() !== 0) return;
     const bash = requireBashPath();
     const dummyArchive = join(tmpdir(), "tc-deploy-024-dummy-archive.tar.gz");
@@ -166,6 +192,7 @@ describe("TC-DEPLOY-024 restore.sh (R1-R7)", () => {
         },
       );
       failIfCommandNotFound(out);
+      failIfUnexpectedExit(out, 0);
       expect(out.status).toBe(0);
       expect(out.stdout).toMatch(/DRY RUN|timers-stop|health-reset|repair-infra/);
     } finally {
@@ -193,6 +220,7 @@ describe("TC-DEPLOY-024 restore.sh (R1-R7)", () => {
       },
     );
     failIfCommandNotFound(out);
+    failIfUnexpectedExit(out, 1);
     expect(out.status).toBe(1);
   });
 });
