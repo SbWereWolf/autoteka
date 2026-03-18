@@ -37,8 +37,7 @@ if [ -z "${AUTOTEKA_LIB_TELEGRAM_SH:-}" ]; then
 
   load_telegram_env() {
     if [ -z "${TELEGRAM_ENV_FILE:-}" ]; then
-      echo "TELEGRAM_ENV_FILE не задан. Задайте в options.env или в переменных окружения. Пример: TELEGRAM_ENV_FILE=/etc/autoteka/telegram.env" >&2
-      exit 3
+      return 0
     fi
     local env_file="${1:-$TELEGRAM_ENV_FILE}"
 
@@ -57,13 +56,17 @@ if [ -z "${AUTOTEKA_LIB_TELEGRAM_SH:-}" ]; then
 
   telegram_log() {
     local message="$1"
+    local line
 
+    line="$(date -u '+%Y-%m-%d %H:%M') $message"
     if [ -z "${TELEGRAM_LOG_FILE:-}" ]; then
-      echo "TELEGRAM_LOG_FILE не задан. Задайте в файле, указанном TELEGRAM_ENV_FILE (telegram.env), или в options.env. Пример: TELEGRAM_LOG_FILE=/var/log/autoteka-telegram.log" >&2
-      exit 3
+      echo "[telegram] TELEGRAM_LOG_FILE не задан, вывод в stdout: $line"
+      return 0
     fi
-    mkdir -p "$(dirname "$TELEGRAM_LOG_FILE")"
-    printf '%s %s\n' "$(date -u '+%Y-%m-%d %H:%M')" "$message" >> "$TELEGRAM_LOG_FILE"
+    if mkdir -p "$(dirname "$TELEGRAM_LOG_FILE")" 2>/dev/null && printf '%s\n' "$line" >> "$TELEGRAM_LOG_FILE" 2>/dev/null; then
+      return 0
+    fi
+    echo "[telegram] Не удалось записать в $TELEGRAM_LOG_FILE, вывод в stdout: $line"
   }
 
   telegram_send() {
