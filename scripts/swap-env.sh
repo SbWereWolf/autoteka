@@ -6,9 +6,34 @@ if [[ ! -f "$script_dir/.env" ]]; then
   printf "[swap-env] Отсутствует scripts/.env или переменные AUTOTEKA_ROOT, INFRA_ROOT. Скопируйте scripts/example.env в scripts/.env и задайте пути.\n" >&2
   exit 3
 fi
-set -a
-source "$script_dir/.env"
-set +a
+
+# $1 — путь к .env; $2 — пробелом разделённый список ключей-путей (для них \ → /)
+_parse_env_file() {
+  local file="$1" path_keys="${2:-}" line key value
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    line="${line%%#*}"
+    line="${line%"${line##*[![:space:]]}"}"
+    line="${line#"${line%%[![:space:]]*}"}"
+    [[ -z "$line" ]] && continue
+    if [[ "$line" == *=* ]]; then
+      key="${line%%=*}"
+      key="${key%"${key##*[![:space:]]}"}"
+      value="${line#*=}"
+      value="${value#"${value%%[![:space:]]*}"}"
+      value="${value%"${value##*[![:space:]]}"}"
+      value="${value#\"}"
+      value="${value%\"}"
+      value="${value#\'}"
+      value="${value%\'}"
+      if [[ " $path_keys " == *" $key "* ]]; then
+        value="${value//\\//}"
+      fi
+      [[ -n "$key" ]] && eval "export $(printf '%s=%q' "$key" "$value")"
+    fi
+  done < "$file"
+}
+_parse_env_file "$script_dir/.env" "AUTOTEKA_ROOT INFRA_ROOT"
+
 if [[ -z "${AUTOTEKA_ROOT:-}" ]]; then
   printf "[swap-env] Отсутствует scripts/.env или переменные AUTOTEKA_ROOT, INFRA_ROOT. Скопируйте scripts/example.env в scripts/.env и задайте пути.\n" >&2
   exit 3
@@ -19,6 +44,13 @@ if [[ -z "${INFRA_ROOT:-}" ]]; then
 fi
 repo_root="$AUTOTEKA_ROOT"
 infra_root="$INFRA_ROOT"
+
+_operational_system_path="$infra_root/lib/operational_system.sh"
+if [[ ! -f "$_operational_system_path" ]]; then
+  printf "[swap-env] Не найден %s\n" "$_operational_system_path" >&2
+  exit 3
+fi
+source "$_operational_system_path"
 
 all_types=(
   "root-lock"
@@ -46,16 +78,7 @@ has_mismatch=0
 aggregate_hints=0
 
 get_current_platform() {
-  if [[ -n "${PWD:-}" && "$PWD" == /* ]]; then
-    printf "nix"
-    return
-  fi
-  if [[ -n "${OS:-}" && "$OS" == *[Ww][Ii][Nn][Dd][Oo][Ww][Ss]* ]]; then
-    printf "win"
-    return
-  fi
-  printf "[swap-env] Не удалось определить платформу: задайте переменную окружения OS (со значением, содержащим Windows) или PWD (начинается с /)\n" >&2
-  exit 2
+  autoteka_get_current_platform
 }
 
 current_platform="$(get_current_platform)"

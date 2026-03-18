@@ -24,6 +24,8 @@
 - `SCRIPT_BASH_PATH` — путь к интерпретатору `bash`.
 - `SCRIPT_PHP_PATH` — путь к исполняемому файлу `php` для репозиторных
   PowerShell-скриптов, включая `scripts/agent/verify.ps1`.
+- `AUTOTEKA_ROOT`, `INFRA_ROOT` — корни репозитория и infrastructure (для
+  `swap-env.sh`).
 
 ## Работа с platform env
 
