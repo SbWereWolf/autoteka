@@ -429,6 +429,8 @@
       <excludeFolder url="file://$MODULE_DIR$/system-tests/node_modules.win" />
       <excludeFolder url="file://$MODULE_DIR$/backend/storage" />
       <excludeFolder url="file://$MODULE_DIR$/.runtime" />
+      <excludeFolder url="file://$MODULE_DIR$/backend/apps/ShopAPI/vendor/autoteka/laravel-runtime" />
+      <excludeFolder url="file://$MODULE_DIR$/backend/apps/ShopOperator/vendor/autoteka/laravel-runtime" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

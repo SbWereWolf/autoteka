@@ -417,9 +417,41 @@
       <path value="$PROJECT_DIR$/backend/apps/ShopOperator/vendor/dragonmantank/cron-expression" />
       <path value="$PROJECT_DIR$/backend/apps/ShopOperator/vendor/graham-campbell/result-type" />
       <path value="$PROJECT_DIR$/backend/apps/ShopOperator/vendor/composer" />
+      <path value="$PROJECT_DIR$/backend/apps/ShopAPI/vendor/doctrine/deprecations" />
+      <path value="$PROJECT_DIR$/backend/apps/ShopAPI/vendor/jean85/pretty-package-versions" />
+      <path value="$PROJECT_DIR$/backend/apps/ShopAPI/vendor/brianium/paratest" />
+      <path value="$PROJECT_DIR$/backend/apps/ShopAPI/vendor/fidry/cpu-core-counter" />
+      <path value="$PROJECT_DIR$/backend/apps/ShopAPI/vendor/phpstan/phpdoc-parser" />
+      <path value="$PROJECT_DIR$/backend/apps/ShopAPI/vendor/ta-tikoma/phpunit-architecture-test" />
+      <path value="$PROJECT_DIR$/backend/apps/ShopAPI/vendor/pestphp/pest-plugin" />
+      <path value="$PROJECT_DIR$/backend/apps/ShopAPI/vendor/pestphp/pest" />
+      <path value="$PROJECT_DIR$/backend/apps/ShopAPI/vendor/pestphp/pest-plugin-mutate" />
+      <path value="$PROJECT_DIR$/backend/apps/ShopAPI/vendor/pestphp/pest-plugin-laravel" />
+      <path value="$PROJECT_DIR$/backend/apps/ShopAPI/vendor/pestphp/pest-plugin-arch" />
+      <path value="$PROJECT_DIR$/backend/apps/ShopAPI/vendor/webmozart/assert" />
+      <path value="$PROJECT_DIR$/backend/apps/ShopAPI/vendor/phpdocumentor/reflection-docblock" />
+      <path value="$PROJECT_DIR$/backend/apps/ShopAPI/vendor/phpdocumentor/reflection-common" />
+      <path value="$PROJECT_DIR$/backend/apps/ShopAPI/vendor/phpdocumentor/type-resolver" />
+      <path value="$PROJECT_DIR$/backend/apps/ShopOperator/vendor/fidry/cpu-core-counter" />
+      <path value="$PROJECT_DIR$/backend/apps/ShopOperator/vendor/pestphp/pest-plugin-arch" />
+      <path value="$PROJECT_DIR$/backend/apps/ShopOperator/vendor/pestphp/pest-plugin" />
+      <path value="$PROJECT_DIR$/backend/apps/ShopOperator/vendor/pestphp/pest" />
+      <path value="$PROJECT_DIR$/backend/apps/ShopOperator/vendor/ta-tikoma/phpunit-architecture-test" />
+      <path value="$PROJECT_DIR$/backend/apps/ShopOperator/vendor/pestphp/pest-plugin-mutate" />
+      <path value="$PROJECT_DIR$/backend/apps/ShopOperator/vendor/pestphp/pest-plugin-laravel" />
+      <path value="$PROJECT_DIR$/backend/apps/ShopOperator/vendor/jean85/pretty-package-versions" />
+      <path value="$PROJECT_DIR$/backend/apps/ShopOperator/vendor/phpdocumentor/reflection-common" />
+      <path value="$PROJECT_DIR$/backend/apps/ShopOperator/vendor/phpdocumentor/type-resolver" />
+      <path value="$PROJECT_DIR$/backend/apps/ShopOperator/vendor/webmozart/assert" />
+      <path value="$PROJECT_DIR$/backend/apps/ShopOperator/vendor/phpdocumentor/reflection-docblock" />
+      <path value="$PROJECT_DIR$/backend/apps/ShopOperator/vendor/doctrine/deprecations" />
+      <path value="$PROJECT_DIR$/backend/apps/ShopOperator/vendor/phpstan/phpdoc-parser" />
+      <path value="$PROJECT_DIR$/backend/apps/ShopOperator/vendor/brianium/paratest" />
+      <path value="$PROJECT_DIR$/backend/apps/ShopAPI/vendor/autoteka/laravel-runtime" />
+      <path value="$PROJECT_DIR$/backend/apps/ShopOperator/vendor/autoteka/laravel-runtime" />
     </include_path>
   </component>
-  <component name="PhpProjectSharedConfiguration" php_language_level="8.2">
+  <component name="PhpProjectSharedConfiguration" php_language_level="8.4">
     <option name="suggestChangeDefaultLanguageLevel" value="false" />
   </component>
   <component name="PhpStan">
