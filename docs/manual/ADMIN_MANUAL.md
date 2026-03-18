@@ -229,6 +229,10 @@ deploy создаст его из `frontend/example.env`.
 
 ### 6.3. Серверные env-файлы
 
+- `AUTOTEKA_OPTIONS_FILE` — путь к options.env (обычно `/etc/autoteka/options.env`).
+  При **ручном запуске** `autoteka` (без systemd) переменная должна быть задана:
+  `export AUTOTEKA_OPTIONS_FILE=/etc/autoteka/options.env` или
+  `source /etc/autoteka/options.env` перед вызовом.
 - `/etc/autoteka/options.env` — `AUTOTEKA_ROOT`, `INFRA_ROOT`, `BRANCH`,
   `REMOTE`, `HTTP_PORT` (см. [DEPLOY](../../infrastructure/DEPLOY.md)).
   Скрипты берут пути только из env или аргументов, не из расположения.
@@ -242,8 +246,9 @@ deploy создаст его из `frontend/example.env`.
 
 - `$INFRA_ROOT/prod.env` — шаблон для production. Перед install создайте
   `$INFRA_ROOT/.env` копированием: `cp -n "$INFRA_ROOT/prod.env" "$INFRA_ROOT/.env"`.
-  install.sh копирует .env в `/etc/autoteka/options.env`. После установки
-  изменяйте только options.env.
+  install.sh копирует .env в `$AUTOTEKA_OPTIONS_FILE` (например, `/etc/autoteka/options.env`),
+  затем перемещает .env в `$INFRA_ROOT/backup.env`. Для повторного install:
+  `cp "$INFRA_ROOT/backup.env" "$INFRA_ROOT/.env"`. После установки изменяйте только options.env.
 - `$INFRA_ROOT/bootstrap/config/telegram.example.env` — шаблон. install.sh
   копирует его по пути `TELEGRAM_ENV_FILE` и заполняет значениями из
   `$INFRA_ROOT/.env`. Путь задаётся в .env.

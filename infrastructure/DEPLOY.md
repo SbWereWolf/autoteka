@@ -48,10 +48,13 @@ sudo ./infrastructure/bootstrap/install.sh --infra-root=/opt/vue-app/infrastruct
 
 ## Основные файлы
 
-- `$INFRA_ROOT/prod.env` — шаблон переменных для production (включая `AUTOTEKA_LOG_DIR`).
+- `$INFRA_ROOT/prod.env` — шаблон переменных для production (включая `AUTOTEKA_OPTIONS_FILE`, `AUTOTEKA_LOG_DIR`).
 - `$INFRA_ROOT/dev.env` — шаблон переменных для dev-среды.
 - `$INFRA_ROOT/.env` — создаётся из prod.env перед install, используется только install.sh.
-- `/etc/autoteka/options.env` — рабочий конфиг после установки; все изменения вносить в options.env.
+  После успешной установки install.sh перемещает .env в `$INFRA_ROOT/backup.env`.
+  Для повторного install: `cp backup.env .env`.
+- `$AUTOTEKA_OPTIONS_FILE` (обычно `/etc/autoteka/options.env`) — рабочий конфиг после установки;
+  все изменения вносить в options.env.
 - Файл по пути `TELEGRAM_ENV_FILE` — `TELEGRAM_TOKEN`, `TELEGRAM_CHAT`.
   Путь задаётся в .env, install.sh копирует его в options.env.
   Каждое уведомление содержит hash и subject в блоке version.
@@ -65,7 +68,8 @@ sudo ./infrastructure/bootstrap/install.sh --infra-root=/opt/vue-app/infrastruct
 
 ### 5. Настройки окружения
 
-- `/etc/autoteka/options.env` — `AUTOTEKA_ROOT`, `INFRA_ROOT`, `AUTOTEKA_LOG_DIR`,
+- `AUTOTEKA_OPTIONS_FILE` — путь к options.env (в prod.env: `/etc/autoteka/options.env`).
+- options.env — `AUTOTEKA_ROOT`, `INFRA_ROOT`, `AUTOTEKA_LOG_DIR`, `TELEGRAM_LOCK_DIR`,
   `BRANCH`, `REMOTE`, `HTTP_PORT`. Скрипты берут пути только из env или аргументов.
 - Файл по пути `TELEGRAM_ENV_FILE` — `TELEGRAM_TOKEN`, `TELEGRAM_CHAT`
   (см. выше в «Основные файлы»).
