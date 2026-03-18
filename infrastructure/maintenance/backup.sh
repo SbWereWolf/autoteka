@@ -197,6 +197,15 @@ RULES_ROOT=$(rules_file "backup-rules-root")
 RULES_AUTOTEKA=$(rules_file "backup-rules-autoteka")
 RULES_INFRA=$(rules_file "backup-rules-infra")
 
+[[ -z "$RULES_ROOT" ]] \
+&& echo "Предупреждение: backup-rules-root.txt не найден, архивация root пропущена." >&2
+
+[[ -z "$RULES_AUTOTEKA" ]] \
+&& echo "Предупреждение: backup-rules-autoteka.txt не найден, архивация autoteka пропущена." >&2
+
+[[ -z "$RULES_INFRA" ]] \
+&& echo "Предупреждение: backup-rules-infra.txt не найден, архивация infra пропущена." >&2
+
 if [[ "$DRY_RUN" == "yes" ]]; then
   [[ -n "$RULES_ROOT" ]] && { say "--- root (/) ---"; backup_from_rules "/" "$RULES_ROOT" "" "yes" || true; }
   [[ -n "$RULES_AUTOTEKA" ]] && { say "--- autoteka ($AUTOTEKA_ROOT) ---"; backup_from_rules "$AUTOTEKA_ROOT" "$RULES_AUTOTEKA" "" "yes" || true; }

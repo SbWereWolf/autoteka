@@ -92,6 +92,21 @@ install -m 0644 "$INFRA_ROOT/maintenance/config/logrotate-autoteka-deploy.conf" 
 install -m 0644 "$INFRA_ROOT/maintenance/config/logrotate-server-watchdog.conf" /etc/logrotate.d/server-watchdog
 install -m 0644 "$INFRA_ROOT/maintenance/config/logrotate-autoteka-telegram.conf" /etc/logrotate.d/autoteka-telegram
 install -m 0644 "$INFRA_ROOT/maintenance/config/logrotate-autoteka-backend.conf" /etc/logrotate.d/autoteka-backend
+
+# Backup rules: создать из .example при первом развёртывании.
+for base in backup-rules-root backup-rules-autoteka backup-rules-infra; do
+  dst="$INFRA_ROOT/maintenance/config/$base.txt"
+  src="$INFRA_ROOT/maintenance/config/$base.example.txt"
+  if [ ! -f "$src" ]; then
+    echo "Предупреждение: исходный файл $src не найден, пропуск." >&2
+  elif [ -f "$dst" ]; then
+    echo "Файл $dst уже существует, копирование из шаблона пропущено."
+  else
+    cp "$src" "$dst"
+    echo "Создан $dst из шаблона."
+  fi
+done
+
 systemctl daemon-reload
 systemctl enable --now fail2ban >/dev/null 2>&1 || true
 systemctl restart docker || true
