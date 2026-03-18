@@ -48,13 +48,13 @@ sudo ./infrastructure/bootstrap/install.sh --infra-root=/opt/vue-app/infrastruct
 
 ## Основные файлы
 
-- `$INFRA_ROOT/prod.env` — шаблон переменных для production.
+- `$INFRA_ROOT/prod.env` — шаблон переменных для production (включая `AUTOTEKA_LOG_DIR`).
 - `$INFRA_ROOT/dev.env` — шаблон переменных для dev-среды.
 - `$INFRA_ROOT/.env` — создаётся из prod.env перед install, используется только install.sh.
 - `/etc/autoteka/options.env` — рабочий конфиг после установки; все изменения вносить в options.env.
-- Файл по пути `TELEGRAM_ENV_FILE` — `TELEGRAM_TOKEN`, `TELEGRAM_CHAT`,
-  `TELEGRAM_LOG_FILE`. Путь задаётся в .env, install.sh копирует его в
-  options.env. Каждое уведомление содержит hash и subject в блоке version.
+- Файл по пути `TELEGRAM_ENV_FILE` — `TELEGRAM_TOKEN`, `TELEGRAM_CHAT`.
+  Путь задаётся в .env, install.sh копирует его в options.env.
+  Каждое уведомление содержит hash и subject в блоке version.
 - `$INFRA_ROOT/bootstrap/` — install/uninstall и host-конфиги.
 - `$INFRA_ROOT/runtime/` — compose, rollout и watch-changes.
 - `$INFRA_ROOT/repair/` — сценарии починки runtime и infra.
@@ -65,18 +65,18 @@ sudo ./infrastructure/bootstrap/install.sh --infra-root=/opt/vue-app/infrastruct
 
 ### 5. Настройки окружения
 
-- `/etc/autoteka/options.env` — `AUTOTEKA_ROOT`, `INFRA_ROOT`, `BRANCH`,
-  `REMOTE`, `HTTP_PORT`. Скрипты берут пути только из env или аргументов.
-- Файл по пути `TELEGRAM_ENV_FILE` — `TELEGRAM_TOKEN`, `TELEGRAM_CHAT`,
-  `TELEGRAM_LOG_FILE` (см. выше в «Основные файлы»).
+- `/etc/autoteka/options.env` — `AUTOTEKA_ROOT`, `INFRA_ROOT`, `AUTOTEKA_LOG_DIR`,
+  `BRANCH`, `REMOTE`, `HTTP_PORT`. Скрипты берут пути только из env или аргументов.
+- Файл по пути `TELEGRAM_ENV_FILE` — `TELEGRAM_TOKEN`, `TELEGRAM_CHAT`
+  (см. выше в «Основные файлы»).
 
 ### 5.2. Telegram env
 
-Опции Telegram (`TELEGRAM_ENV_FILE`, `TELEGRAM_TOKEN`, `TELEGRAM_CHAT`,
-`TELEGRAM_LOG_FILE`) задаются в `$INFRA_ROOT/.env` перед install. install.sh
-копирует шаблон `bootstrap/config/telegram.example.env` по пути
-`TELEGRAM_ENV_FILE` и переписывает туда значения из .env. В `options.env` —
-`TELEGRAM_ENV_FILE` (путь задаётся в .env).
+Опции Telegram (`TELEGRAM_ENV_FILE`, `TELEGRAM_TOKEN`, `TELEGRAM_CHAT`)
+задаются в `$INFRA_ROOT/.env` перед install. install.sh копирует шаблон
+`bootstrap/config/telegram.example.env` по пути `TELEGRAM_ENV_FILE` и
+переписывает туда значения из .env. В `options.env` — `TELEGRAM_ENV_FILE`
+(путь задаётся в .env). Лог Telegram: `$AUTOTEKA_LOG_DIR/telegram.log`.
 
 `TELEGRAM_ENV_FILE` опционален: если не задан, watchdog, watch-changes и
 maintenance работают без Telegram-уведомлений.
@@ -258,12 +258,12 @@ flowchart TD
 
 Проверяет health-домены (nginx, php, backend, admin, api) по порогам.
 При сбое: DEGRADED → автопочинка → cooldown → manual_required.
-Пишет метрики в `/var/log/server-metrics.log`, вызывает
+Пишет метрики в `$AUTOTEKA_LOG_DIR/server-metrics.log`, вызывает
 `metrics-export.sh` при успешной проверке.
 
 ### metrics-export.sh
 
-Читает `/var/log/server-metrics.log`, конвертирует в JSON, пишет в
+Читает `$AUTOTEKA_LOG_DIR/server-metrics.log`, конвертирует в JSON, пишет в
 `$INFRA_ROOT/observability/application/metrics/data.json`. Nginx раздаёт
 его по `/metrics/data.json`.
 
@@ -281,10 +281,10 @@ flowchart TD
 
 - `journalctl -u autoteka.service -u watch-changes.service`
 - `journalctl -u server-watchdog.service -u server-maintenance.service`
-- `tail -n 100 /var/log/autoteka-deploy.log`
-- `tail -n 100 /var/log/server-watchdog.log`
-- `tail -n 100 /var/log/server-maintenance.log`
-- `tail -n 100 /var/log/autoteka-telegram.log`
+- `tail -n 100 $AUTOTEKA_LOG_DIR/autoteka-deploy.log`
+- `tail -n 100 $AUTOTEKA_LOG_DIR/server-watchdog.log`
+- `tail -n 100 $AUTOTEKA_LOG_DIR/server-maintenance.log`
+- `tail -n 100 $AUTOTEKA_LOG_DIR/telegram.log`
 
 ## Верификация
 

@@ -465,17 +465,18 @@ telegram, watchdog, metrics.
 
 | Журнал                                                                | Что пишется                           | Когда смотреть               |
 |-----------------------------------------------------------------------|---------------------------------------|------------------------------|
-| `/var/log/autoteka-deploy.log`                                        | deploy, watch-changes                 | Деплой не срабатывает        |
-| `/var/log/server-maintenance.log`                                     | apt, journalctl, docker prune, backup | Проблемы maintenance         |
-| `/var/log/autoteka-telegram.log`                                      | Попытки отправки в Telegram           | Не приходят уведомления      |
-| `/var/log/server-watchdog.log`                                        | start, check domain, end, result      | Сайт/API/админка, контейнеры |
-| `/var/log/server-metrics.log`                                         | load, ram, health                     | Нет данных в /metrics        |
+| `$AUTOTEKA_LOG_DIR/autoteka-deploy.log`                               | deploy, watch-changes                 | Деплой не срабатывает        |
+| `$AUTOTEKA_LOG_DIR/server-maintenance.log`                            | apt, journalctl, docker prune, backup | Проблемы maintenance         |
+| `$AUTOTEKA_LOG_DIR/telegram.log`                                      | Попытки отправки в Telegram           | Не приходят уведомления      |
+| `$AUTOTEKA_LOG_DIR/server-watchdog.log`                               | start, check domain, end, result      | Сайт/API/админка, контейнеры |
+| `$AUTOTEKA_LOG_DIR/server-metrics.log`                                | load, ram, health                     | Нет данных в /metrics        |
 | `backend/apps/ShopAPI/storage/logs/laravel.log`                       | Laravel-логи ShopAPI                  | Ошибки API, админки, БД      |
 | `backend/apps/ShopOperator/storage/logs/laravel.log`                  | Laravel-логи ShopOperator             | Ошибки API, админки, БД      |
 | `journalctl -u autoteka.service -u watch-changes.service`             | systemd-юниты deploy                  | Деплой, таймеры              |
 | `journalctl -u server-watchdog.service -u server-maintenance.service` | watchdog, maintenance                 | Здоровье системы             |
 | `docker compose logs web`, `docker compose logs php`                  | nginx, php-fpm                        | Веб-сервер, PHP              |
 
+`AUTOTEKA_LOG_DIR` задаётся в `/etc/autoteka/options.env` (по умолчанию `/var/log/autoteka`).
 Пути к Laravel-логам — относительно корня приложения в контейнере или на хосте.
 
 ## 8. Серверные скрипты deploy
@@ -694,7 +695,7 @@ Telegram dedup lock'и хранятся отдельно в:
 
 ### 12.1. Нет метрик в /metrics
 
-1. Проверить `tail -n 50 /var/log/server-metrics.log` — пишет ли watchdog.
+1. Проверить `tail -n 50 $AUTOTEKA_LOG_DIR/server-metrics.log` — пишет ли watchdog.
 2. Проверить `ls -la $INFRA_ROOT/observability/application/metrics/data.json`.
 3. Выполнить вручную: `$INFRA_ROOT/observability/application/metrics-export.sh`.
 4. Проверить монтирование в nginx: `docker compose exec web ls /usr/share/nginx/html/metrics/`.
@@ -702,8 +703,8 @@ Telegram dedup lock'и хранятся отдельно в:
 
 ### 12.2. Не приходят сообщения в Telegram
 
-1. Проверить файл по `TELEGRAM_ENV_FILE`: `TELEGRAM_TOKEN`, `TELEGRAM_CHAT`, `TELEGRAM_LOG_FILE`.
-2. Проверить `tail -n 50 /var/log/autoteka-telegram.log` — попытки отправки и ошибки.
+1. Проверить файл по `TELEGRAM_ENV_FILE`: `TELEGRAM_TOKEN`, `TELEGRAM_CHAT`.
+2. Проверить `tail -n 50 $AUTOTEKA_LOG_DIR/telegram.log` — попытки отправки и ошибки.
 3. Проверить `ls /tmp/autoteka-telegram-locks/` — lock-файлы могут блокировать повторные уведомления.
 4. При необходимости: `autoteka health-reset all` — сброс lock'ов.
 5. Проверить доступность `api.telegram.org` с сервера.
@@ -800,8 +801,8 @@ Telegram dedup lock'и хранятся отдельно в:
 5. Проверить server-metrics.log (создаётся при каждом успешном прогоне):
 
    ```bash
-   ls -la /var/log/server-metrics.log
-   tail -5 /var/log/server-metrics.log
+   ls -la $AUTOTEKA_LOG_DIR/server-metrics.log
+   tail -5 $AUTOTEKA_LOG_DIR/server-metrics.log
    ```
 
 6. Проверить options.env (WATCHDOG_* переменные):
