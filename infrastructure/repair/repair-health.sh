@@ -100,7 +100,7 @@ repair_backend_runtime() {
 
 case "$DOMAIN" in
   nginx)
-    restart_or_up vue-app web
+    restart_or_up autoteka-http web
     ;;
   php)
     restart_or_up autoteka-php php

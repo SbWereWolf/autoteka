@@ -11,13 +11,15 @@ shift || true
 FORCE="no"
 RM_ROOT_DIR="no"
 RM_ETC_VUE_APP="no"
+PRUNE_IMAGES="no"
+PRUNE_VOLUMES="no"
 
 usage() {
   cat <<'USAGE'
 Usage:
   sudo "$INFRA_ROOT"/bootstrap/uninstall.sh soft  [--force]
   sudo "$INFRA_ROOT"/bootstrap/uninstall.sh purge [--force] [--rm-etc]
-  sudo "$INFRA_ROOT"/bootstrap/uninstall.sh nuke  [--force] [--rm-etc] [--rm-root]
+  sudo "$INFRA_ROOT"/bootstrap/uninstall.sh nuke  [--force] [--rm-etc] [--rm-root] [--prune-images] [--prune-volumes]
 
 Modes:
   soft  - stop/disable timers+services + docker compose down. No file removal.
@@ -25,9 +27,11 @@ Modes:
   nuke  - purge + remove system-level configs installed by install.sh (with backup).
 
 Flags:
-  --force     Skip interactive confirmation for destructive actions
-  --rm-etc    Also remove /etc/autoteka/* (secrets!)
-  --rm-root   Also remove $AUTOTEKA_ROOT directory (DANGEROUS)
+  --force        Skip interactive confirmation for destructive actions
+  --rm-etc       Also remove /etc/autoteka/* (secrets!)
+  --rm-root      Also remove $AUTOTEKA_ROOT and $INFRA_ROOT (DANGEROUS)
+  --prune-images In nuke only: docker image prune -a
+  --prune-volumes In nuke only: docker volume prune
 USAGE
 }
 
@@ -36,6 +40,8 @@ while [ "${1:-}" != "" ]; do
     --force) FORCE="yes"; shift;;
     --rm-root) RM_ROOT_DIR="yes"; shift;;
     --rm-etc) RM_ETC_VUE_APP="yes"; shift;;
+    --prune-images) PRUNE_IMAGES="yes"; shift;;
+    --prune-volumes) PRUNE_VOLUMES="yes"; shift;;
     -h|--help) usage; exit 0;;
     *) echo "Unknown arg: $1"; usage; exit 2;;
   esac
@@ -59,7 +65,7 @@ UNITS=(
 )
 
 LOGROTATE_FILES=(
-  /etc/logrotate.d/vue-app-deploy
+  /etc/logrotate.d/autoteka-deploy
   /etc/logrotate.d/server-watchdog
   /etc/logrotate.d/autoteka-telegram
   /etc/logrotate.d/autoteka-backend
@@ -74,8 +80,8 @@ APP_LOGS=(
 )
 
 APP_STATE=(
-  /var/lib/vue-app-prev-commit
-  /var/lib/vue-app-last-good
+  /var/lib/autoteka-http-prev-commit
+  /var/lib/autoteka-http-last-good
   /var/lib/server-watchdog.state
   /var/lib/server-watchdog.reboot
   /var/lib/server-watchdog
@@ -139,9 +145,9 @@ soft() {
     say "docker compose down"
     compose down --remove-orphans >/dev/null 2>&1 || true
 
-    if docker ps -a --format '{{.Names}}' | grep -qx 'vue-app'; then
-      say "docker rm -f vue-app"
-      docker rm -f vue-app >/dev/null 2>&1 || true
+    if docker ps -a --format '{{.Names}}' | grep -qx 'autoteka-http'; then
+      say "docker rm -f autoteka-http"
+      docker rm -f autoteka-http >/dev/null 2>&1 || true
     fi
   fi
 }
@@ -163,7 +169,13 @@ purge() {
 
   say "Removing app logs/state..."
   rm -f "${APP_LOGS[@]}" 2>/dev/null || true
-  rm -f "${APP_STATE[@]}" 2>/dev/null || true
+  for p in "${APP_STATE[@]}"; do
+    if [ -d "$p" ]; then
+      rm -rf "$p" 2>/dev/null || true
+    else
+      rm -f "$p" 2>/dev/null || true
+    fi
+  done
 
   if [ "$RM_ETC_VUE_APP" = "yes" ]; then
     confirm_or_exit "REMOVE /etc/autoteka/* (secrets)"
@@ -191,9 +203,28 @@ nuke() {
   systemctl restart fail2ban >/dev/null 2>&1 || true
   systemctl restart docker >/dev/null 2>&1 || true
 
+  if [ -f /usr/local/bin/autoteka ]; then
+    say "removing /usr/local/bin/autoteka"
+    rm -f /usr/local/bin/autoteka
+  fi
+
+  if command -v docker >/dev/null 2>&1; then
+    if [ "$PRUNE_IMAGES" = "yes" ]; then
+      say "docker image prune -a -f"
+      docker image prune -a -f >/dev/null 2>&1 || true
+    fi
+    if [ "$PRUNE_VOLUMES" = "yes" ]; then
+      say "docker volume prune -f"
+      docker volume prune -f >/dev/null 2>&1 || true
+    fi
+  fi
+
   if [ "$RM_ROOT_DIR" = "yes" ]; then
-    confirm_or_exit "REMOVE AUTOTEKA_ROOT: This will delete '$AUTOTEKA_ROOT' recursively."
+    confirm_or_exit "REMOVE AUTOTEKA_ROOT and INFRA_ROOT: This will delete '$AUTOTEKA_ROOT' and '$INFRA_ROOT' recursively."
     rm -rf "$AUTOTEKA_ROOT"
+    if [ -n "${INFRA_ROOT:-}" ] && [ "$INFRA_ROOT" != "$AUTOTEKA_ROOT" ]; then
+      rm -rf "$INFRA_ROOT"
+    fi
   fi
 }
 
@@ -206,4 +237,4 @@ esac
 
 say "Check:"
 echo "  systemctl list-timers --all | egrep 'autoteka|server-watchdog|server-maintenance' || true"
-echo "  docker ps -a | grep vue-app || true"
+echo "  docker ps -a | grep autoteka-http || true"

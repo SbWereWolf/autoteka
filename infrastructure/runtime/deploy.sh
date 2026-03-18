@@ -52,7 +52,7 @@ flock -n 9 || exit 0
 
   autoteka_run_deploy_flow --mode=deploy
 
-  printf '%s\n' "$CURRENT_HEAD" > "$STATE_DIR/vue-app-last-good" || true
+  printf '%s\n' "$CURRENT_HEAD" > "$STATE_DIR/autoteka-http-last-good" || true
   clear_script_notification_locks "$SCRIPT_ID"
   notify_info "$SCRIPT_ID" "$DEPLOY_ACTION завершено успешно" "DEPLOY_SUCCESS" "версия $CURRENT_HEAD, commit $CURRENT_SUBJECT"
   echo "$(date -Is) deploy success ($CURRENT_HEAD)"

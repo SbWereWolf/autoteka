@@ -12,6 +12,7 @@ SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/../init-roots.sh"
 autoteka_init_roots "$@"
 set -- "${AUTOTEKA_ARGS[@]}"
+source "$INFRA_ROOT/lib/laravel-runtime.sh"
 source "$INFRA_ROOT/lib/telegram.sh"
 load_telegram_env
 
@@ -83,6 +84,26 @@ if [ -f /var/lib/logrotate/status ]; then
     log "ERROR chmod /var/lib/logrotate/status failed"
     notify_maintenance_error "MAINTENANCE_LOGROTATE_PERM_FIX_FAILED" \
       "не удалось исправить права /var/lib/logrotate/status"
+  fi
+fi
+
+if command -v docker >/dev/null 2>&1; then
+  if compose exec -T php true >/dev/null 2>&1; then
+    log "Laravel optimize:clear + session prune"
+    if ! compose exec -T php sh -lc 'cd /var/www/backend/apps/ShopAPI && php artisan optimize:clear --ansi' >/dev/null 2>&1; then
+      log "WARN ShopAPI optimize:clear failed (non-fatal)"
+    fi
+    if ! compose exec -T php sh -lc 'cd /var/www/backend/apps/ShopOperator && php artisan optimize:clear --ansi' >/dev/null 2>&1; then
+      log "WARN ShopOperator optimize:clear failed (non-fatal)"
+    fi
+    if ! compose exec -T php sh -lc 'cd /var/www/backend/apps/ShopAPI && php artisan autoteka:session:prune --ansi' >/dev/null 2>&1; then
+      log "WARN ShopAPI session prune failed (non-fatal)"
+    fi
+    if ! compose exec -T php sh -lc 'cd /var/www/backend/apps/ShopOperator && php artisan autoteka:session:prune --ansi' >/dev/null 2>&1; then
+      log "WARN ShopOperator session prune failed (non-fatal)"
+    fi
+  else
+    log "Laravel maintenance skipped (php container not ready)"
   fi
 fi
 

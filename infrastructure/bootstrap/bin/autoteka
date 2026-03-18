@@ -80,6 +80,7 @@ Commands:
   repair-health     Targeted auto-repair for one health domain.
   health-reset      Clear incident state and Telegram dedup locks.
   repair-infra      Re-enable timers and reset watchdog counters.
+  diagnose          Show overall status and suggest repair commands.
   timers-stop       Stop all autoteka timers.
   timers-start      Start all autoteka timers.
   maintenance       Run periodic maintenance tasks.
@@ -257,6 +258,23 @@ Accepted values:
 USAGE
 }
 
+print_diagnose_usage() {
+  cat <<'USAGE'
+Usage:
+  autoteka diagnose
+
+Purpose:
+  Show overall status (containers, timers, health endpoints, recent logs)
+  and suggest repair commands. Read-only, does not change state.
+
+Arguments:
+  none
+
+Accepted values:
+  none
+USAGE
+}
+
 print_repair_infra_usage() {
   cat <<'USAGE'
 Usage:
@@ -418,6 +436,7 @@ print_command_usage() {
     repair-health) print_repair_health_usage ;;
     health-reset) print_health_reset_usage ;;
     repair-infra) print_repair_infra_usage ;;
+    diagnose) print_diagnose_usage ;;
     timers-stop) print_timers_stop_usage ;;
     timers-start) print_timers_start_usage ;;
     maintenance) print_maintenance_usage ;;
@@ -529,6 +548,16 @@ case "$CMD" in
     ensure_infra_root
     validate_required_paths
     exec "$INFRA_ROOT/repair/repair-infra.sh" "$@"
+    ;;
+  diagnose)
+    if [ "${1:-}" = "-h" ] || [ "${1:-}" = "--help" ]; then
+      print_diagnose_usage
+      exit 0
+    fi
+    ensure_autoteka_root
+    ensure_infra_root
+    validate_required_paths
+    exec "$INFRA_ROOT/repair/diagnose.sh" "$@"
     ;;
   timers-stop)
     if [ "${1:-}" = "-h" ] || [ "${1:-}" = "--help" ]; then

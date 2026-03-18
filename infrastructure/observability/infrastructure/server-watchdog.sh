@@ -7,7 +7,7 @@ RESOURCE_STATE="/var/lib/server-watchdog.state"
 REBOOT_STATE="/var/lib/server-watchdog.reboot"
 LOCK_FILE="/var/lock/autoteka-server-watchdog.lock"
 
-WEB_CONTAINER="vue-app"
+WEB_CONTAINER="autoteka-http"
 PHP_CONTAINER="autoteka-php"
 COMPOSE_UNIT="autoteka.service"
 

@@ -33,6 +33,6 @@ etc/systemd/journald.conf.d/limits.conf
 
 etc/fail2ban/jail.d/sshd.local
 
-etc/logrotate.d/vue-app-deploy
+etc/logrotate.d/autoteka-deploy
 etc/logrotate.d/server-watchdog
 etc/logrotate.d/autoteka-telegram

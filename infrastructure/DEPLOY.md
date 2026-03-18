@@ -63,6 +63,31 @@ sudo ./infrastructure/bootstrap/install.sh --infra-root=/opt/vue-app/infrastruct
 - `$INFRA_ROOT/observability/` — watchdog и экспорт metrics.
 - `$INFRA_ROOT/lib/` — общие shell-библиотеки.
 
+### 5. Настройки окружения
+
+- `/etc/autoteka/options.env` — `AUTOTEKA_ROOT`, `INFRA_ROOT`, `BRANCH`,
+  `REMOTE`, `HTTP_PORT`. Скрипты берут пути только из env или аргументов.
+- `/etc/autoteka/telegram.env` — `TELEGRAM_TOKEN`, `TELEGRAM_CHAT`,
+  `TELEGRAM_LOG_FILE` (см. выше в «Основные файлы»).
+
+### 5.2. Telegram env
+
+В `options.env` задаётся только `TELEGRAM_ENV_FILE` (путь к telegram.env).
+Содержимое telegram.env — `TELEGRAM_TOKEN`, `TELEGRAM_CHAT`, `TELEGRAM_LOG_FILE`.
+
+### 5.3. Backend env
+
+`backend/.env` — Laravel-конфиг. Создаётся из `backend/example.env` при первом
+запуске. Подробности — [ADMIN_MANUAL §6.2](../docs/manual/ADMIN_MANUAL.md#62-backend).
+
+### 6.1. Systemd и timers
+
+После install.sh создаются systemd-юниты: `autoteka.service`,
+`watch-changes.timer`, `server-watchdog.timer`, `server-maintenance.timer`.
+Таймеры запускают скрипты из `$INFRA_ROOT`. При изменении `$INFRA_ROOT` или
+путей к скриптам требуется обновление unit-файлов — см.
+[ADMIN_MANUAL: инструкция по обновлению](../docs/manual/ADMIN_MANUAL.md#инструкция-по-обновлению-при-изменении-infra_root).
+
 ## Команды
 
 - `autoteka up` — поднять production runtime.
@@ -125,6 +150,14 @@ docker compose \
 
 ## Подготовка к развёртыванию
 
+### 3. Что делает install.sh
+
+install.sh копирует .env в `/etc/autoteka/options.env`, создаёт systemd-юниты,
+logrotate-правила, каталоги для логов и metrics. Подробности по диагностике и
+починке — [ADMIN_MANUAL](../docs/manual/ADMIN_MANUAL.md).
+
+### 4. Развёртывание с нуля
+
 Перед первым запуском install.sh:
 
 1. Задайте `INFRA_ROOT` и `AUTOTEKA_ROOT` (env, аргументы или загрузка из файла).
@@ -156,6 +189,18 @@ install.sh скопирует .env в /etc/autoteka/options.env. После ус
 
 ## Backup и restore
 
+### 8. Техническое обслуживание
+
+`autoteka maintenance` — периодическая очистка (apt, journalctl, docker prune),
+backup, исправление прав logrotate. Запускается таймером `server-maintenance.timer`.
+
+### 9. Удаление установленной системы
+
+`autoteka uninstall <mode>` — удаление systemd-юнитов, logrotate, логов.
+Режимы: `soft`, `purge`, `nuke`. Подробности — [ADMIN_MANUAL](../docs/manual/ADMIN_MANUAL.md).
+
+### 10. Резервное копирование и восстановление deploy-настроек
+
 `autoteka backup` создаёт до трёх архивов по glob-правилам из
 `$INFRA_ROOT/maintenance/config/backup-rules-*.txt` (или `.example.txt`):
 
@@ -180,6 +225,51 @@ install.sh скопирует .env в /etc/autoteka/options.env. После ус
 Новая версия не выполняет автоматическую миграцию старой установки.
 Пошаговый сценарий обновления оформляется отдельной инструкцией в
 `tasks/`.
+
+## Логика работы скриптов
+
+### install.sh
+
+Загружает `$INFRA_ROOT/.env`, устанавливает пакеты (docker, logrotate, fail2ban),
+создаёт `/etc/autoteka/options.env` и `telegram.env`, копирует systemd-юниты,
+запускает deploy flow (сборка, compose up), включает таймеры.
+
+### watch-changes.sh
+
+```mermaid
+flowchart TD
+    A[flock] --> B{git fetch}
+    B -->|fail| C[notify_error, exit]
+    B -->|ok| D{new commits?}
+    D -->|no| E[log end, exit]
+    D -->|yes| F[stash if dirty]
+    F --> G[git reset --hard]
+    G --> H[deploy.sh]
+    H --> I[log end]
+```
+
+### server-watchdog.sh
+
+Проверяет health-домены (nginx, php, backend, admin, api) по порогам.
+При сбое: DEGRADED → автопочинка → cooldown → manual_required.
+Пишет метрики в `/var/log/server-metrics.log`, вызывает
+`metrics-export.sh` при успешной проверке.
+
+### metrics-export.sh
+
+Читает `/var/log/server-metrics.log`, конвертирует в JSON, пишет в
+`$INFRA_ROOT/observability/application/metrics/data.json`. Nginx раздаёт
+его по `/metrics/data.json`.
+
+### repair-скрипты и diagnose
+
+- `diagnose` — общая картина (контейнеры, таймеры, health, логи), рекомендации.
+- `repair-health <domain>` — перезапуск контейнеров, проверка health.
+- `repair-runtime` — полная пересборка и smoke-check.
+- `repair-infra` — перезапуск таймеров, сброс watchdog state.
+- `health-reset <target>` — сброс incident state и Telegram lock'ов.
+
+Подробные сценарии диагностики — [ADMIN_MANUAL §12](../docs/manual/ADMIN_MANUAL.md#12-пошаговая-диагностика).
 
 ## Диагностика
 

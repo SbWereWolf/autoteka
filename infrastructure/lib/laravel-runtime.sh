@@ -107,18 +107,24 @@ if [ -z "${AUTOTEKA_LIB_LARAVEL_RUNTIME_SH:-}" ]; then
 
   ensure_package_lock_for_deploy() {
     local root="${AUTOTEKA_ROOT:?}"
-    local pair src dest
-    for pair in \
-      "package-lock.nix.json:package-lock.json" \
-      "frontend/package-lock.nix.json:frontend/package-lock.json" \
-      "system-tests/package-lock.nix.json:system-tests/package-lock.json" \
-      "infrastructure/tests/package-lock.nix.json:infrastructure/tests/package-lock.json"; do
-      src="${pair%%:*}"
-      dest="${pair##*:}"
-      if [ -f "$root/$src" ] && [ ! -f "$root/$dest" ]; then
-        cp "$root/$src" "$root/$dest"
-      fi
-    done
+    local src="frontend/package-lock.nix.json"
+    local dest="frontend/package-lock.json"
+
+    if [ ! -f "$root/$src" ]; then
+      echo "Для деплоя требуется frontend/package-lock.nix.json. Создайте его в *nix-окружении (WSL/Linux):" >&2
+      echo "" >&2
+      echo "  cd frontend" >&2
+      echo "  npm i" >&2
+      echo "  cd .." >&2
+      echo "  bash ./scripts/swap-env.sh save -t frontend-lock" >&2
+      echo "" >&2
+      echo "Или одной строкой:" >&2
+      echo "" >&2
+      echo "  (cd frontend && npm i) && bash ./scripts/swap-env.sh save -t frontend-lock" >&2
+      exit 3
+    fi
+
+    cp "$root/$src" "$root/$dest"
   }
 
   api_artisan_in_php() {

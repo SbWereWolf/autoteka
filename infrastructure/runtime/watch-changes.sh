@@ -130,7 +130,7 @@ fi
     log "worktree already clean; stash not required"
   fi
 
-  printf '%s\n' "$LOCAL" > "$STATE_DIR/vue-app-prev-commit" || true
+  printf '%s\n' "$LOCAL" > "$STATE_DIR/autoteka-http-prev-commit" || true
 
   WATCH_STAGE="git_reset"
   git reset --hard "$REMOTE/$BRANCH"
