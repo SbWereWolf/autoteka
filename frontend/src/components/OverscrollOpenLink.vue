@@ -83,6 +83,7 @@ function openUrl() {
   if (isCoolingDown.value) return;
   triggered.value = true;
   startCooldown();
+  history.pushState(null, "", window.location.href);
   window.location.href = props.url;
 }
 
