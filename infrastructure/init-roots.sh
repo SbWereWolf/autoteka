@@ -9,7 +9,6 @@ AUTOTEKA_INIT_ROOTS_SH=1
 _init_roots_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 source "$_init_roots_dir/lib/operational_system.sh"
 
-AUTOTEKA_OPTIONS_ENV_DEFAULT="${AUTOTEKA_OPTIONS_ENV_DEFAULT:-/etc/autoteka/options.env}"
 AUTOTEKA_ARGS=()
 
 _autoteka_print_roots_usage() {
@@ -25,7 +24,7 @@ _autoteka_print_roots_usage() {
 }
 
 autoteka_load_options_env() {
-  local env_file="${1:-$AUTOTEKA_OPTIONS_ENV_DEFAULT}"
+  local env_file="${1:-$AUTOTEKA_OPTIONS_FILE}"
 
   if [ ! -e "$env_file" ]; then
     return 0

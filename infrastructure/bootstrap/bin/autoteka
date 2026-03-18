@@ -1,7 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-ENV_FILE="/etc/autoteka/options.env"
+if [ -z "${AUTOTEKA_OPTIONS_FILE:-}" ]; then
+  echo "AUTOTEKA_OPTIONS_FILE не задан. Задайте вручную: export AUTOTEKA_OPTIONS_FILE=/path или source options.env. См. ADMIN_MANUAL." >&2
+  exit 3
+fi
+ENV_FILE="$AUTOTEKA_OPTIONS_FILE"
 
 load_env_if_present() {
   if [ -f "$ENV_FILE" ]; then
