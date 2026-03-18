@@ -459,19 +459,22 @@ sudo systemctl start server-maintenance.service
 
 ### 7.7. Журналы приложения
 
-При диагностике смотрите в следующие журналы:
+При диагностике смотрите в следующие журналы. Команда `autoteka diagnose`
+выводит последние 3 строки из каждого лога в порядке: deploy, maintenance,
+telegram, watchdog, metrics.
 
-| Журнал | Что пишется | Когда смотреть |
-|--------|-------------|----------------|
-| `/var/log/autoteka-deploy.log` | deploy, watch-changes | Деплой не срабатывает |
-| `/var/log/server-watchdog.log` | healthcheck, repair | Сайт/API/админка, контейнеры |
-| `/var/log/server-metrics.log` | load, ram, health | Нет данных в /metrics |
-| `/var/log/server-maintenance.log` | apt, journalctl, docker prune, backup | Проблемы maintenance |
-| `/var/log/autoteka-telegram.log` | Попытки отправки в Telegram | Не приходят уведомления |
-| `backend/apps/ShopAPI/storage/logs/laravel.log`, `backend/apps/ShopOperator/storage/logs/laravel.log` | Laravel-логи приложений | Ошибки API, админки, БД |
-| `journalctl -u autoteka.service -u watch-changes.service` | systemd-юниты deploy | Деплой, таймеры |
-| `journalctl -u server-watchdog.service -u server-maintenance.service` | watchdog, maintenance | Здоровье системы |
-| `docker compose logs web`, `docker compose logs php` | nginx, php-fpm | Веб-сервер, PHP |
+| Журнал                                                                | Что пишется                           | Когда смотреть               |
+|-----------------------------------------------------------------------|---------------------------------------|------------------------------|
+| `/var/log/autoteka-deploy.log`                                        | deploy, watch-changes                 | Деплой не срабатывает        |
+| `/var/log/server-maintenance.log`                                     | apt, journalctl, docker prune, backup | Проблемы maintenance         |
+| `/var/log/autoteka-telegram.log`                                      | Попытки отправки в Telegram           | Не приходят уведомления      |
+| `/var/log/server-watchdog.log`                                        | start, check domain, end, result      | Сайт/API/админка, контейнеры |
+| `/var/log/server-metrics.log`                                         | load, ram, health                     | Нет данных в /metrics        |
+| `backend/apps/ShopAPI/storage/logs/laravel.log`                       | Laravel-логи ShopAPI                  | Ошибки API, админки, БД      |
+| `backend/apps/ShopOperator/storage/logs/laravel.log`                  | Laravel-логи ShopOperator             | Ошибки API, админки, БД      |
+| `journalctl -u autoteka.service -u watch-changes.service`             | systemd-юниты deploy                  | Деплой, таймеры              |
+| `journalctl -u server-watchdog.service -u server-maintenance.service` | watchdog, maintenance                 | Здоровье системы             |
+| `docker compose logs web`, `docker compose logs php`                  | nginx, php-fpm                        | Веб-сервер, PHP              |
 
 Пути к Laravel-логам — относительно корня приложения в контейнере или на хосте.
 
@@ -726,14 +729,23 @@ Telegram dedup lock'и хранятся отдельно в:
 1. `docker compose logs php` — логи PHP-FPM.
 2. `curl -i http://127.0.0.1/up` — backend.
 3. `curl -i http://127.0.0.1/api/v1/category-list` — API.
-4. При необходимости: `autoteka repair-health php`, `autoteka repair-health backend`, `autoteka repair-runtime`.
+4. При необходимости: 
+   - `autoteka repair-health php`, 
+   - `autoteka repair-health backend`, 
+   - `autoteka repair-runtime`.
 
 ### 12.6. Сервер (админка или API) отвечает 502
 
-1. Проверить `docker compose ps` — контейнер `php` в состоянии `Up` и `healthy`.
-2. `docker compose logs php` — ошибки PHP-FPM.
-3. `backend/apps/ShopAPI/storage/logs/laravel.log`, `backend/apps/ShopOperator/storage/logs/laravel.log` — ошибки приложения.
-4. При необходимости: `autoteka repair-health php`, `autoteka repair-health backend`, `autoteka repair-runtime`.
+1. Проверить состояние контейнера `php`:
+   - `docker compose ps` — в состоянии `Up` и `healthy`.
+2. ошибки PHP-FPM: `docker compose logs php`.
+3. ошибки приложения:
+   - `backend/apps/ShopAPI/storage/logs/laravel.log`, 
+   - `backend/apps/ShopOperator/storage/logs/laravel.log`.
+4. При необходимости: 
+   - `autoteka repair-health php`, 
+   - `autoteka repair-health backend`, 
+   - `autoteka repair-runtime`.
 
 ### 12.7. Контейнер unhealthy или missing
 
@@ -759,6 +771,49 @@ Telegram dedup lock'и хранятся отдельно в:
 2. `journalctl -u watch-changes.timer -u server-watchdog.timer -u server-maintenance.timer -n 50`.
 3. При необходимости: `autoteka repair-infra`, `autoteka timers-start`.
 
+### 12.11. Диагностика server-watchdog (лог не найден или не обновляется)
+
+1. Проверить, что таймер и сервис существуют:
+
+   ```bash
+   systemctl status server-watchdog.timer server-watchdog.service
+   ```
+
+2. Посмотреть последние запуски (journal):
+
+   ```bash
+   journalctl -u server-watchdog.service -n 20 --no-pager
+   ```
+
+3. Убедиться, что watchdog реально запускается:
+
+   ```bash
+   systemctl list-timers server-watchdog.timer
+   ```
+
+4. Ручной запуск — должен отработать без ошибок:
+
+   ```bash
+   sudo autoteka watchdog
+   ```
+
+5. Проверить server-metrics.log (создаётся при каждом успешном прогоне):
+
+   ```bash
+   ls -la /var/log/server-metrics.log
+   tail -5 /var/log/server-metrics.log
+   ```
+
+6. Проверить options.env (WATCHDOG_* переменные):
+
+   ```bash
+   grep WATCHDOG /etc/autoteka/options.env 2>/dev/null || echo "options.env не найден"
+   ```
+
+Ожидаемый результат при здоровой системе: journalctl показывает успешные
+запуски (exit 0); server-metrics.log существует и обновляется;
+server-watchdog.log создаётся при каждом прогоне (start, check, end).
+
 ## 13. Инструкция по обновлению при изменении $INFRA_ROOT
 
 Пути к скриптам и `$INFRA_ROOT` жёстко записаны в systemd-юнитах и
@@ -768,9 +823,14 @@ Telegram dedup lock'и хранятся отдельно в:
 
 ### 13.1. Что обновлять
 
-- Файлы в `/etc/systemd/system/`: `autoteka.service`, `watch-changes.service`,
-  `watch-changes.timer`, `server-watchdog.service`, `server-watchdog.timer`,
-  `server-maintenance.service`, `server-maintenance.timer`.
+- Файлы в `/etc/systemd/system/`: 
+  - `autoteka.service`, 
+  - `watch-changes.service`,
+  - `watch-changes.timer`, 
+  - `server-watchdog.service`,
+  - `server-watchdog.timer`,
+  - `server-maintenance.service`, 
+  - `server-maintenance.timer`.
 - `/etc/autoteka/options.env` — переменные `INFRA_ROOT`, `AUTOTEKA_ROOT`.
 - При необходимости — logrotate, cron, другие конфиги, ссылающиеся на пути.
 
@@ -778,11 +838,14 @@ Telegram dedup lock'и хранятся отдельно в:
 
 1. Остановить таймеры: `autoteka timers-stop`.
 2. Обновить `/etc/autoteka/options.env` — новые значения `INFRA_ROOT`, `AUTOTEKA_ROOT`.
-3. Переустановить systemd-юниты: скопировать актуальные unit-файлы из
-   `$INFRA_ROOT/runtime/systemd/`, `$INFRA_ROOT/observability/infrastructure/systemd/`,
-   `$INFRA_ROOT/maintenance/systemd/` в `/etc/systemd/system/` и выполнить
-   `systemctl daemon-reload`.
-4. Запустить таймеры: `autoteka timers-start`.
-5. Проверить: `systemctl status autoteka.service watch-changes.timer server-watchdog.timer server-maintenance.timer`.
+3. Переустановить systemd-юниты: скопировать в `/etc/systemd/system/` 
+   актуальные unit-файлы из:
+   - `$INFRA_ROOT/runtime/systemd/`, 
+   - `$INFRA_ROOT/observability/infrastructure/systemd/`,
+   -  `$INFRA_ROOT/maintenance/systemd/`
+4. Выполнить `systemctl daemon-reload`.
+5. Запустить таймеры: `autoteka timers-start`.
+6. Проверить: 
+   - `systemctl status autoteka.service watch-changes.timer server-watchdog.timer server-maintenance.timer`.
 
 Подробности по структуре systemd — [DEPLOY §6.1](../../infrastructure/DEPLOY.md#61-systemd-и-timers).
