@@ -1,6 +1,9 @@
 # AGENTS.md
 
-MANDATORY !! NEVER USE FALLBACK VALUES, NEVER USE DEFAULT VALUES.
+Fallbacks and defaults mask configuration problems: the real value 
+stays hidden until inspected in code, complicates debugging, and 
+leads to unpredictable behavior. If a value is required, fail 
+explicitly (e.g. exit 3) with a clear message instead.
 
 MANDATORY !! NEVER .env.example, ALWAYS example.env
 
