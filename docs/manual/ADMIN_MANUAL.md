@@ -710,7 +710,7 @@ Telegram dedup lock'и хранятся отдельно в:
 
 1. Проверить файл по `TELEGRAM_ENV_FILE`: `TELEGRAM_TOKEN`, `TELEGRAM_CHAT`.
 2. Проверить `tail -n 50 $AUTOTEKA_LOG_DIR/telegram.log` — попытки отправки и ошибки.
-3. Проверить `ls /tmp/autoteka-telegram-locks/` — lock-файлы могут блокировать повторные уведомления.
+3. Проверить lock-файлы: `autoteka diagnose` выводит их список, или вручную `ls $TELEGRAM_LOCK_DIR` (обычно `/tmp/autoteka-telegram-locks/`).
 4. При необходимости: `autoteka health-reset all` — сброс lock'ов.
 5. Проверить доступность `api.telegram.org` с сервера.
 

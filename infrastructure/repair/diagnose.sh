@@ -36,6 +36,18 @@ for url in "http://127.0.0.1/healthcheck" "http://127.0.0.1/up" "http://127.0.0.
 done
 echo ""
 
+# Telegram lock-файлы
+echo "--- Telegram lock-файлы ---"
+if [ -z "${TELEGRAM_LOCK_DIR:-}" ]; then
+  echo "  TELEGRAM_LOCK_DIR не задан (проверьте options.env)"
+elif [ ! -d "$TELEGRAM_LOCK_DIR" ]; then
+  echo "  Каталог не создан: $TELEGRAM_LOCK_DIR"
+else
+  echo "  $TELEGRAM_LOCK_DIR:"
+  ls -la "$TELEGRAM_LOCK_DIR" 2>/dev/null | sed 's/^/    /' || echo "    (не удалось прочитать)"
+fi
+echo ""
+
 # Последние записи в логах
 echo "--- Последние записи в логах (tail -3) ---"
 if [ -n "${AUTOTEKA_LOG_DIR:-}" ]; then
