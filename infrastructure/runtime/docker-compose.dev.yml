@@ -71,22 +71,17 @@ services:
       - php
       - frontend
     environment:
-      FRONTEND_MODE: ${FRONTEND_MODE:-source}
-      FRONTEND_PORT: ${FRONTEND_PORT:-5173}
-      CORS_ALLOW_ORIGIN: ${CORS_ALLOW_ORIGIN:-*}
-      CORS_ALLOW_METHODS:
-        ${CORS_ALLOW_METHODS:-GET,POST,PUT,PATCH,DELETE,OPTIONS}
-      CORS_ALLOW_HEADERS:
-        ${CORS_ALLOW_HEADERS:-Authorization,Content-Type,Accept,Origin,X-Requested-With}
-      CORS_EXPOSE_HEADERS: >-
-        ${CORS_EXPOSE_HEADERS:-Content-Length,Content-Range}
-      CORS_ALLOW_CREDENTIALS: ${CORS_ALLOW_CREDENTIALS:-false}
-      CORS_MAX_AGE: ${CORS_MAX_AGE:-86400}
-      API_CACHE_TTL: ${API_CACHE_TTL:-3600}
-      API_CACHE_CONTROL_GET:
-        ${API_CACHE_CONTROL_GET:-public, max-age=${API_CACHE_TTL:-3600}}
-      API_CACHE_CONTROL_MUTATION:
-        ${API_CACHE_CONTROL_MUTATION:-no-store,no-cache,must-revalidate,max-age=0}
+      FRONTEND_MODE: ${FRONTEND_MODE:?FRONTEND_MODE must be set in dev.env}
+      FRONTEND_PORT: ${FRONTEND_PORT:?FRONTEND_PORT must be set in dev.env}
+      CORS_ALLOW_ORIGIN: ${CORS_ALLOW_ORIGIN:?CORS_ALLOW_ORIGIN must be set in dev.env}
+      CORS_ALLOW_METHODS: ${CORS_ALLOW_METHODS:?CORS_ALLOW_METHODS must be set in dev.env}
+      CORS_ALLOW_HEADERS: ${CORS_ALLOW_HEADERS:?CORS_ALLOW_HEADERS must be set in dev.env}
+      CORS_EXPOSE_HEADERS: ${CORS_EXPOSE_HEADERS:?CORS_EXPOSE_HEADERS must be set in dev.env}
+      CORS_ALLOW_CREDENTIALS: ${CORS_ALLOW_CREDENTIALS:?CORS_ALLOW_CREDENTIALS must be set in dev.env}
+      CORS_MAX_AGE: ${CORS_MAX_AGE:?CORS_MAX_AGE must be set in dev.env}
+      API_CACHE_TTL: ${API_CACHE_TTL:?API_CACHE_TTL must be set in dev.env}
+      API_CACHE_CONTROL_GET: ${API_CACHE_CONTROL_GET:?API_CACHE_CONTROL_GET must be set in dev.env}
+      API_CACHE_CONTROL_MUTATION: ${API_CACHE_CONTROL_MUTATION:?API_CACHE_CONTROL_MUTATION must be set in dev.env}
     volumes:
       - ${AUTOTEKA_ROOT}/frontend:/workspace/frontend:ro
       - autoteka_frontend_dist:/workspace/frontend/dist:ro
