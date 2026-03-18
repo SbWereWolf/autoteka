@@ -13,6 +13,15 @@
 - `swap-env.ps1` / `swap-env.sh` — явная проверка, сохранение и загрузка
   platform-specific артефактов для `win` и `nix`.
 - `example.env` — пример формата `scripts/.env`.
+- `agent/` — скрипты для агентов и CI (verify, preflight, commit и др.).
+
+### scripts/agent/ — WSL-тестирование
+
+- `wsl-preflight.sh` — pre-check перед тестированием на WSL: Docker, curl,
+  Node.js, npm, system-tests/.env, prod.test.env, scripts/.env.
+- `wsl-prepare-test-copy.sh` — копирует проект в изолированную папку
+  (`TEST_ROOT`, по умолчанию `/tmp/autoteka-wsl-test`) и создаёт env-файлы
+  с путями под тестовый корень. Запускать из WSL.
 
 ## Локальная конфигурация
 
@@ -22,6 +31,8 @@
 Поддерживаемые переменные:
 
 - `SCRIPT_BASH_PATH` — путь к интерпретатору `bash`.
+- `SCRIPT_NODE_PATH`, `SCRIPT_NPX_PATH` — пути к `node` и `npx` (для verify,
+  system-tests, playwright).
 - `SCRIPT_PHP_PATH` — путь к исполняемому файлу `php` для репозиторных
   PowerShell-скриптов, включая `scripts/agent/verify.ps1`.
 - `AUTOTEKA_ROOT`, `INFRA_ROOT` — корни репозитория и infrastructure (для
@@ -37,8 +48,7 @@
 
 ### Команды
 
-- `validate` — сверяет `active` и `current-env`. Это команда по
-  умолчанию.
+- `validate` — сверяет `active` и `current-env`. Это команда по умолчанию.
 - `save` — записывает из `active` в `current-env`,
   только если замена нужна.
 - `load` — загружает из `current-env` в `active`, 
