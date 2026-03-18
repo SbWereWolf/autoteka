@@ -26,6 +26,10 @@ scripts/.env
 /system-tests/win.env
 /system-tests/nix.env
 
+/infrastructure/tests/.env
+/infrastructure/tests/win.env
+/infrastructure/tests/nix.env
+
 /infrastructure/dev.test.env
 /infrastructure/prod.test.env
 

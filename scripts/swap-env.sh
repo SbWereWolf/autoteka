@@ -26,6 +26,7 @@ all_types=(
   "system-tests-env"
   "system-tests-lock"
   "infrastructure-tests-lock"
+  "infrastructure-tests-env"
   "root-node-modules"
   "frontend-node-modules"
   "system-tests-node-modules"
@@ -135,7 +136,7 @@ get_relative_path() {
 
 get_type_kind() {
   case "$1" in
-    root-lock|frontend-lock|system-tests-lock|infrastructure-tests-lock|scripts-env|lint-env|shop-api-env|shop-operator-env|system-tests-env)
+    root-lock|frontend-lock|system-tests-lock|infrastructure-tests-lock|scripts-env|lint-env|shop-api-env|shop-operator-env|system-tests-env|infrastructure-tests-env)
       printf "file"
       ;;
     root-node-modules|frontend-node-modules|system-tests-node-modules|infrastructure-tests-node-modules)
@@ -154,6 +155,7 @@ get_type_active_path() {
     system-tests-env) printf "%s/system-tests/.env" "$repo_root" ;;
     system-tests-lock) printf "%s/system-tests/package-lock.json" "$repo_root" ;;
     infrastructure-tests-lock) printf "%s/tests/package-lock.json" "$infra_root" ;;
+    infrastructure-tests-env) printf "%s/tests/.env" "$infra_root" ;;
     root-node-modules) printf "%s/node_modules" "$repo_root" ;;
     frontend-node-modules) printf "%s/frontend/node_modules" "$repo_root" ;;
     system-tests-node-modules) printf "%s/system-tests/node_modules" "$repo_root" ;;
@@ -176,6 +178,7 @@ get_type_variant_path() {
     system-tests-env) printf "%s/system-tests/%s.env" "$repo_root" "$platform_name" ;;
     system-tests-lock) printf "%s/system-tests/package-lock.%s.json" "$repo_root" "$platform_name" ;;
     infrastructure-tests-lock) printf "%s/tests/package-lock.%s.json" "$infra_root" "$platform_name" ;;
+    infrastructure-tests-env) printf "%s/tests/%s.env" "$infra_root" "$platform_name" ;;
     root-node-modules) printf "%s/node_modules.%s" "$repo_root" "$platform_name" ;;
     frontend-node-modules) printf "%s/frontend/node_modules.%s" "$repo_root" "$platform_name" ;;
     system-tests-node-modules) printf "%s/system-tests/node_modules.%s" "$repo_root" "$platform_name" ;;

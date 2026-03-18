@@ -61,6 +61,7 @@
 - `system-tests-env`
 - `system-tests-lock`
 - `infrastructure-tests-lock`
+- `infrastructure-tests-env`
 - `scripts-env`
 - `lint-env`
 - `shop-api-env`

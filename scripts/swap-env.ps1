@@ -34,6 +34,7 @@ $allTypes = @(
     "system-tests-env",
     "system-tests-lock",
     "infrastructure-tests-lock",
+    "infrastructure-tests-env",
     "root-node-modules",
     "frontend-node-modules",
     "system-tests-node-modules",
@@ -155,6 +156,15 @@ function Get-TypeInfo {
                 Label = "infrastructure/tests node_modules"
                 ActivePath = Join-Path $base "node_modules"
                 CurrentEnvPath = Join-Path $base "node_modules.$Platform"
+            }
+        }
+        "infrastructure-tests-env" {
+            $base = Join-Path $script:InfraRoot "tests"
+            return @{
+                Kind = "File"
+                Label = "infrastructure/tests env"
+                ActivePath = Join-Path $base ".env"
+                CurrentEnvPath = Join-Path $base $envFileName
             }
         }
         "scripts-env" {

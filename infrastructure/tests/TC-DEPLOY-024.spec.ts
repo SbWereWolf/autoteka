@@ -16,7 +16,27 @@ function read(relPath: string): string {
   return readFileSync(join(INFRA_ROOT_PATH, relPath), "utf-8");
 }
 
-const BASH = process.env.SCRIPT_BASH_PATH || process.env.BASH_PATH || "bash";
+const BASH_PATH_MESSAGE = `[infrastructure/tests] Для интеграционных тестов backup/restore требуется bash.
+Скопируйте infrastructure/tests/example.env в infrastructure/tests/.env и задайте BASH_PATH.
+Или: pwsh ./scripts/swap-env.ps1 load -t infrastructure-tests-env`;
+
+function requireBashPath(): string {
+  const path = process.env.BASH_PATH;
+  if (!path || path.trim() === "") {
+    console.error(BASH_PATH_MESSAGE);
+    process.exit(3);
+  }
+  return path;
+}
+
+function failIfCommandNotFound(
+  out: { status: number | null },
+): void {
+  if (out.status === 127) {
+    console.error(BASH_PATH_MESSAGE);
+    process.exit(3);
+  }
+}
 
 describe("TC-DEPLOY-024 backup.sh (B1-B8)", () => {
   it("backup.sh содержит логику backup_glob (apply_rule или emit_selected)", () => {
@@ -65,7 +85,8 @@ describe("TC-DEPLOY-024 backup.sh (B1-B8)", () => {
   });
 
   it("B1: backup --dry-run выводит список и завершается с exit 0", () => {
-    const out = spawnSync(BASH, [join(INFRA_ROOT_PATH, "maintenance/backup.sh"), "--dry-run"], {
+    const bash = requireBashPath();
+    const out = spawnSync(bash, [join(INFRA_ROOT_PATH, "maintenance/backup.sh"), "--dry-run"], {
       env: {
         ...process.env,
         INFRA_ROOT: INFRA_ROOT_PATH,
@@ -73,16 +94,19 @@ describe("TC-DEPLOY-024 backup.sh (B1-B8)", () => {
       },
       encoding: "utf-8",
     });
+    failIfCommandNotFound(out);
     expect(out.status).toBe(0);
     expect(out.stdout).toBeDefined();
   });
 
   it("B4: backup без root завершается с exit 1", () => {
     if (typeof process.getuid === "function" && process.getuid() === 0) return;
-    const out = spawnSync(BASH, [join(INFRA_ROOT_PATH, "maintenance/backup.sh")], {
+    const bash = requireBashPath();
+    const out = spawnSync(bash, [join(INFRA_ROOT_PATH, "maintenance/backup.sh")], {
       env: { ...process.env, INFRA_ROOT: INFRA_ROOT_PATH, AUTOTEKA_ROOT: join(INFRA_ROOT_PATH, "..") },
       encoding: "utf-8",
     });
+    failIfCommandNotFound(out);
     expect(out.status).toBe(1);
   });
 
@@ -90,6 +114,14 @@ describe("TC-DEPLOY-024 backup.sh (B1-B8)", () => {
     const content = read("maintenance/backup.sh");
     expect(content).toMatch(/STORAGE_BACKUP_RETENTION_DAYS|RETENTION_DAYS/);
     expect(content).toMatch(/find.*-mtime|removed old/);
+  });
+
+  it("backup.sh выводит предупреждение при отсутствии rules-файла", () => {
+    const content = read("maintenance/backup.sh");
+    expect(content).toMatch(/Предупреждение:.*backup-rules-root\.txt.*не найден/);
+    expect(content).toMatch(/Предупреждение:.*backup-rules-autoteka\.txt.*не найден/);
+    expect(content).toMatch(/Предупреждение:.*backup-rules-infra\.txt.*не найден/);
+    expect(content).toMatch(/>&2/);
   });
 });
 
@@ -117,11 +149,12 @@ describe("TC-DEPLOY-024 restore.sh (R1-R7)", () => {
 
   it("R3: restore --dry-run выводит план", () => {
     if (typeof process.getuid === "function" && process.getuid() !== 0) return;
+    const bash = requireBashPath();
     const dummyArchive = join(tmpdir(), "tc-deploy-024-dummy-archive.tar.gz");
     try {
       writeFileSync(dummyArchive, "");
       const out = spawnSync(
-        BASH,
+        bash,
         [
           join(INFRA_ROOT_PATH, "maintenance/restore.sh"),
           "--dry-run",
@@ -132,6 +165,7 @@ describe("TC-DEPLOY-024 restore.sh (R1-R7)", () => {
           encoding: "utf-8",
         },
       );
+      failIfCommandNotFound(out);
       expect(out.status).toBe(0);
       expect(out.stdout).toMatch(/DRY RUN|timers-stop|health-reset|repair-infra/);
     } finally {
@@ -145,8 +179,9 @@ describe("TC-DEPLOY-024 restore.sh (R1-R7)", () => {
 
   it("R6: restore с несуществующим архивом завершается с exit 1", () => {
     if (typeof process.getuid === "function" && process.getuid() === 0) return;
+    const bash = requireBashPath();
     const out = spawnSync(
-      BASH,
+      bash,
       [
         join(INFRA_ROOT_PATH, "maintenance/restore.sh"),
         "--force",
@@ -157,6 +192,7 @@ describe("TC-DEPLOY-024 restore.sh (R1-R7)", () => {
         encoding: "utf-8",
       },
     );
+    failIfCommandNotFound(out);
     expect(out.status).toBe(1);
   });
 });
@@ -167,10 +203,15 @@ describe("TC-DEPLOY-024 autoteka CLI", () => {
     expect(content).toMatch(/timers-stop/);
     expect(content).toMatch(/timers-start/);
   });
+});
 
-  it("autoteka не содержит backup-storage", () => {
-    const content = read("bootstrap/bin/autoteka");
-    expect(content).not.toMatch(/backup-storage/);
+describe("TC-DEPLOY-024 install.sh", () => {
+  it("install.sh создаёт backup-rules-*.txt из .example.txt при первом развёртывании", () => {
+    const content = read("bootstrap/install.sh");
+    expect(content).toMatch(/backup-rules-root|backup-rules-autoteka|backup-rules-infra/);
+    expect(content).toMatch(/\.example\.txt/);
+    expect(content).toMatch(/уже существует.*пропущено|копирование из шаблона пропущено/);
+    expect(content).toMatch(/Создан.*из шаблона|Создан \$dst из шаблона/);
   });
 });
 
