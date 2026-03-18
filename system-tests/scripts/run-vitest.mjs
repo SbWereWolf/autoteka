@@ -1,7 +1,10 @@
 import { spawnSync } from "node:child_process";
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+
+const nullDevice = os.platform() === "win32" ? "NUL" : "/dev/null";
 
 const rawArgs = process.argv.slice(2);
 
@@ -122,12 +125,15 @@ const composeFileForStack = (stack) => {
   return null;
 };
 
+const stackEnv = profileInfo.stack === "prod" ? deployEnv : devEnv;
+const composeEnv = { ...process.env, ...stackEnv };
+
 const preflightRuntime = (baseUrl) => {
   const composeFile = composeFileForStack(profileInfo.stack);
   if (!composeFile) return;
 
   const upArgs = ["compose", "-f", composeFile, "up", "-d", "--remove-orphans"];
-  const up = spawnSync("docker", upArgs, { stdio: "inherit", cwd: repoRoot, env: process.env });
+  const up = spawnSync("docker", upArgs, { stdio: "inherit", cwd: repoRoot, env: composeEnv });
   if (up.status !== 0) {
     console.error("[run-vitest] Не удалось поднять docker-compose runtime");
     process.exit(up.status ?? 1);
@@ -136,7 +142,7 @@ const preflightRuntime = (baseUrl) => {
   const ps = spawnSync("docker", ["compose", "-f", composeFile, "ps"], {
     stdio: "inherit",
     cwd: repoRoot,
-    env: process.env,
+    env: composeEnv,
   });
   if (ps.status !== 0) {
     console.error("[run-vitest] Не удалось получить статус контейнеров");
@@ -153,7 +159,7 @@ const preflightRuntime = (baseUrl) => {
   const listContainers = spawnSync(
     "docker",
     ["compose", "-f", composeFile, "ps", "-q"],
-    { stdio: "pipe", encoding: "utf8", cwd: repoRoot, env: process.env },
+    { stdio: "pipe", encoding: "utf8", cwd: repoRoot, env: composeEnv },
   );
   if (listContainers.status !== 0) {
     console.error("[run-vitest] Не удалось получить id контейнеров для ожидания health");
@@ -181,7 +187,7 @@ const preflightRuntime = (baseUrl) => {
           "{{if .State.Health}}{{.State.Health.Status}}{{else}}{{.State.Status}}{{end}}",
           containerId,
         ],
-        { stdio: "pipe", encoding: "utf8", cwd: repoRoot, env: process.env },
+        { stdio: "pipe", encoding: "utf8", cwd: repoRoot, env: composeEnv },
       );
       if (inspect.status !== 0) {
         console.error(`[run-vitest] Не удалось проверить состояние контейнера ${containerId}`);
@@ -205,7 +211,7 @@ const preflightRuntime = (baseUrl) => {
       const psAfterTimeout = spawnSync("docker", ["compose", "-f", composeFile, "ps"], {
         stdio: "inherit",
         cwd: repoRoot,
-        env: process.env,
+        env: composeEnv,
       });
       process.exit(psAfterTimeout.status ?? 1);
     }
@@ -213,7 +219,7 @@ const preflightRuntime = (baseUrl) => {
     spawnSync("sleep", [String(effectiveWait.intervalSec)], {
       stdio: "inherit",
       cwd: repoRoot,
-      env: process.env,
+      env: composeEnv,
     });
   }
 
@@ -244,7 +250,7 @@ const preflightRuntime = (baseUrl) => {
         "--max-time",
         String(effectiveWait.smokeTimeoutSec),
         "-o",
-        "/dev/null",
+        nullDevice,
         "-w",
         "%{http_code}",
         new URL("/admin/login", baseUrl).toString(),
