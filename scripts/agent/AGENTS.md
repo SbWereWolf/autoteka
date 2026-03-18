@@ -17,4 +17,6 @@ and commit wrappers.
 3. Validate the changed scripts directly with safe flags where
    possible.
 4. When changing `verify.ps1`, state the cache limitation explicitly.
-5. Keep PowerShell and shell wrapper expectations aligned.
+5. На Windows verify запускает тесты через ProcessStartInfo с CreateNoWindow,
+   без всплывающих консольных окон. Требуется pwsh.
+6. Keep PowerShell and shell wrapper expectations aligned.

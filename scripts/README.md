@@ -14,8 +14,6 @@
   platform-specific артефактов для `win` и `nix`.
 - `example.env` — пример формата `scripts/.env`.
 
-Фронтовые `.mjs` утилиты переехали в `frontend/scripts/`.
-
 ## Локальная конфигурация
 
 1. Скопируй `scripts/example.env` в `scripts/.env`.

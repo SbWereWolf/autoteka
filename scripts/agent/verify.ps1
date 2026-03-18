@@ -67,6 +67,24 @@ function Start-VerifyProcess {
         }
     }
 
+    if ($isWindowsHost) {
+        $psi = New-Object System.Diagnostics.ProcessStartInfo
+        $psi.FileName = $startFilePath
+        $psi.WorkingDirectory = $WorkingDirectory
+        $psi.UseShellExecute = $false
+        $psi.CreateNoWindow = $true
+
+        foreach ($arg in $startArguments) {
+            [void]$psi.ArgumentList.Add($arg)
+        }
+
+        $process = New-Object System.Diagnostics.Process
+        $process.StartInfo = $psi
+        $process.Start() | Out-Null
+
+        return $process
+    }
+
     return Start-Process `
         -FilePath $startFilePath `
         -ArgumentList $startArguments `
@@ -115,7 +133,7 @@ $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot "../..")).Path
 $frontendDir = Join-Path $repoRoot "frontend"
 $shopApiDir = Join-Path $repoRoot "backend/apps/ShopAPI"
 $shopOperatorDir = Join-Path $repoRoot "backend/apps/ShopOperator"
-$scriptsEnvPath = Join-Path $repoRoot "scripts/.env"
+$scriptsEnvPath = [System.IO.Path]::GetFullPath((Join-Path $repoRoot "scripts/.env"))
 $verifyCachePath = Join-Path $repoRoot ".runtime/verify/minimal-src-cache.json"
 [int]$parallelWorkers = 2
 $phpCommand = "php"
@@ -250,7 +268,9 @@ if ($scriptsEnv.ContainsKey("TEST_PARALLEL_WORKERS")) {
 
 if ($scriptsEnv.ContainsKey("SCRIPT_PHP_PATH")) {
     $configuredPhpPath = $scriptsEnv["SCRIPT_PHP_PATH"].Trim()
-    $phpCommand = Resolve-ExecutableCommand -Value $configuredPhpPath -Label "SCRIPT_PHP_PATH"
+    if (-not [string]::IsNullOrWhiteSpace($configuredPhpPath)) {
+        $phpCommand = Resolve-ExecutableCommand -Value $configuredPhpPath -Label "SCRIPT_PHP_PATH"
+    }
 }
 
 $npmCommand = Resolve-ExecutableCommand -Value "npm" -Label "npm"
@@ -332,7 +352,7 @@ Invoke-Step -Name "minimal tests (parallel)" -Script {
         }
 
         if ($exitCode -ne 0) {
-            Write-Error "[verify] failed: process id=$($process.Id), exit code=$exitCode"
+            Write-Error "[verify] failed: $($entry.Block.Name) (process id=$($process.Id), exit code=$exitCode)"
             $hasFailures = $true
             continue
         }
