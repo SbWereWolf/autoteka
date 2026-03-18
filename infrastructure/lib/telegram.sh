@@ -55,16 +55,13 @@ if [ -z "${AUTOTEKA_LIB_TELEGRAM_SH:-}" ]; then
   telegram_log() {
     local message="$1"
     local line
+    local log_file="${AUTOTEKA_LOG_DIR}/telegram.log"
 
     line="$(date -u '+%Y-%m-%d %H:%M') $message"
-    if [ -z "${TELEGRAM_LOG_FILE:-}" ]; then
-      echo "[telegram] TELEGRAM_LOG_FILE не задан, вывод в stdout: $line"
+    if mkdir -p "$(dirname "$log_file")" 2>/dev/null && printf '%s\n' "$line" >> "$log_file" 2>/dev/null; then
       return 0
     fi
-    if mkdir -p "$(dirname "$TELEGRAM_LOG_FILE")" 2>/dev/null && printf '%s\n' "$line" >> "$TELEGRAM_LOG_FILE" 2>/dev/null; then
-      return 0
-    fi
-    echo "[telegram] Не удалось записать в $TELEGRAM_LOG_FILE, вывод в stdout: $line"
+    echo "[telegram] Не удалось записать в $log_file, вывод в stdout: $line"
   }
 
   telegram_send() {

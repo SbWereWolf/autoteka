@@ -1,8 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-LOG="/var/log/server-watchdog.log"
-METRIC_LOG="/var/log/server-metrics.log"
 RESOURCE_STATE="/var/lib/server-watchdog.state"
 REBOOT_STATE="/var/lib/server-watchdog.reboot"
 LOCK_FILE="/var/lock/autoteka-server-watchdog.lock"
@@ -18,6 +16,9 @@ set -- "${AUTOTEKA_ARGS[@]}"
 source "$INFRA_ROOT/lib/laravel-runtime.sh"
 source "$INFRA_ROOT/lib/health-state.sh"
 load_telegram_env
+
+LOG="${AUTOTEKA_LOG_DIR}/server-watchdog.log"
+METRIC_LOG="${AUTOTEKA_LOG_DIR}/server-metrics.log"
 
 # ===== host/resource settings =====
 LOAD_LIMIT="${WATCHDOG_LOAD_LIMIT}"
@@ -95,7 +96,7 @@ while [ $# -gt 0 ]; do
   shift
 done
 
-mkdir -p /var/lib /var/log /var/lock "$(health_state_dir)"
+mkdir -p /var/lib /var/lock "$(health_state_dir)" "$AUTOTEKA_LOG_DIR"
 exec 9>"$LOCK_FILE"
 if ! flock -n 9; then
   log_action "[watchdog] skip reason=flock"

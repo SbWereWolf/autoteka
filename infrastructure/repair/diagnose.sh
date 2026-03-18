@@ -38,14 +38,18 @@ echo ""
 
 # Последние записи в логах
 echo "--- Последние записи в логах (tail -3) ---"
-for log in /var/log/autoteka-deploy.log /var/log/server-maintenance.log /var/log/autoteka-telegram.log /var/log/server-watchdog.log /var/log/server-metrics.log; do
-  if [ -f "$log" ]; then
-    echo "  $log:"
-    tail -3 "$log" 2>/dev/null | sed 's/^/    /'
-  else
-    echo "  $log: не найден"
-  fi
-done
+if [ -n "${AUTOTEKA_LOG_DIR:-}" ]; then
+  for log in "${AUTOTEKA_LOG_DIR}/autoteka-deploy.log" "${AUTOTEKA_LOG_DIR}/server-maintenance.log" "${AUTOTEKA_LOG_DIR}/telegram.log" "${AUTOTEKA_LOG_DIR}/server-watchdog.log" "${AUTOTEKA_LOG_DIR}/server-metrics.log"; do
+    if [ -f "$log" ]; then
+      echo "  $log:"
+      tail -3 "$log" 2>/dev/null | sed 's/^/    /'
+    else
+      echo "  $log: не найден"
+    fi
+  done
+else
+  echo "  AUTOTEKA_LOG_DIR не задан, пропуск"
+fi
 echo ""
 
 # Рекомендации

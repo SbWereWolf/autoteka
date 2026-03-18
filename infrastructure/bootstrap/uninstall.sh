@@ -71,13 +71,16 @@ LOGROTATE_FILES=(
   /etc/logrotate.d/autoteka-backend
 )
 
-APP_LOGS=(
-  /var/log/autoteka-deploy.log
-  /var/log/server-watchdog.log
-  /var/log/server-metrics.log
-  /var/log/server-maintenance.log
-  /var/log/autoteka-telegram.log
-)
+APP_LOGS=()
+if [ -n "${AUTOTEKA_LOG_DIR:-}" ]; then
+  APP_LOGS=(
+    "${AUTOTEKA_LOG_DIR}/autoteka-deploy.log"
+    "${AUTOTEKA_LOG_DIR}/server-watchdog.log"
+    "${AUTOTEKA_LOG_DIR}/server-metrics.log"
+    "${AUTOTEKA_LOG_DIR}/server-maintenance.log"
+    "${AUTOTEKA_LOG_DIR}/telegram.log"
+  )
+fi
 
 APP_STATE=(
   /var/lib/autoteka-http-prev-commit

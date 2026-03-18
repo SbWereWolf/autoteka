@@ -9,7 +9,7 @@ source "$INFRA_ROOT/lib/deploy-flow.sh"
 source "$INFRA_ROOT/lib/telegram.sh"
 load_telegram_env
 
-LOG="/var/log/autoteka-deploy.log"
+LOG="${AUTOTEKA_LOG_DIR}/autoteka-deploy.log"
 LOCK="/var/lock/autoteka-deploy.lock"
 STATE_DIR="/var/lib"
 PHP_READY_TIMEOUT="${PHP_READY_TIMEOUT}"
@@ -17,17 +17,6 @@ ADMIN_SMOKE_URL="${ADMIN_SMOKE_URL}"
 SCRIPT_ID="deploy"
 DEPLOY_ACTION="обновление приложения"
 DEPLOY_STAGE="init"
-
-if ! mkdir -p /var/lock /var/log /var/lib 2>/dev/null || \
-   [ ! -w /var/lock ] || \
-   [ ! -w /var/log ] || \
-   [ ! -w /var/lib ]; then
-  RUNTIME_DIR="${AUTOTEKA_ROOT}/.runtime"
-  mkdir -p "$RUNTIME_DIR/lock" "$RUNTIME_DIR/log" "$RUNTIME_DIR/lib"
-  LOG="$RUNTIME_DIR/log/autoteka-deploy.log"
-  LOCK="$RUNTIME_DIR/lock/autoteka-deploy.lock"
-  STATE_DIR="$RUNTIME_DIR/lib"
-fi
 export DOCKER_BUILDKIT="${DOCKER_BUILDKIT:-1}"
 export COMPOSE_DOCKER_CLI_BUILD="${COMPOSE_DOCKER_CLI_BUILD:-1}"
 

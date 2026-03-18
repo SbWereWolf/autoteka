@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Convert /var/log/server-metrics.log -> $INFRA_ROOT/observability/application/metrics/data.json
+# Convert $AUTOTEKA_LOG_DIR/server-metrics.log -> $INFRA_ROOT/observability/application/metrics/data.json
 # Input format (single line):
 #   2026-03-04T03:10:00+03:00 load=0.25 ram=32 health=healthy
 
@@ -10,7 +10,7 @@ source "$SCRIPT_DIR/../../init-roots.sh"
 autoteka_init_roots "$@"
 set -- "${AUTOTEKA_ARGS[@]}"
 
-INPUT="/var/log/server-metrics.log"
+INPUT="${AUTOTEKA_LOG_DIR}/server-metrics.log"
 OUTPUT="$INFRA_ROOT/observability/application/metrics/data.json"
 
 mkdir -p "$(dirname "$OUTPUT")"

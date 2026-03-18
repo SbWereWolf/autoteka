@@ -23,13 +23,18 @@ set -a
 source "$INFRA_ENV" || { echo "Ошибка загрузки $INFRA_ENV" >&2; exit 1; }
 set +a
 
+if [ -z "${AUTOTEKA_LOG_DIR:-}" ]; then
+  echo "AUTOTEKA_LOG_DIR не задан в $INFRA_ENV. Задайте путь к директории логов." >&2
+  exit 3
+fi
+
 source "$INFRA_ROOT/lib/deploy-flow.sh"
 export DOCKER_BUILDKIT="${DOCKER_BUILDKIT:-1}"
 export COMPOSE_DOCKER_CLI_BUILD="${COMPOSE_DOCKER_CLI_BUILD:-1}"
 export DEBIAN_FRONTEND=noninteractive
 
 apt-get update
-apt-get install -y --no-install-recommends ca-certificates curl git wget bc logrotate fail2ban
+apt-get install -y --no-install-recommends ca-certificates curl git wget bc logrotate fail2ban gettext
 if ! command -v docker >/dev/null 2>&1; then
   apt-get install -y --no-install-recommends docker.io docker-compose-plugin     || apt-get install -y --no-install-recommends docker.io docker-compose
 fi
@@ -49,15 +54,14 @@ touch "$INFRA_ROOT/observability/application/metrics/data.json" || true
 mkdir -p /etc/systemd/journald.conf.d /etc/fail2ban/jail.d /etc/systemd/system/docker.service.d /etc/autoteka
 install -m 0600 "$INFRA_ENV" /etc/autoteka/options.env
 # Telegram-переменные только в telegram.env, не в options.env
-sed -i '/^TELEGRAM_TOKEN=/d;/^TELEGRAM_CHAT=/d;/^TELEGRAM_LOG_FILE=/d' /etc/autoteka/options.env
+sed -i '/^TELEGRAM_TOKEN=/d;/^TELEGRAM_CHAT=/d' /etc/autoteka/options.env
 
 # Проверка опций Telegram в .env
-if [ -n "${TELEGRAM_ENV_FILE:-}" ] && { [ -z "${TELEGRAM_TOKEN:-}" ] || [ -z "${TELEGRAM_CHAT:-}" ] || [ -z "${TELEGRAM_LOG_FILE:-}" ]; }; then
-  echo "Предупреждение: TELEGRAM_ENV_FILE задан, но TELEGRAM_TOKEN, TELEGRAM_CHAT или TELEGRAM_LOG_FILE не заданы в $INFRA_ENV." >&2
+if [ -n "${TELEGRAM_ENV_FILE:-}" ] && { [ -z "${TELEGRAM_TOKEN:-}" ] || [ -z "${TELEGRAM_CHAT:-}" ]; }; then
+  echo "Предупреждение: TELEGRAM_ENV_FILE задан, но TELEGRAM_TOKEN или TELEGRAM_CHAT не заданы в $INFRA_ENV." >&2
   echo "Для Telegram-уведомлений watchdog добавьте в .env:" >&2
   echo "  TELEGRAM_TOKEN=<токен бота>" >&2
   echo "  TELEGRAM_CHAT=<id чата>" >&2
-  echo "  TELEGRAM_LOG_FILE=<путь к логу>" >&2
   echo "" >&2
   echo "Заполнить и перезапустить install:" >&2
   echo "  nano $INFRA_ENV" >&2
@@ -75,9 +79,6 @@ if [ -n "${TELEGRAM_ENV_FILE:-}" ]; then
   if [ -n "${TELEGRAM_CHAT:-}" ]; then
     sed -i "s|^TELEGRAM_CHAT=.*|TELEGRAM_CHAT=${TELEGRAM_CHAT}|" "$TELEGRAM_ENV_FILE"
   fi
-  if [ -n "${TELEGRAM_LOG_FILE:-}" ]; then
-    sed -i "s|^TELEGRAM_LOG_FILE=.*|TELEGRAM_LOG_FILE=${TELEGRAM_LOG_FILE}|" "$TELEGRAM_ENV_FILE"
-  fi
 fi
 
 install -m 0755 "$INFRA_ROOT/bootstrap/bin/autoteka" /usr/local/bin/autoteka
@@ -88,9 +89,10 @@ install -m 0644 "$INFRA_ROOT/observability/infrastructure/systemd/server-watchdo
 install -m 0644 "$INFRA_ROOT/observability/infrastructure/systemd/server-watchdog.timer" /etc/systemd/system/server-watchdog.timer
 install -m 0644 "$INFRA_ROOT/maintenance/systemd/server-maintenance.service" /etc/systemd/system/server-maintenance.service
 install -m 0644 "$INFRA_ROOT/maintenance/systemd/server-maintenance.timer" /etc/systemd/system/server-maintenance.timer
-install -m 0644 "$INFRA_ROOT/maintenance/config/logrotate-autoteka-deploy.conf" /etc/logrotate.d/autoteka-deploy
-install -m 0644 "$INFRA_ROOT/maintenance/config/logrotate-server-watchdog.conf" /etc/logrotate.d/server-watchdog
-install -m 0644 "$INFRA_ROOT/maintenance/config/logrotate-autoteka-telegram.conf" /etc/logrotate.d/autoteka-telegram
+mkdir -p "$AUTOTEKA_LOG_DIR"
+for name in autoteka-deploy server-watchdog autoteka-telegram; do
+  envsubst '${AUTOTEKA_LOG_DIR}' < "$INFRA_ROOT/maintenance/config/logrotate-${name}.template.conf" | install -m 0644 /dev/stdin "/etc/logrotate.d/$name"
+done
 install -m 0644 "$INFRA_ROOT/maintenance/config/logrotate-autoteka-backend.conf" /etc/logrotate.d/autoteka-backend
 
 # Backup rules: создать из .example при первом развёртывании.
