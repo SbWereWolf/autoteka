@@ -194,7 +194,91 @@ Docker DEV вариант:
 
 PROD профили выполнять точечно как финальный предрелизный прогон.
 
-## 8. Quick verify cache
+## 8. Тестирование на WSL
+
+### 8.1 Требования
+
+- WSL2
+- Docker (Docker Desktop с WSL2 backend или Docker Engine в WSL)
+- Node.js, npm, curl
+- Playwright: `cd system-tests && npm install && npx playwright install firefox`
+- Зависимости для браузеров в WSL (при ошибке «Host system is missing
+  dependencies»): `sudo apt-get install -y libxdamage1 libgtk-3-0
+  libgdk-pixbuf-2.0-0 libpango-1.0-0 libatk1.0-0 libcairo2 libasound2
+  libpangocairo-1.0-0 libcairo-gobject2`
+- systemd (опционально): `[boot] systemd=true` в `~/.wslconfig` для
+  install.sh; при Docker Desktop `docker.service` может отсутствовать —
+  install.sh пропускает systemctl в этом случае
+- WSLg для headed-профилей (видимый браузер)
+
+### 8.2 Pre-check перед тестированием
+
+```bash
+bash scripts/agent/wsl-preflight.sh
+```
+
+Проверяет: Docker, curl, Node.js, npm, system-tests/.env, prod.test.env,
+scripts/.env.
+
+### 8.3 Типичный план предрелизного тестирования на WSL
+
+1. **Подготовка изолированной копии** (опционально):
+   ```bash
+   TEST_ROOT=/tmp/autoteka-wsl-test bash scripts/agent/wsl-prepare-test-copy.sh
+   cd $TEST_ROOT
+   ```
+
+2. **Pre-check**:
+   ```bash
+   bash scripts/agent/wsl-preflight.sh
+   ```
+
+3. **Синхронизация тестовых env с prod**:
+   ```bash
+   cp infrastructure/prod.env infrastructure/prod.test.env
+   cp infrastructure/dev.env infrastructure/dev.test.env
+   # Адаптировать пути AUTOTEKA_ROOT, INFRA_ROOT под тестовую копию
+   bash scripts/swap-env.sh load -t system-tests-env
+   ```
+
+4. **install.sh** (требует root):
+   ```bash
+   export INFRA_ROOT="$(pwd)/infrastructure" AUTOTEKA_ROOT="$(pwd)"
+   sudo -E ./infrastructure/bootstrap/install.sh
+   ```
+
+5. **deploy**:
+   ```bash
+   autoteka deploy
+   ```
+
+6. **System-tests** (двухэтапно). Перед прогоном загрузить prod.test.env
+   (для docker compose):
+   ```bash
+   set -a && source infrastructure/prod.test.env && set +a
+   cd system-tests
+   npm run test:ui-headless-prod
+   npm run test:ui-headed-prod
+   ```
+
+7. **Очистка после тестирования**:
+   ```bash
+   autoteka uninstall nuke --force --rm-etc --prune-images --prune-volumes
+   # При необходимости: --rm-root для удаления AUTOTEKA_ROOT
+   ```
+
+### 8.4 Типичные проблемы
+
+- **docker.service не найден** — Docker Desktop; install.sh пропускает
+  systemctl, docker compose работает.
+- **INFRA_ROOT/AUTOTEKA_OPTIONS_FILE unbound** — задайте переменные
+  перед install или передайте `--infra-root=` / `--autoteka-root=`.
+- **system-tests/.env отсутствует** — выполните
+  `bash scripts/swap-env.sh load -t system-tests-env`.
+- **Playwright: Executable doesn't exist** — выполните
+  `npx playwright install firefox` в `system-tests`.
+
+## 9. Quick verify cache
 
 `scripts/agent/verify.ps1 -TestProfile minimal` использует локальный
 кэш quick-проверок по хэшам `src`-деревьев.
