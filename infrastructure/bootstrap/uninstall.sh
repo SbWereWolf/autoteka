@@ -179,7 +179,15 @@ purge() {
 
   if [ "$RM_ETC_VUE_APP" = "yes" ]; then
     confirm_or_exit "REMOVE /etc/autoteka/* (secrets)"
-    rm -f /etc/autoteka/options.env /etc/autoteka/telegram.env 2>/dev/null || true
+    if [ -f /etc/autoteka/options.env ]; then
+      set -a
+      source /etc/autoteka/options.env 2>/dev/null || true
+      set +a
+      if [ -n "${TELEGRAM_ENV_FILE:-}" ] && [ -f "$TELEGRAM_ENV_FILE" ]; then
+        rm -f "$TELEGRAM_ENV_FILE" 2>/dev/null || true
+      fi
+    fi
+    rm -f /etc/autoteka/options.env 2>/dev/null || true
     rmdir /etc/autoteka 2>/dev/null || true
   fi
 

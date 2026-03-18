@@ -7,6 +7,7 @@
 # - only server-relevant files should stay here
 
 etc/autoteka/options.env
+# Файл telegram: путь из TELEGRAM_ENV_FILE в options.env (напр. etc/autoteka/telegram.env)
 etc/autoteka/telegram.env
 
 !var/lib/server-watchdog/health/**

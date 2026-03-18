@@ -51,8 +51,33 @@ install -m 0600 "$INFRA_ENV" /etc/autoteka/options.env
 # Telegram-переменные только в telegram.env, не в options.env
 sed -i '/^TELEGRAM_TOKEN=/d;/^TELEGRAM_CHAT=/d;/^TELEGRAM_LOG_FILE=/d' /etc/autoteka/options.env
 
-if [ ! -f /etc/autoteka/telegram.env ]; then
-  install -m 0600 "$INFRA_ROOT/bootstrap/config/telegram.example.env" /etc/autoteka/telegram.env
+# Проверка опций Telegram в .env
+if [ -n "${TELEGRAM_ENV_FILE:-}" ] && { [ -z "${TELEGRAM_TOKEN:-}" ] || [ -z "${TELEGRAM_CHAT:-}" ] || [ -z "${TELEGRAM_LOG_FILE:-}" ]; }; then
+  echo "Предупреждение: TELEGRAM_ENV_FILE задан, но TELEGRAM_TOKEN, TELEGRAM_CHAT или TELEGRAM_LOG_FILE не заданы в $INFRA_ENV." >&2
+  echo "Для Telegram-уведомлений watchdog добавьте в .env:" >&2
+  echo "  TELEGRAM_TOKEN=<токен бота>" >&2
+  echo "  TELEGRAM_CHAT=<id чата>" >&2
+  echo "  TELEGRAM_LOG_FILE=<путь к логу>" >&2
+  echo "" >&2
+  echo "Заполнить и перезапустить install:" >&2
+  echo "  nano $INFRA_ENV" >&2
+  echo "  sudo $0" >&2
+  echo "" >&2
+fi
+
+# Файл telegram создаётся по пути из TELEGRAM_ENV_FILE (.env), значения из .env переписываются
+if [ -n "${TELEGRAM_ENV_FILE:-}" ]; then
+  mkdir -p "$(dirname "$TELEGRAM_ENV_FILE")"
+  install -m 0600 "$INFRA_ROOT/bootstrap/config/telegram.example.env" "$TELEGRAM_ENV_FILE"
+  if [ -n "${TELEGRAM_TOKEN:-}" ]; then
+    sed -i "s|^TELEGRAM_TOKEN=.*|TELEGRAM_TOKEN=${TELEGRAM_TOKEN}|" "$TELEGRAM_ENV_FILE"
+  fi
+  if [ -n "${TELEGRAM_CHAT:-}" ]; then
+    sed -i "s|^TELEGRAM_CHAT=.*|TELEGRAM_CHAT=${TELEGRAM_CHAT}|" "$TELEGRAM_ENV_FILE"
+  fi
+  if [ -n "${TELEGRAM_LOG_FILE:-}" ]; then
+    sed -i "s|^TELEGRAM_LOG_FILE=.*|TELEGRAM_LOG_FILE=${TELEGRAM_LOG_FILE}|" "$TELEGRAM_ENV_FILE"
+  fi
 fi
 
 install -m 0755 "$INFRA_ROOT/bootstrap/bin/autoteka" /usr/local/bin/autoteka
