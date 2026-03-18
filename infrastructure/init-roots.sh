@@ -6,6 +6,9 @@ if [ -n "${AUTOTEKA_INIT_ROOTS_SH:-}" ]; then
 fi
 AUTOTEKA_INIT_ROOTS_SH=1
 
+_init_roots_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+source "$_init_roots_dir/lib/operational_system.sh"
+
 AUTOTEKA_OPTIONS_ENV_DEFAULT="${AUTOTEKA_OPTIONS_ENV_DEFAULT:-/etc/autoteka/options.env}"
 AUTOTEKA_ARGS=()
 
@@ -14,6 +17,8 @@ _autoteka_print_roots_usage() {
   echo "  export INFRA_ROOT=/opt/vue-app/infrastructure" >&2
   echo "  export AUTOTEKA_ROOT=/opt/vue-app" >&2
   echo "  sudo $0" >&2
+  echo "" >&2
+  echo "Пример (Windows): export INFRA_ROOT=C:/path/to/infrastructure" >&2
   echo "" >&2
   echo "Пример через аргументы:" >&2
   echo "  sudo $0 --infra-root=/opt/vue-app/infrastructure --autoteka-root=/opt/vue-app" >&2
@@ -71,27 +76,34 @@ autoteka_parse_root_args() {
 
 autoteka_validate_roots() {
   local invalid=0
+  local path_infra path_autoteka
 
   if [ -z "${INFRA_ROOT}" ]; then
     echo "INFRA_ROOT не задан. Задайте абсолютный путь." >&2
     invalid=1
-  elif [[ "${INFRA_ROOT}" != /* ]]; then
+  elif ! autoteka_is_absolute_path "${INFRA_ROOT}"; then
     echo "INFRA_ROOT задан относительным путём. Требуется абсолютный путь." >&2
     invalid=1
-  elif [ ! -d "${INFRA_ROOT}" ]; then
-    echo "INFRA_ROOT=${INFRA_ROOT} не существует или не является каталогом." >&2
-    invalid=1
+  else
+    path_infra="$(autoteka_path_for_test "${INFRA_ROOT}")"
+    if [ ! -d "$path_infra" ]; then
+      echo "INFRA_ROOT=${INFRA_ROOT} не существует или не является каталогом." >&2
+      invalid=1
+    fi
   fi
 
   if [ -z "${AUTOTEKA_ROOT}" ]; then
     echo "AUTOTEKA_ROOT не задан. Задайте абсолютный путь." >&2
     invalid=1
-  elif [[ "${AUTOTEKA_ROOT}" != /* ]]; then
+  elif ! autoteka_is_absolute_path "${AUTOTEKA_ROOT}"; then
     echo "AUTOTEKA_ROOT задан относительным путём. Требуется абсолютный путь." >&2
     invalid=1
-  elif [ ! -d "${AUTOTEKA_ROOT}" ]; then
-    echo "AUTOTEKA_ROOT=${AUTOTEKA_ROOT} не существует или не является каталогом." >&2
-    invalid=1
+  else
+    path_autoteka="$(autoteka_path_for_test "${AUTOTEKA_ROOT}")"
+    if [ ! -d "$path_autoteka" ]; then
+      echo "AUTOTEKA_ROOT=${AUTOTEKA_ROOT} не существует или не является каталогом." >&2
+      invalid=1
+    fi
   fi
 
   if [ "$invalid" -ne 0 ]; then
