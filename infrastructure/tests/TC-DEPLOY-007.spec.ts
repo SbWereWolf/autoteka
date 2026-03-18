@@ -11,6 +11,7 @@ const INFRA_ROOT_PATH = join(__dirname, "..");
 
 const EXPECTED_VARS = [
   "AUTOTEKA_ROOT",
+  "AUTOTEKA_LOG_DIR",
   "BRANCH",
   "REMOTE",
   "HTTP_PORT",

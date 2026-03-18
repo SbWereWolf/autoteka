@@ -160,7 +160,7 @@
 
 ### TC-IMPLEMENTATION-014
 
-- Утверждение: watchdog пишет метрики в `/var/log/server-metrics.log`,
+- Утверждение: watchdog пишет метрики в `$AUTOTEKA_LOG_DIR/server-metrics.log`,
   экспортирует JSON, выполняет self-healing в 3 стадии.
 - Проверка:
   1. Запустить watchdog и проверить запись метрик/экспорт.

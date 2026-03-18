@@ -40,7 +40,7 @@
 - Проверка:
   1. Смоделировать локальные изменения перед запуском watcher.
   2. Проверить появление stash и запись в
-     `/var/log/autoteka-deploy.log`.
+     `$AUTOTEKA_LOG_DIR/autoteka-deploy.log`.
 - Ожидаемый результат:
   - stash создаётся;
   - в deploy log есть статус `git stash` и идентификатор stash.
@@ -171,7 +171,7 @@
 ### TC-DEPLOY-014
 
 - Утверждение: `/metrics/data.json` формируется из
-  `/var/log/server-metrics.log` и содержит `timestamp`, `load`, `ram`,
+  `$AUTOTEKA_LOG_DIR/server-metrics.log` и содержит `timestamp`, `load`, `ram`,
   `health`.
 - Проверка:
   1. Запустить `server-watchdog.sh` + `metrics-export.sh`.
