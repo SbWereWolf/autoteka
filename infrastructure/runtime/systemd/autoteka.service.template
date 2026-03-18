@@ -1,0 +1,15 @@
+[Unit]
+Description=Autoteka Frontend (docker compose up -d)
+Requires=docker.service
+After=docker.service
+
+[Service]
+Type=oneshot
+EnvironmentFile=-${AUTOTEKA_OPTIONS_FILE}
+ExecStart=/usr/local/bin/autoteka up
+ExecStop=/usr/local/bin/autoteka down
+RemainAfterExit=yes
+TimeoutStartSec=0
+
+[Install]
+WantedBy=multi-user.target

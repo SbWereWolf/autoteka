@@ -1,0 +1,9 @@
+[Unit]
+Description=Autoteka watch-changes service (git polling)
+After=network-online.target docker.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+EnvironmentFile=-${AUTOTEKA_OPTIONS_FILE}
+ExecStart=/usr/local/bin/autoteka watch-changes

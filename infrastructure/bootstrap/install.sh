@@ -16,6 +16,7 @@ INFRA_ENV="$INFRA_ROOT/.env"
 if [ ! -f "$INFRA_ENV" ]; then
   echo "Файл $INFRA_ENV не найден. Создайте его перед развёртыванием." >&2
   echo "Пример: cp -n \"$INFRA_ROOT/prod.env\" \"$INFRA_ENV\"" >&2
+  echo "Повторный install: cp \"$INFRA_ROOT/backup.env\" \"$INFRA_ENV\"" >&2
   exit 3
 fi
 
@@ -23,14 +24,32 @@ set -a
 source "$INFRA_ENV" || { echo "Ошибка загрузки $INFRA_ENV" >&2; exit 1; }
 set +a
 
+if [ -z "${AUTOTEKA_OPTIONS_FILE:-}" ]; then
+  echo "AUTOTEKA_OPTIONS_FILE не задан в $INFRA_ENV. Задайте путь к options.env." >&2
+  exit 3
+fi
+
 if [ -z "${AUTOTEKA_LOG_DIR:-}" ]; then
   echo "AUTOTEKA_LOG_DIR не задан в $INFRA_ENV. Задайте путь к директории логов." >&2
   exit 3
 fi
 
+if [ -z "${HEALTH_STATE_DIR:-}" ]; then
+  echo "HEALTH_STATE_DIR не задан в $INFRA_ENV. Задайте путь к директории health state." >&2
+  exit 3
+fi
+
 source "$INFRA_ROOT/lib/deploy-flow.sh"
-export DOCKER_BUILDKIT="${DOCKER_BUILDKIT:-1}"
-export COMPOSE_DOCKER_CLI_BUILD="${COMPOSE_DOCKER_CLI_BUILD:-1}"
+if [ -z "${DOCKER_BUILDKIT:-}" ]; then
+  echo "DOCKER_BUILDKIT не задан в $INFRA_ENV." >&2
+  exit 3
+fi
+if [ -z "${COMPOSE_DOCKER_CLI_BUILD:-}" ]; then
+  echo "COMPOSE_DOCKER_CLI_BUILD не задан в $INFRA_ENV." >&2
+  exit 3
+fi
+export DOCKER_BUILDKIT
+export COMPOSE_DOCKER_CLI_BUILD
 export DEBIAN_FRONTEND=noninteractive
 
 apt-get update
@@ -51,10 +70,18 @@ chmod +x "$INFRA_ROOT/observability/infrastructure"/*.sh 2>/dev/null || true
 mkdir -p "$INFRA_ROOT/observability/application/metrics"
 touch "$INFRA_ROOT/observability/application/metrics/data.json" || true
 
-mkdir -p /etc/systemd/journald.conf.d /etc/fail2ban/jail.d /etc/systemd/system/docker.service.d /etc/autoteka
-install -m 0600 "$INFRA_ENV" /etc/autoteka/options.env
+mkdir -p /etc/systemd/journald.conf.d /etc/fail2ban/jail.d /etc/systemd/system/docker.service.d "$(dirname "$AUTOTEKA_OPTIONS_FILE")"
+install -m 0600 "$INFRA_ENV" "$AUTOTEKA_OPTIONS_FILE"
 # Telegram-переменные только в telegram.env, не в options.env
-sed -i '/^TELEGRAM_TOKEN=/d;/^TELEGRAM_CHAT=/d' /etc/autoteka/options.env
+sed -i '/^TELEGRAM_TOKEN=/d;/^TELEGRAM_CHAT=/d' "$AUTOTEKA_OPTIONS_FILE"
+# TELEGRAM_LOCK_DIR: вычислить из временной папки ОС и записать в options.env
+source "$INFRA_ROOT/lib/operational_system.sh"
+TELEGRAM_LOCK_DIR="$(autoteka_get_os_temp_dir)/autoteka-telegram-locks"
+if grep -q '^TELEGRAM_LOCK_DIR=' "$AUTOTEKA_OPTIONS_FILE" 2>/dev/null; then
+  sed -i "s|^TELEGRAM_LOCK_DIR=.*|TELEGRAM_LOCK_DIR=${TELEGRAM_LOCK_DIR}|" "$AUTOTEKA_OPTIONS_FILE"
+else
+  printf 'TELEGRAM_LOCK_DIR=%s\n' "$TELEGRAM_LOCK_DIR" >> "$AUTOTEKA_OPTIONS_FILE"
+fi
 
 # Проверка опций Telegram в .env
 if [ -n "${TELEGRAM_ENV_FILE:-}" ] && { [ -z "${TELEGRAM_TOKEN:-}" ] || [ -z "${TELEGRAM_CHAT:-}" ]; }; then
@@ -82,13 +109,14 @@ if [ -n "${TELEGRAM_ENV_FILE:-}" ]; then
 fi
 
 install -m 0755 "$INFRA_ROOT/bootstrap/bin/autoteka" /usr/local/bin/autoteka
-install -m 0644 "$INFRA_ROOT/runtime/systemd/autoteka.service" /etc/systemd/system/autoteka.service
-install -m 0644 "$INFRA_ROOT/runtime/systemd/watch-changes.service" /etc/systemd/system/watch-changes.service
+envsubst '${AUTOTEKA_OPTIONS_FILE}' < "$INFRA_ROOT/runtime/systemd/autoteka.service.template" | install -m 0644 /dev/stdin /etc/systemd/system/autoteka.service
+envsubst '${AUTOTEKA_OPTIONS_FILE}' < "$INFRA_ROOT/runtime/systemd/watch-changes.service.template" | install -m 0644 /dev/stdin /etc/systemd/system/watch-changes.service
 install -m 0644 "$INFRA_ROOT/runtime/systemd/watch-changes.timer" /etc/systemd/system/watch-changes.timer
-install -m 0644 "$INFRA_ROOT/observability/infrastructure/systemd/server-watchdog.service" /etc/systemd/system/server-watchdog.service
+envsubst '${AUTOTEKA_OPTIONS_FILE}' < "$INFRA_ROOT/observability/infrastructure/systemd/server-watchdog.service.template" | install -m 0644 /dev/stdin /etc/systemd/system/server-watchdog.service
 install -m 0644 "$INFRA_ROOT/observability/infrastructure/systemd/server-watchdog.timer" /etc/systemd/system/server-watchdog.timer
-install -m 0644 "$INFRA_ROOT/maintenance/systemd/server-maintenance.service" /etc/systemd/system/server-maintenance.service
+envsubst '${AUTOTEKA_OPTIONS_FILE}' < "$INFRA_ROOT/maintenance/systemd/server-maintenance.service.template" | install -m 0644 /dev/stdin /etc/systemd/system/server-maintenance.service
 install -m 0644 "$INFRA_ROOT/maintenance/systemd/server-maintenance.timer" /etc/systemd/system/server-maintenance.timer
+envsubst '${AUTOTEKA_OPTIONS_FILE}' < "$INFRA_ROOT/bootstrap/config/autoteka.profile.template" | install -m 0644 /dev/stdin /etc/profile.d/autoteka.sh
 mkdir -p "$AUTOTEKA_LOG_DIR"
 for name in autoteka-deploy server-watchdog autoteka-telegram; do
   envsubst '${AUTOTEKA_LOG_DIR}' < "$INFRA_ROOT/maintenance/config/logrotate-${name}.template.conf" | install -m 0644 /dev/stdin "/etc/logrotate.d/$name"
@@ -131,9 +159,15 @@ systemctl restart \
   server-watchdog.timer \
   server-maintenance.timer
 
-mkdir -p /var/lib /var/lib/server-watchdog/health
+mkdir -p /var/lib "$(dirname "$HEALTH_STATE_DIR")"
 printf '0
 ' > /var/lib/server-watchdog.state
 
 echo "=== autoteka bootstrap finished ==="
 echo "AUTOTEKA_ROOT=$AUTOTEKA_ROOT"
+
+# Переместить .env в backup.env для повторных запусков (cp backup.env .env перед следующим install)
+if [ -f "$INFRA_ENV" ]; then
+  mv -f "$INFRA_ENV" "$INFRA_ROOT/backup.env"
+  echo ".env перемещён в backup.env"
+fi
