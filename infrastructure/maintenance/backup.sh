@@ -13,14 +13,13 @@ autoteka_init_roots "$@"
 set -- "${AUTOTEKA_ARGS[@]}"
 
 # Загрузить options.env для STORAGE_BACKUP_RETENTION_DAYS
-if [ -f /etc/autoteka/options.env ]; then
+if [ -n "${AUTOTEKA_OPTIONS_FILE:-}" ] && [ -f "$AUTOTEKA_OPTIONS_FILE" ]; then
   set -a
-  source /etc/autoteka/options.env 2>/dev/null || true
+  source "$AUTOTEKA_OPTIONS_FILE" 2>/dev/null || true
   set +a
 fi
 
 OUTPUT_DIR="/root"
-RETENTION_DAYS="${STORAGE_BACKUP_RETENTION_DAYS:-7}"
 DRY_RUN="no"
 CONFIG_DIR="$INFRA_ROOT/maintenance/config"
 
@@ -73,6 +72,12 @@ if [ "$(id -u)" -ne 0 ]; then
   echo "Run as root: sudo $0" >&2
   exit 1
 fi
+
+if [ -z "${STORAGE_BACKUP_RETENTION_DAYS:-}" ]; then
+  echo "STORAGE_BACKUP_RETENTION_DAYS не задан в options.env." >&2
+  exit 3
+fi
+RETENTION_DAYS="$STORAGE_BACKUP_RETENTION_DAYS"
 
 TIMESTAMP="$(date +%Y%m%d-%H%M%S)"
 say() { printf '>>> %s\n' "$*"; }

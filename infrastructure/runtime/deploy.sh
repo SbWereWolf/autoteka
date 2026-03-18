@@ -17,8 +17,12 @@ ADMIN_SMOKE_URL="${ADMIN_SMOKE_URL}"
 SCRIPT_ID="deploy"
 DEPLOY_ACTION="обновление приложения"
 DEPLOY_STAGE="init"
-export DOCKER_BUILDKIT="${DOCKER_BUILDKIT:-1}"
-export COMPOSE_DOCKER_CLI_BUILD="${COMPOSE_DOCKER_CLI_BUILD:-1}"
+if [ -z "${DOCKER_BUILDKIT:-}" ] || [ -z "${COMPOSE_DOCKER_CLI_BUILD:-}" ]; then
+  echo "DOCKER_BUILDKIT или COMPOSE_DOCKER_CLI_BUILD не заданы в options.env." >&2
+  exit 3
+fi
+export DOCKER_BUILDKIT
+export COMPOSE_DOCKER_CLI_BUILD
 
 on_deploy_error() {
   local exit_code="$?"

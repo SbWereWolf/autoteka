@@ -55,7 +55,7 @@ if [ -z "${AUTOTEKA_LIB_DEPLOY_FLOW_SH:-}" ]; then
     compose up -d --build --remove-orphans php
 
     autoteka_deploy_flow_set_stage "wait_for_php"
-    wait_for_php_exec_ready "${PHP_READY_TIMEOUT}"
+    wait_for_php_exec_ready
 
     autoteka_deploy_flow_set_stage "laravel_prepare"
     prepare_laravel_runtime

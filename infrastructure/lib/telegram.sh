@@ -7,7 +7,10 @@ if [ -z "${AUTOTEKA_LIB_TELEGRAM_SH:-}" ]; then
   # INFRA_ROOT должен быть задан вызывающим скриптом (env или args)
     source "$INFRA_ROOT/lib/dry-run.sh"
 
-  TELEGRAM_LOCK_DIR="${TMPDIR:-/tmp}/autoteka-telegram-locks"
+  if [ -z "${TELEGRAM_LOCK_DIR:-}" ]; then
+    echo "TELEGRAM_LOCK_DIR не задан. Задайте в options.env (вычисляется при install)." >&2
+    exit 3
+  fi
   TELEGRAM_APP_VERSION_CACHE=""
 
   app_version_short() {

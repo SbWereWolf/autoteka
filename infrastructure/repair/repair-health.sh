@@ -82,14 +82,14 @@ repair_backend_runtime() {
   run_cmd /usr/bin/docker compose -f "$INFRA_ROOT/runtime/docker-compose.yml" up -d --build --remove-orphans php
 
   if ! is_dry_run; then
-    wait_for_php_exec_ready "$PHP_READY_TIMEOUT"
+    wait_for_php_exec_ready
     prepare_laravel_runtime
     ensure_public_storage_link
     clear_laravel_optimizations
     check_sqlite_write_access
     compose up -d --build --remove-orphans web
   else
-    dry_run_log "wait_for_php_exec_ready $PHP_READY_TIMEOUT"
+    dry_run_log "wait_for_php_exec_ready"
     dry_run_log "prepare_laravel_runtime"
     dry_run_log "ensure_public_storage_link"
     dry_run_log "clear_laravel_optimizations"

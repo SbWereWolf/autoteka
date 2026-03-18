@@ -8,10 +8,12 @@ if [ -z "${AUTOTEKA_LIB_HEALTH_STATE_SH:-}" ]; then
     source "$INFRA_ROOT/lib/dry-run.sh"
     source "$INFRA_ROOT/lib/telegram.sh"
 
-  HEALTH_STATE_DIR_DEFAULT="/var/lib/server-watchdog/health"
-
   health_state_dir() {
-    printf '%s\n' "${HEALTH_STATE_DIR:-$HEALTH_STATE_DIR_DEFAULT}"
+    if [ -z "${HEALTH_STATE_DIR:-}" ]; then
+      echo "HEALTH_STATE_DIR не задан. Задайте в options.env." >&2
+      exit 3
+    fi
+    printf '%s\n' "$HEALTH_STATE_DIR"
   }
 
   health_state_path() {

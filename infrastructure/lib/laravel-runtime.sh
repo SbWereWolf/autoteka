@@ -152,7 +152,12 @@ if [ -z "${AUTOTEKA_LIB_LARAVEL_RUNTIME_SH:-}" ]; then
   }
 
   wait_for_php_exec_ready() {
-    local timeout="${1:-60}"
+    local timeout
+    if [ -z "${PHP_READY_TIMEOUT:-}" ]; then
+      echo "PHP_READY_TIMEOUT не задан в options.env." >&2
+      exit 3
+    fi
+    timeout="$PHP_READY_TIMEOUT"
     local started_at
 
     started_at="$(date +%s)"
