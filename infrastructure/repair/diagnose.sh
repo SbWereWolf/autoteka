@@ -8,6 +8,7 @@ autoteka_init_roots "$@"
 set -- "${AUTOTEKA_ARGS[@]}"
 
 echo "=== autoteka diagnose ==="
+echo "$(date +"%Y-%m-%d %H:%M:%S")"
 echo ""
 
 # Контейнеры
@@ -37,7 +38,7 @@ echo ""
 
 # Последние записи в логах
 echo "--- Последние записи в логах (tail -3) ---"
-for log in /var/log/autoteka-deploy.log /var/log/server-watchdog.log; do
+for log in /var/log/autoteka-deploy.log /var/log/server-maintenance.log /var/log/autoteka-telegram.log /var/log/server-watchdog.log /var/log/server-metrics.log; do
   if [ -f "$log" ]; then
     echo "  $log:"
     tail -3 "$log" 2>/dev/null | sed 's/^/    /'
@@ -54,3 +55,4 @@ echo "  При проблемах с таймерами: autoteka repair-infra"
 echo "  Полная починка runtime: autoteka repair-runtime --dry-run (проверка), затем без --dry-run"
 echo "  Сброс incident state: autoteka health-reset all"
 echo "  Подробная диагностика: см. docs/manual/ADMIN_MANUAL.md §12"
+exit 0
