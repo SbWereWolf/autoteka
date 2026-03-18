@@ -98,16 +98,26 @@ done
 mkdir -p /var/lib /var/log /var/lock "$(health_state_dir)"
 exec 9>"$LOCK_FILE"
 if ! flock -n 9; then
+  log_action "[watchdog] skip reason=flock"
   echo "watchdog already running, skip" >&2
   exit 0
 fi
 
 log_action() {
   if [ "$DRY_RUN" = "1" ]; then
-    dry_run_log "log $(date -Is) $*"
+    dry_run_log "log $(date +"%Y-%m-%d %H:%M:%S") $*"
     return 0
   fi
-  echo "$(date -Is) $*" >> "$LOG"
+  echo "$(date +"%Y-%m-%d %H:%M:%S") $*" >> "$LOG"
+}
+
+log_watchdog_end() {
+  local err_arr="$1"
+  if [ -z "$err_arr" ]; then
+    log_action "[watchdog] end, result: OK"
+  else
+    log_action "[watchdog] end ERRORS_START{\"errors\":[$err_arr]}ERRORS_END"
+  fi
 }
 
 append_metrics() {
@@ -511,12 +521,16 @@ reset_host_failure_state() {
 
 UP="$(uptime_s)"
 if [ "$UP" -lt "$BOOT_GRACE" ]; then
+  log_action "[watchdog] skip reason=boot_grace"
   exit 0
 fi
 
 LOAD="$(load_1m)"
 RAM="$(ram_used_pct)"
 HOST_REASON=""
+
+log_action "[watchdog] start"
+
 if ! docker_available; then
   HOST_REASON="docker command unavailable"
 elif float_gt "$LOAD" "$LOAD_LIMIT"; then
@@ -542,12 +556,14 @@ if [ -n "$HOST_REASON" ]; then
     fi
   fi
   handle_host_failure "$LOAD" "$RAM" "$HOST_REASON"
+  log_watchdog_end '{"code":"HOST_FAILED","detail":"'"${HOST_REASON//\"/\\\"}"'"}' || true
   exit 0
 fi
 
 reset_host_failure_state
 
 probe_domain nginx && NGINX_STATUS="healthy" || NGINX_STATUS="failed"
+log_action "[watchdog] check nginx=$NGINX_STATUS"
 if [ "$NGINX_STATUS" = "healthy" ]; then
   handle_domain_success nginx "$PROBE_DETAIL"
 else
@@ -563,10 +579,12 @@ if [ "$NGINX_STATUS" != "healthy" ]; then
       notify_info "$SCRIPT_ID" "$WATCHDOG_ACTION" "WATCHDOG_METRICS_EXPORT_FAILED" "не удалось обновить infrastructure/observability/application/metrics/data.json"
     fi
   fi
+  log_watchdog_end '{"code":"NGINX_FAILED","detail":"'"${PROBE_DETAIL//\"/\\\"}"'"}' || true
   exit 0
 fi
 
 probe_domain php && PHP_STATUS="healthy" || PHP_STATUS="failed"
+log_action "[watchdog] check php=$PHP_STATUS"
 if [ "$PHP_STATUS" = "healthy" ]; then
   handle_domain_success php "$PROBE_DETAIL"
 else
@@ -582,10 +600,12 @@ if [ "$PHP_STATUS" != "healthy" ]; then
       notify_info "$SCRIPT_ID" "$WATCHDOG_ACTION" "WATCHDOG_METRICS_EXPORT_FAILED" "не удалось обновить infrastructure/observability/application/metrics/data.json"
     fi
   fi
+  log_watchdog_end '{"code":"PHP_FAILED","detail":"'"${PROBE_DETAIL//\"/\\\"}"'"}' || true
   exit 0
 fi
 
 probe_domain backend && BACKEND_STATUS="healthy" || BACKEND_STATUS="failed"
+log_action "[watchdog] check backend=$BACKEND_STATUS"
 if [ "$BACKEND_STATUS" = "healthy" ]; then
   handle_domain_success backend "$PROBE_DETAIL"
 else
@@ -601,10 +621,13 @@ if [ "$BACKEND_STATUS" != "healthy" ]; then
       notify_info "$SCRIPT_ID" "$WATCHDOG_ACTION" "WATCHDOG_METRICS_EXPORT_FAILED" "не удалось обновить infrastructure/observability/application/metrics/data.json"
     fi
   fi
+  log_watchdog_end '{"code":"BACKEND_FAILED","detail":"'"${PROBE_DETAIL//\"/\\\"}"'"}' || true
   exit 0
 fi
 
 probe_domain admin && ADMIN_STATUS="healthy" || ADMIN_STATUS="failed"
+log_action "[watchdog] check admin=$ADMIN_STATUS"
+ADMIN_PROBE_DETAIL="$PROBE_DETAIL"
 if [ "$ADMIN_STATUS" = "healthy" ]; then
   handle_domain_success admin "$PROBE_DETAIL"
 else
@@ -613,6 +636,7 @@ else
 fi
 
 probe_domain api && API_STATUS="healthy" || API_STATUS="failed"
+log_action "[watchdog] check api=$API_STATUS"
 if [ "$API_STATUS" = "healthy" ]; then
   handle_domain_success api "$PROBE_DETAIL"
 else
@@ -627,5 +651,14 @@ if [ -x "$INFRA_ROOT/observability/application/metrics-export.sh" ]; then
     notify_info "$SCRIPT_ID" "$WATCHDOG_ACTION" "WATCHDOG_METRICS_EXPORT_FAILED" "не удалось обновить infrastructure/observability/application/metrics/data.json"
   fi
 fi
+
+WATCHDOG_END_ERRORS=""
+if [ "$ADMIN_STATUS" != "healthy" ]; then
+  WATCHDOG_END_ERRORS='{"code":"ADMIN_FAILED","detail":"'"${ADMIN_PROBE_DETAIL//\"/\\\"}"'"}'"${WATCHDOG_END_ERRORS:+,$WATCHDOG_END_ERRORS}"
+fi
+if [ "$API_STATUS" != "healthy" ]; then
+  WATCHDOG_END_ERRORS='{"code":"API_FAILED","detail":"'"${PROBE_DETAIL//\"/\\\"}"'"}'"${WATCHDOG_END_ERRORS:+,$WATCHDOG_END_ERRORS}"
+fi
+log_watchdog_end "$WATCHDOG_END_ERRORS" || true
 
 exit 0
