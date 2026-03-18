@@ -41,12 +41,10 @@ if [ -z "${AUTOTEKA_LIB_TELEGRAM_SH:-}" ]; then
     fi
     local env_file="${1:-$TELEGRAM_ENV_FILE}"
 
-    if [ -z "${TELEGRAM_TOKEN:-}" ] || [ -z "${TELEGRAM_CHAT:-}" ]; then
-      if [ -f "$env_file" ]; then
-        set -a
-        source "$env_file" || { echo "Сбой загрузки '$env_file'" >&2; exit 3; }
-        set +a
-      fi
+    if [ -f "$env_file" ]; then
+      set -a
+      source "$env_file" || { echo "Сбой загрузки '$env_file'" >&2; exit 3; }
+      set +a
     fi
   }
 
@@ -78,16 +76,18 @@ if [ -z "${AUTOTEKA_LIB_TELEGRAM_SH:-}" ]; then
 
     telegram_log "Для отправки подготовлено сообщение: $message"
 
-    if curl -fsS -X POST "https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage" \
-      --data-urlencode "chat_id=${TELEGRAM_CHAT}" \
-      --data-urlencode "text=${message}" \
-      >/dev/null 2>&1; then
-      telegram_log "Успешная отправка: $message"
-      return 0
-    fi
-
-    telegram_log "Сбой отправки: $message"
-    return 1
+    (
+      if curl -fsS --max-time 15 -X POST "https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage" \
+        --data-urlencode "chat_id=${TELEGRAM_CHAT}" \
+        --data-urlencode "text=${message}" \
+        >/dev/null 2>&1; then
+        telegram_log "Успешная отправка: $message"
+      else
+        telegram_log "Сбой отправки: $message"
+      fi
+    ) &
+    disown 2>/dev/null || true
+    return 0
   }
 
   telegram_lock_dir() {

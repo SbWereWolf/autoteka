@@ -54,7 +54,12 @@ flock -n 9 || exit 0
 
   printf '%s\n' "$CURRENT_HEAD" > "$STATE_DIR/autoteka-http-last-good" || true
   clear_script_notification_locks "$SCRIPT_ID"
-  notify_info "$SCRIPT_ID" "$DEPLOY_ACTION завершено успешно" "DEPLOY_SUCCESS" "версия $CURRENT_HEAD, commit $CURRENT_SUBJECT"
+  load_telegram_env
+  if telegram_enabled; then
+    notify_info "$SCRIPT_ID" "$DEPLOY_ACTION завершено успешно" "DEPLOY_SUCCESS" "версия $CURRENT_HEAD, commit $CURRENT_SUBJECT"
+  else
+    echo "$(date -Is) deploy: telegram отключён (TELEGRAM_TOKEN или TELEGRAM_CHAT не заданы)"
+  fi
   echo "$(date -Is) deploy success ($CURRENT_HEAD)"
   echo "$(date -Is) === deploy end ==="
 } >> "$LOG" 2>&1
