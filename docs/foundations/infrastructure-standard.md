@@ -63,6 +63,14 @@ Avoid:
 - untracked assumptions about credentials, ports, paths, or installed
   binaries.
 
+### 5.1 Переменные окружения в шаблонах
+
+Любая переменная окружения, используемая infrastructure-скриптами или
+docker-compose, должна быть объявлена в шаблонах `infrastructure/prod.env`
+и `infrastructure/dev.env`. Набор переменных в обоих шаблонах одинаков;
+значения различаются по окружению. Переменные, не применимые в данном
+окружении, указываются закомментированными.
+
 ## 6. Verification and observability
 
 Infrastructure work is not complete when the file changed; it is complete
