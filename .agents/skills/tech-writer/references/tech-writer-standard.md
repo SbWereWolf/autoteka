@@ -27,7 +27,7 @@ Use manuals for:
 Examples:
 
 - `USER_MANUAL`
-- `CLERC_MANUAL`
+- `CLERK_MANUAL`
 - `ADMIN_MANUAL`
 - `TESTING`
 

@@ -20,7 +20,7 @@ Update when the task changes:
 
 Update when end users can do something new or differently.
 
-### `docs/manual/CLERC_MANUAL.md`
+### `docs/manual/CLERK_MANUAL.md`
 
 Update when operator or clerk workflows change.
 

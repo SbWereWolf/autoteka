@@ -8,7 +8,7 @@
 - [ ] `infrastructure/DEPLOY.md`
 - [ ] `docs/manual/ADMIN_MANUAL.md`
 - [ ] `docs/manual/USER_MANUAL.md`
-- [ ] `docs/manual/CLERC_MANUAL.md`
+- [ ] `docs/manual/CLERK_MANUAL.md`
 - [ ] subsystem README files as relevant
 - [ ] `scripts/README.md` as relevant
 

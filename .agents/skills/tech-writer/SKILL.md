@@ -23,7 +23,7 @@ Use the repo's document roles consistently:
 
 - `docs/foundations/IMPLEMENTATION.md` -> how the system is physically/factually implemented; structure, boundaries, responsibilities, connections
 - `infrastructure/DEPLOY.md` -> physical infrastructure and runtime/ops processes
-- `docs/manual/USER_MANUAL.md`, `CLERC_MANUAL.md`, `ADMIN_MANUAL.md`, `TESTING.md` -> runbooks / ways of using the system
+- `docs/manual/USER_MANUAL.md`, `CLERK_MANUAL.md`, `ADMIN_MANUAL.md`, `TESTING.md` -> runbooks / ways of using the system
 - `test-cases/*` -> traceability from docs/requirements to verification
 
 ## Rules
