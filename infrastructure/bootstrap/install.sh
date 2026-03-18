@@ -57,7 +57,11 @@ apt-get install -y --no-install-recommends ca-certificates curl git wget bc logr
 if ! command -v docker >/dev/null 2>&1; then
   apt-get install -y --no-install-recommends docker.io docker-compose-plugin     || apt-get install -y --no-install-recommends docker.io docker-compose
 fi
-systemctl enable --now docker
+if systemctl list-unit-files docker.service >/dev/null 2>&1; then
+  systemctl enable --now docker
+else
+  echo "docker.service не найден (Docker Desktop?) — пропуск systemctl enable docker"
+fi
 if ! docker compose version >/dev/null 2>&1; then
   apt-get install -y --no-install-recommends docker-compose-plugin || true
 fi
@@ -139,7 +143,7 @@ done
 
 systemctl daemon-reload
 systemctl enable --now fail2ban >/dev/null 2>&1 || true
-systemctl restart docker || true
+systemctl restart docker 2>/dev/null || true
 systemctl restart systemd-journald || true
 systemctl restart fail2ban >/dev/null 2>&1 || true
 

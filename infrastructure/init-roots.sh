@@ -24,7 +24,7 @@ _autoteka_print_roots_usage() {
 }
 
 autoteka_load_options_env() {
-  local env_file="${1:-$AUTOTEKA_OPTIONS_FILE}"
+  local env_file="${1:-${AUTOTEKA_OPTIONS_FILE:-}}"
 
   if [ ! -e "$env_file" ]; then
     return 0
