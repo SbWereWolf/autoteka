@@ -87,7 +87,7 @@ APP_STATE=(
   /var/lib/autoteka-http-last-good
   /var/lib/server-watchdog.state
   /var/lib/server-watchdog.reboot
-  /var/lib/server-watchdog
+  /var/lib/autoteka
   /var/lock/autoteka-deploy.lock
   /var/lock/autoteka-server-watchdog.lock
 )
@@ -182,16 +182,18 @@ purge() {
 
   if [ "$RM_ETC_VUE_APP" = "yes" ]; then
     confirm_or_exit "REMOVE /etc/autoteka/* (secrets)"
-    if [ -f /etc/autoteka/options.env ]; then
+    local opts_file="${AUTOTEKA_OPTIONS_FILE:-/etc/autoteka/options.env}"
+    if [ -f "$opts_file" ]; then
       set -a
-      source /etc/autoteka/options.env 2>/dev/null || true
+      source "$opts_file" 2>/dev/null || true
       set +a
       if [ -n "${TELEGRAM_ENV_FILE:-}" ] && [ -f "$TELEGRAM_ENV_FILE" ]; then
         rm -f "$TELEGRAM_ENV_FILE" 2>/dev/null || true
       fi
+      rm -f "$opts_file" 2>/dev/null || true
     fi
-    rm -f /etc/autoteka/options.env 2>/dev/null || true
     rmdir /etc/autoteka 2>/dev/null || true
+    rm -f /etc/profile.d/autoteka.sh 2>/dev/null || true
   fi
 
 }
