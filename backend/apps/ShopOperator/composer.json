@@ -13,7 +13,8 @@
         "laravel/framework": "^12.0",
         "laravel/tinker": "^2.10.1",
         "moonshine/moonshine": "^4.8",
-        "autoteka/schema-definition": "*"
+        "autoteka/schema-definition": "*",
+        "autoteka/laravel-runtime": "*"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
@@ -84,6 +85,13 @@
         {
             "type": "path",
             "url": "../../packages/SchemaDefinition",
+            "options": {
+                "symlink": true
+            }
+        },
+        {
+            "type": "path",
+            "url": "../../packages/LaravelRuntime",
             "options": {
                 "symlink": true
             }

@@ -1,0 +1,25 @@
+{
+  "name": "autoteka/laravel-runtime",
+  "description": "Shared Laravel runtime utilities: session prune and maintenance commands.",
+  "version": "1.0.0",
+  "type": "library",
+  "license": "proprietary",
+  "require": {
+    "php": "^8.4",
+    "laravel/framework": "^12.0"
+  },
+  "autoload": {
+    "psr-4": {
+      "Autoteka\\LaravelRuntime\\": "src/"
+    }
+  },
+  "extra": {
+    "laravel": {
+      "providers": [
+        "Autoteka\\LaravelRuntime\\LaravelRuntimeServiceProvider"
+      ]
+    }
+  },
+  "minimum-stability": "stable",
+  "prefer-stable": true
+}
