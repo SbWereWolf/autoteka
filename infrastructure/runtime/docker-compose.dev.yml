@@ -8,13 +8,14 @@ services:
       additional_contexts:
         infra: ${INFRA_ROOT:?INFRA_ROOT must be set}
       target: dev
-    container_name: autoteka-dev-php
+    container_name: ${AUTOTEKA_RUNTIME_INSTANCE:-autoteka}-dev-php
     working_dir: /workspace/backend
     environment:
       APP_ENV: ${APP_ENV}
       APP_DEBUG: ${APP_DEBUG}
       APP_URL: ${APP_URL}
       DB_CONNECTION: ${DB_CONNECTION}
+      DB_DATABASE: ${DB_DATABASE}
       SESSION_DRIVER: ${SESSION_DRIVER}
       CACHE_STORE: ${CACHE_STORE}
       QUEUE_CONNECTION: ${QUEUE_CONNECTION}
@@ -43,7 +44,7 @@ services:
       dockerfile: ${INFRA_ROOT:?INFRA_ROOT must be set}/runtime/docker/dev/frontend/Dockerfile
       additional_contexts:
         infra: ${INFRA_ROOT:?INFRA_ROOT must be set}
-    container_name: autoteka-dev-frontend
+    container_name: ${AUTOTEKA_RUNTIME_INSTANCE:-autoteka}-dev-frontend
     working_dir: /workspace/frontend
     environment:
       FRONTEND_MODE: ${FRONTEND_MODE}
@@ -53,6 +54,7 @@ services:
       FRONTEND_HMR_PORT: ${FRONTEND_HMR_PORT}
       VITE_API_BASE_URL: ${VITE_API_BASE_URL}
       VITE_BUILD_SOURCEMAP: ${VITE_BUILD_SOURCEMAP}
+      VITE_CACHE_DIR: /tmp/autoteka-vite-cache
     volumes:
       - ${AUTOTEKA_ROOT}/frontend:/workspace/frontend
       - autoteka_frontend_node_modules:/workspace/frontend/node_modules
@@ -66,13 +68,15 @@ services:
       dockerfile: ${INFRA_ROOT:?INFRA_ROOT must be set}/runtime/docker/dev/nginx/Dockerfile
       additional_contexts:
         infra: ${INFRA_ROOT:?INFRA_ROOT must be set}
-    container_name: autoteka-dev-web
+    container_name: ${AUTOTEKA_RUNTIME_INSTANCE:-autoteka}-dev-web
     depends_on:
       - php
       - frontend
     environment:
       FRONTEND_MODE: ${FRONTEND_MODE:?FRONTEND_MODE must be set in dev.env}
       FRONTEND_PORT: ${FRONTEND_PORT:?FRONTEND_PORT must be set in dev.env}
+      FRONTEND_UPSTREAM_HOST: ${FRONTEND_UPSTREAM_HOST:-frontend}
+      FRONTEND_UPSTREAM_PORT: ${FRONTEND_UPSTREAM_PORT:-${FRONTEND_PORT}}
       CORS_ALLOW_ORIGIN: ${CORS_ALLOW_ORIGIN:?CORS_ALLOW_ORIGIN must be set in dev.env}
       CORS_ALLOW_METHODS: ${CORS_ALLOW_METHODS:?CORS_ALLOW_METHODS must be set in dev.env}
       CORS_ALLOW_HEADERS: ${CORS_ALLOW_HEADERS:?CORS_ALLOW_HEADERS must be set in dev.env}
@@ -86,16 +90,26 @@ services:
       - ${AUTOTEKA_ROOT}/frontend:/workspace/frontend:ro
       - autoteka_frontend_dist:/workspace/frontend/dist:ro
       - ${AUTOTEKA_ROOT}/backend:/workspace/backend:ro
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     ports:
       - "${DEV_BIND_HOST}:${DEV_WEB_PORT}:80"
     restart: unless-stopped
 
 volumes:
   autoteka_api_vendor:
+    name: "${AUTOTEKA_RUNTIME_INSTANCE:-autoteka}_api_vendor"
   autoteka_admin_vendor:
+    name: "${AUTOTEKA_RUNTIME_INSTANCE:-autoteka}_admin_vendor"
   autoteka_shopapi_bootstrap_cache:
+    name: "${AUTOTEKA_RUNTIME_INSTANCE:-autoteka}_shopapi_bootstrap_cache"
   autoteka_shopoperator_bootstrap_cache:
+    name: "${AUTOTEKA_RUNTIME_INSTANCE:-autoteka}_shopoperator_bootstrap_cache"
   autoteka_shopapi_storage_framework:
+    name: "${AUTOTEKA_RUNTIME_INSTANCE:-autoteka}_shopapi_storage_framework"
   autoteka_shopoperator_storage_framework:
+    name: "${AUTOTEKA_RUNTIME_INSTANCE:-autoteka}_shopoperator_storage_framework"
   autoteka_frontend_node_modules:
+    name: "${AUTOTEKA_RUNTIME_INSTANCE:-autoteka}_frontend_node_modules"
   autoteka_frontend_dist:
+    name: "${AUTOTEKA_RUNTIME_INSTANCE:-autoteka}_frontend_dist"

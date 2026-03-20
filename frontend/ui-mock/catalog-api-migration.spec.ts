@@ -1,10 +1,34 @@
 import { expect, test } from "@playwright/test";
+import type { APIRequestContext } from "@playwright/test";
 import { installApiMocks } from "./support/mockApi";
+
+async function waitForUiMockFrontend(request: APIRequestContext) {
+  const deadline = Date.now() + 120_000;
+  let lastError: unknown = null;
+
+  while (Date.now() < deadline) {
+    try {
+      const response = await request.get("/", {
+        timeout: 5_000,
+      });
+      if (response.ok()) {
+        return true;
+      }
+
+      lastError = new Error(`Unexpected HTTP status: ${response.status()}`);
+    } catch (error) {
+      lastError = error;
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, 1_000));
+  }
+
+  throw lastError ?? new Error("UI mock frontend is unavailable");
+}
 
 test.beforeEach(async ({ request }) => {
   try {
-    const response = await request.get("/");
-    test.skip(!response.ok(), "UI mock frontend is unavailable");
+    await waitForUiMockFrontend(request);
   } catch {
     test.skip(true, "UI mock frontend is unavailable");
   }

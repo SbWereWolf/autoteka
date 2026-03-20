@@ -2,6 +2,31 @@
 
 use Illuminate\Support\Str;
 
+$resolveSqliteDatabasePath = static function (): string {
+    $path = env(
+        'DB_DATABASE',
+        (function (): string {
+            $shared = realpath(
+                base_path(
+                    '../../database/database.sqlite'
+                )
+            );
+
+            return $shared === false ? base_path(
+                '../../database/database.sqlite'
+            ) : $shared;
+        })()
+    );
+
+    if (str_starts_with($path, 'file:')) {
+        return $path;
+    }
+
+    return realpath($path) ?: $path;
+};
+
+$sqliteDatabasePath = $resolveSqliteDatabasePath();
+
 return [
 
     /*
@@ -34,24 +59,7 @@ return [
         'sqlite' => [
             'driver' => 'sqlite',
             'url' => env('DB_URL'),
-            'database' => (function (): string {
-                $path = env(
-                    'DB_DATABASE',
-                    (function (): string {
-                        $shared = realpath(
-                            base_path(
-                                '../../database/database.sqlite'
-                            )
-                        );
-
-                        return $shared === false ? base_path(
-                            '../../database/database.sqlite'
-                        ) : $shared;
-                    })()
-                );
-
-                return realpath($path) ?: $path;
-            })(),
+            'database' => $sqliteDatabasePath,
             'prefix' => '',
             'foreign_key_constraints' => true,
             'busy_timeout' => 5000,

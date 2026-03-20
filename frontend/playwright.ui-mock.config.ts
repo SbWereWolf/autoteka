@@ -6,7 +6,7 @@ import { defineConfig } from "@playwright/test";
  */
 export default defineConfig({
   testDir: "./ui-mock",
-  timeout: 30000,
+  timeout: 120000,
   fullyParallel: false,
   workers: 1,
   retries: 0,

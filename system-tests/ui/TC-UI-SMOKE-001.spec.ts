@@ -18,6 +18,10 @@ type BrowserContextLike = {
   close: () => Promise<void>;
 };
 
+type LocatorLike = {
+  count: () => Promise<number>;
+};
+
 type PageLike = {
   goto: (
     url: string,
@@ -26,7 +30,11 @@ type PageLike = {
     ok: () => boolean | null;
     status: () => number;
   } | null>;
-  content: () => Promise<string>;
+  locator: (selector: string) => LocatorLike;
+  waitForFunction: (
+    pageFunction: () => unknown,
+    opts?: { timeout?: number },
+  ) => Promise<void>;
 };
 let browser: BrowserLike | undefined;
 const closeWithTimeout = async (
@@ -61,8 +69,10 @@ describe("TC-UI-SMOKE-001", () => {
       });
       expect(response).not.toBeNull();
       expect(response!.ok() ?? response!.status() < 400).toBe(true);
-      const html = await page.content();
-      expect(html.trim().length).toBeGreaterThan(0);
+      await page.waitForFunction(
+        () => document.querySelector("#app") !== null,
+        { timeout: 10000 },
+      );
     } finally {
       await closeWithTimeout(() => context.close(), 5000);
     }

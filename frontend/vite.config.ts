@@ -17,8 +17,10 @@ export default defineConfig(({ mode }) => {
   const hmrProtocol = env.FRONTEND_HMR_PROTOCOL || undefined;
   const buildSourcemap =
     (env.VITE_BUILD_SOURCEMAP || "false").toLowerCase() === "true";
+  const cacheDir = env.VITE_CACHE_DIR || "node_modules/.vite";
 
   return {
+    cacheDir,
     plugins: [vue()],
     server: {
       host: "0.0.0.0",

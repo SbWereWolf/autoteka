@@ -41,6 +41,8 @@ rm -f "$TEST_ROOT/infrastructure/.env" "$TEST_ROOT/infrastructure/backup.env" \
 
 AUTOTEKA_ROOT="$TEST_ROOT"
 INFRA_ROOT="$TEST_ROOT/infrastructure"
+RUNTIME_INSTANCE_SUFFIX="$(basename "$TEST_ROOT" | tr '[:upper:]' '[:lower:]' | tr -cs 'a-z0-9' '-')"
+RUNTIME_INSTANCE="autoteka-test-${RUNTIME_INSTANCE_SUFFIX}"
 
 echo ">>> Создание env-файлов (AUTOTEKA_ROOT=$AUTOTEKA_ROOT)"
 
@@ -48,11 +50,29 @@ echo ">>> Создание env-файлов (AUTOTEKA_ROOT=$AUTOTEKA_ROOT)"
 cp -n "$INFRA_ROOT/prod.env" "$INFRA_ROOT/.env" 2>/dev/null || true
 sed -i "s|^AUTOTEKA_ROOT=.*|AUTOTEKA_ROOT=$AUTOTEKA_ROOT|" "$INFRA_ROOT/.env"
 sed -i "s|^INFRA_ROOT=.*|INFRA_ROOT=$INFRA_ROOT|" "$INFRA_ROOT/.env"
+if grep -q '^AUTOTEKA_RUNTIME_INSTANCE=' "$INFRA_ROOT/.env"; then
+  sed -i "s|^AUTOTEKA_RUNTIME_INSTANCE=.*|AUTOTEKA_RUNTIME_INSTANCE=$RUNTIME_INSTANCE|" "$INFRA_ROOT/.env"
+else
+  printf '%s\n' "AUTOTEKA_RUNTIME_INSTANCE=$RUNTIME_INSTANCE" >> "$INFRA_ROOT/.env"
+fi
 
 # prod.test.env — синхронизация с prod.env, пути под тестовый корень
 cp "$INFRA_ROOT/prod.env" "$INFRA_ROOT/prod.test.env"
 sed -i "s|^AUTOTEKA_ROOT=.*|AUTOTEKA_ROOT=$AUTOTEKA_ROOT|" "$INFRA_ROOT/prod.test.env"
 sed -i "s|^INFRA_ROOT=.*|INFRA_ROOT=$INFRA_ROOT|" "$INFRA_ROOT/prod.test.env"
+if grep -q '^DB_DATABASE=' "$INFRA_ROOT/prod.test.env"; then
+  sed -i "s|^DB_DATABASE=.*|DB_DATABASE=../../database/database.test.sqlite|" "$INFRA_ROOT/prod.test.env"
+else
+  printf '%s\n' 'DB_DATABASE=../../database/database.test.sqlite' >> "$INFRA_ROOT/prod.test.env"
+fi
+if grep -q '^AUTOTEKA_RUNTIME_INSTANCE=' "$INFRA_ROOT/prod.test.env"; then
+  sed -i "s|^AUTOTEKA_RUNTIME_INSTANCE=.*|AUTOTEKA_RUNTIME_INSTANCE=$RUNTIME_INSTANCE|" "$INFRA_ROOT/prod.test.env"
+else
+  printf '%s\n' "AUTOTEKA_RUNTIME_INSTANCE=$RUNTIME_INSTANCE" >> "$INFRA_ROOT/prod.test.env"
+fi
+if [ ! -f "$AUTOTEKA_ROOT/backend/database/database.test.sqlite" ] && [ -f "$AUTOTEKA_ROOT/backend/database/database.sqlite" ]; then
+  cp "$AUTOTEKA_ROOT/backend/database/database.sqlite" "$AUTOTEKA_ROOT/backend/database/database.test.sqlite"
+fi
 
 # dev.test.env — синхронизация с dev.env
 if [ -f "$INFRA_ROOT/dev.env" ]; then
@@ -61,6 +81,16 @@ if [ -f "$INFRA_ROOT/dev.env" ]; then
   sed -i "s|^INFRA_ROOT=.*|INFRA_ROOT=$INFRA_ROOT|" "$INFRA_ROOT/dev.test.env"
   sed -i "s|^DEV_BIND_HOST=.*|DEV_BIND_HOST=127.0.0.1|" "$INFRA_ROOT/dev.test.env"
   sed -i "s|^DEV_WEB_PORT=.*|DEV_WEB_PORT=8081|" "$INFRA_ROOT/dev.test.env"
+  if grep -q '^DB_DATABASE=' "$INFRA_ROOT/dev.test.env"; then
+    sed -i "s|^DB_DATABASE=.*|DB_DATABASE=../../database/database.test.sqlite|" "$INFRA_ROOT/dev.test.env"
+  else
+    printf '%s\n' 'DB_DATABASE=../../database/database.test.sqlite' >> "$INFRA_ROOT/dev.test.env"
+  fi
+  if grep -q '^AUTOTEKA_RUNTIME_INSTANCE=' "$INFRA_ROOT/dev.test.env"; then
+    sed -i "s|^AUTOTEKA_RUNTIME_INSTANCE=.*|AUTOTEKA_RUNTIME_INSTANCE=$RUNTIME_INSTANCE|" "$INFRA_ROOT/dev.test.env"
+  else
+    printf '%s\n' "AUTOTEKA_RUNTIME_INSTANCE=$RUNTIME_INSTANCE" >> "$INFRA_ROOT/dev.test.env"
+  fi
 fi
 
 # scripts/.env

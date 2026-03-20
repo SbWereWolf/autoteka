@@ -19,6 +19,10 @@ export type BrowserContextLike = {
   close: () => Promise<void>;
 };
 
+export type LocatorLike = {
+  count: () => Promise<number>;
+};
+
 export type PageLike = {
   goto: (
     url: string,
@@ -30,11 +34,17 @@ export type PageLike = {
   content: () => Promise<string>;
   click: (selector: string) => Promise<void>;
   url: () => string;
+  locator: (selector: string) => LocatorLike;
+  evaluate: (pageFunction: () => void) => Promise<void>;
   waitForURL: (
     pattern: RegExp,
     opts?: { timeout?: number },
   ) => Promise<void>;
-  goBack: (opts: { waitUntil: "domcontentloaded" }) => Promise<void>;
+  waitForFunction: (
+    pageFunction: () => unknown,
+    opts?: { timeout?: number },
+  ) => Promise<void>;
+  goBack: (opts?: { waitUntil: "domcontentloaded" }) => Promise<void>;
 };
 
 export const closeWithTimeout = async (
@@ -48,6 +58,16 @@ export const closeWithTimeout = async (
     }),
   ]);
 };
+
+export async function goBackToCatalog(page: PageLike): Promise<void> {
+  await page.evaluate(() => {
+    window.history.back();
+  });
+  await page.waitForFunction(
+    () => window.location.pathname === "/",
+    { timeout: 10000 },
+  );
+}
 
 export async function getFirstShopCode(): Promise<string | null> {
   const cityResponse = await fetch(toUrl("/api/v1/city-list"));

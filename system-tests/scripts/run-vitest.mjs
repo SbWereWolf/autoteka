@@ -1,4 +1,4 @@
-import { spawnSync } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -20,6 +20,7 @@ const getArgValue = (name) => {
 const profile = getArgValue("--profile") ?? "quick-local";
 const cliBaseUrl = getArgValue("--base-url");
 const waitProfile = (process.env.TEST_WAIT_PROFILE ?? "normal").toLowerCase();
+const hostFrontendPort = Number(process.env.AUTOTEKA_DEV_FRONTEND_PORT ?? "4174");
 
 const profileMap = {
   "quick-local": { mode: "quick", stack: "local", headed: "0" },
@@ -55,6 +56,77 @@ const parseEnvFile = (filePath) => {
     parsed[key] = value.replace(/^['"]|['"]$/g, "");
   }
   return parsed;
+};
+
+const fail = (message) => {
+  console.error(message);
+  process.exit(3);
+};
+
+const isWindowsAbsolutePath = (value) => /^[A-Za-z]:[\\/]/.test(value);
+
+const resolveEnvRootPath = (rawPath, label) => {
+  if (!rawPath) return undefined;
+  if (path.isAbsolute(rawPath)) return path.resolve(rawPath);
+  if (process.platform !== "win32" && isWindowsAbsolutePath(rawPath)) {
+    fail(
+      `[run-vitest] ${label} задан Windows-путём в non-Windows среде: ${rawPath}. Синхронизируйте *.test.env под текущую платформу или подготовьте copy через scripts/agent/wsl-prepare-test-copy.sh.`,
+    );
+  }
+  return path.resolve(rawPath);
+};
+
+const resolvePath = (basePath, targetPath) => {
+  if (!targetPath) return undefined;
+  if (path.isAbsolute(targetPath)) return path.resolve(targetPath);
+  return path.resolve(basePath, targetPath);
+};
+
+const getRuntimeInstance = (stackEnvForProfile) =>
+  stackEnvForProfile.AUTOTEKA_RUNTIME_INSTANCE?.trim() || "autoteka";
+
+const getResolvedRuntimeState = (stackEnvForProfile) => {
+  const autotekaRootRaw = stackEnvForProfile.AUTOTEKA_ROOT?.trim();
+  const infraRootRaw = stackEnvForProfile.INFRA_ROOT?.trim();
+  const dbDatabaseRaw = stackEnvForProfile.DB_DATABASE?.trim();
+
+  const autotekaRoot = autotekaRootRaw
+    ? resolveEnvRootPath(autotekaRootRaw, "AUTOTEKA_ROOT")
+    : undefined;
+  const infraRootFromEnv = infraRootRaw
+    ? resolveEnvRootPath(infraRootRaw, "INFRA_ROOT")
+    : undefined;
+  const dbBasePath = autotekaRoot
+    ? path.join(autotekaRoot, "backend", "apps", "ShopOperator")
+    : undefined;
+  const resolvedDbPath =
+    dbBasePath && dbDatabaseRaw ? resolvePath(dbBasePath, dbDatabaseRaw) : undefined;
+  const mainDbPath = autotekaRoot
+    ? path.resolve(autotekaRoot, "backend", "database", "database.sqlite")
+    : undefined;
+  const testDbPath = autotekaRoot
+    ? path.resolve(autotekaRoot, "backend", "database", "database.test.sqlite")
+    : undefined;
+
+  return {
+    instance: getRuntimeInstance(stackEnvForProfile),
+    autotekaRoot,
+    infraRootFromEnv,
+    dbDatabaseRaw,
+    resolvedDbPath,
+    mainDbPath,
+    testDbPath,
+  };
+};
+const logTestRuntimeEnv = (stackEnvForProfile) => {
+  if (profileInfo.stack === "local") return;
+
+  const runtimeState = getResolvedRuntimeState(stackEnvForProfile);
+  const dbConnection = stackEnvForProfile.DB_CONNECTION?.trim() ?? "sqlite";
+  const runMigrations = stackEnvForProfile.RUN_MIGRATIONS?.trim() ?? "false";
+  console.log(
+    `[run-vitest] runtime instance=${runtimeState.instance} dbConnection=${dbConnection} dbPath=${runtimeState.resolvedDbPath ?? "<unset>"} runMigrations=${runMigrations}`,
+  );
 };
 
 if (!fs.existsSync(systemTestsEnvPath)) {
@@ -125,12 +197,146 @@ const composeFileForStack = (stack) => {
   return null;
 };
 
+const waitForHttpStatus = ({
+  url,
+  timeoutSec,
+  intervalSec,
+  expectedStatuses,
+  label,
+}) => {
+  const startedAt = Date.now();
+
+  while (true) {
+    const response = spawnSync(
+      "curl",
+      [
+        "-sS",
+        "--max-time",
+        "5",
+        "-o",
+        nullDevice,
+        "-w",
+        "%{http_code}",
+        url,
+      ],
+      {
+        stdio: "pipe",
+        encoding: "utf8",
+        cwd: repoRoot,
+        env: process.env,
+      },
+    );
+
+    const statusCode = response.stdout.trim();
+    if (response.status === 0 && expectedStatuses.has(statusCode)) {
+      return;
+    }
+
+    const elapsedSec = Math.floor((Date.now() - startedAt) / 1000);
+    if (elapsedSec >= timeoutSec) {
+      const printableStatus = statusCode || "<no-http-status>";
+      console.error(
+        `[run-vitest] ${label} не стал готов за ${timeoutSec}s: lastStatus=${printableStatus}`,
+      );
+      process.exit(1);
+    }
+
+    spawnSync("sleep", [String(intervalSec)], {
+      stdio: "inherit",
+      cwd: repoRoot,
+      env: process.env,
+    });
+  }
+};
+
 const stackEnv = profileInfo.stack === "prod" ? deployEnv : devEnv;
-const composeEnv = { ...process.env, ...stackEnv };
+logTestRuntimeEnv(stackEnv);
+
+const composeEnv = {
+  ...process.env,
+  ...stackEnv,
+};
+
+const shouldUseHostFrontendDevServer =
+  profile === "ui-headless-dev" &&
+  profileInfo.stack === "dev" &&
+  (stackEnv.FRONTEND_MODE?.trim() ?? "source") === "source";
+
+if (shouldUseHostFrontendDevServer) {
+  composeEnv.FRONTEND_UPSTREAM_HOST = "host.docker.internal";
+  composeEnv.FRONTEND_UPSTREAM_PORT = String(hostFrontendPort);
+}
+
+let hostFrontendProcess = null;
+
+const startHostFrontendDevServer = () => {
+  if (!shouldUseHostFrontendDevServer || hostFrontendProcess) return;
+
+  hostFrontendProcess = spawn(
+    "npm",
+    [
+      "--prefix",
+      "frontend",
+      "run",
+      "dev",
+      "--",
+      "--host",
+      "127.0.0.1",
+      "--port",
+      String(hostFrontendPort),
+    ],
+    {
+      cwd: repoRoot,
+      env: {
+        ...process.env,
+        ...stackEnv,
+        FRONTEND_PORT: String(hostFrontendPort),
+      },
+      stdio: "inherit",
+    },
+  );
+
+  hostFrontendProcess.on("exit", (code, signal) => {
+    if (hostFrontendProcess) {
+      console.error(
+        `[run-vitest] Host frontend dev server завершился раньше времени: code=${code ?? "<null>"} signal=${signal ?? "<null>"}`,
+      );
+    }
+  });
+};
+
+const stopHostFrontendDevServer = () => {
+  if (!hostFrontendProcess) return;
+  hostFrontendProcess.kill("SIGTERM");
+  hostFrontendProcess = null;
+};
+
+const waitForHostFrontendDevServer = () => {
+  if (!shouldUseHostFrontendDevServer) return;
+
+  waitForHttpStatus({
+    url: `http://127.0.0.1:${hostFrontendPort}/`,
+    timeoutSec: 120,
+    intervalSec: 2,
+    expectedStatuses: new Set(["200"]),
+    label: `host frontend / on ${hostFrontendPort}`,
+  });
+
+  waitForHttpStatus({
+    url: `http://127.0.0.1:${hostFrontendPort}/@vite/client`,
+    timeoutSec: 120,
+    intervalSec: 2,
+    expectedStatuses: new Set(["200"]),
+    label: `host frontend /@vite/client on ${hostFrontendPort}`,
+  });
+};
 
 const preflightRuntime = (baseUrl) => {
   const composeFile = composeFileForStack(profileInfo.stack);
   if (!composeFile) return;
+
+  startHostFrontendDevServer();
+  waitForHostFrontendDevServer();
 
   const upArgs = ["compose", "-f", composeFile, "up", "-d", "--remove-orphans"];
   const up = spawnSync("docker", upArgs, { stdio: "inherit", cwd: repoRoot, env: composeEnv });
@@ -223,106 +429,111 @@ const preflightRuntime = (baseUrl) => {
     });
   }
 
-  const smoke = spawnSync(
-    "curl",
-    [
-      "-fsS",
-      "--max-time",
-      String(effectiveWait.smokeTimeoutSec),
-      new URL("/healthcheck", baseUrl).toString(),
-    ],
-    {
-      stdio: "inherit",
-      cwd: repoRoot,
-      env: process.env,
-    },
-  );
-  if (smoke.status !== 0) {
-    console.error("[run-vitest] Healthcheck не отвечает для целевого BASE_URL");
-    process.exit(smoke.status ?? 1);
-  }
+  waitForHttpStatus({
+    url: new URL("/healthcheck", baseUrl).toString(),
+    timeoutSec: effectiveWait.startupTimeoutSec,
+    intervalSec: effectiveWait.intervalSec,
+    expectedStatuses: new Set(["200", "204"]),
+    label: "/healthcheck",
+  });
+
+  waitForHttpStatus({
+    url: new URL("/up", baseUrl).toString(),
+    timeoutSec: effectiveWait.startupTimeoutSec,
+    intervalSec: effectiveWait.intervalSec,
+    expectedStatuses: new Set(["200"]),
+    label: "/up",
+  });
+
+  waitForHttpStatus({
+    url: new URL("/api/v1/category-list", baseUrl).toString(),
+    timeoutSec: effectiveWait.startupTimeoutSec,
+    intervalSec: effectiveWait.intervalSec,
+    expectedStatuses: new Set(["200"]),
+    label: "/api/v1/category-list",
+  });
 
   if (profileInfo.mode === "ui") {
-    const adminSmoke = spawnSync(
-      "curl",
-      [
-        "-fsS",
-        "--max-time",
-        String(effectiveWait.smokeTimeoutSec),
-        "-o",
-        nullDevice,
-        "-w",
-        "%{http_code}",
-        new URL("/admin/login", baseUrl).toString(),
-      ],
-      {
-        stdio: "pipe",
-        encoding: "utf8",
-        cwd: repoRoot,
-        env: process.env,
-      },
-    );
-    if (adminSmoke.status !== 0 || adminSmoke.stdout.trim() !== "200") {
-      console.error("[run-vitest] /admin/login не готов для UI-профиля");
-      process.exit(1);
-    }
+    waitForHttpStatus({
+      url: new URL("/admin/login", baseUrl).toString(),
+      timeoutSec: effectiveWait.startupTimeoutSec,
+      intervalSec: effectiveWait.intervalSec,
+      expectedStatuses: new Set(["200"]),
+      label: "/admin/login",
+    });
+    waitForHttpStatus({
+      url: new URL("/", baseUrl).toString(),
+      timeoutSec: effectiveWait.startupTimeoutSec,
+      intervalSec: effectiveWait.intervalSec,
+      expectedStatuses: new Set(["200"]),
+      label: "/",
+    });
   }
 };
 
 const baseUrl = resolveBaseUrl();
-preflightRuntime(baseUrl);
-console.log(
-  `[run-vitest] profile=${profile} stack=${profileInfo.stack} baseUrl=${baseUrl}`,
-);
 
-const env = {
-  ...process.env,
-  BASE_URL: baseUrl,
-  TEST_BASE_URL: baseUrl,
-  TEST_PROFILE: profile,
-  TEST_MODE: profileInfo.mode,
-  TEST_STACK: profileInfo.stack,
-  TEST_UI_HEADED: profileInfo.headed,
-};
+let exitCode = 1;
 
-const testTargets =
-  profileInfo.mode === "quick"
-    ? ["cases"]
-    : ["cases", "ui"];
+try {
+  preflightRuntime(baseUrl);
+  console.log(
+    `[run-vitest] profile=${profile} stack=${profileInfo.stack} baseUrl=${baseUrl} db=${composeEnv.DB_DATABASE ?? "<unset>"} instance=${getRuntimeInstance(stackEnv)}`,
+  );
 
-const passThroughArgs = [];
-for (let i = 0; i < rawArgs.length; i += 1) {
-  const arg = rawArgs[i];
-  if (arg === "--profile" || arg === "--base-url") {
-    i += 1;
-    continue;
+  const env = {
+    ...process.env,
+    BASE_URL: baseUrl,
+    TEST_BASE_URL: baseUrl,
+    TEST_PROFILE: profile,
+    TEST_MODE: profileInfo.mode,
+    TEST_STACK: profileInfo.stack,
+    TEST_UI_HEADED: profileInfo.headed,
+  };
+
+  const testTargets =
+    profileInfo.mode === "quick"
+      ? ["cases"]
+      : ["cases", "ui"];
+
+  const passThroughArgs = [];
+  for (let i = 0; i < rawArgs.length; i += 1) {
+    const arg = rawArgs[i];
+    if (arg === "--profile" || arg === "--base-url") {
+      i += 1;
+      continue;
+    }
+    if (arg.startsWith("--profile=") || arg.startsWith("--base-url=")) {
+      continue;
+    }
+    passThroughArgs.push(arg);
   }
-  if (arg.startsWith("--profile=") || arg.startsWith("--base-url=")) {
-    continue;
+
+  const result = spawnSync(
+    process.execPath,
+    [
+      fileURLToPath(new URL("../node_modules/vitest/vitest.mjs", import.meta.url)),
+      "run",
+      "--config",
+      "vitest.config.ts",
+      ...testTargets,
+      ...passThroughArgs,
+    ],
+    {
+      cwd: fileURLToPath(new URL("..", import.meta.url)),
+      stdio: "inherit",
+      env,
+    },
+  );
+
+  if (result.error) {
+    console.error(result.error);
+    exitCode = 1;
+  } else {
+    exitCode = result.status ?? 1;
   }
-  passThroughArgs.push(arg);
+} finally {
+  stopHostFrontendDevServer();
 }
 
-const result = spawnSync(
-  process.execPath,
-  [
-    fileURLToPath(new URL("../node_modules/vitest/vitest.mjs", import.meta.url)),
-    "run",
-    "--config",
-    "vitest.config.ts",
-    ...testTargets,
-    ...passThroughArgs,
-  ],
-  {
-    cwd: fileURLToPath(new URL("..", import.meta.url)),
-    stdio: "inherit",
-    env,
-  },
-);
-
-if (result.error) {
-  console.error(result.error);
-  process.exit(1);
-}
-
-process.exit(result.status ?? 1);
+process.exit(exitCode);

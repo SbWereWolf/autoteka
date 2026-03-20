@@ -3,6 +3,7 @@ import {
   type BrowserLike,
   baseUrl,
   closeWithTimeout,
+  goBackToCatalog,
   headed,
 } from "./uiUserHelpers";
 
@@ -30,10 +31,13 @@ describe("TC-UI-USER-006", () => {
           waitUntil: "domcontentloaded",
         },
       );
-      await page.goBack({ waitUntil: "domcontentloaded" });
-      await page.waitForURL(/\/$/, { timeout: 10000 });
-      const html = await page.content();
-      expect(html).toContain('id="app"');
+      await goBackToCatalog(page);
+      await page.waitForFunction(
+        () =>
+          document.querySelector("#app") !== null &&
+          document.querySelector('[data-testid="catalog-grid-shell"]') !== null,
+        { timeout: 10000 },
+      );
     } finally {
       await closeWithTimeout(() => context.close(), 5000);
     }

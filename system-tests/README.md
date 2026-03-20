@@ -18,6 +18,14 @@
   (для dev-профилей).
 - `infrastructure/prod.test.env` — копия из `infrastructure/prod.env`
   (для prod-профилей).
+- Без isolated режима `quick-dev` может работать по
+  `../../database/database.sqlite`.
+- Для isolated copy используйте отдельный
+  `AUTOTEKA_RUNTIME_INSTANCE`.
+- Для isolated copy используйте отдельный
+  `DB_DATABASE=../../database/database.test.sqlite`.
+- Если `database.test.sqlite` отсутствует, создайте её копированием из
+  основной SQLite заранее или через `scripts/agent/wsl-prepare-test-copy.sh`.
 
 Эти файлы не коммитятся (в `.gitignore`).
 
@@ -76,7 +84,7 @@ npm run test:quick-local -- --base-url=http://127.0.0.1:8081
 - `cases/` — общий каталог тест-кейсов для всех профилей.
 - `ui/` — UI-кейсы (Playwright) для headless/headed профилей.
 - `scripts/run-vitest.mjs` — раннер профилей и нормализация runtime
-  env.
+  env, включая лог целевой DB/runtime.
 
 ## Что уже покрыто сейчас
 

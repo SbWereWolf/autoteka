@@ -28,9 +28,13 @@ describe("TC-UI-USER-002", () => {
       });
       expect(response).not.toBeNull();
       expect(response!.status()).toBeLessThan(500);
-      const html = await page.content();
-      expect(html).toContain('id="app"');
-      expect(html).toContain("Загрузка");
+      await page.waitForFunction(
+        () =>
+          document.querySelector("#app") !== null &&
+          (document.querySelector('[data-testid="catalog-grid-shell"]') !== null ||
+            document.body.textContent?.includes("Загрузка") === true),
+        { timeout: 10000 },
+      );
     } finally {
       await closeWithTimeout(() => context.close(), 5000);
     }

@@ -37,6 +37,13 @@
 - Для dev/prod профилей нужны `infrastructure/dev.test.env` и
   `infrastructure/prod.test.env` (копии из `dev.env`/`prod.env`,
   gitignored).
+- Обычный `quick-dev` допускает работу по
+  `backend/database/database.sqlite`.
+- Для isolated copy используйте отдельный `AUTOTEKA_RUNTIME_INSTANCE`.
+- В isolated copy `DB_DATABASE` должен указывать на отдельный test
+  SQLite, обычно `../../database/database.test.sqlite`.
+- Если `database.test.sqlite` отсутствует, создайте её копированием из
+  `database.sqlite`.
 - Базовый URL задаётся:
   - через `BASE_URL` в окружении;
   - или через CLI-override: `--base-url=http://127.0.0.1:8081`
@@ -227,6 +234,9 @@ scripts/.env.
    TEST_ROOT=/tmp/autoteka-wsl-test bash scripts/agent/wsl-prepare-test-copy.sh
    cd $TEST_ROOT
    ```
+   Скрипт переводит `dev.test.env` / `prod.test.env` на отдельный
+   `backend/database/database.test.sqlite` и отдельный
+   `AUTOTEKA_RUNTIME_INSTANCE`.
 
 2. **Pre-check**:
    ```bash
@@ -238,8 +248,12 @@ scripts/.env.
    cp infrastructure/prod.env infrastructure/prod.test.env
    cp infrastructure/dev.env infrastructure/dev.test.env
    # Адаптировать пути AUTOTEKA_ROOT, INFRA_ROOT под тестовую копию
+   sed -i 's|^DB_DATABASE=.*|DB_DATABASE=../../database/database.test.sqlite|' infrastructure/prod.test.env
+   sed -i 's|^DB_DATABASE=.*|DB_DATABASE=../../database/database.test.sqlite|' infrastructure/dev.test.env
    bash scripts/swap-env.sh load -t system-tests-env
    ```
+   Если `backend/database/database.test.sqlite` отсутствует, её нужно
+   создать копированием из `backend/database/database.sqlite`.
 
 4. **install.sh** (требует root):
    ```bash
@@ -260,6 +274,11 @@ scripts/.env.
    npm run test:ui-headless-prod
    npm run test:ui-headed-prod
    ```
+
+Если isolated guard обнаруживает отсутствие marker-файла, неправильный
+контракт isolated режима или попытку опасной операции без явного opt-in,
+запуск обязан завершиться ошибкой до `docker compose up`, `migrate` и
+`seed`.
 
 7. **Очистка после тестирования**:
    ```bash

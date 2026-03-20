@@ -3,6 +3,7 @@ import {
   type BrowserLike,
   baseUrl,
   closeWithTimeout,
+  goBackToCatalog,
   headed,
 } from "./uiUserHelpers";
 
@@ -24,8 +25,12 @@ describe("TC-UI-USER-010", () => {
     try {
       const page = await context.newPage();
       await page.goto(baseUrl, { waitUntil: "domcontentloaded" });
-      const html = await page.content();
-      expect(html).toContain('id="app"');
+      await page.waitForFunction(
+        () =>
+          document.querySelector("#app") !== null &&
+          document.querySelector('[data-testid="catalog-grid-shell"]') !== null,
+        { timeout: 10000 },
+      );
 
       await page.goto(
         `${baseUrl.replace(/\/$/, "")}/shop/test-shop`,
@@ -33,11 +38,13 @@ describe("TC-UI-USER-010", () => {
           waitUntil: "domcontentloaded",
         },
       );
-      await page.goBack({ waitUntil: "domcontentloaded" });
-      await page.waitForURL(/\/$/, { timeout: 10000 });
-
-      const htmlBack = await page.content();
-      expect(htmlBack).toContain('id="app"');
+      await goBackToCatalog(page);
+      await page.waitForFunction(
+        () =>
+          document.querySelector("#app") !== null &&
+          document.querySelector('[data-testid="catalog-grid-shell"]') !== null,
+        { timeout: 10000 },
+      );
     } finally {
       await closeWithTimeout(() => context.close(), 5000);
     }

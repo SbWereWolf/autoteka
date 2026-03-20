@@ -7,10 +7,14 @@ const rawBaseUrl =
   "http://127.0.0.1:8081";
 const baseUrl =
   rawBaseUrl === "/" ? "http://127.0.0.1:8081/" : rawBaseUrl;
+const smokeUrl = new URL("/up", baseUrl).toString();
 
 describe("TC-HTTP-SMOKE-001", () => {
-  it("BASE_URL отвечает HTTP-статусом < 500", async () => {
-    const response = await fetch(baseUrl, { redirect: "manual" });
+  it("health endpoint отвечает HTTP-статусом < 500", async () => {
+    const response = await fetch(smokeUrl, {
+      redirect: "manual",
+      signal: AbortSignal.timeout(10000),
+    });
     expect(response.status).toBeGreaterThanOrEqual(100);
     expect(response.status).toBeLessThan(500);
   });
