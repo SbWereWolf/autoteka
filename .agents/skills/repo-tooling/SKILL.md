@@ -1,6 +1,6 @@
 ---
 name: repo-tooling
-description: Use for repository workflow mechanics and tooling: scripts, scripts/agent, lint tooling, AGENTS.md, nested AGENTS, Codex skills, subagent configs, commit/verify workflow, and instruction hygiene. Do not use for application business logic or UI work.
+description: "Use for repository workflow mechanics and tooling: scripts, scripts/agent, lint tooling, AGENTS.md, nested AGENTS, Codex skills, subagent configs, commit/verify workflow, and instruction hygiene. Do not use for application business logic or UI work."
 ---
 
 # Repo tooling
