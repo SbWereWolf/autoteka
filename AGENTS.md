@@ -241,6 +241,23 @@ Never treat a non-zero exit code as success, partial success, or a
 warning-only condition unless the script documentation explicitly says
 so.
 
+### 2.6 Static-analysis baselines
+
+Current static-analysis findings that are intentionally accepted may be
+recorded in the relevant baseline files.
+
+When a task changes code covered by a static-analysis baseline, the
+agent must synchronize the baseline with the current code state:
+
+- remove stale baseline entries that no longer match reported issues;
+- add new baseline entries only for findings that are intentionally
+  accepted and explicitly left unresolved;
+- prefer fixing the code over widening the baseline when the issue can
+  be resolved safely within scope.
+
+Do not leave the baseline drifting away from the actual reported
+findings after code changes.
+
 ## 3. Commit policy
 
 Create commits only when explicitly requested by the user.
@@ -293,6 +310,16 @@ Agents must:
 - avoid narrating routine tool calls;
 - keep scope tight and avoid expanding the task surface;
 - clearly label optional follow-up work instead of silently doing it.
+
+## 6.1 Diff-stable formatting
+
+When arguments, array items, object properties, enum cases, match arms,
+or similar lists are written one-per-line in a vertical block, the
+trailing comma after the last item is mandatory.
+
+Do not remove an existing trailing comma from such multiline lists.
+Prefer keeping or adding the trailing comma so future diffs change one
+line instead of two.
 
 After any write or update step, briefly restate:
 
