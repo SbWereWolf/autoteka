@@ -4,8 +4,9 @@ set -euo pipefail
 if [ -z "${AUTOTEKA_LIB_LARAVEL_RUNTIME_SH:-}" ]; then
   AUTOTEKA_LIB_LARAVEL_RUNTIME_SH=1
 
-  # INFRA_ROOT должен быть задан и провалидирован вызывающим скриптом.
+  source "$INFRA_ROOT/init-roots.sh"
 
+  # INFRA_ROOT должен быть задан и провалидирован вызывающим скриптом.
   compose() {
     /usr/bin/docker compose -f "$INFRA_ROOT/runtime/docker-compose.yml" "$@"
   }
@@ -26,13 +27,42 @@ if [ -z "${AUTOTEKA_LIB_LARAVEL_RUNTIME_SH:-}" ]; then
     compose exec -T php sh -lc '
       set -eu
       cd /var/www/backend
+      module_requires_path_package() {
+        module_dir="$1"
+        package_name="$2"
+        grep -q "\"$package_name\"" "$module_dir/composer.json"
+      }
+      module_needs_composer_sync() {
+        module_dir="$1"
+
+        if [ ! -f "$module_dir/vendor/autoload.php" ]; then
+          return 0
+        fi
+
+        if module_requires_path_package "$module_dir" "autoteka/laravel-session-prune" \
+          && [ ! -e "$module_dir/vendor/autoteka/laravel-session-prune" ]; then
+          return 0
+        fi
+
+        if ! module_requires_path_package "$module_dir" "autoteka/laravel-runtime" \
+          && [ -e "$module_dir/vendor/autoteka/laravel-runtime" ]; then
+          return 0
+        fi
+
+        if module_requires_path_package "$module_dir" "autoteka/is-there-an-admin" \
+          && [ ! -e "$module_dir/vendor/autoteka/is-there-an-admin" ]; then
+          return 0
+        fi
+
+        return 1
+      }
       for module_dir in apps/ShopAPI apps/ShopOperator; do
         case "$module_dir" in
           */packages/SchemaDefinition|packages/SchemaDefinition)
             continue
             ;;
         esac
-        if [ -f "$module_dir/composer.json" ] && [ ! -f "$module_dir/vendor/autoload.php" ]; then
+        if [ -f "$module_dir/composer.json" ] && module_needs_composer_sync "$module_dir"; then
           (
             cd "$module_dir"
             composer install --prefer-dist --no-interaction --optimize-autoloader
@@ -71,13 +101,42 @@ if [ -z "${AUTOTEKA_LIB_LARAVEL_RUNTIME_SH:-}" ]; then
       [ -f database/database.sqlite ] || touch database/database.sqlite
       mkdir -p         apps/ShopAPI/storage/framework/cache         apps/ShopAPI/storage/framework/cache/data         apps/ShopAPI/storage/framework/sessions         apps/ShopAPI/storage/framework/views         apps/ShopAPI/storage/framework/testing         apps/ShopAPI/storage/logs         apps/ShopAPI/bootstrap/cache
       mkdir -p         apps/ShopOperator/storage/framework/cache         apps/ShopOperator/storage/framework/cache/data         apps/ShopOperator/storage/framework/sessions         apps/ShopOperator/storage/framework/views         apps/ShopOperator/storage/framework/testing         apps/ShopOperator/storage/logs         apps/ShopOperator/bootstrap/cache
+      module_requires_path_package() {
+        module_dir="$1"
+        package_name="$2"
+        grep -q "\"$package_name\"" "$module_dir/composer.json"
+      }
+      module_needs_composer_sync() {
+        module_dir="$1"
+
+        if [ ! -f "$module_dir/vendor/autoload.php" ]; then
+          return 0
+        fi
+
+        if module_requires_path_package "$module_dir" "autoteka/laravel-session-prune" \
+          && [ ! -e "$module_dir/vendor/autoteka/laravel-session-prune" ]; then
+          return 0
+        fi
+
+        if ! module_requires_path_package "$module_dir" "autoteka/laravel-runtime" \
+          && [ -e "$module_dir/vendor/autoteka/laravel-runtime" ]; then
+          return 0
+        fi
+
+        if module_requires_path_package "$module_dir" "autoteka/is-there-an-admin" \
+          && [ ! -e "$module_dir/vendor/autoteka/is-there-an-admin" ]; then
+          return 0
+        fi
+
+        return 1
+      }
       for module_dir in apps/ShopAPI apps/ShopOperator; do
         case "$module_dir" in
           */packages/SchemaDefinition|packages/SchemaDefinition)
             continue
             ;;
         esac
-        if [ -f "$module_dir/composer.json" ] && [ ! -f "$module_dir/vendor/autoload.php" ]; then
+        if [ -f "$module_dir/composer.json" ] && module_needs_composer_sync "$module_dir"; then
           (
             cd "$module_dir"
             composer install --prefer-dist --no-interaction --optimize-autoloader
@@ -149,6 +208,28 @@ if [ -z "${AUTOTEKA_LIB_LARAVEL_RUNTIME_SH:-}" ]; then
 
   artisan_in_php() {
     api_artisan_in_php "$1"
+  }
+
+  seed_admin_user_if_missing_in_php() {
+    local admin_email="${1:-admin@example.com}"
+    local status=0
+
+    set +e
+    admin_artisan_in_php "autoteka:is-there-an-admin \"$admin_email\""
+    status=$?
+    set -e
+
+    case "$status" in
+      0)
+        admin_artisan_in_php 'db:seed --class=AdminUserSeeder --force'
+        ;;
+      4)
+        return 0
+        ;;
+      *)
+        return "$status"
+        ;;
+    esac
   }
 
   wait_for_php_exec_ready() {

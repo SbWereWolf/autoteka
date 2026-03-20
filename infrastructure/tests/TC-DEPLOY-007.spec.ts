@@ -31,6 +31,22 @@ describe("TC-DEPLOY-007", () => {
     expect(content).toMatch(/INFRA_ROOT/);
   });
 
+  it("prod.test.env содержит отдельный runtime instance и test SQLite", () => {
+    const path = join(INFRA_ROOT_PATH, "prod.test.env");
+    expect(existsSync(path)).toBe(true);
+    const content = readFileSync(path, "utf-8");
+    expect(content).toMatch(/AUTOTEKA_RUNTIME_INSTANCE=autoteka-[\w-]+/);
+    expect(content).toMatch(/DB_DATABASE=.*database\.test\.sqlite/);
+  });
+
+  it("dev.test.env использует shared database.sqlite и runtime instance", () => {
+    const path = join(INFRA_ROOT_PATH, "dev.test.env");
+    expect(existsSync(path)).toBe(true);
+    const content = readFileSync(path, "utf-8");
+    expect(content).toMatch(/AUTOTEKA_RUNTIME_INSTANCE=autoteka/);
+    expect(content).toMatch(/DB_DATABASE=.*database\.sqlite/);
+  });
+
   it("runtime-скрипты используют переменные из env", () => {
     const deployContent = readFileSync(
       join(INFRA_ROOT_PATH, "runtime/deploy.sh"),
@@ -57,5 +73,12 @@ describe("TC-DEPLOY-007", () => {
       "utf-8",
     );
     expect(composeContent).toMatch(/HTTP_PORT/);
+
+    const runtimeHelpersContent = readFileSync(
+      join(INFRA_ROOT_PATH, "lib/laravel-runtime.sh"),
+      "utf-8",
+    );
+    expect(runtimeHelpersContent).toMatch(/autoteka:is-there-an-admin/);
+    expect(runtimeHelpersContent).toMatch(/AdminUserSeeder/);
   });
 });

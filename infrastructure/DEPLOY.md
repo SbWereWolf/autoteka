@@ -129,6 +129,19 @@ export AUTOTEKA_ROOT=/opt/vue-app
 Скрипты backup, restore и др. поддерживают аргументы `--infra-root=` и
 `--autoteka-root=` для переопределения.
 
+## Test runtime и изоляция
+
+- Обычный dev/runtime может работать по основной SQLite.
+- Для изолированной копии используйте отдельный
+  `AUTOTEKA_RUNTIME_INSTANCE`, чтобы контейнеры и volumes не делились с
+  основной копией.
+- Для изолированной копии используйте отдельный `DB_DATABASE`, обычно
+  `../../database/database.test.sqlite`.
+- `migrate --force` не очищает БД; он применяет обычные миграции к
+  выбранной базе.
+- `AdminUserSeeder` должен запускаться только после проверки наличия
+  admin-учётки через `autoteka:is-there-an-admin`.
+
 ## Runtime и сборка контейнеров
 
 - Compose-файлы находятся в `$INFRA_ROOT/runtime/`.

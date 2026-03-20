@@ -14,7 +14,8 @@
         "laravel/tinker": "^2.10.1",
         "moonshine/moonshine": "^4.8",
         "autoteka/schema-definition": "*",
-        "autoteka/laravel-runtime": "*"
+        "autoteka/laravel-session-prune": "*",
+        "autoteka/is-there-an-admin": "*"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
@@ -49,7 +50,7 @@
             "composer install",
             "@php -r \"file_exists('.env') || copy('example.env', '.env');\"",
             "@php artisan key:generate",
-            "@php artisan db:seed --class=AdminUserSeeder --force"
+            "@php -r \"passthru('php artisan autoteka:is-there-an-admin '.escapeshellarg((string) getenv('MOONSHINE_ADMIN_EMAIL') ?: 'admin@example.com'), $code); if ($code === 0) { passthru('php artisan db:seed --class=AdminUserSeeder --force', $seedCode); exit($seedCode); } if ($code === 4) { exit(0); } exit($code);\""
         ],
         "post-autoload-dump": [
             "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
@@ -91,7 +92,14 @@
         },
         {
             "type": "path",
-            "url": "../../packages/LaravelRuntime",
+            "url": "../../packages/SessionPrune",
+            "options": {
+                "symlink": true
+            }
+        },
+        {
+            "type": "path",
+            "url": "../../packages/IsThereAnAdmin",
             "options": {
                 "symlink": true
             }

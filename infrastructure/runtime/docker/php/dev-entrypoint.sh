@@ -21,12 +21,42 @@ cp .env apps/ShopOperator/.env
 if [ "${APP_KEY:-}" = "" ]; then
   unset APP_KEY
 fi
-if [ -f apps/ShopAPI/composer.json ] && [ ! -f apps/ShopAPI/vendor/autoload.php ]; then
-  (cd apps/ShopAPI && composer install --prefer-dist --no-interaction)
-fi
-if [ -f apps/ShopOperator/composer.json ] && [ ! -f apps/ShopOperator/vendor/autoload.php ]; then
-  (cd apps/ShopOperator && composer install --prefer-dist --no-interaction)
-fi
+module_requires_path_package() {
+  module_dir="$1"
+  package_name="$2"
+  grep -q "\"$package_name\"" "$module_dir/composer.json"
+}
+
+module_needs_composer_sync() {
+  module_dir="$1"
+
+  if [ ! -f "$module_dir/vendor/autoload.php" ]; then
+    return 0
+  fi
+
+  if module_requires_path_package "$module_dir" "autoteka/laravel-session-prune" \
+    && [ ! -e "$module_dir/vendor/autoteka/laravel-session-prune" ]; then
+    return 0
+  fi
+
+  if ! module_requires_path_package "$module_dir" "autoteka/laravel-runtime" \
+    && [ -e "$module_dir/vendor/autoteka/laravel-runtime" ]; then
+    return 0
+  fi
+
+  if module_requires_path_package "$module_dir" "autoteka/is-there-an-admin" \
+    && [ ! -e "$module_dir/vendor/autoteka/is-there-an-admin" ]; then
+    return 0
+  fi
+
+  return 1
+}
+
+for module_dir in apps/ShopAPI apps/ShopOperator; do
+  if [ -f "$module_dir/composer.json" ] && module_needs_composer_sync "$module_dir"; then
+    (cd "$module_dir" && composer install --prefer-dist --no-interaction)
+  fi
+done
 rm -rf apps/ShopAPI/public/storage apps/ShopOperator/public/storage
 ln -sfn ../../../storage/app/public apps/ShopAPI/public/storage
 ln -sfn ../../../storage/app/public apps/ShopOperator/public/storage
@@ -40,7 +70,22 @@ fi
 (cd apps/ShopAPI && php artisan optimize:clear --ansi >/dev/null 2>&1 || true)
 (cd apps/ShopOperator && php artisan optimize:clear --ansi >/dev/null 2>&1 || true)
 if [ "${RUN_MIGRATIONS}" = "true" ]; then
+  admin_email="${MOONSHINE_ADMIN_EMAIL:-admin@example.com}"
   (cd apps/ShopOperator && php artisan migrate --force --ansi)
-  (cd apps/ShopOperator && php artisan db:seed --class=AdminUserSeeder --force --ansi)
+  set +e
+  (cd apps/ShopOperator && php artisan autoteka:is-there-an-admin "$admin_email" --ansi)
+  admin_check_status=$?
+  set -e
+  case "$admin_check_status" in
+    0)
+      (cd apps/ShopOperator && php artisan db:seed --class=AdminUserSeeder --force --ansi)
+      ;;
+    4)
+      :
+      ;;
+    *)
+      exit "$admin_check_status"
+      ;;
+  esac
 fi
 exec "$@"

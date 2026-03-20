@@ -111,8 +111,10 @@ location.reload();
 - login: `admin@example.com`
 - password: `admin12345`
 
-Учетная запись initial admin создаётся сидером `AdminUserSeeder`. Для
-production нужно задавать:
+Учетная запись initial admin создаётся сидером `AdminUserSeeder`, но
+сидер должен запускаться только если команда
+`php artisan autoteka:is-there-an-admin <email>` показывает, что такой
+учётки ещё нет. Для production нужно задавать:
 
 - `MOONSHINE_ADMIN_NAME`
 - `MOONSHINE_ADMIN_EMAIL`
@@ -193,6 +195,7 @@ public media.
 Примеры backend-операций:
 
 - `cd backend/apps/ShopOperator && php artisan migrate`
+- `cd backend/apps/ShopOperator && php artisan autoteka:is-there-an-admin admin@example.com`
 - `cd backend/apps/ShopOperator && php artisan db:seed --class=AdminUserSeeder`
 - `cd backend/apps/ShopAPI && php artisan test`
 - `cd backend/apps/ShopOperator && php artisan test`

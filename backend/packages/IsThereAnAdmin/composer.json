@@ -1,0 +1,26 @@
+{
+  "name": "autoteka/is-there-an-admin",
+  "description": "Laravel package с командой проверки существования admin-учётки.",
+  "version": "1.0.0",
+  "type": "library",
+  "license": "proprietary",
+  "require": {
+    "php": "^8.4",
+    "laravel/framework": "^12.0",
+    "moonshine/moonshine": "^4.8"
+  },
+  "autoload": {
+    "psr-4": {
+      "Autoteka\\IsThereAnAdmin\\": "src/"
+    }
+  },
+  "extra": {
+    "laravel": {
+      "providers": [
+        "Autoteka\\IsThereAnAdmin\\IsThereAnAdminServiceProvider"
+      ]
+    }
+  },
+  "minimum-stability": "stable",
+  "prefer-stable": true
+}

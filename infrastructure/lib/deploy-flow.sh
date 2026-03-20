@@ -73,7 +73,7 @@ if [ -z "${AUTOTEKA_LIB_DEPLOY_FLOW_SH:-}" ]; then
     admin_artisan_in_php 'migrate --force'
 
     autoteka_deploy_flow_set_stage "artisan_seed"
-    admin_artisan_in_php 'db:seed --class=AdminUserSeeder --force'
+    seed_admin_user_if_missing_in_php "${MOONSHINE_ADMIN_EMAIL:-admin@example.com}"
 
     if [ "$mode" = "deploy" ]; then
       autoteka_deploy_flow_set_stage "sqlite_write_check"

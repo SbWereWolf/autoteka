@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Autoteka\LaravelRuntime\Console;
+namespace Autoteka\SessionPrune\Console;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Session;

@@ -4,15 +4,50 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "15824b05030487afe281a9dae5999f83",
+    "content-hash": "355d730f79092e6f0db5a3baaf626a94",
     "packages": [
         {
-            "name": "autoteka/laravel-runtime",
+            "name": "autoteka/is-there-an-admin",
             "version": "1.0.0",
             "dist": {
                 "type": "path",
-                "url": "../../packages/LaravelRuntime",
-                "reference": "c060b420ae4dc5e98f88138be0025dababf3ed34"
+                "url": "../../packages/IsThereAnAdmin",
+                "reference": "d154945e6e3a2e2dd862a8bdbc42b94eec825a7d"
+            },
+            "require": {
+                "laravel/framework": "^12.0",
+                "moonshine/moonshine": "^4.8",
+                "php": "^8.4"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Autoteka\\IsThereAnAdmin\\IsThereAnAdminServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Autoteka\\IsThereAnAdmin\\": "src/"
+                }
+            },
+            "license": [
+                "proprietary"
+            ],
+            "description": "Laravel package with a command that checks whether the admin user exists.",
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
+        },
+        {
+            "name": "autoteka/laravel-session-prune",
+            "version": "1.0.0",
+            "dist": {
+                "type": "path",
+                "url": "../../packages/SessionPrune",
+                "reference": "37fe9e34104465fe1995cf9b052258e3677495b9"
             },
             "require": {
                 "laravel/framework": "^12.0",
@@ -22,19 +57,19 @@
             "extra": {
                 "laravel": {
                     "providers": [
-                        "Autoteka\\LaravelRuntime\\LaravelRuntimeServiceProvider"
+                        "Autoteka\\SessionPrune\\SessionPruneServiceProvider"
                     ]
                 }
             },
             "autoload": {
                 "psr-4": {
-                    "Autoteka\\LaravelRuntime\\": "src/"
+                    "Autoteka\\SessionPrune\\": "src/"
                 }
             },
             "license": [
                 "proprietary"
             ],
-            "description": "Shared Laravel runtime utilities: session prune and maintenance commands.",
+            "description": "Laravel package with the session prune command.",
             "transport-options": {
                 "symlink": true,
                 "relative": true
