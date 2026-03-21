@@ -125,6 +125,20 @@ manual verification steps.
 
 Pure documentation-only tasks are excluded from this loop.
 
+### 1.3.1 Migration discipline
+
+- Do not edit an existing migration file under
+  `backend/packages/SchemaDefinition/database/migrations`.
+- If the schema must change, create a new migration with a later
+  timestamp and keep the old file untouched.
+- Before applying any migration that changes schema or data, create a
+  database backup first. Use a filename of the form
+  `YYYYMMDD-HHMMSS.database.sqlite`; put the purpose in the basename and
+  keep the extension aligned with the actual contents.
+- Migration code must be explicit and linear. Do not hide required
+  schema/data steps behind `if` branches or fallback branches that make
+  the migration silently skip work.
+
 ### 1.4 Environment readiness
 
 If something required for the task is missing from the environment, do
@@ -142,6 +156,39 @@ Instead, the agent must:
 The agent may still perform non-blocked analysis, planning, diff review,
 or documentation work that does not depend on the missing requirement,
 but must not pretend that verification or execution succeeded.
+
+### 1.5 Migration discipline
+
+Existing migration files are immutable.
+
+Rules:
+
+- never edit an existing migration file;
+- every schema change must use a new migration file;
+- migration logic must follow the known schema state from the migration
+  chain and must not contain fallback logic, discovery branches, or
+  `if`-style checks that guess the database state;
+- a migration must describe one exact transition, not a set of
+  possible transitions;
+- do not design migrations for repeated manual re-application after
+  they have already been recorded as applied.
+
+Before any migration is executed against a SQLite database:
+
+- create a backup of `backend/database/database.sqlite`;
+- store it under `backend/database/backup/`;
+- use the filename format `YYYYMMDD-HHMMSS.database.sqlite`.
+
+### 1.6 File naming and extensions
+
+File extensions must always match the real file content.
+
+Rules:
+
+- never change a file extension to express purpose or workflow stage;
+- reflect file purpose in the basename, not in the extension;
+- do not rename a file in a way that makes the extension lie about the
+  actual format.
 
 ## 2. Verification contract
 

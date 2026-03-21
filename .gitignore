@@ -49,3 +49,4 @@ node_modules
 
 /.php-cs-fixer.cache
 /.php-cs-fixer.dist.php
+/frontend/dev.env
