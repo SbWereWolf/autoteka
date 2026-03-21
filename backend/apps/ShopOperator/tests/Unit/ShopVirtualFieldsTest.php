@@ -18,7 +18,7 @@ final class ShopVirtualFieldsTest extends TestCase
         $shop->contact_entries = [['contact_type_id' => 1, 'value' => 'x']];
         $shop->gallery_entries = [['file_path' => 'shops/a.png']];
         $shop->schedule_entries = [['weekday' => 1, 'time_from' => '09:00', 'time_to' => '18:00']];
-        $shop->schedule_note_text = 'note';
+        $shop->schedule_note = 'note';
 
         $attributes = $shop->getAttributes();
 
@@ -27,6 +27,7 @@ final class ShopVirtualFieldsTest extends TestCase
         self::assertArrayNotHasKey('contact_entries', $attributes);
         self::assertArrayNotHasKey('gallery_entries', $attributes);
         self::assertArrayNotHasKey('schedule_entries', $attributes);
+        self::assertSame('note', $attributes['schedule_note']);
         self::assertArrayNotHasKey('schedule_note_text', $attributes);
     }
 

@@ -91,7 +91,11 @@ final class AdminHttpShopCrudFullCycleTest extends TestCase
             'sort' => 10,
             'city_id' => $cityA->getKey(),
             'description' => 'Shop cycle description',
-            'site_url' => 'https://example.com/shop-cycle',
+            'site_url' => 'example.com/shop-cycle',
+            'slogan' => 'Слоган цикла',
+            'latitude' => 55.0287,
+            'longitude' => 82.9235,
+            'schedule_note' => 'Old note',
             'is_published' => '0',
             'category_links' => [
                 ['category_id' => $categoryA->getKey()],
@@ -123,7 +127,7 @@ final class AdminHttpShopCrudFullCycleTest extends TestCase
                     'is_published' => true,
                 ],
             ],
-            'schedule_note_text' => 'Old note',
+            'schedule_note' => 'Old note',
         ])->assertStatus(302);
 
         $shop = Shop::query()->where('code', 'shop-cycle')->firstOrFail();
@@ -131,7 +135,7 @@ final class AdminHttpShopCrudFullCycleTest extends TestCase
         $this->assertDatabaseHas('shop', ['id' => $shop->id, 'is_published' => 0]);
         $this->assertDatabaseHas('shop_category', ['shop_id' => $shop->id, 'category_id' => $categoryA->getKey()]);
         $this->assertDatabaseHas('shop_feature', ['shop_id' => $shop->id, 'feature_id' => $featureA->getKey()]);
-        $this->assertDatabaseHas('shop_schedule_note', ['shop_id' => $shop->id, 'text' => 'Old note']);
+        $this->assertDatabaseHas('shop', ['id' => $shop->id, 'schedule_note' => 'Old note']);
 
         $contact = ShopContact::query()->where('shop_id', $shop->id)->firstOrFail();
         $gallery = ShopGalleryImage::query()->where('shop_id', $shop->id)->firstOrFail();
@@ -147,7 +151,11 @@ final class AdminHttpShopCrudFullCycleTest extends TestCase
             'sort' => 99,
             'city_id' => $cityB->getKey(),
             'description' => 'Shop cycle description updated',
-            'site_url' => 'https://example.com/shop-cycle-updated',
+            'site_url' => 'example.com/shop-cycle-updated',
+            'slogan' => 'Новый слоган цикла',
+            'latitude' => 55.1234,
+            'longitude' => 82.5432,
+            'schedule_note' => 'New note',
             'is_published' => '1',
             'category_links' => [
                 ['category_id' => $categoryB->getKey()],
@@ -182,7 +190,7 @@ final class AdminHttpShopCrudFullCycleTest extends TestCase
                     'is_published' => false,
                 ],
             ],
-            'schedule_note_text' => 'New note',
+            'schedule_note' => 'New note',
         ])->assertStatus(302);
 
         $this->assertDatabaseHas('shop', [
@@ -224,11 +232,9 @@ final class AdminHttpShopCrudFullCycleTest extends TestCase
             'sort' => 7,
             'is_published' => 0,
         ]);
-        $this->assertDatabaseHas('shop_schedule_note', [
-            'shop_id' => $shop->id,
-            'text' => 'New note',
-            'sort' => 0,
-            'is_published' => 1,
+        $this->assertDatabaseHas('shop', [
+            'id' => $shop->id,
+            'schedule_note' => 'New note',
         ]);
 
         $this->post(route('moonshine.crud.update', [
@@ -241,21 +247,21 @@ final class AdminHttpShopCrudFullCycleTest extends TestCase
             'sort' => 99,
             'city_id' => $cityB->getKey(),
             'description' => 'Shop cycle description updated',
-            'site_url' => 'https://example.com/shop-cycle-updated',
+            'site_url' => 'example.com/shop-cycle-updated',
             'is_published' => '0',
             'category_links' => [],
             'feature_links' => [],
             'contact_entries' => [],
             'gallery_entries' => [],
             'schedule_entries' => [],
-            'schedule_note_text' => '',
+            'schedule_note' => '',
         ])->assertStatus(302);
 
         $this->assertDatabaseHas('shop', ['id' => $shop->id, 'is_published' => 0]);
         $this->assertDatabaseMissing('shop_contact', ['shop_id' => $shop->id]);
         $this->assertDatabaseMissing('shop_gallery_image', ['shop_id' => $shop->id]);
         $this->assertDatabaseMissing('shop_schedule', ['shop_id' => $shop->id]);
-        $this->assertDatabaseMissing('shop_schedule_note', ['shop_id' => $shop->id]);
+        $this->assertDatabaseHas('shop', ['id' => $shop->id, 'schedule_note' => null]);
 
         $this->post(route('moonshine.crud.store', ['resourceUri' => 'shop-resource']), [
             'code' => 'shop-invalid-no-city',
@@ -270,7 +276,7 @@ final class AdminHttpShopCrudFullCycleTest extends TestCase
             'contact_entries' => [],
             'gallery_entries' => [],
             'schedule_entries' => [],
-            'schedule_note_text' => '',
+            'schedule_note' => '',
         ])->assertStatus(302);
 
         $this->assertDatabaseMissing('shop', ['title' => 'Shop Invalid']);

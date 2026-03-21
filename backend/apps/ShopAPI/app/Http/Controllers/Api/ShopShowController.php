@@ -6,7 +6,6 @@ namespace ShopAPI\Http\Controllers\Api;
 
 use ShopAPI\Http\Controllers\Controller;
 use ShopAPI\Models\Shop;
-use ShopAPI\Support\Shop\FormatsWorkHours;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Storage;
 
@@ -30,10 +29,6 @@ final class ShopShowController extends Controller
                     ->where('is_published', true)
                     ->orderBy('sort')
                     ->orderBy('weekday'),
-                'scheduleNotes' => static fn ($query) => $query
-                    ->where('is_published', true)
-                    ->orderBy('sort')
-                    ->orderBy('id'),
             ])
             ->where('code', $code)
             ->where('is_published', true)
@@ -46,7 +41,11 @@ final class ShopShowController extends Controller
             'sort' => $shop->sort,
             'cityId' => $shop->city_id,
             'description' => $shop->description,
-            'siteUrl' => $shop->site_url,
+            'siteUrl' => $shop->site_url ?? '',
+            'slogan' => $shop->slogan ?? '',
+            'latitude' => $shop->latitude,
+            'longitude' => $shop->longitude,
+            'scheduleNote' => $shop->schedule_note ?? '',
             'thumbUrl' => $shop->thumb_path === null ? null : Storage::disk((string) config('autoteka.media.disk'))->url($shop->thumb_path),
             'galleryImages' => $shop->galleryImages
                 ->pluck('file_path')
@@ -55,7 +54,6 @@ final class ShopShowController extends Controller
                 ->all(),
             'categoryIds' => $shop->categories->pluck('id')->values()->all(),
             'featureIds' => $shop->features->pluck('id')->values()->all(),
-            'workHours' => FormatsWorkHours::fromShop($shop),
         ]);
     }
 }

@@ -9,7 +9,6 @@ use ShopOperator\Models\Shop;
 use ShopOperator\Models\ShopContact;
 use ShopOperator\Models\ShopGalleryImage;
 use ShopOperator\Models\ShopSchedule;
-use ShopOperator\Models\ShopScheduleNote;
 use ShopOperator\Support\Media\UploadOriginalNameStore;
 use ShopOperator\Support\Shop\ShopContactUniqueness;
 use Illuminate\Support\Facades\DB;
@@ -32,6 +31,10 @@ final class SaveShopResourceHandler
                 'city_id' => (int) ($data['city_id'] ?? 0),
                 'description' => (string) ($data['description'] ?? ''),
                 'site_url' => (string) ($data['site_url'] ?? ''),
+                'slogan' => $this->nullableString($data['slogan'] ?? null),
+                'latitude' => $this->nullableFloat($data['latitude'] ?? null),
+                'longitude' => $this->nullableFloat($data['longitude'] ?? null),
+                'schedule_note' => $this->nullableString($data['schedule_note'] ?? null),
                 'thumb_path' => $this->nullableString($data['thumb_path'] ?? null),
                 'thumb_original_name' => $uploadOriginalNames->pullByPath(
                     $this->nullableString($data['thumb_path'] ?? null),
@@ -51,7 +54,6 @@ final class SaveShopResourceHandler
             $this->syncContacts($shop, $data['contact_entries'] ?? []);
             $this->syncGallery($shop, $data['gallery_entries'] ?? [], $uploadOriginalNames);
             $this->syncSchedules($shop, $data['schedule_entries'] ?? []);
-            $this->syncScheduleNote($shop, $data['schedule_note_text'] ?? '');
 
             return $shop->fresh([
                 'city',
@@ -60,7 +62,6 @@ final class SaveShopResourceHandler
                 'contacts.contactType',
                 'galleryImages',
                 'schedules',
-                'scheduleNotes',
             ]) ?? $shop;
         });
     }
@@ -271,28 +272,18 @@ final class SaveShopResourceHandler
         $shop->schedules()->whereNotIn('id', $keptIds)->delete();
     }
 
-    private function syncScheduleNote(Shop $shop, mixed $value): void
-    {
-        $text = trim((string) $value);
-        $shop->scheduleNotes()->delete();
-
-        if ($text === '') {
-            return;
-        }
-
-        $note = new ShopScheduleNote();
-        $note->shop_id = $shop->getKey();
-        $note->text = $text;
-        $note->sort = 0;
-        $note->is_published = true;
-        $note->save();
-    }
-
     private function nullableString(mixed $value): ?string
     {
         $value = trim((string) $value);
 
         return $value === '' ? null : $value;
+    }
+
+    private function nullableFloat(mixed $value): ?float
+    {
+        $value = trim((string) $value);
+
+        return $value === '' ? null : (float) $value;
     }
 
     private function validateRequiredFields(array $data): void
@@ -314,6 +305,17 @@ final class SaveShopResourceHandler
                     'city_id' => ['Поле "Город" обязательно для магазина.'],
                 ]);
             }
+
+            $this->assertNullableNumeric(
+                $request->input('latitude'),
+                'latitude',
+                'Поле "Широта" должно быть числом.',
+            );
+            $this->assertNullableNumeric(
+                $request->input('longitude'),
+                'longitude',
+                'Поле "Долгота" должно быть числом.',
+            );
         }
 
         $title = trim((string) ($data['title'] ?? ''));
@@ -333,6 +335,35 @@ final class SaveShopResourceHandler
         if (! City::query()->whereKey($cityId)->exists()) {
             throw ValidationException::withMessages([
                 'city_id' => ['Выбранный город не существует.'],
+            ]);
+        }
+
+        $this->assertNullableNumeric(
+            $data['latitude'] ?? null,
+            'latitude',
+            'Поле "Широта" должно быть числом.',
+        );
+        $this->assertNullableNumeric(
+            $data['longitude'] ?? null,
+            'longitude',
+            'Поле "Долгота" должно быть числом.',
+        );
+    }
+
+    private function assertNullableNumeric(mixed $value, string $field, string $message): void
+    {
+        if ($value === null) {
+            return;
+        }
+
+        $normalized = trim((string) $value);
+        if ($normalized === '') {
+            return;
+        }
+
+        if (! is_numeric($normalized)) {
+            throw ValidationException::withMessages([
+                $field => [$message],
             ]);
         }
     }

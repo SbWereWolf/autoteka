@@ -13,6 +13,10 @@ enum ShopColumns: string
     case CITY_ID = 'city_id';
     case DESCRIPTION = 'description';
     case SITE_URL = 'site_url';
+    case SLOGAN = 'slogan';
+    case LATITUDE = 'latitude';
+    case LONGITUDE = 'longitude';
+    case SCHEDULE_NOTE = 'schedule_note';
     case THUMB_PATH = 'thumb_path';
     case THUMB_ORIGINAL_NAME = 'thumb_original_name';
     case IS_PUBLISHED = 'is_published';

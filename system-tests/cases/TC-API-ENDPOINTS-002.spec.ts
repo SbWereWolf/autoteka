@@ -62,6 +62,8 @@ describe("TC-API-ENDPOINTS-002", () => {
     const { payload: cityList } = await fetchJson(
       "/api/v1/city-list",
     );
+    expect(Array.isArray(cityList)).toBe(true);
+    expect(cityList.length).toBeGreaterThan(0);
     if (!Array.isArray(cityList) || cityList.length === 0) {
       return;
     }
@@ -95,16 +97,31 @@ describe("TC-API-ENDPOINTS-002", () => {
     expect(response.status).toBe(200);
     expect(typeof payload.code).toBe("string");
     expect(typeof payload.title).toBe("string");
+    expect(typeof payload.slogan).toBe("string");
+    expect(typeof payload.description).toBe("string");
+    expect(typeof payload.scheduleNote).toBe("string");
+    expect(typeof payload.siteUrl).toBe("string");
+    expect(
+      payload.latitude === null ||
+        typeof payload.latitude === "string" ||
+        typeof payload.latitude === "number",
+    ).toBe(true);
+    expect(
+      payload.longitude === null ||
+        typeof payload.longitude === "string" ||
+        typeof payload.longitude === "number",
+    ).toBe(true);
     expect(Array.isArray(payload.categoryIds)).toBe(true);
     expect(Array.isArray(payload.featureIds)).toBe(true);
     expect(Array.isArray(payload.galleryImages)).toBe(true);
-    expect(typeof payload.workHours).toBe("string");
   });
 
   it("POST acceptable-contact-types: пустой/невалидный payload не ломает API", async () => {
     const { payload: cityList } = await fetchJson(
       "/api/v1/city-list",
     );
+    expect(Array.isArray(cityList)).toBe(true);
+    expect(cityList.length).toBeGreaterThan(0);
     if (!Array.isArray(cityList) || cityList.length === 0) {
       return;
     }

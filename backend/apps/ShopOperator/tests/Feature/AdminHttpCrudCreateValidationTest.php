@@ -129,14 +129,17 @@ final class AdminHttpCrudCreateValidationTest extends TestCase
             'sort' => 1,
             'city_id' => $city->getKey(),
             'description' => 'Created in HTTP test',
-            'site_url' => 'https://example.com/shop-create',
+            'site_url' => 'example.com/shop-create',
+            'slogan' => 'Слоган для создания',
+            'latitude' => 55.0287,
+            'longitude' => 82.9235,
+            'schedule_note' => '',
             'is_published' => '1',
             'category_links' => [],
             'feature_links' => [],
             'contact_entries' => [],
             'gallery_entries' => [],
             'schedule_entries' => [],
-            'schedule_note_text' => '',
         ])->assertStatus(302);
 
         $this->assertDatabaseHas('shop', [
@@ -165,14 +168,17 @@ final class AdminHttpCrudCreateValidationTest extends TestCase
             'sort' => 1,
             'city_id' => $city->getKey(),
             'description' => 'Created in HTTP test',
-            'site_url' => 'https://example.com/shop-invalid',
+            'site_url' => 'example.com/shop-invalid',
+            'slogan' => null,
+            'latitude' => null,
+            'longitude' => null,
+            'schedule_note' => '',
             'is_published' => '1',
             'category_links' => [],
             'feature_links' => [],
             'contact_entries' => [],
             'gallery_entries' => [],
             'schedule_entries' => [],
-            'schedule_note_text' => '',
         ])->assertStatus(302);
 
         $shop = \ShopOperator\Models\Shop::query()->where('title', 'Shop Invalid')->firstOrFail();
@@ -296,13 +302,16 @@ final class AdminHttpCrudCreateValidationTest extends TestCase
             'city_id' => $city->getKey(),
             'description' => '',
             'site_url' => '',
+            'slogan' => null,
+            'latitude' => null,
+            'longitude' => null,
+            'schedule_note' => '',
             'is_published' => '1',
             'category_links' => [],
             'feature_links' => [],
             'contact_entries' => [],
             'gallery_entries' => [],
             'schedule_entries' => [],
-            'schedule_note_text' => '',
         ])->assertStatus(302);
 
         $this->assertDatabaseMissing('shop', ['city_id' => $city->getKey(), 'sort' => 1]);
@@ -313,16 +322,72 @@ final class AdminHttpCrudCreateValidationTest extends TestCase
             'city_id' => null,
             'description' => '',
             'site_url' => '',
+            'slogan' => null,
+            'latitude' => null,
+            'longitude' => null,
+            'schedule_note' => '',
             'is_published' => '1',
             'category_links' => [],
             'feature_links' => [],
             'contact_entries' => [],
             'gallery_entries' => [],
             'schedule_entries' => [],
-            'schedule_note_text' => '',
         ])->assertStatus(302);
 
         $this->assertDatabaseMissing('shop', ['title' => 'Shop Without City']);
+    }
+
+    public function test_admin_cannot_create_shop_with_invalid_latitude_or_longitude_over_http(): void
+    {
+        $this->withoutMiddleware(VerifyCsrfToken::class);
+        $admin = $this->createAdminUser();
+        $this->actingAs($admin, 'moonshine');
+
+        $city = City::query()->create([
+            'title' => 'Город Для Координат',
+            'sort' => 1,
+            'is_published' => true,
+        ]);
+
+        $this->post(route('moonshine.crud.store', ['resourceUri' => 'shop-resource']), [
+            'title' => 'Shop Invalid Latitude',
+            'sort' => 1,
+            'city_id' => $city->getKey(),
+            'description' => '',
+            'site_url' => '',
+            'slogan' => 'Слоган',
+            'latitude' => 'north',
+            'longitude' => 82.9235,
+            'schedule_note' => '',
+            'is_published' => '1',
+            'category_links' => [],
+            'feature_links' => [],
+            'contact_entries' => [],
+            'gallery_entries' => [],
+            'schedule_entries' => [],
+        ])->assertStatus(302);
+
+        $this->assertDatabaseMissing('shop', ['title' => 'Shop Invalid Latitude']);
+
+        $this->post(route('moonshine.crud.store', ['resourceUri' => 'shop-resource']), [
+            'title' => 'Shop Invalid Longitude',
+            'sort' => 1,
+            'city_id' => $city->getKey(),
+            'description' => '',
+            'site_url' => '',
+            'slogan' => 'Слоган',
+            'latitude' => 55.0287,
+            'longitude' => 'east',
+            'schedule_note' => '',
+            'is_published' => '1',
+            'category_links' => [],
+            'feature_links' => [],
+            'contact_entries' => [],
+            'gallery_entries' => [],
+            'schedule_entries' => [],
+        ])->assertStatus(302);
+
+        $this->assertDatabaseMissing('shop', ['title' => 'Shop Invalid Longitude']);
     }
 
     public function test_shop_city_binding_is_enforced_at_db_level(): void

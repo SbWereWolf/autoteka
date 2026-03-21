@@ -15,7 +15,6 @@ use ShopOperator\Models\ShopSchedule;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use MoonShine\Laravel\Models\MoonshineUser;
 use MoonShine\Laravel\Models\MoonshineUserRole;
@@ -69,7 +68,11 @@ final class AdminHttpShopCrudUpdateTest extends TestCase
             'sort' => 10,
             'city_id' => $cityA->getKey(),
             'description' => 'Old description',
-            'site_url' => 'https://old.example.com',
+            'site_url' => 'old.example.com',
+            'slogan' => 'Старый слоган',
+            'latitude' => 55.0,
+            'longitude' => 82.0,
+            'schedule_note' => 'Старая заметка',
             'thumb_path' => null,
             'is_published' => true,
         ]);
@@ -91,7 +94,11 @@ final class AdminHttpShopCrudUpdateTest extends TestCase
                 'sort' => 55,
                 'city_id' => $cityB->getKey(),
                 'description' => 'Updated description',
-                'site_url' => 'https://example.com/shop-new',
+                'site_url' => 'example.com/shop-new',
+                'slogan' => 'Новый слоган',
+                'latitude' => 55.0287,
+                'longitude' => 82.9235,
+                'schedule_note' => 'Тестовая заметка',
                 'thumb_path' => $thumb,
                 'is_published' => '0',
                 'category_links' => [
@@ -128,7 +135,7 @@ final class AdminHttpShopCrudUpdateTest extends TestCase
                         'is_published' => true,
                     ],
                 ],
-                'schedule_note_text' => 'Тестовая заметка',
+                'schedule_note' => 'Тестовая заметка',
             ]
         );
 
@@ -141,7 +148,11 @@ final class AdminHttpShopCrudUpdateTest extends TestCase
             'sort' => 55,
             'city_id' => $cityB->getKey(),
             'description' => 'Updated description',
-            'site_url' => 'https://example.com/shop-new',
+            'site_url' => 'example.com/shop-new',
+            'slogan' => 'Новый слоган',
+            'latitude' => 55.0287,
+            'longitude' => 82.9235,
+            'schedule_note' => 'Тестовая заметка',
             'is_published' => 0,
         ]);
         $this->assertDatabaseMissing('shop', [
@@ -185,11 +196,9 @@ final class AdminHttpShopCrudUpdateTest extends TestCase
             'sort' => 1,
             'is_published' => 1,
         ]);
-        $this->assertDatabaseHas('shop_schedule_note', [
-            'shop_id' => $shop->getKey(),
-            'text' => 'Тестовая заметка',
-            'sort' => 0,
-            'is_published' => 1,
+        $this->assertDatabaseHas('shop', [
+            'id' => $shop->getKey(),
+            'schedule_note' => 'Тестовая заметка',
         ]);
     }
 
@@ -239,7 +248,7 @@ final class AdminHttpShopCrudUpdateTest extends TestCase
                     ],
                 ],
                 'schedule_entries' => [],
-                'schedule_note_text' => '',
+                'schedule_note' => '',
             ]
         );
 
@@ -435,12 +444,6 @@ final class AdminHttpShopCrudUpdateTest extends TestCase
             'sort' => 1,
             'is_published' => true,
         ]);
-        DB::table('shop_schedule_note')->insert([
-            'shop_id' => $shop->getKey(),
-            'text' => 'Старая заметка',
-            'sort' => 0,
-            'is_published' => 1,
-        ]);
 
         $response = $this->post(
             route('moonshine.crud.update', [
@@ -457,7 +460,7 @@ final class AdminHttpShopCrudUpdateTest extends TestCase
                 'contact_entries' => [],
                 'gallery_entries' => [],
                 'schedule_entries' => [],
-                'schedule_note_text' => '',
+                'schedule_note' => '',
             ]
         );
 
@@ -484,8 +487,9 @@ final class AdminHttpShopCrudUpdateTest extends TestCase
         $this->assertDatabaseMissing('shop_schedule', [
             'id' => $schedule->getKey(),
         ]);
-        $this->assertDatabaseMissing('shop_schedule_note', [
-            'shop_id' => $shop->getKey(),
+        $this->assertDatabaseHas('shop', [
+            'id' => $shop->getKey(),
+            'schedule_note' => null,
         ]);
     }
 

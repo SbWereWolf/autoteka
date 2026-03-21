@@ -55,6 +55,10 @@ final class AdminHttpPublishHideCycleTest extends TestCase
             'title' => 'Shop Toggle',
             'sort' => 1,
             'city_id' => $city->id,
+            'slogan' => null,
+            'latitude' => null,
+            'longitude' => null,
+            'schedule_note' => null,
             'is_published' => false,
         ]);
 
@@ -69,13 +73,16 @@ final class AdminHttpPublishHideCycleTest extends TestCase
             'city_id' => $city->id,
             'description' => '',
             'site_url' => '',
+            'slogan' => null,
+            'latitude' => null,
+            'longitude' => null,
+            'schedule_note' => '',
             'is_published' => '1',
             'category_links' => [],
             'feature_links' => [],
             'contact_entries' => [],
             'gallery_entries' => [],
             'schedule_entries' => [],
-            'schedule_note_text' => '',
         ])->assertStatus(302);
 
         $this->assertDatabaseHas('shop', ['id' => $shop->id, 'is_published' => 1]);
@@ -91,13 +98,16 @@ final class AdminHttpPublishHideCycleTest extends TestCase
             'city_id' => $city->id,
             'description' => '',
             'site_url' => '',
+            'slogan' => null,
+            'latitude' => null,
+            'longitude' => null,
+            'schedule_note' => '',
             'is_published' => '0',
             'category_links' => [],
             'feature_links' => [],
             'contact_entries' => [],
             'gallery_entries' => [],
             'schedule_entries' => [],
-            'schedule_note_text' => '',
         ])->assertStatus(302);
 
         $this->assertDatabaseHas('shop', ['id' => $shop->id, 'is_published' => 0]);
@@ -116,13 +126,16 @@ final class AdminHttpPublishHideCycleTest extends TestCase
             'city_id' => null,
             'description' => '',
             'site_url' => '',
+            'slogan' => null,
+            'latitude' => null,
+            'longitude' => null,
+            'schedule_note' => '',
             'is_published' => '1',
             'category_links' => [],
             'feature_links' => [],
             'contact_entries' => [],
             'gallery_entries' => [],
             'schedule_entries' => [],
-            'schedule_note_text' => '',
         ])->assertStatus(302);
 
         $this->assertDatabaseMissing('shop', ['code' => 'shop-invalid-no-city']);

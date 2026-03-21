@@ -22,6 +22,10 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property int $city_id
  * @property string $description
  * @property string|null $site_url
+ * @property string|null $slogan
+ * @property float|null $latitude
+ * @property float|null $longitude
+ * @property string|null $schedule_note
  * @property string|null $thumb_path
  * @property string|null $thumb_original_name
  * @property bool $is_published
@@ -30,13 +34,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property array<int, array{id: int, contact_type_id: int, value: string, sort: int, is_published: bool}> $contact_entries
  * @property array<int, array{id: int, file_path: string, sort: int, is_published: bool}> $gallery_entries
  * @property array<int, array{id: int, weekday: int, time_from: string, time_to: string, sort: int, is_published: bool}> $schedule_entries
- * @property string $schedule_note_text
  * @property \Illuminate\Database\Eloquent\Collection<int, Category> $categories
  * @property \Illuminate\Database\Eloquent\Collection<int, Feature> $features
  * @property \Illuminate\Database\Eloquent\Collection<int, ShopContact> $contacts
  * @property \Illuminate\Database\Eloquent\Collection<int, ShopGalleryImage> $galleryImages
  * @property \Illuminate\Database\Eloquent\Collection<int, ShopSchedule> $schedules
- * @property \Illuminate\Database\Eloquent\Collection<int, ShopScheduleNote> $scheduleNotes
  * @property City|null $city
  */
 class Shop extends Model
@@ -53,6 +55,10 @@ class Shop extends Model
         'city_id',
         'description',
         'site_url',
+        'slogan',
+        'latitude',
+        'longitude',
+        'schedule_note',
         'thumb_path',
         'thumb_original_name',
         'is_published',
@@ -61,6 +67,8 @@ class Shop extends Model
     protected $casts = [
         'sort' => 'integer',
         'city_id' => 'integer',
+        'latitude' => 'float',
+        'longitude' => 'float',
         'is_published' => 'boolean',
     ];
 
@@ -70,7 +78,6 @@ class Shop extends Model
         'contact_entries',
         'gallery_entries',
         'schedule_entries',
-        'schedule_note_text',
     ];
 
     /**
@@ -121,11 +128,6 @@ class Shop extends Model
     public function schedules(): HasMany
     {
         return $this->hasMany(ShopSchedule::class, 'shop_id');
-    }
-
-    public function scheduleNotes(): HasMany
-    {
-        return $this->hasMany(ShopScheduleNote::class, 'shop_id');
     }
 
     public function getCategoryLinksAttribute(): array
@@ -244,29 +246,6 @@ class Shop extends Model
     {
         $this->virtualInput['schedule_entries'] = $value;
         unset($this->attributes['schedule_entries']);
-    }
-
-    public function getScheduleNoteTextAttribute(): string
-    {
-        if (array_key_exists('schedule_note_text', $this->virtualInput)) {
-            return trim((string) $this->virtualInput['schedule_note_text']);
-        }
-
-        if (! $this->relationLoaded('scheduleNotes')) {
-            return '';
-        }
-
-        return (string) $this->scheduleNotes
-            ->sortBy('sort')
-            ->pluck('text')
-            ->filter()
-            ->implode("\n");
-    }
-
-    public function setScheduleNoteTextAttribute(mixed $value): void
-    {
-        $this->virtualInput['schedule_note_text'] = $value;
-        unset($this->attributes['schedule_note_text']);
     }
 
     private function normalizeVirtualList(mixed $value): array

@@ -8,6 +8,7 @@ use ShopOperator\Models\Category;
 use ShopOperator\Models\City;
 use ShopOperator\Models\ContactType;
 use ShopOperator\Models\Feature;
+use ShopOperator\Models\ShopContact;
 use ShopOperator\Models\Shop;
 use ShopOperator\MoonShine\Handlers\SaveShopResourceHandler;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -56,7 +57,11 @@ final class SaveShopResourceHandlerTest extends TestCase
             'sort' => 0,
             'city_id' => $city->getKey(),
             'description' => '',
-            'site_url' => '',
+            'site_url' => 'example.com/shop',
+            'slogan' => null,
+            'latitude' => null,
+            'longitude' => null,
+            'schedule_note' => null,
             'thumb_path' => null,
             'is_published' => true,
         ]);
@@ -69,7 +74,11 @@ final class SaveShopResourceHandlerTest extends TestCase
             'sort' => 10,
             'city_id' => $city->getKey(),
             'description' => 'Updated',
-            'site_url' => 'https://example.com',
+            'site_url' => 'example.com/shop',
+            'slogan' => 'Лучшие автотовары',
+            'latitude' => 55.0287,
+            'longitude' => 82.9235,
+            'schedule_note' => 'Всегда открыты',
             'thumb_path' => null,
             'is_published' => true,
             'category_links' => [
@@ -88,7 +97,6 @@ final class SaveShopResourceHandlerTest extends TestCase
             ],
             'gallery_entries' => [],
             'schedule_entries' => [],
-            'schedule_note_text' => '',
         ]);
 
         self::assertSame('New Name', $result->title);
@@ -98,6 +106,11 @@ final class SaveShopResourceHandlerTest extends TestCase
             'title' => 'New Name',
             'sort' => 10,
             'city_id' => $city->getKey(),
+            'site_url' => 'example.com/shop',
+            'slogan' => 'Лучшие автотовары',
+            'latitude' => 55.0287,
+            'longitude' => 82.9235,
+            'schedule_note' => 'Всегда открыты',
         ]);
 
         $this->assertDatabaseHas('shop_category', [
@@ -115,6 +128,112 @@ final class SaveShopResourceHandlerTest extends TestCase
             'contact_type_id' => $contactType->getKey(),
             'value' => '+7 900 000 00 00',
         ]);
+    }
+
+    public function test_save_handler_rejects_invalid_latitude_value(): void
+    {
+        $city = City::query()->create([
+            'code' => 'invalid-coords-city',
+            'title' => 'Invalid Coords City',
+            'sort' => 0,
+            'is_published' => true,
+        ]);
+
+        $shop = Shop::query()->create([
+            'code' => 'invalid-coords-shop',
+            'title' => 'Invalid Coords Shop',
+            'sort' => 0,
+            'city_id' => $city->getKey(),
+            'description' => '',
+            'site_url' => '',
+            'slogan' => null,
+            'latitude' => null,
+            'longitude' => null,
+            'schedule_note' => null,
+            'thumb_path' => null,
+            'is_published' => true,
+        ]);
+
+        $handler = app(SaveShopResourceHandler::class);
+
+        try {
+            $handler($shop, [
+                'code' => 'invalid-coords-shop',
+                'title' => 'Invalid Coords Shop',
+                'sort' => 1,
+                'city_id' => $city->getKey(),
+                'description' => '',
+                'site_url' => '',
+                'slogan' => null,
+                'latitude' => 'not-a-number',
+                'longitude' => '82.9235',
+                'schedule_note' => '',
+                'thumb_path' => null,
+                'is_published' => true,
+                'category_links' => [],
+                'feature_links' => [],
+                'contact_entries' => [],
+                'gallery_entries' => [],
+                'schedule_entries' => [],
+            ]);
+
+            self::fail('Expected ValidationException for invalid latitude.');
+        } catch (ValidationException $exception) {
+            self::assertArrayHasKey('latitude', $exception->errors());
+        }
+    }
+
+    public function test_save_handler_rejects_invalid_longitude_value(): void
+    {
+        $city = City::query()->create([
+            'code' => 'invalid-longitude-city',
+            'title' => 'Invalid Longitude City',
+            'sort' => 0,
+            'is_published' => true,
+        ]);
+
+        $shop = Shop::query()->create([
+            'code' => 'invalid-longitude-shop',
+            'title' => 'Invalid Longitude Shop',
+            'sort' => 0,
+            'city_id' => $city->getKey(),
+            'description' => '',
+            'site_url' => '',
+            'slogan' => null,
+            'latitude' => null,
+            'longitude' => null,
+            'schedule_note' => null,
+            'thumb_path' => null,
+            'is_published' => true,
+        ]);
+
+        $handler = app(SaveShopResourceHandler::class);
+
+        try {
+            $handler($shop, [
+                'code' => 'invalid-longitude-shop',
+                'title' => 'Invalid Longitude Shop',
+                'sort' => 1,
+                'city_id' => $city->getKey(),
+                'description' => '',
+                'site_url' => '',
+                'slogan' => null,
+                'latitude' => '55.0287',
+                'longitude' => 'not-a-number',
+                'schedule_note' => '',
+                'thumb_path' => null,
+                'is_published' => true,
+                'category_links' => [],
+                'feature_links' => [],
+                'contact_entries' => [],
+                'gallery_entries' => [],
+                'schedule_entries' => [],
+            ]);
+
+            self::fail('Expected ValidationException for invalid longitude.');
+        } catch (ValidationException $exception) {
+            self::assertArrayHasKey('longitude', $exception->errors());
+        }
     }
 
     public function test_save_handler_deletes_existing_nested_rows_when_virtual_fields_are_empty(): void
@@ -140,6 +259,10 @@ final class SaveShopResourceHandlerTest extends TestCase
             'city_id' => $city->getKey(),
             'description' => '',
             'site_url' => '',
+            'slogan' => null,
+            'latitude' => null,
+            'longitude' => null,
+            'schedule_note' => 'Old note',
             'thumb_path' => null,
             'is_published' => true,
         ]);
@@ -168,13 +291,6 @@ final class SaveShopResourceHandlerTest extends TestCase
             'is_published' => 1,
         ]);
 
-        DB::table('shop_schedule_note')->insert([
-            'shop_id' => $shop->getKey(),
-            'text' => 'Old note',
-            'sort' => 0,
-            'is_published' => 1,
-        ]);
-
         $handler = app(SaveShopResourceHandler::class);
 
         $handler($shop, [
@@ -184,6 +300,10 @@ final class SaveShopResourceHandlerTest extends TestCase
             'city_id' => $city->getKey(),
             'description' => 'Updated',
             'site_url' => 'https://example.com',
+            'slogan' => null,
+            'latitude' => null,
+            'longitude' => null,
+            'schedule_note' => '',
             'thumb_path' => null,
             'is_published' => true,
             'category_links' => [],
@@ -191,19 +311,20 @@ final class SaveShopResourceHandlerTest extends TestCase
             'contact_entries' => [],
             'gallery_entries' => [],
             'schedule_entries' => [],
-            'schedule_note_text' => '',
+            'schedule_note' => '',
         ]);
 
         $this->assertDatabaseMissing('shop_contact', ['id' => $contactId]);
         $this->assertDatabaseMissing('shop_gallery_image', ['id' => $galleryId]);
         $this->assertDatabaseMissing('shop_schedule', ['id' => $scheduleId]);
-        $this->assertDatabaseMissing('shop_schedule_note', ['shop_id' => $shop->getKey()]);
+        $this->assertDatabaseHas('shop', [
+            'id' => $shop->getKey(),
+            'schedule_note' => null,
+        ]);
     }
 
-    public function test_save_handler_rejects_duplicate_contacts_case_insensitive(): void
+    public function test_save_handler_allows_multiple_contacts_with_same_type_and_preserves_order(): void
     {
-        $this->expectException(ValidationException::class);
-
         $city = City::query()->create([
             'code' => 'dup-city',
             'title' => 'Dup City',
@@ -225,6 +346,10 @@ final class SaveShopResourceHandlerTest extends TestCase
             'city_id' => $city->getKey(),
             'description' => '',
             'site_url' => '',
+            'slogan' => null,
+            'latitude' => null,
+            'longitude' => null,
+            'schedule_note' => null,
             'thumb_path' => null,
             'is_published' => true,
         ]);
@@ -245,21 +370,45 @@ final class SaveShopResourceHandlerTest extends TestCase
             'contact_entries' => [
                 [
                     'contact_type_id' => $contactType->getKey(),
-                    'value' => 'Test@Example.COM',
+                    'value' => '+7 900 000 00 00',
                     'sort' => 1,
                     'is_published' => true,
                 ],
                 [
                     'contact_type_id' => $contactType->getKey(),
-                    'value' => 'test@example.com',
+                    'value' => '+7 900 000 00 01',
                     'sort' => 2,
                     'is_published' => true,
                 ],
             ],
             'gallery_entries' => [],
             'schedule_entries' => [],
-            'schedule_note_text' => '',
+            'schedule_note' => '',
         ]);
+
+        $this->assertDatabaseHas('shop_contact', [
+            'shop_id' => $shop->getKey(),
+            'contact_type_id' => $contactType->getKey(),
+            'value' => '+7 900 000 00 00',
+            'sort' => 1,
+            'is_published' => 1,
+        ]);
+        $this->assertDatabaseHas('shop_contact', [
+            'shop_id' => $shop->getKey(),
+            'contact_type_id' => $contactType->getKey(),
+            'value' => '+7 900 000 00 01',
+            'sort' => 2,
+            'is_published' => 1,
+        ]);
+
+        self::assertSame(
+            [1, 2],
+            ShopContact::query()
+                ->where('shop_id', $shop->getKey())
+                ->orderBy('sort')
+                ->pluck('sort')
+                ->all(),
+        );
     }
 
     public function test_save_handler_deletes_old_gallery_files_when_replaced_or_removed(): void
@@ -281,6 +430,10 @@ final class SaveShopResourceHandlerTest extends TestCase
             'city_id' => $city->getKey(),
             'description' => '',
             'site_url' => '',
+            'slogan' => null,
+            'latitude' => null,
+            'longitude' => null,
+            'schedule_note' => null,
             'thumb_path' => null,
             'is_published' => true,
         ]);
@@ -328,7 +481,7 @@ final class SaveShopResourceHandlerTest extends TestCase
                 ],
             ],
             'schedule_entries' => [],
-            'schedule_note_text' => '',
+            'schedule_note' => '',
         ]);
 
         $this->assertDatabaseHas('shop_gallery_image', [
@@ -340,7 +493,7 @@ final class SaveShopResourceHandlerTest extends TestCase
         $disk->assertMissing($oldPathToDelete);
     }
 
-    public function test_save_handler_replaces_existing_schedule_note_text(): void
+    public function test_save_handler_updates_schedule_note_column(): void
     {
         $city = City::query()->create([
             'code' => 'note-city',
@@ -356,15 +509,12 @@ final class SaveShopResourceHandlerTest extends TestCase
             'city_id' => $city->getKey(),
             'description' => '',
             'site_url' => '',
+            'slogan' => null,
+            'latitude' => null,
+            'longitude' => null,
+            'schedule_note' => 'Old note',
             'thumb_path' => null,
             'is_published' => true,
-        ]);
-
-        DB::table('shop_schedule_note')->insert([
-            'shop_id' => $shop->getKey(),
-            'text' => 'Old note',
-            'sort' => 0,
-            'is_published' => 1,
         ]);
 
         $handler = app(SaveShopResourceHandler::class);
@@ -376,6 +526,10 @@ final class SaveShopResourceHandlerTest extends TestCase
             'city_id' => $city->getKey(),
             'description' => '',
             'site_url' => '',
+            'slogan' => null,
+            'latitude' => null,
+            'longitude' => null,
+            'schedule_note' => 'New note',
             'thumb_path' => null,
             'is_published' => true,
             'category_links' => [],
@@ -383,19 +537,12 @@ final class SaveShopResourceHandlerTest extends TestCase
             'contact_entries' => [],
             'gallery_entries' => [],
             'schedule_entries' => [],
-            'schedule_note_text' => 'New note',
         ]);
 
-        $this->assertDatabaseHas('shop_schedule_note', [
-            'shop_id' => $shop->getKey(),
-            'text' => 'New note',
-            'sort' => 0,
-            'is_published' => 1,
+        $this->assertDatabaseHas('shop', [
+            'id' => $shop->getKey(),
+            'schedule_note' => 'New note',
         ]);
-        self::assertSame(
-            1,
-            DB::table('shop_schedule_note')->where('shop_id', $shop->getKey())->count()
-        );
     }
 
     public function test_save_handler_syncs_category_and_feature_links_with_detach(): void
@@ -439,6 +586,10 @@ final class SaveShopResourceHandlerTest extends TestCase
             'city_id' => $city->getKey(),
             'description' => '',
             'site_url' => '',
+            'slogan' => null,
+            'latitude' => null,
+            'longitude' => null,
+            'schedule_note' => null,
             'thumb_path' => null,
             'is_published' => true,
         ]);
@@ -466,7 +617,7 @@ final class SaveShopResourceHandlerTest extends TestCase
             'contact_entries' => [],
             'gallery_entries' => [],
             'schedule_entries' => [],
-            'schedule_note_text' => '',
+            'schedule_note' => '',
         ]);
 
         $this->assertDatabaseHas('shop_category', [

@@ -8,16 +8,6 @@ final class NormalizesSiteUrl
 {
     public static function normalize(?string $value): string
     {
-        $value = trim((string) $value);
-        if ($value === '') {
-            return '';
-        }
-
-        $parsed = parse_url($value);
-        if ($parsed !== false && isset($parsed['scheme']) && $parsed['scheme'] !== '') {
-            return $value;
-        }
-
-        return 'https://' . ltrim($value, '/');
+        return trim((string) $value);
     }
 }

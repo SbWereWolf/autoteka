@@ -52,7 +52,6 @@ class ShopResource extends ModelResource
         'contacts.contactType',
         'galleryImages',
         'schedules',
-        'scheduleNotes',
     ];
 
     protected function activeActions(): ListOf
@@ -115,7 +114,13 @@ class ShopResource extends ModelResource
             Textarea::make('Описание', 'description'),
             Text::make('Ссылка на сайт', 'site_url')
                 ->placeholder('https://example.com'),
-            Image::make('Картинка плитки', 'thumb_path')
+            Text::make('Слоган', 'slogan'),
+            Number::make('Широта', 'latitude')
+                ->step(0.000001),
+            Number::make('Долгота', 'longitude')
+                ->step(0.000001),
+            Textarea::make('Текст расписания', 'schedule_note'),
+            Image::make('Логотип', 'thumb_path')
                 ->disk((string) config('autoteka.media.disk'))
                 ->dir((string) config('autoteka.media.shop_thumb_dir'))
                 ->allowedExtensions(['jpg', 'jpeg', 'png', 'webp'])
@@ -213,7 +218,6 @@ class ShopResource extends ModelResource
                 ])
                 ->vertical()
                 ->creatable(true, 7),
-            Textarea::make('Текст расписания', 'schedule_note_text'),
             Date::make('Создан', 'created_at')->format('d.m.Y H:i'),
             Date::make('Обновлён', 'updated_at')->format('d.m.Y H:i'),
         ];

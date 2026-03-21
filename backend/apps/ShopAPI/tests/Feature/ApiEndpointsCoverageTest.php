@@ -12,7 +12,6 @@ use ShopAPI\Models\Shop;
 use ShopAPI\Models\ShopContact;
 use ShopAPI\Models\ShopGalleryImage;
 use ShopAPI\Models\ShopSchedule;
-use ShopAPI\Models\ShopScheduleNote;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
@@ -141,11 +140,15 @@ final class ApiEndpointsCoverageTest extends TestCase
         $response->assertOk();
         $response->assertJsonPath('code', 'shop-a');
         $response->assertJsonPath('cityId', $data['city']->getKey());
+        $response->assertJsonPath('slogan', 'Лучшие автотовары');
+        $response->assertJsonPath('latitude', 55.0287);
+        $response->assertJsonPath('longitude', 82.9235);
         $response->assertJsonPath('categoryIds', [$data['category']->getKey()]);
         $response->assertJsonPath('featureIds', [$data['feature']->getKey()]);
         $response->assertJsonPath('galleryImages.0', Storage::disk((string) config('autoteka.media.disk', 'public'))->url('shops/gallery/a.webp'));
         $response->assertJsonPath('thumbUrl', Storage::disk((string) config('autoteka.media.disk', 'public'))->url('shops/thumbs/a.webp'));
-        $response->assertJsonPath('workHours', "Пн 09:00-18:00\nБез выходных");
+        $response->assertJsonPath('scheduleNote', 'Без выходных');
+        $response->assertJsonMissingPath('workHours');
     }
 
     public function test_shop_show_returns_404_for_unknown_or_unpublished_shop(): void
@@ -311,7 +314,11 @@ final class ApiEndpointsCoverageTest extends TestCase
             'city_id' => $city->getKey(),
             'description' => 'Desc A',
             'site_url' => 'https://example.com/a',
+            'slogan' => 'Лучшие автотовары',
+            'latitude' => 55.0287,
+            'longitude' => 82.9235,
             'thumb_path' => 'shops/thumbs/a.webp',
+            'schedule_note' => 'Без выходных',
             'is_published' => true,
         ]);
         $shopHidden = Shop::query()->create([
@@ -321,7 +328,11 @@ final class ApiEndpointsCoverageTest extends TestCase
             'city_id' => $city->getKey(),
             'description' => 'Hidden',
             'site_url' => 'https://example.com/hidden',
+            'slogan' => null,
+            'latitude' => null,
+            'longitude' => null,
             'thumb_path' => null,
+            'schedule_note' => null,
             'is_published' => false,
         ]);
 
@@ -378,19 +389,6 @@ final class ApiEndpointsCoverageTest extends TestCase
             'time_from' => '10:00',
             'time_to' => '19:00',
             'sort' => 2,
-            'is_published' => false,
-        ]);
-
-        ShopScheduleNote::query()->create([
-            'shop_id' => $shop->getKey(),
-            'text' => 'Без выходных',
-            'sort' => 0,
-            'is_published' => true,
-        ]);
-        ShopScheduleNote::query()->create([
-            'shop_id' => $shopHidden->getKey(),
-            'text' => 'Hidden note',
-            'sort' => 1,
             'is_published' => false,
         ]);
 

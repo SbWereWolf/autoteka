@@ -25,7 +25,6 @@ use Autoteka\SchemaDefinition\Enums\Columns\ShopContactColumns;
 use Autoteka\SchemaDefinition\Enums\Columns\ShopFeatureColumns;
 use Autoteka\SchemaDefinition\Enums\Columns\ShopGalleryImageColumns;
 use Autoteka\SchemaDefinition\Enums\Columns\ShopScheduleColumns;
-use Autoteka\SchemaDefinition\Enums\Columns\ShopScheduleNoteColumns;
 use Autoteka\SchemaDefinition\Enums\Columns\UsersColumns;
 use Autoteka\SchemaDefinition\Enums\TableName;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -63,7 +62,6 @@ final class SchemaDefinitionSchemaConsistencyTest extends TestCase
             TableName::SHOP_CONTACT->value => ShopContactColumns::class,
             TableName::SHOP_GALLERY_IMAGE->value => ShopGalleryImageColumns::class,
             TableName::SHOP_SCHEDULE->value => ShopScheduleColumns::class,
-            TableName::SHOP_SCHEDULE_NOTE->value => ShopScheduleNoteColumns::class,
             TableName::MIGRATIONS->value => MigrationsColumns::class,
         ];
     }

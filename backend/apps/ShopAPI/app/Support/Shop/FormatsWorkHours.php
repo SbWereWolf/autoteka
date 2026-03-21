@@ -31,18 +31,6 @@ final class FormatsWorkHours
             $parts[] = self::formatSchedule($schedule);
         }
 
-        $note = $shop->scheduleNotes
-            ->where('is_published', true)
-            ->sortBy('sort')
-            ->pluck('text')
-            ->map(static fn (mixed $text): string => trim((string) $text))
-            ->filter()
-            ->implode("\n");
-
-        if ($note !== '') {
-            $parts[] = $note;
-        }
-
         return implode("\n", array_filter($parts));
     }
 

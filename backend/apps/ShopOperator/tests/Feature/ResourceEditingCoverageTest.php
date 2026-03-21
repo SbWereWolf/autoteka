@@ -64,7 +64,11 @@ final class ResourceEditingCoverageTest extends TestCase
             'sort' => 1,
             'city_id' => $cityA->getKey(),
             'description' => 'Old description',
-            'site_url' => 'https://old.example.com',
+            'site_url' => 'old.example.com',
+            'slogan' => 'Old slogan',
+            'latitude' => 55.75,
+            'longitude' => 37.61,
+            'schedule_note' => 'Old note',
             'thumb_path' => null,
             'is_published' => true,
         ]);
@@ -77,7 +81,11 @@ final class ResourceEditingCoverageTest extends TestCase
             'sort' => 55,
             'city_id' => $cityB->getKey(),
             'description' => 'Updated description',
-            'site_url' => 'https://example.com/shop-updated',
+            'site_url' => 'example.com/shop-updated',
+            'slogan' => 'Updated slogan',
+            'latitude' => 55.0287,
+            'longitude' => 82.9235,
+            'schedule_note' => 'Без выходных',
             'thumb_path' => 'shops/thumbs/updated.webp',
             'is_published' => false,
             'category_links' => [
@@ -110,7 +118,7 @@ final class ResourceEditingCoverageTest extends TestCase
                     'is_published' => true,
                 ],
             ],
-            'schedule_note_text' => 'Без выходных',
+            'schedule_note' => 'Без выходных',
         ]);
 
         $this->assertDatabaseHas('shop', [
@@ -120,7 +128,11 @@ final class ResourceEditingCoverageTest extends TestCase
             'sort' => 55,
             'city_id' => $cityB->getKey(),
             'description' => 'Updated description',
-            'site_url' => 'https://example.com/shop-updated',
+            'site_url' => 'example.com/shop-updated',
+            'slogan' => 'Updated slogan',
+            'latitude' => 55.0287,
+            'longitude' => 82.9235,
+            'schedule_note' => 'Без выходных',
             'thumb_path' => 'shops/thumbs/updated.webp',
             'is_published' => 0,
         ]);
@@ -154,11 +166,12 @@ final class ResourceEditingCoverageTest extends TestCase
             'sort' => 4,
             'is_published' => 1,
         ]);
-        $this->assertDatabaseHas('shop_schedule_note', [
-            'shop_id' => $shop->getKey(),
-            'text' => 'Без выходных',
-            'sort' => 0,
-            'is_published' => 1,
+        $this->assertDatabaseHas('shop', [
+            'id' => $shop->getKey(),
+            'slogan' => 'Updated slogan',
+            'latitude' => 55.0287,
+            'longitude' => 82.9235,
+            'schedule_note' => 'Без выходных',
         ]);
     }
 

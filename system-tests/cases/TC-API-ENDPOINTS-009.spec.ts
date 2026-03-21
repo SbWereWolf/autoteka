@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { getFirstShopCode } from "../ui/uiUserHelpers";
 
 const rawBaseUrl =
   process.env.TEST_BASE_URL ??
@@ -22,25 +23,9 @@ const fetchJson = async (path: string) => {
 };
 
 describe("TC-API-ENDPOINTS-009", () => {
-  it("shop payload содержит базовый контракт типов", async () => {
-    const cities = await fetchJson("/api/v1/city-list");
-    if (!Array.isArray(cities) || cities.length === 0) return;
-
-    const cityCode = (cities[0] as { code?: string }).code;
-    if (!cityCode) return;
-
-    const cityCatalog = (await fetchJson(
-      `/api/v1/city/${cityCode}`,
-    )) as {
-      items?: Array<{ code?: string }>;
-    };
-    if (
-      !Array.isArray(cityCatalog.items) ||
-      cityCatalog.items.length === 0
-    )
-      return;
-
-    const shopCode = (cityCatalog.items[0] as { code?: string }).code;
+  it("shop payload содержит новый контракт со scheduleNote", async () => {
+    const shopCode = await getFirstShopCode();
+    expect(shopCode).toBeTruthy();
     if (!shopCode) return;
 
     const shop = (await fetchJson(
@@ -50,33 +35,20 @@ describe("TC-API-ENDPOINTS-009", () => {
     expect(typeof shop.id).toBe("number");
     expect(typeof shop.code).toBe("string");
     expect(typeof shop.title).toBe("string");
-    expect(typeof shop.sort).toBe("number");
-    expect(typeof shop.cityId).toBe("number");
-    expect(typeof shop.workHours).toBe("string");
+    expect(typeof shop.slogan).toBe("string");
+    expect(typeof shop.description).toBe("string");
+    expect(typeof shop.scheduleNote).toBe("string");
+    expect(typeof shop.siteUrl).toBe("string");
+    expect("latitude" in shop).toBe(true);
+    expect("longitude" in shop).toBe(true);
     expect(Array.isArray(shop.categoryIds)).toBe(true);
     expect(Array.isArray(shop.featureIds)).toBe(true);
     expect(Array.isArray(shop.galleryImages)).toBe(true);
   });
 
   it("galleryImages и thumbUrl, если есть, представлены URL-строками", async () => {
-    const cities = await fetchJson("/api/v1/city-list");
-    if (!Array.isArray(cities) || cities.length === 0) return;
-
-    const cityCode = (cities[0] as { code?: string }).code;
-    if (!cityCode) return;
-
-    const cityCatalog = (await fetchJson(
-      `/api/v1/city/${cityCode}`,
-    )) as {
-      items?: Array<{ code?: string }>;
-    };
-    if (
-      !Array.isArray(cityCatalog.items) ||
-      cityCatalog.items.length === 0
-    )
-      return;
-
-    const shopCode = (cityCatalog.items[0] as { code?: string }).code;
+    const shopCode = await getFirstShopCode();
+    expect(shopCode).toBeTruthy();
     if (!shopCode) return;
 
     const shop = (await fetchJson(`/api/v1/shop/${shopCode}`)) as {
