@@ -1,7 +1,8 @@
 import { defineConfig, loadEnv } from "vite";
 import vue from "@vitejs/plugin-vue";
+import vueDevTools from "vite-plugin-vue-devtools";
 
-export default defineConfig(({ mode }) => {
+export default defineConfig(({ mode, command }) => {
   const env = {
     ...loadEnv(mode, process.cwd(), ""),
     ...process.env,
@@ -21,7 +22,10 @@ export default defineConfig(({ mode }) => {
 
   return {
     cacheDir,
-    plugins: [vue()],
+    plugins: [
+      vue(),
+      command === "serve" && vueDevTools(),
+    ].filter(Boolean),
     server: {
       host: "0.0.0.0",
       port: frontendPort,

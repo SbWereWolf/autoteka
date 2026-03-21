@@ -551,22 +551,53 @@ remove_destination_path() {
   return 0
 }
 
+count_directory_files() {
+  local source_path="$1"
+  find "$source_path" -mindepth 1 \( ! -type d -o -type l \) | wc -l | tr -d '[:space:]'
+}
+
+print_copy_progress() {
+  local type_name="$1"
+  local copied_count="$2"
+  local total_count="$3"
+  printf "[swap-env] %s: копирование файлов %s/%s\n" "$type_name" "$copied_count" "$total_count"
+}
+
 copy_file_artifact() {
   local source_path="$1"
   local destination_path="$2"
+  local type_name="${3:-artifact}"
+  print_copy_progress "$type_name" "0" "1"
   mkdir -p "$(dirname "$destination_path")"
   cp "$source_path" "$destination_path"
+  print_copy_progress "$type_name" "1" "1"
 }
 
 copy_directory_artifact() {
-  local source_path="$1"
-  local destination_path="$2"
+  local type_name="$1"
+  local source_path="$2"
+  local destination_path="$3"
+  local total_files copied_count source_entry relative_path target_path
+  total_files="$(count_directory_files "$source_path")"
+  copied_count=0
+
   mkdir -p "$destination_path"
-  if command -v rsync >/dev/null 2>&1; then
-    rsync -a --delete "$source_path"/ "$destination_path"/
-    return
-  fi
-  cp -a "$source_path"/. "$destination_path"/
+  print_copy_progress "$type_name" "$copied_count" "$total_files"
+
+  while IFS= read -r -d '' source_entry; do
+    relative_path="${source_entry#$source_path/}"
+    target_path="$destination_path/$relative_path"
+
+    if [[ -d "$source_entry" && ! -L "$source_entry" ]]; then
+      mkdir -p "$target_path"
+      continue
+    fi
+
+    mkdir -p "$(dirname "$target_path")"
+    cp -a "$source_entry" "$target_path"
+    copied_count=$((copied_count + 1))
+    print_copy_progress "$type_name" "$copied_count" "$total_files"
+  done < <(find "$source_path" -mindepth 1 -print0 | LC_ALL=C sort -z)
 }
 
 save_or_load_from_state() {
@@ -598,19 +629,18 @@ save_or_load_from_state() {
       return
     fi
 
-    printf "[swap-env] %s: копирование...\n" "$type_name"
     if ! remove_destination_path "$current_env_path"; then
       add_operational_error "$type_name" "same" "same" "не удалось заменить артефакт current-env." 0 1 "save"
       return
     fi
 
     if [[ "$kind" == "file" ]]; then
-      if ! copy_file_artifact "$active_path" "$current_env_path"; then
+      if ! copy_file_artifact "$active_path" "$current_env_path" "$type_name"; then
         add_operational_error "$type_name" "same" "same" "не удалось заменить артефакт current-env." 0 1 "save"
         return
       fi
     else
-      if ! copy_directory_artifact "$active_path" "$current_env_path"; then
+      if ! copy_directory_artifact "$type_name" "$active_path" "$current_env_path"; then
         add_operational_error "$type_name" "same" "same" "не удалось заменить артефакт current-env." 0 1 "save"
         return
       fi
@@ -634,19 +664,18 @@ save_or_load_from_state() {
     return
   fi
 
-  printf "[swap-env] %s: копирование...\n" "$type_name"
   if ! remove_destination_path "$active_path"; then
     add_operational_error "$type_name" "same" "same" "не удалось заменить active-артефакт." 0 1 "load"
     return
   fi
 
   if [[ "$kind" == "file" ]]; then
-    if ! copy_file_artifact "$current_env_path" "$active_path"; then
+    if ! copy_file_artifact "$current_env_path" "$active_path" "$type_name"; then
       add_operational_error "$type_name" "same" "same" "не удалось заменить active-артефакт." 0 1 "load"
       return
     fi
   else
-    if ! copy_directory_artifact "$current_env_path" "$active_path"; then
+    if ! copy_directory_artifact "$type_name" "$current_env_path" "$active_path"; then
       add_operational_error "$type_name" "same" "same" "не удалось заменить active-артефакт." 0 1 "load"
       return
     fi

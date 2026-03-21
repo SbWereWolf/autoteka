@@ -26,8 +26,6 @@ if (-not $scriptsEnv["INFRA_ROOT"]) {
     Write-Stderr "[swap-env] Отсутствует scripts/.env или переменные AUTOTEKA_ROOT, INFRA_ROOT. Скопируйте scripts/example.env в scripts/.env и задайте пути."
     exit 3
 }
-$repoRoot = $scriptsEnv["AUTOTEKA_ROOT"]
-$script:InfraRoot = $scriptsEnv["INFRA_ROOT"]
 $allTypes = @(
     "root-lock",
     "frontend-lock",
@@ -284,6 +282,40 @@ function Write-Stderr {
     [Console]::Error.WriteLine($Message)
 }
 
+function Convert-ConfiguredRootPath {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Path,
+        [Parameter(Mandatory = $true)]
+        [ValidateSet("win", "nix")]
+        [string]$Platform
+    )
+
+    if ($Platform -eq "win") {
+        if ($Path -match '^/mnt/([a-zA-Z])/(.*)$') {
+            $drive = $matches[1].ToUpperInvariant()
+            $tail = $matches[2].Replace('/', '\\')
+            return "${drive}:\\$tail"
+        }
+        return $Path
+    }
+
+    if ($Path -match '^([a-zA-Z]):[\\/](.*)$') {
+        $drive = $matches[1].ToLowerInvariant()
+        $tail = $matches[2].Replace('\\', '/')
+        return "/mnt/$drive/$tail"
+    }
+
+    return $Path
+}
+function Resolve-ConfiguredPath {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Path
+    )
+
+    return Convert-ConfiguredRootPath -Path $Path -Platform $platform
+}
 $script:StatusMaxLen = 17
 $script:LabelMaxLen = 11
 
@@ -937,6 +969,23 @@ catch {
 
 $script:AggregateHints = ($selectedTypes.Count -eq $allTypes.Count)
 $platform = Get-CurrentPlatform
+try {
+    $repoRoot = Resolve-ConfiguredPath -Path $scriptsEnv["AUTOTEKA_ROOT"]
+    $script:InfraRoot = Resolve-ConfiguredPath -Path $scriptsEnv["INFRA_ROOT"]
+}
+catch {
+    Write-Stderr $_.Exception.Message
+    exit 3
+}
+
+if (-not (Test-Path -LiteralPath $repoRoot -PathType Container)) {
+    Write-Stderr "[swap-env] Не найден AUTOTEKA_ROOT: $repoRoot"
+    exit 3
+}
+if (-not (Test-Path -LiteralPath $script:InfraRoot -PathType Container)) {
+    Write-Stderr "[swap-env] Не найден INFRA_ROOT: $script:InfraRoot"
+    exit 3
+}
 $states = @(foreach ($typeName in $selectedTypes) {
     Get-TypeState -TypeName $typeName -Platform $platform
 })

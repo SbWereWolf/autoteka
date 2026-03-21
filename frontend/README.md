@@ -1,13 +1,15 @@
 # Frontend Автотеки
 
-**Актуально по коду на 2026-03-07.**
+**Актуально по коду на 2026-03-21.**
 
 Frontend реализован на Vue 3 + Vite и отвечает за front office:
 
 - каталог магазинов;
-- карточку магазина;
-- выбор города, категорий и фишки;
-- переключение темы и runtime theme editor.
+- overlay-меню с выбором города и категорий;
+- страницу магазина;
+- offline UI mock-тесты и online e2e для живого контура.
+
+Система тем и runtime theme editor из публичного интерфейса удалены.
 
 ## Быстрый запуск
 
@@ -24,7 +26,7 @@ npm run dev
 npm run dev
 npm run build
 npm run preview
-npm run test
+npm run test:unit
 npm run test:api:online
 npm run test:e2e
 npm run test:ui:mock
@@ -33,9 +35,14 @@ npm run test:ui:mock
 Где:
 
 - `test:e2e` — online e2e для установленного контура frontend+backend
-  (без API-моков; нужен работающий backend).
-- `test:ui:mock` — offline UI-тесты на mock-данных (поднимается только
-  frontend, API перехватывается в Playwright).
+  без API-моков;
+- `test:ui:mock` — offline UI-тесты на заглушках, где поднимается только
+  frontend и API перехватывается в Playwright.
+
+Для разработки используйте последовательный цикл:
+
+1. сначала `npm run test:ui:mock`,
+2. затем `npm run test:e2e` только на готовом живом контуре.
 
 Для online-запусков используйте:
 
@@ -50,7 +57,7 @@ PLAYWRIGHT_BASE_URL=http://127.0.0.1 npm run test:e2e
 ## Основные маршруты
 
 - `/` — каталог;
-- `/shop/:code` — карточка магазина.
+- `/shop/:code` — страница магазина.
 
 ## API-конфигурация
 
@@ -58,7 +65,7 @@ PLAYWRIGHT_BASE_URL=http://127.0.0.1 npm run test:e2e
 `frontend/example.env` используется как шаблон для создания
 `frontend/.env`.
 
-Для same-origin схемы (production/deploy):
+Для same-origin схемы:
 
 ```text
 VITE_API_BASE_URL=/api/v1
@@ -67,7 +74,6 @@ VITE_API_BASE_URL=/api/v1
 ## Что читать дальше
 
 - `../README.md` — карта проекта и документации.
-- `../docs/foundations/USER_MANUAL.md` — пользовательские сценарии.
-- `../docs/foundations/ADMIN_MANUAL.md` — администрирование и theme
-  editor.
+- `../docs/manual/USER_MANUAL.md` — пользовательские сценарии.
+- `../docs/manual/ADMIN_MANUAL.md` — администрирование магазина.
 - `../docs/foundations/IMPLEMENTATION.md` — техническая реализация.

@@ -2,7 +2,9 @@
 
 Документ фиксирует, как в проекте запускать тесты в изолированных
 режимах, какие env/config используются, и как выбирать профиль под
-конкретную задачу отладки.
+конкретную задачу отладки. Для редизайна магазинов действует явный
+TDD-порядок: сначала пишутся тесты, затем подтверждается red-фаза,
+после чего код доводится до green.
 
 ## 1. Базовое правило изоляции env/config
 
@@ -15,9 +17,14 @@
   `scripts/swap-env.ps1` / `scripts/swap-env.sh`.
 - Перед запуском system-tests active `system-tests/.env` должно быть
   синхронизировано через `swap-env load -t system-tests-env`.
-- Сам `swap-env` больше не выполняет авто-переключение: он либо
-  проверяет состояние (`validate`), либо явно сохраняет (`save`) /
-  загружает (`load`) артефакты текущей среды.
+- Сам `swap-env`: он либо проверяет состояние (`validate`),
+  либо явно сохраняет (`save`) / загружает (`load`) артефакты
+  текущей среды.
+- Для frontend direct checks active `frontend/node_modules` и
+  `frontend/package-lock.json` должны совпадать с env-specific storage
+  текущей среды; если `swap-env load` блокируется живыми `vite` или
+  `npm install` процессами, сначала остановить эти процессы и только
+  потом повторять `load`.
 
 ## 2. Где какие env и конфиги
 
@@ -54,8 +61,17 @@
 - Unit/UI mock режимы во frontend запускаются из `frontend` и
   используют свои test-конфиги frontend без обязательного поднятия
   backend.
+- Для текущего проекта последовательные прогоны являются дефолтом:
+  parallel-варианты не использовать в dev-цикле, пока повторные замеры
+  не покажут реальный выигрыш по wall-clock.
 
 ## 3. Матрица режимов запуска
+
+Перед запуском тестов убедитесь, что у вас актуальные образы для
+контейнеров Docker. Если до запуска тестов уже есть запущенные
+контейнеры, то удалите их, для каждого теста (где используется Docker)
+следует создавать новый набор контейнеров, после тестирования
+контейнеры следует удалять.
 
 ### 3.1 quick — HTTP без браузера, LOCAL
 
@@ -140,9 +156,36 @@ npm run test:ui-headed-prod
 
 ```bash
 cd frontend
-npm run test
+npm run test:unit
 npm run test:ui:mock
 ```
+
+Рекомендуемый порядок для изменений в UI:
+
+1. сначала обновить/написать `frontend/ui-mock` тесты;
+2. получить red на текущем коде;
+3. довести frontend до green в `npm run test:ui:mock`;
+4. только затем переходить к живому контуру.
+
+Если перед `npm run test:unit` или `npm run test:ui:mock` видно ошибки
+вида `vitest: not found`, `playwright: not found` или `swap-env ...
+frontend-node-modules: different`, это означает не кодовую, а env
+проблему. В таком случае сначала восстановить frontend env через
+`pwsh scripts/swap-env.ps1 load`.
+
+Для `frontend/ui-mock` текущий стабильный browser profile —
+`chromium`. Навигация в mock-suite намеренно ждёт
+`domcontentloaded`, а не полный `load`, потому что это устраняет
+ложные timeout-падения dev-server harness при первом открытии страницы
+и не ослабляет сами UI-assertions.
+
+Если `npm --prefix system-tests run test:quick-dev` или
+`test:ui-headless-dev` зависают на dev-runtime, а `docker logs
+autoteka-dev-frontend` показывает `Cannot find package
+'vite-plugin-vue-devtools'`, проблема не в UI-коде, а в stale docker
+volume `/workspace/frontend/node_modules`. В этом случае надо
+пересобрать dev frontend image и дать entrypoint заново выполнить
+`npm ci` для container-local зависимостей.
 
 ### 4.2 Backend по HTTP (без клиентской части)
 
@@ -164,6 +207,13 @@ npm run test:quick-local -- --base-url=http://127.0.0.1:8081
 
 Цель: одновременно отлаживать frontend и backend.
 
+Для кросс-рантайм изменений использовать такой порядок:
+
+1. заранее написать `system-tests` под новое поведение;
+2. подтвердить, что до реализации они падают;
+3. сначала добиться green на mock/backend-слое;
+4. затем довести живой frontend+backend до green в `system-tests`.
+
 Локальный вариант:
 
 1. Поднять backend локально (`php artisan serve`).
@@ -181,6 +231,12 @@ Docker DEV вариант:
    - `npm run test:quick-dev`;
    - `npm run test:ui-headless-dev`.
 
+Для длинных browser-flow кейсов в `system-tests/ui`
+(`TC-UI-USER-002/005/006/010`) текущий стабильный профиль —
+`chromium` + `waitForBaseUrlReady()` + увеличенный timeout. Это нужно,
+чтобы тесты проверяли реальный UI/runtime, а не случайную фазу
+cold-start dev web/frontend после `docker compose`.
+
 ## 6. Что покрыто тест-кейсами сейчас (high-level)
 
 - `system-tests/cases`:
@@ -192,14 +248,20 @@ Docker DEV вариант:
   - `ADMIN-UI` сценарии управления пользователями
     (`TC-UI-ADMIN-USERS-*`).
 
-## 7. Рекомендуемый дев-цикл (только DEV, как основной)
+## 7. Рекомендуемый dev-цикл (только DEV, как основной)
 
-До завершения расширения покрытия выполнять в первую очередь:
+Для редизайна магазинов и других cross-runtime изменений выполнять в
+первую очередь:
 
-1. `npm --prefix system-tests run test:quick-dev`
-2. `npm --prefix system-tests run test:ui-headless-dev`
+1. `npm --prefix frontend run test:unit`
+2. `npm --prefix frontend run test:ui:mock`
+3. `cd backend/apps/ShopAPI && php artisan test`
+4. `cd backend/apps/ShopOperator && php artisan test`
+5. `npm --prefix system-tests run test:quick-dev`
+6. `npm --prefix system-tests run test:ui-headless-dev`
 
-PROD профили выполнять точечно как финальный предрелизный прогон.
+Все команды запускать последовательно. PROD профили выполнять точечно
+как финальный предрелизный прогон.
 
 ## 8. Тестирование на WSL
 
