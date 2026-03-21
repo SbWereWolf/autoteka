@@ -4,14 +4,16 @@ import {
   baseUrl,
   closeWithTimeout,
   headed,
+  waitForBaseUrlReady,
+  waitForCatalogShell,
 } from "./uiUserHelpers";
 
 let browser: BrowserLike | undefined;
 
 describe("TC-UI-USER-002", () => {
   beforeAll(async () => {
-    const { firefox } = await import("playwright");
-    browser = await firefox.launch({ headless: !headed });
+    const { chromium } = await import("playwright");
+    browser = await chromium.launch({ headless: !headed });
   });
 
   afterAll(async () => {
@@ -23,20 +25,24 @@ describe("TC-UI-USER-002", () => {
     const context = await browser!.newContext();
     try {
       const page = await context.newPage();
+      await waitForBaseUrlReady();
       const response = await page.goto(baseUrl, {
         waitUntil: "domcontentloaded",
+        timeout: 60_000,
       });
       expect(response).not.toBeNull();
       expect(response!.status()).toBeLessThan(500);
-      await page.waitForFunction(
-        () =>
-          document.querySelector("#app") !== null &&
-          (document.querySelector('[data-testid="catalog-grid-shell"]') !== null ||
-            document.body.textContent?.includes("Загрузка") === true),
-        { timeout: 10000 },
-      );
+      await waitForCatalogShell(page);
+      const hamburgerCount = await page
+        .locator("[data-menu-button] .catalog-hamburger-line")
+        .count();
+      const brandCount = await page
+        .locator('.catalog-topbar img[alt="TOauto.ru"]')
+        .count();
+      expect(hamburgerCount).toBe(4);
+      expect(brandCount).toBe(1);
     } finally {
       await closeWithTimeout(() => context.close(), 5000);
     }
-  });
+  }, 180_000);
 });

@@ -1,16 +1,17 @@
 <template>
-  <div class="text-panel space-y-4">
-    <p class="text-sm" :style="{ color: 'var(--muted)' }">
+  <div class="shop-content-card space-y-4">
+    <h2 class="m-0 text-xl font-semibold text-slate-900">
       {{ message }}
-    </p>
+    </h2>
 
     <div class="flex flex-wrap gap-2">
       <button
         type="button"
         class="ui-transition ui-interactive ui-bounce rounded-2xl min-h-12 px-4 py-3 text-sm font-semibold"
         @click="goBack"
+        aria-label="Назад"
       >
-        ← Назад
+        ←
       </button>
 
       <button

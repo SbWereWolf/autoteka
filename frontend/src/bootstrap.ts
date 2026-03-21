@@ -12,6 +12,5 @@ export async function bootstrapAppState() {
     cities,
     categories,
     features,
-    defaultThemeId: "a-neutral",
   });
 }

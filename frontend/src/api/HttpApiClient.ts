@@ -31,9 +31,13 @@ type RawShop = {
   code: string;
   cityId: number | string;
   title: string;
+  slogan?: string | null;
   description: string;
-  workHours: string;
+  scheduleNote?: string | null;
+  schedule_note?: string | null;
   siteUrl: string;
+  latitude?: number | string | null;
+  longitude?: number | string | null;
   thumbUrl?: string | null;
   galleryImages?: string[];
   categoryIds: Array<number | string>;
@@ -56,6 +60,17 @@ type RawCityCatalogItem = {
 
 function normalizeId(value: number | string): string {
   return String(value);
+}
+
+function normalizeNullableScalar(
+  value: number | string | null | undefined,
+): string | null {
+  if (value === null || value === undefined) {
+    return null;
+  }
+
+  const next = String(value).trim();
+  return next === "" ? null : next;
 }
 
 function resolveMediaUrl(
@@ -105,9 +120,12 @@ function toShopSummary(
     code: raw.code,
     cityId: normalizeId(raw.cityId),
     title: raw.title,
+    slogan: "",
     description: "",
-    workHours: "",
+    scheduleNote: "",
     siteUrl: "",
+    latitude: null,
+    longitude: null,
     thumbUrl: resolveMediaUrl(raw.thumbUrl, baseUrl),
     galleryImages: [],
     categoryIds: raw.categoryIds.map(normalizeId),
@@ -120,9 +138,14 @@ function toShop(raw: RawShop, baseUrl: string): ShopPublic {
     code: raw.code,
     cityId: normalizeId(raw.cityId),
     title: raw.title,
+    slogan: String(raw.slogan ?? "").trim(),
     description: raw.description,
-    workHours: raw.workHours,
+    scheduleNote: String(
+      raw.scheduleNote ?? raw.schedule_note ?? "",
+    ).trim(),
     siteUrl: raw.siteUrl,
+    latitude: normalizeNullableScalar(raw.latitude),
+    longitude: normalizeNullableScalar(raw.longitude),
     thumbUrl: resolveMediaUrl(raw.thumbUrl, baseUrl),
     galleryImages: Array.isArray(raw.galleryImages)
       ? raw.galleryImages

@@ -1,75 +1,48 @@
 <template>
-  <div>
-    <div
-      v-if="state.menuOpen"
-      class="fixed inset-0 z-50"
-      @keydown.esc.prevent.stop="closeMenu"
+  <div v-if="state.menuOpen" class="fixed inset-0 z-[60]">
+    <button
+      class="absolute inset-0 h-full w-full"
+      :style="overlayStyle"
+      aria-label="Закрыть меню"
+      type="button"
+      @click="closeMenu"
+    />
+
+    <aside
+      class="catalog-menu-panel"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Меню и фильтры"
+      @click.stop
     >
-      <button
-        class="absolute inset-0 w-full h-full"
-        :style="overlayStyle"
-        aria-label="Закрыть меню"
-        type="button"
-        @click="closeMenu"
-      />
-
-      <aside
-        class="absolute top-0 left-0 h-full w-[86%] max-w-sm ui-transition ui-surface-strong"
-        :style="{ boxShadow: 'var(--shadow)' }"
-        role="dialog"
-        aria-modal="true"
-        @click.stop
-      >
-        <div
-          class="h-14 flex items-center justify-between px-4 border-b"
-          :style="{ borderColor: 'var(--border)' }"
+      <div class="catalog-menu-header">
+        <button
+          ref="closeBtnEl"
+          class="catalog-close-button ui-bounce"
+          aria-label="Закрыть"
+          type="button"
+          @click="closeMenu"
         >
-          <div
-            class="text-sm font-semibold"
-            :style="{ color: 'var(--text)' }"
-          >
-            Меню
-          </div>
-          <button
-            ref="closeBtnEl"
-            class="ui-transition ui-interactive ui-bounce rounded-xl h-12 w-12 inline-flex items-center justify-center"
-            aria-label="Закрыть"
-            type="button"
-            @click="closeMenu"
-          >
-            ✕
-          </button>
-        </div>
+          <span class="text-2xl leading-none">×</span>
+        </button>
+      </div>
 
-        <div
-          class="p-4 space-y-5 overflow-y-auto h-[calc(100%-3.5rem)]"
-        >
-          <section class="space-y-2">
-            <div
-              class="text-xs uppercase tracking-wide"
-              :style="{ color: 'var(--muted)' }"
-            >
-              Город
-            </div>
-            <CitySelect
-              aria-label="Город"
-              test-id="menu-city-select"
-              @changed="closeMenu"
-            />
-          </section>
+      <div class="catalog-menu-content">
+        <section class="space-y-3">
+          <h2 class="catalog-menu-label">Город</h2>
+          <CitySelect
+            aria-label="Город"
+            test-id="menu-city-select"
+            @changed="closeMenu"
+          />
+        </section>
 
-          <section class="space-y-2">
-            <div
-              class="text-xs uppercase tracking-wide"
-              :style="{ color: 'var(--muted)' }"
-            >
-              Категории
-            </div>
-            <CategoryChips />
-          </section>
-        </div>
-      </aside>
-    </div>
+        <section class="space-y-3">
+          <h2 class="catalog-menu-label">Категории</h2>
+          <CategoryChips />
+        </section>
+      </div>
+    </aside>
   </div>
 </template>
 
@@ -90,7 +63,8 @@ const closeBtnEl = ref<HTMLButtonElement | null>(null);
 let prevFocused: HTMLElement | null = null;
 
 const overlayStyle = computed(() => ({
-  background: "oklch(0 0 0 / 0.35)",
+  background:
+    "linear-gradient(180deg, oklch(1 0 0 / 0.82), oklch(1 0 0 / 0.72))",
   border: "none",
 }));
 
@@ -99,10 +73,9 @@ function closeMenu() {
 }
 
 function focusMenuButton() {
-  const btn = document.querySelector<HTMLElement>(
-    "[data-menu-button]",
-  );
-  btn?.focus();
+  document
+    .querySelector<HTMLElement>("[data-menu-button]")
+    ?.focus();
 }
 
 watch(
@@ -113,24 +86,30 @@ watch(
       document.body.style.overflow = "hidden";
       await nextTick();
       closeBtnEl.value?.focus();
-    } else {
-      document.body.style.overflow = "";
-      if (prevFocused && prevFocused.isConnected) prevFocused.focus();
-      else focusMenuButton();
+      return;
     }
+
+    document.body.style.overflow = "";
+    if (prevFocused && prevFocused.isConnected) {
+      prevFocused.focus();
+      return;
+    }
+    focusMenuButton();
   },
 );
 
-function onKeydown(e: KeyboardEvent) {
+function onKeydown(event: KeyboardEvent) {
   if (!state.menuOpen) return;
-  if (e.key === "Escape") {
-    e.preventDefault();
-    closeMenu();
-  }
+  if (event.key !== "Escape") return;
+  event.preventDefault();
+  closeMenu();
 }
 
-onMounted(() => document.addEventListener("keydown", onKeydown));
-onBeforeUnmount(() =>
-  document.removeEventListener("keydown", onKeydown),
-);
+onMounted(() => {
+  document.addEventListener("keydown", onKeydown);
+});
+
+onBeforeUnmount(() => {
+  document.removeEventListener("keydown", onKeydown);
+});
 </script>

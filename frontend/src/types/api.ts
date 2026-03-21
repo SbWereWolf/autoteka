@@ -20,9 +20,12 @@ export type ShopPublic = {
   code: string;
   cityId: string;
   title: string;
+  slogan: string;
   description: string;
-  workHours: string;
+  scheduleNote: string;
   siteUrl: string;
+  latitude: string | null;
+  longitude: string | null;
   thumbUrl?: string;
   galleryImages?: string[];
   categoryIds: string[];

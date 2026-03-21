@@ -9,6 +9,21 @@ export const toUrl = (path: string) =>
 
 export const headed = process.env.TEST_UI_HEADED === "1";
 
+export type ShopPayload = {
+  code?: string;
+  title?: string;
+  slogan?: string;
+  description?: string;
+  scheduleNote?: string;
+  siteUrl?: string;
+  latitude?: string | number | null;
+  longitude?: string | number | null;
+  thumbUrl?: string | null;
+  galleryImages?: unknown;
+  categoryIds?: unknown;
+  featureIds?: unknown;
+};
+
 export type BrowserLike = {
   newContext: () => Promise<BrowserContextLike>;
   close: () => Promise<void>;
@@ -60,9 +75,12 @@ export const closeWithTimeout = async (
 };
 
 export async function goBackToCatalog(page: PageLike): Promise<void> {
-  await page.evaluate(() => {
-    window.history.back();
-  });
+  try {
+    await page.goBack({ waitUntil: "domcontentloaded" });
+  } catch {
+    // Firefox may abort the document load on history navigation even when
+    // the URL changes correctly; the follow-up wait below is the real proof.
+  }
   await page.waitForFunction(
     () => window.location.pathname === "/",
     { timeout: 10000 },
@@ -91,4 +109,119 @@ export async function getFirstShopCode(): Promise<string | null> {
     (s) => typeof s.code === "string",
   )?.code;
   return shopCode ?? null;
+}
+
+export async function getFirstShopPayload(): Promise<ShopPayload | null> {
+  const shopCode = await getFirstShopCode();
+  if (!shopCode) return null;
+
+  return getShopPayloadByCode(shopCode);
+}
+
+export async function getFirstShopWithScheduleNotePayload(): Promise<{
+  code: string;
+  payload: ShopPayload;
+} | null> {
+  const cityResponse = await fetch(toUrl("/api/v1/city-list"));
+  if (cityResponse.status >= 500) return null;
+
+  const cities = (await cityResponse.json()) as Array<{
+    code?: string;
+  }>;
+
+  for (const city of cities) {
+    if (typeof city.code !== "string" || city.code.length === 0) {
+      continue;
+    }
+
+    const cityResponse = await fetch(
+      toUrl(`/api/v1/city/${encodeURIComponent(city.code)}`),
+    );
+    if (cityResponse.status >= 500) continue;
+
+    const cityPayload = (await cityResponse.json()) as {
+      items?: Array<{ code?: string }>;
+    };
+
+    for (const item of cityPayload.items ?? []) {
+      if (typeof item.code !== "string" || item.code.length === 0) {
+        continue;
+      }
+
+      const payload = await getShopPayloadByCode(item.code);
+      const note = String(payload?.scheduleNote ?? "").trim();
+      if (payload && note.length > 0) {
+        return {
+          code: item.code,
+          payload,
+        };
+      }
+    }
+  }
+
+  return null;
+}
+
+export async function waitForCatalogShell(
+  page: PageLike,
+  timeout = 60_000,
+): Promise<void> {
+  await page.waitForFunction(
+    () =>
+      document.querySelector("#app") !== null &&
+      document.querySelector('[data-testid="catalog-grid-shell"]') !== null,
+    { timeout },
+  );
+}
+
+export async function waitForBaseUrlReady(
+  timeoutMs = 60_000,
+): Promise<void> {
+  const deadline = Date.now() + timeoutMs;
+  let lastStatus = "no-response";
+
+  while (Date.now() < deadline) {
+    try {
+      const response = await fetch(baseUrl, {
+        method: "GET",
+      });
+      if (response.status < 500) {
+        return;
+      }
+      lastStatus = `http-${response.status}`;
+    } catch (error) {
+      lastStatus = error instanceof Error
+        ? error.message
+        : "network-error";
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, 1_000));
+  }
+
+  throw new Error(
+    `Base URL did not become ready within ${timeoutMs}ms: ${lastStatus}`,
+  );
+}
+
+export async function waitForShopShell(
+  page: PageLike,
+  timeout = 60_000,
+): Promise<void> {
+  await page.waitForFunction(
+    () =>
+      document.querySelector("#app") !== null &&
+      document.querySelector('[data-testid="shop-text-section"]') !== null,
+    { timeout },
+  );
+}
+
+export async function getShopPayloadByCode(
+  shopCode: string,
+): Promise<ShopPayload | null> {
+  const response = await fetch(
+    toUrl(`/api/v1/shop/${encodeURIComponent(shopCode)}`),
+  );
+  if (response.status >= 500) return null;
+
+  return (await response.json()) as ShopPayload;
 }

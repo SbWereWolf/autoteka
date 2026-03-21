@@ -1,21 +1,13 @@
-import { computed, reactive } from "vue";
-import { themeList } from "./config/themeList";
+import { reactive } from "vue";
 import type { Category, City, Feature } from "./types";
 import { loadLocal, saveLocal } from "./utils/storage";
 
-export type ThemeId = string;
-
-const THEME_KEY = "autoteka_theme";
 const CITY_KEY = "autoteka_city";
 const CATEGORIES_KEY = "autoteka_categories";
 const FEATURE_KEY = "autoteka_feature";
-const THEME_EDITOR_ENABLED_KEY = "autoteka_theme_editor_enabled";
 
 type AppState = {
-  theme: ThemeId;
   menuOpen: boolean;
-  themeEditorOpen: boolean;
-  themeEditorEnabled: boolean;
   cityCode: string;
   selectedCategoryIds: string[];
   selectedFeatureId: string;
@@ -25,10 +17,7 @@ type AppState = {
 };
 
 export const state = reactive<AppState>({
-  theme: "a-neutral",
   menuOpen: false,
-  themeEditorOpen: false,
-  themeEditorEnabled: false,
   cityCode: "",
   selectedCategoryIds: [],
   selectedFeatureId: "",
@@ -74,7 +63,6 @@ export function initState(params: {
   cities: City[];
   categories: Category[];
   features: Feature[];
-  defaultThemeId?: ThemeId;
 }) {
   state.cities = stableSort(params.cities);
   state.categories = stableSort(params.categories);
@@ -87,17 +75,9 @@ export function initState(params: {
   const featureSet = new Set(
     state.features.map((feature) => feature.id),
   );
-  const themeSet = new Set(themeList.map((theme) => theme.id));
 
   const fallbackCityCode = state.cities[0]?.code ?? "";
   const fallbackFeatureId = state.features[0]?.id ?? "";
-  const fallbackThemeId = params.defaultThemeId ?? "a-neutral";
-
-  const rawTheme = loadLocal<string>(THEME_KEY, fallbackThemeId);
-  state.theme = (
-    themeSet.has(rawTheme) ? rawTheme : fallbackThemeId
-  ) as ThemeId;
-  saveLocal(THEME_KEY, state.theme);
 
   const rawCityCode = loadLocal<string>(CITY_KEY, fallbackCityCode);
   state.cityCode = citySet.has(rawCityCode)
@@ -120,16 +100,6 @@ export function initState(params: {
     ? rawFeatureId
     : fallbackFeatureId;
   saveLocal(FEATURE_KEY, state.selectedFeatureId);
-
-  state.themeEditorEnabled = loadLocal<boolean>(
-    THEME_EDITOR_ENABLED_KEY,
-    import.meta.env.DEV,
-  );
-}
-
-export function setTheme(themeId: ThemeId) {
-  state.theme = themeId;
-  saveLocal(THEME_KEY, themeId);
 }
 
 export function toggleCategory(categoryId: string) {
@@ -138,9 +108,13 @@ export function toggleCategory(categoryId: string) {
     return;
   }
 
-  const i = state.selectedCategoryIds.indexOf(categoryId);
-  if (i >= 0) state.selectedCategoryIds.splice(i, 1);
-  else state.selectedCategoryIds.push(categoryId);
+  const index = state.selectedCategoryIds.indexOf(categoryId);
+  if (index >= 0) {
+    state.selectedCategoryIds.splice(index, 1);
+  } else {
+    state.selectedCategoryIds.push(categoryId);
+  }
+
   saveLocal(CATEGORIES_KEY, state.selectedCategoryIds);
 }
 
@@ -163,7 +137,3 @@ export function setFeature(featureId: string) {
   state.selectedFeatureId = featureId;
   saveLocal(FEATURE_KEY, featureId);
 }
-
-export const activeThemeMeta = computed(() =>
-  themeList.find((theme) => theme.id === state.theme),
-);

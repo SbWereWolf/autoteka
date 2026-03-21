@@ -28,9 +28,12 @@ type RawCityCatalogItem = {
 };
 
 type RawShop = RawCityCatalogItem & {
+  slogan: string;
   description: string;
-  workHours: string;
+  scheduleNote: string;
   siteUrl: string;
+  latitude: string | null;
+  longitude: string | null;
   galleryImages: string[];
 };
 
@@ -40,13 +43,15 @@ const cities: RawCity[] = [
 ];
 
 const categories: RawCategory[] = [
-  { id: "sedan", title: "Седаны", sort: 1 },
-  { id: "suv", title: "Кроссоверы", sort: 2 },
+  { id: "domestic", title: "Отечественные запчасти", sort: 1 },
+  { id: "korean", title: "Корейские запчасти", sort: 2 },
+  { id: "japanese", title: "Японские запчасти", sort: 3 },
+  { id: "european", title: "Европейские запчасти", sort: 4 },
 ];
 
 const features: RawFeature[] = [
-  { id: "credit", title: "Кредит", sort: 1 },
-  { id: "tradein", title: "Trade-in", sort: 2 },
+  { id: "promo", title: "Акции", sort: 1 },
+  { id: "pickup", title: "Самовывоз", sort: 2 },
 ];
 
 const shopsByCity: Record<string, RawCityCatalogItem[]> = {
@@ -54,44 +59,28 @@ const shopsByCity: Record<string, RawCityCatalogItem[]> = {
     {
       code: "barnaul-01",
       cityId: "barnaul",
-      title: "Автосалон Барнаул 1",
+      title: "CarsHelps",
       thumbUrl: "/generated/gen-1x1-x1_0-v1-512x512.png",
-      categoryIds: ["sedan"],
-      featureIds: ["credit"],
+      categoryIds: ["domestic", "korean"],
+      featureIds: ["promo"],
     },
     {
       code: "barnaul-02",
       cityId: "barnaul",
-      title: "Автосалон Барнаул 2",
+      title: "Orange Parts",
       thumbUrl: "/generated/gen-1x1-x1_0-v2-512x512.png",
-      categoryIds: ["suv"],
-      featureIds: ["tradein"],
+      categoryIds: ["japanese"],
+      featureIds: ["pickup"],
     },
   ],
   nizhny: [
     {
       code: "nizhny-01",
       cityId: "nizhny",
-      title: "Автосалон Нижний 1",
-      thumbUrl: "/generated/gen-1x1-x1_0-v3-512x512.png",
-      categoryIds: ["sedan"],
-      featureIds: ["credit"],
-    },
-    {
-      code: "nizhny-02",
-      cityId: "nizhny",
-      title: "Автосалон Нижний 2",
+      title: "Dark Green Motors",
       thumbUrl: "/generated/gen-1x1-x1_25-v1-640x640.png",
-      categoryIds: ["suv"],
-      featureIds: ["tradein"],
-    },
-    {
-      code: "nizhny-03",
-      cityId: "nizhny",
-      title: "Автосалон Нижний 3",
-      thumbUrl: "/generated/gen-1x1-x1_25-v2-640x640.png",
-      categoryIds: ["suv"],
-      featureIds: ["credit"],
+      categoryIds: ["european"],
+      featureIds: ["promo"],
     },
   ],
 };
@@ -99,35 +88,45 @@ const shopsByCity: Record<string, RawCityCatalogItem[]> = {
 const shops: Record<string, RawShop> = Object.fromEntries(
   Object.values(shopsByCity)
     .flat()
-    .map((item) => [
+    .map((item, index) => [
       item.code,
       {
         ...item,
-        description: `Описание для ${item.title}`,
-        workHours: "Пн-Пт 09:00-19:00",
-        siteUrl: "https://example.com",
-        galleryImages: [item.thumbUrl ?? ""].filter(Boolean),
+        slogan:
+          index === 0
+            ? "Запчасти рядом, когда они нужны"
+            : "Детали без лишних поисков",
+        description:
+          index === 0
+            ? "27 лет помогаем автовладельцам находить нужные запчасти."
+            : `Описание магазина ${item.title} по новому макету.`,
+        scheduleNote:
+          index === 0 ? "Время работы\n09:00 - 20:00" : "",
+        siteUrl:
+          index === 0 ? "carshelps.ru" : "https://orange.example",
+        latitude: "53.3474",
+        longitude: "83.7784",
+        galleryImages: [
+          item.thumbUrl ?? "",
+          "/generated/gen-1x1-x1_25-v2-640x640.png",
+        ].filter(Boolean),
       },
     ]),
 );
 
 const contactsByShop: Record<string, Record<string, string[]>> = {
   "barnaul-01": {
-    phone: ["+7 (3852) 000-001"],
-    email: ["barnaul-01@example.com"],
+    phone: ["+7 (3852) 000-001", "+7 (3852) 000-002"],
+    address: ["Барнаул, Павловский тракт, 41"],
+    whatsapp: ["https://wa.me/73852000001"],
   },
   "barnaul-02": {
-    phone: ["+7 (3852) 000-002"],
+    phone: ["+7 (3852) 100-200"],
+    address: ["Барнаул, ул. Попова, 70"],
   },
   "nizhny-01": {
     phone: ["+7 (831) 000-001"],
-    email: ["nizhny-01@example.com"],
-  },
-  "nizhny-02": {
-    phone: ["+7 (831) 000-002"],
-  },
-  "nizhny-03": {
-    phone: ["+7 (831) 000-003"],
+    address: ["Нижний Новгород, Московское шоссе, 12"],
   },
 };
 
@@ -147,6 +146,9 @@ type ErrorScenario = {
   cityCatalogByCode?: Record<string, 404 | 422 | 500>;
   shopByCode?: Record<string, 404 | 422 | 500>;
   contactsByCode?: Record<string, 404 | 422 | 500>;
+  delaysMs?: {
+    shopByCode?: Record<string, number>;
+  };
 };
 
 function errorPayload(status: number, message: string) {
@@ -210,6 +212,7 @@ export async function installApiMocks(
       if (!city) {
         return notFound(route, "City Not Found");
       }
+
       return json(route, {
         city,
         items: shopsByCity[cityCode] ?? [],
@@ -234,6 +237,12 @@ export async function installApiMocks(
       if (!shop) {
         return notFound(route, "Shop Not Found");
       }
+
+      const delayMs = scenario.delaysMs?.shopByCode?.[shopCode];
+      if (typeof delayMs === "number" && delayMs > 0) {
+        await new Promise((resolve) => setTimeout(resolve, delayMs));
+      }
+
       return json(route, shop);
     }
 
@@ -261,11 +270,13 @@ export async function installApiMocks(
         (request.postDataJSON() as string[]) ?? [];
       const available = contactsByShop[shopCode] ?? {};
       const response: Record<string, string[]> = {};
+
       for (const type of requestedTypes) {
         if (available[type]) {
           response[type] = available[type];
         }
       }
+
       return json(route, response);
     }
 

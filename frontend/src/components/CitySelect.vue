@@ -1,9 +1,9 @@
 <template>
-  <div class="relative">
+  <div class="catalog-select-shell">
     <select
       :id="id"
       v-model="city"
-      class="ui-transition ui-interactive ui-bounce w-full min-h-12 rounded-2xl px-3 py-3 text-sm outline-none"
+      class="catalog-select-control ui-bounce"
       :aria-label="ariaLabel"
       :data-testid="testId"
     >
@@ -11,6 +11,7 @@
         {{ c.title }}
       </option>
     </select>
+    <span class="catalog-select-icon" aria-hidden="true">⌄</span>
   </div>
 </template>
 
@@ -39,10 +40,10 @@ const cities = computed(() => state.cities);
 
 const city = computed({
   get: () => state.cityCode,
-  set: (v: string) => {
-    const prev = state.cityCode;
-    setCity(v);
-    if (state.cityCode !== prev) {
+  set: (value: string) => {
+    const previous = state.cityCode;
+    setCity(value);
+    if (state.cityCode !== previous) {
       emit("changed", state.cityCode);
     }
   },

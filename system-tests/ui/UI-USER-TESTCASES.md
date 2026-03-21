@@ -16,10 +16,16 @@
 8. TC-UI-USER-008: страница магазина отдаёт валидный HTML без 5xx.
 9. TC-UI-USER-009: страница магазина содержит SPA-контейнер и не
    падает.
-10. TC-UI-USER-010: полный smoke user-flow (каталог -> магазин ->
-    назад) проходит headless.
+10. TC-UI-USER-010: полный user-flow (каталог -> overlay -> магазин ->
+    назад) проходит headless и проверяет новый header/menu/shop
+    behavior.
 11. TC-UI-USER-011: route `/` с hash-параметром устойчив (без 5xx).
 12. TC-UI-USER-012: route `/` с длинным query устойчив (без 5xx).
 13. TC-UI-USER-013: неизвестный front route не приводит к 5xx.
 14. TC-UI-USER-014: `/shop/:code` с query/hash устойчив (без 5xx).
 15. TC-UI-USER-015: повторные запросы user route стабильны без 5xx.
+
+Дополнительно:
+
+- shop payload в API и UI-кейсах проверяется через `scheduleNote` как
+  каноническое имя публичного поля режима работы.

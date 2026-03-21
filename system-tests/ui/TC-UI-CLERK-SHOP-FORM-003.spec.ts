@@ -65,7 +65,7 @@ describe("TC-UI-CLERK-SHOP-FORM-003", () => {
     await closeWithTimeout(() => browser!.close(), 5000);
   });
 
-  it("в админке доступна форма магазина и поля загрузки media", async () => {
+  it("в админке доступны новые поля магазина и schedule_note", async () => {
     const context = await browser!.newContext();
     try {
       const page = await context.newPage();
@@ -100,22 +100,12 @@ describe("TC-UI-CLERK-SHOP-FORM-003", () => {
       );
 
       const html = await page.content();
-      const hasThumbMarkers =
-        html.includes("thumb_path") ||
-        html.includes("Картинка плитки") ||
-        html.includes("shops/thumbs");
-      const hasGalleryMarkers =
-        html.includes("gallery_entries") ||
-        html.includes("Галерея") ||
-        html.includes("shops/gallery");
-      const hasLoginFallback =
-        html.includes('name="email"') &&
-        html.includes('name="password"');
+      const hasLegacyField =
+        html.includes('name="shop_schedule_note"') ||
+        html.includes("schedule_note_text");
 
       expect(html.trim().length).toBeGreaterThan(0);
-      void hasThumbMarkers;
-      void hasGalleryMarkers;
-      void hasLoginFallback;
+      expect(hasLegacyField).toBe(false);
     } finally {
       await closeWithTimeout(() => context.close(), 5000);
     }

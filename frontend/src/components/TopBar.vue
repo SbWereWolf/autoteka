@@ -1,73 +1,37 @@
 <template>
-  <header class="fixed top-0 left-0 right-0 z-50">
-    <div
-      class="ui-transition ui-surface-strong border-b"
-      :style="{ borderColor: 'var(--border)' }"
-    >
-      <div class="app-container">
-        <div class="topbar-grid">
-          <button
-            data-menu-button
-            class="ui-transition ui-interactive ui-bounce inline-flex items-center justify-center rounded-xl h-12 w-12"
-            aria-label="Открыть меню"
-            type="button"
-            @click="state.menuOpen = true"
-          >
-            <span class="text-lg leading-none">≡</span>
-          </button>
+  <header class="fixed inset-x-0 top-0 z-50 pointer-events-none">
+    <div class="app-container pt-2">
+      <div class="catalog-topbar pointer-events-auto">
+        <button
+          data-menu-button
+          class="catalog-icon-button ui-bounce"
+          aria-label="Открыть меню"
+          type="button"
+          @click="state.menuOpen = true"
+        >
+          <span class="catalog-hamburger-line" />
+          <span class="catalog-hamburger-line" />
+          <span class="catalog-hamburger-line" />
+          <span class="catalog-hamburger-line" />
+        </button>
 
-          <div class="min-w-0">
-            <RouterLink
-              data-testid="topbar-title"
-              class="topbar-title block w-full truncate text-center"
-              :style="{ color: 'var(--text)' }"
-              :to="{ name: 'catalog' }"
-            >
-              Автотека
-            </RouterLink>
-          </div>
-
-          <div
-            class="flex items-center justify-self-end gap-2 shrink-0"
-          >
-            <ThemeSwitcher />
-
-            <button
-              v-if="showThemeEditorButton"
-              class="ui-transition ui-interactive ui-bounce hidden 3xl:inline-flex items-center justify-center rounded-xl h-12 w-12"
-              type="button"
-              :aria-pressed="state.themeEditorOpen"
-              aria-label="CSS переменные"
-              title="CSS переменные"
-              @click="state.themeEditorOpen = !state.themeEditorOpen"
-            >
-              <span class="text-lg leading-none">≡</span>
-            </button>
-          </div>
-        </div>
+        <RouterLink
+          class="catalog-brand-link"
+          :to="{ name: 'catalog' }"
+          aria-label="TOauto.ru"
+        >
+          <img
+            class="catalog-brand-logo"
+            src="/brand/toauto-logo.png"
+            alt="TOauto.ru"
+          />
+        </RouterLink>
       </div>
     </div>
   </header>
 </template>
 
 <script setup lang="ts">
-import { computed, watch } from "vue";
-import { RouterLink, useRoute } from "vue-router";
+import { RouterLink } from "vue-router";
 import { state } from "../state";
-import ThemeSwitcher from "./ThemeSwitcher.vue";
-
-const route = useRoute();
-
-const showThemeEditorButton = computed(() => {
-  if (!state.themeEditorEnabled) return false;
-  return route.name === "catalog" || route.name === "shop";
-});
-
-watch(
-  () => route.name,
-  (name) => {
-    if (name !== "catalog" && name !== "shop")
-      state.themeEditorOpen = false;
-  },
-);
 </script>

@@ -1,9 +1,9 @@
 <template>
-  <div class="relative">
+  <div class="catalog-select-shell">
     <select
       :id="id"
       v-model="featureId"
-      class="ui-transition ui-interactive ui-bounce w-full min-h-12 rounded-2xl px-3 py-3 text-sm outline-none"
+      class="catalog-feature-select ui-bounce"
       :aria-label="ariaLabel"
       :data-testid="testId"
     >
@@ -11,6 +11,7 @@
         {{ f.title }}
       </option>
     </select>
+    <span class="catalog-select-icon" aria-hidden="true">⌄</span>
   </div>
 </template>
 
@@ -35,6 +36,6 @@ const features = computed(() => state.features);
 
 const featureId = computed({
   get: () => state.selectedFeatureId,
-  set: (v: string) => setFeature(v),
+  set: (value: string) => setFeature(value),
 });
 </script>

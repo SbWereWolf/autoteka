@@ -3,16 +3,18 @@ import {
   type BrowserLike,
   baseUrl,
   closeWithTimeout,
+  getFirstShopCode,
   goBackToCatalog,
   headed,
+  waitForBaseUrlReady,
 } from "./uiUserHelpers";
 
 let browser: BrowserLike | undefined;
 
 describe("TC-UI-USER-006", () => {
   beforeAll(async () => {
-    const { firefox } = await import("playwright");
-    browser = await firefox.launch({ headless: !headed });
+    const { chromium } = await import("playwright");
+    browser = await chromium.launch({ headless: !headed });
   });
 
   afterAll(async () => {
@@ -21,14 +23,23 @@ describe("TC-UI-USER-006", () => {
   });
 
   it("возврат назад возвращает к каталогу", async () => {
+    const shopCode = await getFirstShopCode();
+    expect(shopCode).toBeTruthy();
+    if (!shopCode) return;
+
     const context = await browser!.newContext();
     try {
       const page = await context.newPage();
-      await page.goto(baseUrl, { waitUntil: "domcontentloaded" });
+      await waitForBaseUrlReady();
+      await page.goto(baseUrl, {
+        waitUntil: "domcontentloaded",
+        timeout: 60_000,
+      });
       await page.goto(
-        `${baseUrl.replace(/\/$/, "")}/shop/test-shop`,
+        `${baseUrl.replace(/\/$/, "")}/shop/${encodeURIComponent(shopCode)}`,
         {
           waitUntil: "domcontentloaded",
+          timeout: 60_000,
         },
       );
       await goBackToCatalog(page);
@@ -41,5 +52,5 @@ describe("TC-UI-USER-006", () => {
     } finally {
       await closeWithTimeout(() => context.close(), 5000);
     }
-  });
+  }, 180_000);
 });

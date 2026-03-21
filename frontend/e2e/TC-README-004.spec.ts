@@ -14,7 +14,7 @@ test.beforeEach(async ({ request }) => {
   }
 });
 
-test("TC-README-004: запросы к /api/v1 не ломаются, каталог загружается", async ({
+test("TC-README-004: каталог нового дизайна загружается на живом контуре", async ({
   page,
 }) => {
   await page.goto("/");
@@ -24,5 +24,6 @@ test("TC-README-004: запросы к /api/v1 не ломаются, катал
   await expect(
     page.getByTestId("catalog-feature-select"),
   ).toBeVisible();
-  await expect(page.locator("button.ui-tile").first()).toBeVisible();
+  await expect(page.getByRole("img", { name: "TOauto.ru" })).toBeVisible();
+  await expect(page.locator(".catalog-shop-tile").first()).toBeVisible();
 });

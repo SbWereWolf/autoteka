@@ -1,9 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { toUrl } from "./uiUserHelpers";
+import { getFirstShopCode, toUrl } from "./uiUserHelpers";
 
 describe("TC-UI-USER-015", () => {
   it("повторные запросы user route стабильны и без 5xx", async () => {
-    const urls = ["/", "/?city=ekb", "/shop/test-shop"];
+    const shopCode = await getFirstShopCode();
+    expect(shopCode).toBeTruthy();
+    if (!shopCode) return;
+
+    const urls = ["/", "/?city=ekb", `/shop/${shopCode}`];
 
     for (const path of urls) {
       const response = await fetch(toUrl(path));

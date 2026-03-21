@@ -1,63 +1,33 @@
 <template>
-  <div class="app-container pb-16 3xl:pb-24 7xl:pb-28">
-    <div class="pt-4">
-      <button
-        class="ui-transition ui-interactive ui-bounce rounded-xl min-h-12 px-4 py-3 text-sm"
-        @click="router.back()"
-        type="button"
-      >
-        ← Назад
-      </button>
-
-      <div class="mt-3 text-panel">
-        <h1
-          class="text-2xl font-bold m-0"
-          :style="{ fontFamily: 'var(--font-display)' }"
-        >
-          {{ titleText }}
-        </h1>
-      </div>
-
+  <div class="shop-page-root">
+    <div class="app-container pt-2 pb-4 3xl:pb-6">
       <div
         v-if="isLoading"
-        class="mt-8 space-y-4 3xl:space-y-6"
+        class="space-y-4"
         aria-busy="true"
         aria-live="polite"
       >
-        <div class="text-panel">
-          <div
-            class="ui-skeleton h-8 w-48 rounded"
-            aria-hidden="true"
-          />
-          <div class="mt-3 flex gap-2">
+        <div class="shop-hero-shell">
+          <div class="shop-hero-head">
             <div
-              class="ui-skeleton h-7 w-20 rounded-full"
-              aria-hidden="true"
+              class="shop-loading-back-skeleton ui-skeleton"
+              data-testid="shop-loading-back-skeleton"
             />
-            <div
-              class="ui-skeleton h-7 w-24 rounded-full"
-              aria-hidden="true"
-            />
+            <div class="shop-loading-logo-skeleton-shell">
+              <div
+                class="shop-loading-logo-skeleton ui-skeleton"
+                data-testid="shop-loading-logo-skeleton"
+              />
+            </div>
+          </div>
+          <div class="shop-hero-gallery">
+            <div class="h-full w-full ui-skeleton" />
           </div>
         </div>
-        <div
-          class="shop-gallery-shell rounded-[var(--radius)] overflow-hidden"
-        >
-          <div class="h-full w-full ui-skeleton" aria-hidden="true" />
-        </div>
-        <div class="text-panel space-y-2">
-          <div
-            class="ui-skeleton h-4 w-24 rounded"
-            aria-hidden="true"
-          />
-          <div
-            class="ui-skeleton h-4 w-full rounded"
-            aria-hidden="true"
-          />
-          <div
-            class="ui-skeleton h-4 w-[80%] rounded"
-            aria-hidden="true"
-          />
+        <div class="space-y-3">
+          <div class="ui-skeleton h-6 w-48 rounded-full" />
+          <div class="ui-skeleton h-4 w-full rounded-full" />
+          <div class="ui-skeleton h-4 w-[80%] rounded-full" />
         </div>
       </div>
 
@@ -75,132 +45,130 @@
         />
       </div>
 
-      <div v-else-if="shop" class="mt-3 space-y-4 3xl:space-y-6">
-        <section
-          class="relative"
-          aria-labelledby="shop-gallery-heading"
-        >
-          <h2 id="shop-gallery-heading" class="sr-only">Фото</h2>
-          <GalleryCarousel
-            :items="galleryImages"
-            empty-title=""
-            empty-text="Для этого магазина фото ещё не загружены"
-            test-id="shop-gallery"
-          />
-          <div v-if="shop.workHours" class="shop-hours-overlay">
-            <div class="shop-hours-text" :style="hoursStyle">
-              {{ shop.workHours }}
+      <div v-else-if="shop" class="space-y-6">
+        <section class="shop-hero-shell">
+          <div class="shop-hero-head">
+            <button
+              class="shop-back-button"
+              aria-label="Назад"
+              type="button"
+              @click="goToCatalog"
+            >
+              <img
+                class="shop-back-raster"
+                src="/brand/shop-back-arrow.png"
+                alt=""
+                aria-hidden="true"
+              />
+            </button>
+
+            <div class="shop-logo-shell">
+              <img
+                v-if="shop.thumbUrl"
+                class="shop-logo-image"
+                :src="shop.thumbUrl"
+                :alt="`Логотип ${shop.title}`"
+              />
+              <div
+                v-else
+                class="shop-logo-placeholder"
+                aria-label="Логотип магазина отсутствует"
+              >
+                Нет логотипа
+              </div>
+            </div>
+          </div>
+
+          <div class="shop-hero-gallery">
+            <GalleryCarousel
+              :items="galleryImages"
+              empty-title=""
+              empty-text="Для этого магазина изображения ещё не загружены"
+              test-id="shop-gallery"
+            />
+
+            <div
+              v-if="shop.scheduleNote"
+              class="shop-schedule-note"
+              data-testid="shop-schedule-note"
+            >
+              {{ shop.scheduleNote }}
             </div>
           </div>
         </section>
 
         <section
-          class="text-panel"
-          aria-labelledby="shop-desc-heading"
-          data-testid="shop-description"
+          class="shop-content-card"
+          data-testid="shop-text-section"
         >
-          <h2
-            id="shop-desc-heading"
-            class="text-xs uppercase tracking-wide font-normal m-0"
-            :style="{ color: 'var(--muted)' }"
+          <h1
+            v-if="shop.slogan"
+            class="shop-slogan"
+            data-testid="shop-slogan"
           >
-            Описание
-          </h2>
-          <div
-            class="mt-2 text-sm leading-relaxed"
-            :style="{ color: 'var(--text)' }"
+            {{ shop.slogan }}
+          </h1>
+          <p
+            class="shop-description"
+            data-testid="shop-description"
           >
             {{ shop.description }}
-          </div>
-        </section>
-
-        <section class="text-panel" data-testid="shop-meta-section">
-          <ShopMetaBadges
-            :categories="categoryNames"
-            :features="featureNames"
-          />
+          </p>
         </section>
 
         <section
-          class="text-panel"
-          aria-labelledby="shop-contacts-heading"
+          class="shop-content-card"
           data-testid="shop-contacts"
         >
-          <h2
-            id="shop-contacts-heading"
-            class="text-xs uppercase tracking-wide font-normal m-0"
-            :style="{ color: 'var(--muted)' }"
-          >
-            Контакты
+          <h2 class="shop-contacts-title">
+            Контакты:
           </h2>
           <p
             v-if="contactsLoadError"
-            class="mt-2 text-xs"
-            :style="{ color: 'var(--muted)' }"
+            class="mb-3 mt-0 text-xs text-slate-400"
           >
             Часть контактов сейчас недоступна.
           </p>
-          <ul class="mt-2 space-y-2">
+
+          <ul class="shop-contact-list">
             <li v-for="item in contactRows" :key="item.key">
               <a
                 v-if="item.href"
-                class="ui-transition shop-contact-link text-sm underline"
-                :style="{ color: 'var(--text)' }"
+                class="shop-contact-link"
                 :href="item.href"
                 :target="item.target"
                 rel="noreferrer"
               >
                 {{ item.label }}
               </a>
-              <div
-                v-else
-                class="text-sm"
-                :style="{ color: 'var(--text)' }"
-              >
+              <span v-else class="shop-contact-text">
                 {{ item.label }}
-              </div>
+              </span>
+            </li>
+
+            <li v-if="hasSiteUrl">
+              <a
+                class="shop-contact-link"
+                :href="siteUrl"
+                target="_self"
+              >
+                {{ siteUrl }}
+              </a>
             </li>
           </ul>
         </section>
 
-        <section class="flex gap-3 3xl:gap-6">
-          <a
-            v-if="hasSiteUrl"
-            class="ui-transition ui-primary ui-bounce inline-flex items-center justify-center rounded-2xl min-h-12 px-4 py-3 text-sm font-semibold"
-            :style="{ boxShadow: 'var(--shadow)' }"
-            :href="siteUrl"
-            target="_self"
-          >
-            Перейти на сайт ↗
-          </a>
-
-          <button
-            v-else
-            class="ui-transition ui-interactive rounded-2xl min-h-12 px-4 py-3 text-sm font-semibold opacity-60 cursor-not-allowed"
-            type="button"
-            disabled
-            aria-disabled="true"
-            title="У магазина нет ссылки на сайт"
-          >
-            Сайт недоступен
-          </button>
-
-          <div
-            class="flex-1 rounded-2xl px-4 py-3 text-xs ui-transition"
-            :style="hintStyle"
-          >
-            <template v-if="hasSiteUrl"
-              >Или дотяните вниз в конце страницы</template
-            >
-            <template v-else
-              >Ссылка на сайт не указана в моках</template
-            >
-          </div>
+        <section
+          class="shop-content-card"
+          data-testid="shop-features"
+        >
+          <ShopMetaBadges
+            :categories="categoryNames"
+            :features="featureNames"
+          />
         </section>
 
-        <CssVarsEditor />
-
-        <div class="h-24 3xl:h-56 7xl:h-64"></div>
+        <div class="shop-overscroll-spacer" aria-hidden="true" />
       </div>
     </div>
 
@@ -218,7 +186,6 @@ import { useRoute, useRouter } from "vue-router";
 import GalleryCarousel from "../components/GalleryCarousel.vue";
 import OverscrollOpenLink from "../components/OverscrollOpenLink.vue";
 import ShopMetaBadges from "../components/ShopMetaBadges.vue";
-import CssVarsEditor from "../components/CssVarsEditor.vue";
 import { uiConfig } from "../config/ui";
 import type { ContactsResponse, Shop } from "../types";
 import { apiClient } from "../api/HttpApiClient";
@@ -246,32 +213,25 @@ const loadError = ref(false);
 const notFound = ref(false);
 const contactsLoadError = ref(false);
 
-const titleText = computed(() => {
-  if (isLoading.value) return "Загрузка...";
-  if (notFound.value) return "Магазин не найден";
-  return shop.value?.title ?? "Магазин";
-});
-
-const categoryMap = computed(
-  () =>
-    new Map(state.categories.map((item) => [item.id, item.title])),
-);
 const featureMap = computed(
   () => new Map(state.features.map((item) => [item.id, item.title])),
 );
-
-const categoryNames = computed(() =>
-  mapIdsToTitles(shop.value?.categoryIds ?? [], categoryMap.value),
+const categoryMap = computed(
+  () => new Map(state.categories.map((item) => [item.id, item.title])),
 );
+
 const featureNames = computed(() =>
   mapIdsToTitles(shop.value?.featureIds ?? [], featureMap.value),
 );
+const categoryNames = computed(() =>
+  mapIdsToTitles(shop.value?.categoryIds ?? [], categoryMap.value),
+);
 
 const galleryImages = computed<string[]>(() => {
-  const s = shop.value;
-  if (!s) return [];
-  return Array.isArray(s.galleryImages)
-    ? s.galleryImages.filter(Boolean)
+  const current = shop.value;
+  if (!current) return [];
+  return Array.isArray(current.galleryImages)
+    ? current.galleryImages.filter(Boolean)
     : [];
 });
 
@@ -280,19 +240,9 @@ const siteUrl = computed(() =>
 );
 const hasSiteUrl = computed(() => siteUrl.value.length > 0);
 
-const hoursStyle = computed(() => ({
-  color: "var(--shop-hours-color)",
-  maxInlineSize: "min(88cqw, var(--shop-hours-max-width))",
-  textShadow: "var(--shop-hours-shadow)",
-  WebkitTextStroke:
-    "var(--shop-hours-stroke-width) var(--shop-hours-stroke-color)",
-}));
-
-const hintStyle = computed(() => ({
-  background: "var(--surface-strong)",
-  color: "var(--muted)",
-  border: "0.0625rem solid var(--border)",
-}));
+function goToCatalog() {
+  router.push({ name: "catalog" });
+}
 
 const contactRows = computed(() => {
   const rows: Array<{
@@ -301,6 +251,7 @@ const contactRows = computed(() => {
     href: string | null;
     target?: string;
   }> = [];
+
   for (const type of ACCEPTABLE_TYPES) {
     for (const value of contacts.value[type] ?? []) {
       const href = hrefFor(type, value);
@@ -312,27 +263,32 @@ const contactRows = computed(() => {
       });
     }
   }
+
   return rows;
 });
 
 function hrefFor(type: string, value: string) {
-  if (type === "phone")
+  if (type === "phone") {
     return `tel:${value.replace(/\s|\(|\)|-/g, "")}`;
-  if (type === "email") return `mailto:${value}`;
-  if (type === "telegram" || type === "whatsapp") return value;
+  }
+
+  if (type === "email") {
+    return `mailto:${value}`;
+  }
+
+  if (type === "telegram" || type === "whatsapp") {
+    return value;
+  }
+
+  if (type === "address") {
+    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(value)}`;
+  }
+
   return null;
 }
 
 function labelFor(type: string, value: string) {
-  const map: Record<string, string> = {
-    phone: "Телефон",
-    email: "Email",
-    telegram: "Telegram",
-    whatsapp: "WhatsApp",
-    address: "Адрес",
-    text: "Контакт",
-  };
-  return `${map[type] ?? type}: ${value}`;
+  return value;
 }
 
 async function loadShop() {
@@ -342,22 +298,22 @@ async function loadShop() {
   shop.value = null;
   contacts.value = {};
   contactsLoadError.value = false;
+
   try {
     const loadedShop = await apiClient.getShop(shopCode.value);
     shop.value = loadedShop;
+
     try {
-      const loadedContacts =
-        await apiClient.postAcceptableContactTypes(
-          shopCode.value,
-          ACCEPTABLE_TYPES,
-        );
-      contacts.value = loadedContacts;
+      contacts.value = await apiClient.postAcceptableContactTypes(
+        shopCode.value,
+        ACCEPTABLE_TYPES,
+      );
     } catch {
       contacts.value = {};
       contactsLoadError.value = true;
     }
-  } catch (err) {
-    if (err instanceof ApiError && err.status === 404) {
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 404) {
       notFound.value = true;
     } else {
       loadError.value = true;

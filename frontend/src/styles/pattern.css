@@ -1,25 +1,19 @@
-/*
-  App background (WhatsApp-like tiled wallpaper).
-  - Mandatory: --app-bg-image must be defined by the active theme.
-  - Fixed during scroll.
-  - Never shows through content (surfaces are opaque).
-*/
-
-.app-pattern {
+.app-catalog-shell {
   position: relative;
-  isolation: isolate;
-  background-color: var(--bg);
+  min-height: 100vh;
 }
 
-.app-pattern::before {
+.app-catalog-shell::before {
   content: "";
   position: fixed;
   inset: 0;
   z-index: -1;
-  background-image: var(--app-bg-image);
+  background-image: url("/bg/catalog-pattern.jpg");
   background-repeat: repeat;
-  background-size: var(--app-bg-size);
-  background-position: top left;
-  /* Keep the original artwork visible (no overlay / no darkening) */
-  opacity: 1;
+  background-size: 15rem;
+}
+
+.app-shop-shell {
+  min-height: 100vh;
+  background: #ffffff;
 }

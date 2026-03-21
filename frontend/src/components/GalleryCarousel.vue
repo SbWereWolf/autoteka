@@ -1,6 +1,6 @@
 <template>
   <div
-    class="shop-gallery-shell ui-transition ui-surface-strong"
+    class="shop-gallery-shell"
     :data-testid="testId"
   >
     <div
@@ -12,60 +12,51 @@
     >
       <div
         v-if="items.length === 0"
-        class="h-full w-full grid place-items-center"
-        :style="{ backgroundColor: 'var(--surface-strong)' }"
+        class="shop-gallery-empty"
       >
-        <div class="px-6 text-center">
-          <div class="text-xs" :style="{ color: 'var(--muted)' }">
-            {{ emptyText }}
-          </div>
+        <div class="px-6 text-center text-sm text-slate-500">
+          {{ emptyText }}
         </div>
       </div>
 
       <div
         v-else
-        class="h-full flex ui-transition"
+        class="shop-gallery-track"
         :style="trackStyle"
       >
         <div
-          v-for="(g, i) in items"
-          :key="i"
-          class="min-w-full h-full"
+          v-for="(item, index) in items"
+          :key="index"
+          class="shop-gallery-slide"
         >
           <UiImage
-            v-if="typeof g === 'string'"
-            class="w-full h-full"
-            :src="g"
+            v-if="typeof item === 'string'"
+            class="h-full w-full"
+            :src="item"
             alt=""
-            :loading="i === 0 ? 'eager' : 'lazy'"
+            :loading="index === 0 ? 'eager' : 'lazy'"
             decoding="async"
             spinner
-            img-class="w-full h-full object-contain"
+            img-class="h-full w-full object-contain"
           />
 
           <UiImage
-            v-else-if="g.kind === 'image'"
-            class="w-full h-full"
-            :src="g.src"
-            :alt="g.alt"
-            :width="g.width"
-            :height="g.height"
-            :loading="i === 0 ? 'eager' : 'lazy'"
+            v-else-if="item.kind === 'image'"
+            class="h-full w-full"
+            :src="item.src"
+            :alt="item.alt"
+            :width="item.width"
+            :height="item.height"
+            :loading="index === 0 ? 'eager' : 'lazy'"
             decoding="async"
             spinner
-            img-class="w-full h-full object-contain"
+            img-class="h-full w-full object-contain"
           />
 
-          <div
-            v-else
-            class="w-full h-full grid place-items-center text-sm"
-            :style="{
-              color: 'var(--text)',
-              background:
-                'color-mix(in oklch, var(--accent) 10%, var(--surface-strong))',
-            }"
-          >
-            {{ g.label }}
+          <div v-else class="shop-gallery-empty">
+            <div class="px-6 text-center text-sm text-slate-500">
+              {{ item.label }}
+            </div>
           </div>
         </div>
       </div>
@@ -73,36 +64,32 @@
 
     <button
       v-if="items.length > 1"
-      class="absolute left-2 top-1/2 -translate-y-1/2 rounded-xl h-12 w-12 grid place-items-center ui-transition ui-interactive ui-bounce"
-      @click="prev"
-      aria-label="Предыдущий"
+      class="shop-gallery-nav shop-gallery-nav--left"
+      data-testid="gallery-prev"
       type="button"
+      aria-label="Предыдущий кадр"
+      @click="prev"
     >
       ‹
     </button>
     <button
       v-if="items.length > 1"
-      class="absolute right-2 top-1/2 -translate-y-1/2 rounded-xl h-12 w-12 grid place-items-center ui-transition ui-interactive ui-bounce"
-      @click="next"
-      aria-label="Следующий"
+      class="shop-gallery-nav shop-gallery-nav--right"
+      data-testid="gallery-next"
       type="button"
+      aria-label="Следующий кадр"
+      @click="next"
     >
       ›
     </button>
 
-    <div
-      v-if="items.length > 1"
-      class="absolute bottom-2 left-0 right-0 flex justify-center gap-1"
-    >
-      <div
-        v-for="(_, i) in items"
-        :key="'dot' + i"
-        class="h-1.5 w-1.5 rounded-full"
-        :style="{
-          background:
-            i === idx
-              ? 'var(--accent)'
-              : 'color-mix(in oklch, var(--text) 28%, transparent)',
+    <div v-if="items.length > 1" class="shop-gallery-dots">
+      <span
+        v-for="(_, dotIndex) in items"
+        :key="`gallery-dot-${dotIndex}`"
+        class="shop-gallery-dot"
+        :class="{
+          'shop-gallery-dot--active': dotIndex === index,
         }"
       />
     </div>
@@ -138,24 +125,29 @@ const props = withDefaults(
   },
 );
 
-const idx = ref(0);
+const index = ref(0);
 
 function clamp() {
-  if (idx.value < 0) idx.value = 0;
-  if (idx.value > props.items.length - 1)
-    idx.value = props.items.length - 1;
+  if (index.value < 0) {
+    index.value = 0;
+  }
+  if (index.value > props.items.length - 1) {
+    index.value = props.items.length - 1;
+  }
 }
+
 function prev() {
-  idx.value--;
+  index.value -= 1;
   clamp();
 }
+
 function next() {
-  idx.value++;
+  index.value += 1;
   clamp();
 }
 
 const trackStyle = computed(() => ({
-  transform: `translateX(-${idx.value * 100}%)`,
+  transform: `translateX(-${index.value * 100}%)`,
   transitionDuration: `${uiConfig.gallery.transitionMs}ms`,
 }));
 
@@ -163,30 +155,33 @@ let startX = 0;
 let startY = 0;
 let dragging = false;
 
-function onDown(e: PointerEvent) {
+function onDown(event: PointerEvent) {
   if (props.items.length <= 1) return;
-  if ((e.target as HTMLElement).closest("button")) return;
+  if ((event.target as HTMLElement).closest("button")) return;
   dragging = true;
-  startX = e.clientX;
-  startY = e.clientY;
+  startX = event.clientX;
+  startY = event.clientY;
 }
 
-function onMove(e: PointerEvent) {
+function onMove(event: PointerEvent) {
   if (!dragging) return;
-  const dx = e.clientX - startX;
-  const dy = e.clientY - startY;
+  const dx = event.clientX - startX;
+  const dy = event.clientY - startY;
   if (Math.abs(dy) > Math.abs(dx) * 1.3) {
     dragging = false;
   }
 }
 
-function onUp(e: PointerEvent) {
+function onUp(event: PointerEvent) {
   if (!dragging) return;
   dragging = false;
-  const dx = e.clientX - startX;
+  const dx = event.clientX - startX;
   if (Math.abs(dx) < uiConfig.gallery.swipeThresholdPx) return;
-  if (dx < 0) next();
-  else prev();
+  if (dx < 0) {
+    next();
+  } else {
+    prev();
+  }
 }
 
 function onCancel() {

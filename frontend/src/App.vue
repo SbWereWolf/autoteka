@@ -1,53 +1,40 @@
 <template>
   <div
-    ref="appEl"
-    class="app app-pattern min-h-screen"
-    :class="themeClass"
+      class="app min-h-screen"
+      :class="shellClass"
     :style="{ color: 'var(--text)' }"
   >
-    <TopBar />
-    <HamburgerMenu />
+    <TopBar v-if="isCatalog"/>
+    <HamburgerMenu v-if="isCatalog"/>
 
-    <main class="pt-14 xs:pt-14">
+    <main :class="isCatalog ? 'pt-[4.5rem]' : ''">
       <router-view />
     </main>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from "vue";
-import { state } from "./state";
+import {computed} from "vue";
+import {useRoute} from "vue-router";
 import TopBar from "./components/TopBar.vue";
 import HamburgerMenu from "./components/HamburgerMenu.vue";
-import { applyThemeOverrides, removeThemeOverridesFromApp } from "./utils/themeOverrides";
 
-const themeClass = computed(() => `theme-${state.theme}`);
-const appEl = ref<HTMLElement | null>(null);
+const route = useRoute();
 
-function applyFor(theme: typeof state.theme) {
-  if (!appEl.value) return;
-  applyThemeOverrides(appEl.value, theme);
+const isCatalog = computed(() => route.name === "catalog");
+const isShop = computed(() => route.name === "shop");
+const shellClass = computed(() => {
+      let result = "";
+      switch (true) {
+        case isCatalog.value:
+          result = "app-catalog-shell";
+          break;
+        case isShop.value:
+          result = "app-shop-shell";
+          break;
+      }
+
+      return result;
 }
-
-function clearFor(theme: typeof state.theme) {
-  if (!appEl.value) return;
-  removeThemeOverridesFromApp(appEl.value, theme);
-}
-
-onMounted(() => {
-  applyFor(state.theme);
-});
-
-watch(
-  () => state.theme,
-  (next, prev) => {
-    if (prev) clearFor(prev);
-    applyFor(next);
-  },
-  { flush: "post" },
 );
 </script>
-
-<style scoped>
-/* Keep top bar height in sync with padding-top in App */
-</style>

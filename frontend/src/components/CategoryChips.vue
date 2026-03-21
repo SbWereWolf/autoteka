@@ -29,12 +29,12 @@ function chipStyle(c: { id: string }) {
     paddingInline: "var(--menu-category-chip-padding-x, 0.75rem)",
     paddingBlock: "var(--menu-category-chip-padding-y, 0.75rem)",
     background: active
-      ? "color-mix(in oklch, var(--accent) 22%, var(--surface))"
-      : "var(--surface)",
-    borderColor: active
-      ? "color-mix(in oklch, var(--accent) 55%, var(--border))"
-      : "var(--border)",
-    boxShadow: active ? "var(--shadow)" : "none",
+      ? "linear-gradient(180deg, #c7cfef 0%, #b8c2ea 100%)"
+      : "linear-gradient(180deg, #e8eef8 0%, #dde6f4 100%)",
+    borderColor: "rgba(148, 163, 184, 0.35)",
+    boxShadow: "none",
+    color: "#475569",
+    fontWeight: 600,
   };
 }
 </script>

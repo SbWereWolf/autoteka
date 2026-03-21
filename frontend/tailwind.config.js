@@ -4,7 +4,6 @@ export default {
   theme: {
     // Custom screens must match the spec (rem values shown in comments)
     screens: {
-      xs: "20rem",   // 320px
       sm: "24rem",   // 384px
       "3xl": "48rem",// 768px
       "7xl": "80rem" // 1280px

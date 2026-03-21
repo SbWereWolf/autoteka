@@ -125,15 +125,21 @@ describe("TC-API-INTEGRATION", () => {
     const payload = (await response.json()) as {
       code: string;
       title: string;
+      slogan: string;
       cityId: string | number;
       categoryIds: Array<string | number>;
       featureIds: Array<string | number>;
       description: string;
-      workHours: string;
+      scheduleNote: string;
       siteUrl: string;
+      latitude: string | number | null;
+      longitude: string | number | null;
     };
     expect(payload.code).toBe(shopCode);
     expect(typeof payload.title).toBe("string");
+    expect(typeof payload.slogan).toBe("string");
+    expect(typeof payload.scheduleNote).toBe("string");
+    expect(typeof payload.siteUrl).toBe("string");
     expect(Array.isArray(payload.categoryIds)).toBe(true);
     expect(Array.isArray(payload.featureIds)).toBe(true);
   });

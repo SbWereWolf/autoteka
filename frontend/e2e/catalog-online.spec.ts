@@ -9,27 +9,33 @@ test.beforeEach(async ({ request }) => {
   }
 });
 
-test("online e2e: карточка магазина открывается из каталога", async ({
+test("online e2e: каталог показывает новый top bar и открывает магазин", async ({
   page,
 }) => {
   await page.goto("/");
 
-  const firstTile = page.locator("button.ui-tile").first();
+  await expect(
+    page.getByRole("button", { name: "Открыть меню" }),
+  ).toBeVisible();
+  await expect(page.locator(".catalog-hamburger-line")).toHaveCount(4);
+  await expect(page.getByRole("img", { name: "TOauto.ru" })).toBeVisible();
+
+  const firstTile = page.locator(".catalog-shop-tile").first();
   await expect(firstTile).toBeVisible();
   await firstTile.click();
 
-  await expect(page.getByText("Описание")).toBeVisible();
-  await expect(page.getByText("Контакты")).toBeVisible();
+  await expect(page.locator(".shop-back-button")).toBeVisible();
+  await expect(page.locator(".shop-back-icon")).toBeVisible();
+  await expect(page.locator(".shop-back-button")).toHaveText("");
+  await expect(page.getByTestId("shop-contacts")).toBeVisible();
+  await expect(page.getByText("Контакты:")).toBeVisible();
 });
 
-test("online e2e: страница неизвестного магазина отдаёт 404-экран", async ({
+test("online e2e: неизвестный магазин отдаёт 404-экран", async ({
   page,
 }) => {
   await page.goto("/shop/nonexistent");
   await expect(
     page.getByRole("heading", { name: "Магазин не найден" }),
-  ).toBeVisible();
-  await expect(
-    page.getByRole("button", { name: "← Назад" }).first(),
   ).toBeVisible();
 });

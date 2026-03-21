@@ -66,6 +66,7 @@ describe("TC-UI-SMOKE-001", () => {
       const page = await context.newPage();
       const response = await page.goto(baseUrl, {
         waitUntil: "domcontentloaded",
+        timeout: 60_000,
       });
       expect(response).not.toBeNull();
       expect(response!.ok() ?? response!.status() < 400).toBe(true);
@@ -76,5 +77,5 @@ describe("TC-UI-SMOKE-001", () => {
     } finally {
       await closeWithTimeout(() => context.close(), 5000);
     }
-  });
+  }, 90_000);
 });

@@ -10,9 +10,12 @@ const baseShop = (
   code,
   cityId: "barnaul",
   title: code,
+  slogan: "",
   description: "",
-  workHours: "",
+  scheduleNote: "",
   siteUrl: "",
+  latitude: null,
+  longitude: null,
   categoryIds,
   featureIds,
 });
