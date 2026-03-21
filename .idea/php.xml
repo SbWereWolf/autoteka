@@ -449,6 +449,9 @@
       <path value="$PROJECT_DIR$/backend/apps/ShopOperator/vendor/brianium/paratest" />
       <path value="$PROJECT_DIR$/backend/apps/ShopAPI/vendor/autoteka/laravel-runtime" />
       <path value="$PROJECT_DIR$/backend/apps/ShopOperator/vendor/autoteka/laravel-runtime" />
+      <path value="$PROJECT_DIR$/backend/apps/ShopAPI/vendor/autoteka/laravel-session-prune" />
+      <path value="$PROJECT_DIR$/backend/apps/ShopOperator/vendor/autoteka/laravel-session-prune" />
+      <path value="$PROJECT_DIR$/backend/apps/ShopOperator/vendor/autoteka/is-there-an-admin" />
     </include_path>
   </component>
   <component name="PhpProjectSharedConfiguration" php_language_level="8.4">
