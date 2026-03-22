@@ -8,7 +8,7 @@ WORKDIR /var/www/backend
 FROM php-base AS prod
 COPY backend /var/www/backend
 COPY --from=infra runtime/docker/php/php.ini.prod.template /usr/local/share/php/zz-app.ini.template
-COPY --from=infra runtime/docker/php/php-fpm-www.prod.template /usr/local/share/php-fpm/zz-www.conf.template
+COPY --from=infra runtime/docker/php/php-fpm-www.prod.template.conf /usr/local/share/php-fpm/zz-www.conf.template
 COPY --from=infra runtime/docker/php/prod-entrypoint.sh /usr/local/bin/backend-entrypoint
 RUN chmod +x /usr/local/bin/backend-entrypoint && \
   mkdir -p /workspace && ln -snf /var/www/backend /workspace/backend && \
@@ -29,7 +29,7 @@ CMD ["php-fpm", "-F"]
 FROM php-base AS dev
 RUN apk add --no-cache autoconf gcc g++ make     && pecl install xdebug     && docker-php-ext-enable xdebug     && rm -rf /tmp/pear     && apk del autoconf gcc g++ make
 COPY --from=infra runtime/docker/php/php.ini.dev /usr/local/etc/php/conf.d/zz-app.ini
-COPY --from=infra runtime/docker/php/xdebug.ini.template /usr/local/share/php/zz-xdebug.ini.template
+COPY --from=infra runtime/docker/php/xdebug.template.ini /usr/local/share/php/zz-xdebug.ini.template
 COPY --from=infra runtime/docker/php/php-fpm-www.dev.conf /usr/local/etc/php-fpm.d/zz-www.conf
 COPY --from=infra runtime/docker/php/dev-entrypoint.sh /usr/local/bin/backend-entrypoint
 RUN chmod +x /usr/local/bin/backend-entrypoint
