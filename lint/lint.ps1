@@ -46,6 +46,11 @@ else {
   Write-Log "Env file not found, continuing with current environment"
 }
 
+$npmConfigYes = [Environment]::GetEnvironmentVariable("npm_config_yes")
+if ([string]::IsNullOrWhiteSpace($npmConfigYes)) {
+  Set-Item -Path "Env:npm_config_yes" -Value "true"
+}
+
 # --------------------------------------------------
 # LOAD YAML
 # --------------------------------------------------

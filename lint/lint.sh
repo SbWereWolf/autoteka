@@ -71,6 +71,10 @@ else
   log "Env file not found, continuing with current environment"
 fi
 
+if [[ -z "${npm_config_yes:-}" ]]; then
+  export npm_config_yes=true
+fi
+
 read_rules() {
   awk '
     function trim(s){gsub(/^[ \t]+|[ \t]+$/, "", s); return s}
