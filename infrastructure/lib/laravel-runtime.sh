@@ -211,7 +211,7 @@ if [ -z "${AUTOTEKA_LIB_LARAVEL_RUNTIME_SH:-}" ]; then
   }
 
   seed_admin_user_if_missing_in_php() {
-    local admin_email="${1:-admin@example.com}"
+    local admin_email="${1:-}"
     local status=0
 
     set +e

@@ -182,7 +182,7 @@ purge() {
 
   if [ "$RM_ETC_VUE_APP" = "yes" ]; then
     confirm_or_exit "REMOVE /etc/autoteka/* (secrets)"
-    local opts_file="${AUTOTEKA_OPTIONS_FILE:-/etc/autoteka/options.env}"
+    local opts_file="${AUTOTEKA_OPTIONS_FILE:-}"
     if [ -f "$opts_file" ]; then
       set -a
       source "$opts_file" 2>/dev/null || true

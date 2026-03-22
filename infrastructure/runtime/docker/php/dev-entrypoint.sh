@@ -70,7 +70,7 @@ fi
 (cd apps/ShopAPI && php artisan optimize:clear --ansi >/dev/null 2>&1 || true)
 (cd apps/ShopOperator && php artisan optimize:clear --ansi >/dev/null 2>&1 || true)
 if [ "${RUN_MIGRATIONS}" = "true" ]; then
-  admin_email="${MOONSHINE_ADMIN_EMAIL:-admin@example.com}"
+  admin_email="${MOONSHINE_ADMIN_EMAIL}"
   (cd apps/ShopOperator && php artisan migrate --force --ansi)
   set +e
   (cd apps/ShopOperator && php artisan autoteka:is-there-an-admin "$admin_email" --ansi)
