@@ -60,15 +60,18 @@
 - [USER_MANUAL](docs/manual/USER_MANUAL.md) — работа с front office
   для получения информации картотеки;
 - [CLERK_MANUAL](docs/manual/CLERK_MANUAL.md) — работа с данными
-  картотеки: способы ввода и редактирования (+требования качества);
+  картотеки (back office): способы ввода и редактирования
+  (+требования качества);
 
 ### Разработка
 
 - [IMPLEMENTATION](docs/foundations/IMPLEMENTATION.md) — техническое
-  устройство системы as-is.
+  устройство системы as-is;
 - [TESTING](docs/manual/TESTING.md) — режимы и правила запуска тестов
   (изолированные env/config, quick/ui профили, локальные и docker
-  сценарии).
+  сценарии);
+- [DEVELOPER_MANUAL](docs/manual/DEVELOPER_MANUAL.md) 
+  требования к разработке;
 - [backend/README](backend/README.md) — вход в backend-зону;
 - [frontend/README.md](frontend/README.md) — вход во frontend-зону;
 
