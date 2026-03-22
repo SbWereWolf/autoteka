@@ -63,7 +63,7 @@ autoteka_get_os_temp_dir() {
     elif [ -n "${TMP:-}" ]; then
       printf '%s' "$TMP"
     else
-      echo "TEMP или TMP не заданы. Добавьте в .env." >&2
+      echo "TEMP или TMP не заданы. Добавьте в .env (prod.env/dev.env)." >&2
       exit 3
     fi
   fi
