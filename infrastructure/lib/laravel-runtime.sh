@@ -15,11 +15,8 @@ if [ -z "${AUTOTEKA_LIB_LARAVEL_RUNTIME_SH:-}" ]; then
     compose exec -T php sh -lc '
       set -eu
       cd /var/www/backend
-      [ -f .env ] || cp example.env .env
       [ -f apps/ShopAPI/.env ] || cp apps/ShopAPI/example.env apps/ShopAPI/.env
       [ -f apps/ShopOperator/.env ] || cp apps/ShopOperator/example.env apps/ShopOperator/.env
-      cp .env apps/ShopAPI/.env
-      cp .env apps/ShopOperator/.env
     '
   }
 
@@ -76,16 +73,15 @@ if [ -z "${AUTOTEKA_LIB_LARAVEL_RUNTIME_SH:-}" ]; then
     compose exec -T php sh -lc '
       set -eu
       cd /var/www/backend
-      if ! grep -qE "^APP_KEY=base64:" .env; then
-        if [ -f apps/ShopAPI/.env ]; then
+      cp -n apps/ShopAPI/example.env apps/ShopAPI/.env
+      cp -n apps/ShopOperator/example.env apps/ShopOperator/.env
+      if ! grep -qE "^APP_KEY=base64:" apps/ShopAPI/.env; then
           (cd apps/ShopAPI && php artisan key:generate --force --ansi)
-        elif [ -f apps/ShopOperator/.env ]; then
+          cd /var/www/backend
+      fi
+      if ! grep -qE "^APP_KEY=base64:" apps/ShopOperator/.env; then
           (cd apps/ShopOperator && php artisan key:generate --force --ansi)
-        fi
-        if [ -f apps/ShopAPI/.env ]; then
-          cp apps/ShopAPI/.env .env
-          cp .env apps/ShopOperator/.env
-        fi
+          cd /var/www/backend
       fi
     '
   }
@@ -94,13 +90,12 @@ if [ -z "${AUTOTEKA_LIB_LARAVEL_RUNTIME_SH:-}" ]; then
     compose exec -T php sh -lc '
       set -eu
       cd /var/www/backend
-      [ -f .env ] || cp example.env .env
-      [ -f apps/ShopAPI/.env ] || cp apps/ShopAPI/example.env apps/ShopAPI/.env
-      [ -f apps/ShopOperator/.env ] || cp apps/ShopOperator/example.env apps/ShopOperator/.env
-      mkdir -p         database         storage/app/public         storage/app/private         storage/framework/cache         storage/framework/cache/data         storage/framework/sessions         storage/framework/views         storage/framework/testing         storage/logs         bootstrap/cache
+      cp -n apps/ShopAPI/example.env apps/ShopAPI/.env
+      cp -n apps/ShopOperator/example.env apps/ShopOperator/.env
+      mkdir -p database storage/app/public storage/app/private storage/framework/cache storage/framework/cache/data storage/framework/sessions storage/framework/views storage/framework/testing storage/logs bootstrap/cache
       [ -f database/database.sqlite ] || touch database/database.sqlite
-      mkdir -p         apps/ShopAPI/storage/framework/cache         apps/ShopAPI/storage/framework/cache/data         apps/ShopAPI/storage/framework/sessions         apps/ShopAPI/storage/framework/views         apps/ShopAPI/storage/framework/testing         apps/ShopAPI/storage/logs         apps/ShopAPI/bootstrap/cache
-      mkdir -p         apps/ShopOperator/storage/framework/cache         apps/ShopOperator/storage/framework/cache/data         apps/ShopOperator/storage/framework/sessions         apps/ShopOperator/storage/framework/views         apps/ShopOperator/storage/framework/testing         apps/ShopOperator/storage/logs         apps/ShopOperator/bootstrap/cache
+      mkdir -p apps/ShopAPI/storage/framework/cache apps/ShopAPI/storage/framework/cache/data apps/ShopAPI/storage/framework/sessions apps/ShopAPI/storage/framework/views apps/ShopAPI/storage/framework/testing apps/ShopAPI/storage/logs apps/ShopAPI/bootstrap/cache
+      mkdir -p apps/ShopOperator/storage/framework/cache apps/ShopOperator/storage/framework/cache/data apps/ShopOperator/storage/framework/sessions apps/ShopOperator/storage/framework/views apps/ShopOperator/storage/framework/testing apps/ShopOperator/storage/logs apps/ShopOperator/bootstrap/cache
       module_requires_path_package() {
         module_dir="$1"
         package_name="$2"
@@ -143,20 +138,17 @@ if [ -z "${AUTOTEKA_LIB_LARAVEL_RUNTIME_SH:-}" ]; then
           )
         fi
       done
-      cp .env apps/ShopAPI/.env
-      cp .env apps/ShopOperator/.env
       mkdir -p apps/ShopAPI/public apps/ShopOperator/public
       rm -rf apps/ShopAPI/public/storage apps/ShopOperator/public/storage
       ln -sfn ../../../storage/app/public apps/ShopAPI/public/storage
       ln -sfn ../../../storage/app/public apps/ShopOperator/public/storage
-      if ! grep -qE "^APP_KEY=base64:" .env; then
-        if [ -f apps/ShopAPI/artisan ]; then
+      if ! grep -qE "^APP_KEY=base64:" apps/ShopAPI/.env; then
           (cd apps/ShopAPI && php artisan key:generate --force --ansi)
-        elif [ -f apps/ShopOperator/artisan ]; then
+          cd /var/www/backend
+      fi
+      if ! grep -qE "^APP_KEY=base64:" apps/ShopOperator/.env; then
           (cd apps/ShopOperator && php artisan key:generate --force --ansi)
-        fi
-        cp apps/ShopAPI/.env .env
-        cp .env apps/ShopOperator/.env
+          cd /var/www/backend
       fi
       chown -R www-data:www-data database storage bootstrap/cache apps/ShopAPI/storage apps/ShopAPI/bootstrap/cache apps/ShopOperator/storage apps/ShopOperator/bootstrap/cache
       find database storage bootstrap/cache apps/ShopAPI/storage apps/ShopAPI/bootstrap/cache apps/ShopOperator/storage apps/ShopOperator/bootstrap/cache -type d -exec chmod 775 {} \;
