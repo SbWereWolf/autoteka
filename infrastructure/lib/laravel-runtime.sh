@@ -136,7 +136,7 @@ if [ -z "${AUTOTEKA_LIB_LARAVEL_RUNTIME_SH:-}" ]; then
           )
         fi
       done
-      mkdir -p apps/ShopAPI/public apps/ShopOperator/public
+      mkdir -p apps/ShopAPI/public apps/ShopOperator/public apps/ShopOperator/public/vendor
       rm -rf apps/ShopAPI/public/storage apps/ShopOperator/public/storage
       ln -sfn ../../../storage/app/public apps/ShopAPI/public/storage
       ln -sfn ../../../storage/app/public apps/ShopOperator/public/storage
@@ -148,9 +148,9 @@ if [ -z "${AUTOTEKA_LIB_LARAVEL_RUNTIME_SH:-}" ]; then
           (cd apps/ShopOperator && php artisan key:generate --force --ansi)
           cd /var/www/backend
       fi
-      chown -R www-data:www-data database storage bootstrap/cache apps/ShopAPI/storage apps/ShopAPI/bootstrap/cache apps/ShopOperator/storage apps/ShopOperator/bootstrap/cache
-      find database storage bootstrap/cache apps/ShopAPI/storage apps/ShopAPI/bootstrap/cache apps/ShopOperator/storage apps/ShopOperator/bootstrap/cache -type d -exec chmod 775 {} \;
-      find database storage bootstrap/cache apps/ShopAPI/storage apps/ShopAPI/bootstrap/cache apps/ShopOperator/storage apps/ShopOperator/bootstrap/cache -type f -exec chmod 664 {} \;
+      chown -R www-data:www-data database storage bootstrap/cache apps/ShopAPI/storage apps/ShopAPI/bootstrap/cache apps/ShopOperator/storage apps/ShopOperator/bootstrap/cache apps/ShopOperator/public/vendor
+      find database storage bootstrap/cache apps/ShopAPI/storage apps/ShopAPI/bootstrap/cache apps/ShopOperator/storage apps/ShopOperator/bootstrap/cache apps/ShopOperator/public/vendor -type d -exec chmod 775 {} \;
+      find database storage bootstrap/cache apps/ShopAPI/storage apps/ShopAPI/bootstrap/cache apps/ShopOperator/storage apps/ShopOperator/bootstrap/cache apps/ShopOperator/public/vendor -type f -exec chmod 664 {} \;
     '
   }
 

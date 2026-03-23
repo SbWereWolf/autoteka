@@ -23,9 +23,9 @@ services:
       retries: ${PHP_HC_RETRIES}
       start_period: ${PHP_HC_START_PERIOD}
     volumes:
-      - autoteka_backend_database:/var/www/backend/database
-      - autoteka_backend_storage:/var/www/backend/storage
-      - autoteka_backend_admin_vendor:/var/www/backend/apps/ShopOperator/public/vendor
+      - ${AUTOTEKA_ROOT:?AUTOTEKA_ROOT must be set}/backend/database:/var/www/backend/database
+      - ${AUTOTEKA_ROOT:?AUTOTEKA_ROOT must be set}/backend/storage:/var/www/backend/storage
+      - ${AUTOTEKA_ROOT:?AUTOTEKA_ROOT must be set}/backend/apps/ShopOperator/public/vendor:/var/www/backend/apps/ShopOperator/public/vendor
 
   web:
     image: autoteka/runtime-web:prod
@@ -55,13 +55,5 @@ services:
       - "${HTTP_BIND_HOST}:${HTTP_PORT}:80"
     volumes:
       - "${INFRA_ROOT:?INFRA_ROOT must be set}/observability/application/metrics:/usr/share/nginx/html/metrics:ro"
-      - autoteka_backend_storage:/var/www/backend/storage:ro
-      - autoteka_backend_admin_vendor:/usr/share/nginx/backend-public/vendor:ro
-
-volumes:
-  autoteka_backend_database:
-    name: "${AUTOTEKA_RUNTIME_INSTANCE:-autoteka}_backend_database"
-  autoteka_backend_storage:
-    name: "${AUTOTEKA_RUNTIME_INSTANCE:-autoteka}_backend_storage"
-  autoteka_backend_admin_vendor:
-    name: "${AUTOTEKA_RUNTIME_INSTANCE:-autoteka}_backend_admin_vendor"
+      - ${AUTOTEKA_ROOT:?AUTOTEKA_ROOT must be set}/backend/storage:/var/www/backend/storage:ro
+      - ${AUTOTEKA_ROOT:?AUTOTEKA_ROOT must be set}/backend/apps/ShopOperator/public/vendor:/usr/share/nginx/backend-public/vendor:ro

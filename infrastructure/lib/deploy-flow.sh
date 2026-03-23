@@ -13,6 +13,34 @@ if [ -z "${AUTOTEKA_LIB_DEPLOY_FLOW_SH:-}" ]; then
     export DEPLOY_STAGE
   }
 
+  # Перед сборкой образа PHP: vendor на хосте (bind mount) должен соответствовать composer.lock.
+  # Используется образ composer:2 (нужен работающий docker).
+  # Монтируем весь AUTOTEKA_ROOT, а не только apps/*: в composer.json path-репозитории
+  # вида ../../packages/... относительно каталога приложения.
+  autoteka_composer_install_backend_apps() {
+    local root="${AUTOTEKA_ROOT:?AUTOTEKA_ROOT must be set}"
+    local api="$root/backend/apps/ShopAPI"
+    local admin="$root/backend/apps/ShopOperator"
+    if [ ! -f "$api/composer.json" ] || [ ! -f "$admin/composer.json" ]; then
+      echo "autoteka_composer_install_backend_apps: нет composer.json в $api или $admin" >&2
+      return 3
+    fi
+    if ! command -v docker >/dev/null 2>&1; then
+      echo "autoteka_composer_install_backend_apps: docker не найден в PATH" >&2
+      return 3
+    fi
+    docker run --rm \
+      -v "$root:/app" \
+      -w /app/backend/apps/ShopAPI \
+      composer:2 \
+      composer install --no-dev --no-interaction --optimize-autoloader
+    docker run --rm \
+      -v "$root:/app" \
+      -w /app/backend/apps/ShopOperator \
+      composer:2 \
+      composer install --no-dev --no-interaction --optimize-autoloader
+  }
+
   autoteka_run_deploy_flow() {
     local mode=""
 
@@ -51,6 +79,9 @@ if [ -z "${AUTOTEKA_LIB_DEPLOY_FLOW_SH:-}" ]; then
         return 2
         ;;
     esac
+
+    autoteka_deploy_flow_set_stage "composer_install_host"
+    autoteka_composer_install_backend_apps
 
     autoteka_deploy_flow_set_stage "compose_up_php"
     autoteka_runtime_compose up -d --build --remove-orphans php
