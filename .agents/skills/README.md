@@ -10,6 +10,7 @@ This directory is formatted for repo-local Codex skill discovery.
 - `preflight`
 - `verify`
 - `safe-commit`
+- `coordinator`
 
 ### Primary domain skills
 
@@ -30,6 +31,9 @@ This directory is formatted for repo-local Codex skill discovery.
 - `verify` owns the mandatory baseline gate plus direct-check
   discipline.
 - `safe-commit` owns the commit-policy-compliant commit path.
+- `coordinator` owns staged handoff between subagents through
+  task artifacts when complex work must be split into requirements,
+  tests, implementation, and documentation phases.
 - Exactly one primary domain skill should own implementation unless the
   task genuinely spans multiple specializations.
 
@@ -40,6 +44,8 @@ This directory is formatted for repo-local Codex skill discovery.
 - Skill descriptions must be specific enough to route implicitly.
 - Long standards belong in `references/`; reusable scaffolds belong in
   `assets/`.
+- Agent-facing documents in this directory and in related agent
+  configuration must be written in English.
 
 ## Practical routing hints
 
@@ -50,6 +56,8 @@ This directory is formatted for repo-local Codex skill discovery.
 - `infrastructure/` -> `infrastructure`
 - `scripts/`, `.agents/`, `.codex/`, `lint/` -> `repo-tooling`
 - docs/manuals/runbooks/implementation docs -> `tech-writer`
+- staged multi-agent task with explicit handoff -> `coordinator` +
+  `exec-plan` + one primary implementation skill per phase
 
 ## Verification reminder
 

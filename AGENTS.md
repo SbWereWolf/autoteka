@@ -14,8 +14,14 @@ in Russian, except where standard English syntax is required for a
 command, flag, API, filename, library, technology name, or where
 English is explicitly required by this document.
 
+Agent-facing documents must be written in English. This includes every
+`AGENTS.md`, every file under `.agents/` and `.codex/`, and any other
+document whose primary audience is an agent rather than a human end
+user.
+
 If there is no loss of precision between a Russian and an English
-formulation, choose Russian.
+formulation, choose Russian for human-facing project artifacts and
+English for agent-facing documents.
 
 ## 0. Instruction layering and precedence
 
@@ -390,10 +396,17 @@ These skills do not replace the required primary domain skill:
 - `exec-plan` — planning and living task records for complex work;
 - `preflight` — repository state snapshot and blocker detection;
 - `verify` — baseline gate plus direct-check discipline;
-- `safe-commit` — policy-compliant commit workflow.
+- `safe-commit` — policy-compliant commit workflow;
+- `coordinator` — staged handoff discipline between subagents
+  through task artifacts for cross-domain work or dependency-ordered
+  tasks.
 
 If `exec-plan` is active, load it before the primary skill and keep the
 active task folder current during the entire task.
+
+Use `coordinator` only as a meta-skill together with `exec-plan` when
+the task needs controlled handoff between phases or between multiple
+fresh-context subagents. It does not replace the primary domain skill.
 
 ### 7.2 Primary skills
 
@@ -426,6 +439,9 @@ active task folder current during the entire task.
 - If the task changes both runtime code and system behavior assertions,
   choose the runtime skill as primary and use `system-tests` only for
   the narrow verification part.
+- If the task is cross-domain and must pass requirements, tests,
+  implementation, and docs through explicit task-file handoffs, add
+  `coordinator` as a meta-skill together with `exec-plan`.
 
 ## 8. Self-review requirements
 
