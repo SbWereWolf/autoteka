@@ -26,8 +26,8 @@
 Пример для install.sh (переменные окружения):
 
 ```bash
-export INFRA_ROOT=/opt/vue-app/infrastructure
-export AUTOTEKA_ROOT=/opt/vue-app
+export INFRA_ROOT=/opt/autoteka/infrastructure
+export AUTOTEKA_ROOT=/opt/autoteka
 sudo ./infrastructure/bootstrap/install.sh
 ```
 
@@ -43,7 +43,7 @@ sudo -E ./infrastructure/bootstrap/install.sh
 или аргументы:
 
 ```bash
-sudo ./infrastructure/bootstrap/install.sh --infra-root=/opt/vue-app/infrastructure --autoteka-root=/opt/vue-app
+sudo ./infrastructure/bootstrap/install.sh --infra-root=/opt/autoteka/infrastructure --autoteka-root=/opt/autoteka
 ```
 
 ## Основные файлы
@@ -119,8 +119,8 @@ maintenance работают без Telegram-уведомлений.
 заданы (env или options.env). Пример:
 
 ```bash
-export INFRA_ROOT=/opt/vue-app/infrastructure
-export AUTOTEKA_ROOT=/opt/vue-app
+export INFRA_ROOT=/opt/autoteka/infrastructure
+export AUTOTEKA_ROOT=/opt/autoteka
 "$INFRA_ROOT"/bootstrap/install.sh
 "$INFRA_ROOT"/maintenance/backup.sh
 "$INFRA_ROOT"/runtime/deploy.sh
@@ -219,7 +219,7 @@ logrotate-правила, каталоги для логов и metrics. Под�
    && sudo -E ./infrastructure/bootstrap/install.sh`
 
    Через аргументы:
-   `sudo ./infrastructure/bootstrap/install.sh --infra-root=/opt/vue-app/infrastructure --autoteka-root=/opt/vue-app`
+   `sudo ./infrastructure/bootstrap/install.sh --infra-root=/opt/autoteka/infrastructure --autoteka-root=/opt/autoteka`
 
 install.sh скопирует .env в /etc/autoteka/options.env. После установки
 изменяйте значения только в /etc/autoteka/options.env.

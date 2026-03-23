@@ -13,14 +13,14 @@ AUTOTEKA_ARGS=()
 
 _autoteka_print_roots_usage() {
   echo "Пример через переменные окружения:" >&2
-  echo "  export INFRA_ROOT=/opt/vue-app/infrastructure" >&2
-  echo "  export AUTOTEKA_ROOT=/opt/vue-app" >&2
+  echo "  export INFRA_ROOT=/opt/autoteka/infrastructure" >&2
+  echo "  export AUTOTEKA_ROOT=/opt/autoteka" >&2
   echo "  sudo $0" >&2
   echo "" >&2
   echo "Пример (Windows): export INFRA_ROOT=C:/path/to/infrastructure" >&2
   echo "" >&2
   echo "Пример через аргументы:" >&2
-  echo "  sudo $0 --infra-root=/opt/vue-app/infrastructure --autoteka-root=/opt/vue-app" >&2
+  echo "  sudo $0 --infra-root=/opt/autoteka/infrastructure --autoteka-root=/opt/autoteka" >&2
 }
 
 autoteka_load_options_env() {

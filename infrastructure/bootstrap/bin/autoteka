@@ -30,7 +30,7 @@ ensure_infra_root() {
 
   echo "INFRA_ROOT не задан или не указывает на каталог infra." >&2
   echo "Задайте абсолютный путь." >&2
-  echo "Пример: export INFRA_ROOT=/opt/vue-app/infrastructure" >&2
+  echo "Пример: export INFRA_ROOT=/opt/autoteka/infrastructure" >&2
   exit 2
 }
 
@@ -53,12 +53,12 @@ validate_required_paths() {
     echo "Задайте абсолютные пути одним из способов:" >&2
     echo "" >&2
     echo "Через переменные окружения:" >&2
-    echo "  export AUTOTEKA_ROOT=/opt/vue-app" >&2
-    echo "  export INFRA_ROOT=/opt/vue-app/infrastructure" >&2
+    echo "  export AUTOTEKA_ROOT=/opt/autoteka" >&2
+    echo "  export INFRA_ROOT=/opt/autoteka/infrastructure" >&2
     echo "  autoteka deploy" >&2
     echo "" >&2
     echo "Через аргументы (если поддерживаются):" >&2
-    echo "  autoteka deploy --autoteka-root=/opt/vue-app --infra-root=/opt/vue-app/infrastructure" >&2
+    echo "  autoteka deploy --autoteka-root=/opt/autoteka --infra-root=/opt/autoteka/infrastructure" >&2
     exit 2
   fi
 }
