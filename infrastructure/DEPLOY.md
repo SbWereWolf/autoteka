@@ -110,8 +110,9 @@ maintenance работают без Telegram-уведомлений.
 - `autoteka repair-health <domain>` — точечная починка домена.
 - `autoteka repair-infra` — восстановить таймеры и infra-state.
 - `autoteka maintenance` — периодическое обслуживание.
-- `autoteka backup` — backup host-конфигов, env и данных.
-- `autoteka backup-storage` — отдельный storage/database backup.
+- `autoteka backup` — backup host-конфигов, env и данных (в prod БД и
+  `backend/storage` на диске под `$AUTOTEKA_ROOT`, попадают в архив по
+  `backup-rules-autoteka.txt`).
 - `autoteka restore <archive>` — restore конфигов и данных.
 - `autoteka uninstall <mode>` — удаление установленного контура.
 
@@ -132,10 +133,14 @@ export AUTOTEKA_ROOT=/opt/autoteka
 ## Test runtime и изоляция
 
 - Обычный dev/runtime может работать по основной SQLite.
-- Для изолированной копии используйте отдельный
-  `AUTOTEKA_RUNTIME_INSTANCE`, чтобы контейнеры и volumes не делились с
-  основной копией.
-- Для изолированной копии используйте отдельный `DB_DATABASE`, обычно
+- Для **production** стека SQLite, загрузки и `ShopOperator/public/vendor`
+  лежат на **хосте** под `$AUTOTEKA_ROOT/backend/` (bind mount в контейнеры).
+  Второй параллельный prod на том же дереве каталогов без смены
+  `AUTOTEKA_ROOT` конфликтует по файлам БД и storage — для изоляции нужен
+  отдельный клон репозитория или другой `AUTOTEKA_ROOT`.
+- `AUTOTEKA_RUNTIME_INSTANCE` по-прежнему задаёт **имена контейнеров** и
+  полезен, если на одном хосте несколько корней приложения.
+- Для изолированной копии (dev) используйте отдельный `DB_DATABASE`, обычно
   `../../database/database.test.sqlite`.
 - `migrate --force` не очищает БД; он применяет обычные миграции к
   выбранной базе.
@@ -153,6 +158,23 @@ export AUTOTEKA_ROOT=/opt/autoteka
   не зависела от имени каталога.
 - Metrics монтируются из
   `$INFRA_ROOT/observability/application/metrics`.
+
+**Production: постоянные данные на диске** (не в Docker named volumes):
+
+- `$AUTOTEKA_ROOT/backend/database` → `/var/www/backend/database` (SQLite);
+- `$AUTOTEKA_ROOT/backend/storage` → `/var/www/backend/storage` (загрузки,
+  `storage/app/public` и т.д.);
+- `$AUTOTEKA_ROOT/backend/apps/ShopOperator/public/vendor` → тот же путь в
+  контейнере и read-only копия для nginx (`/usr/share/nginx/backend-public/vendor`).
+
+`autoteka backup` и правила `backup-rules-autoteka.txt` архивируют эти пути с
+хоста — это и есть актуальная БД и медиа.
+
+**Install/deploy и Composer:** перед `docker compose up --build` сценарий
+[`lib/deploy-flow.sh`](lib/deploy-flow.sh) вызывает `composer install
+--no-dev` в `backend/apps/ShopAPI` и `backend/apps/ShopOperator` через образ
+`composer:2` (нужен работающий Docker). Так `vendor` и `composer.lock` на диске
+совпадают с репозиторием до сборки PHP-образа.
 
 Production:
 
@@ -187,6 +209,67 @@ docker compose \
   -f "$INFRA_ROOT"/runtime/docker-compose.dev.target-dev.yml \
   up --build -d
 ```
+
+Сборка PHP target `prod` в dev-стеке (те же переменные окружения php, что в
+`docker-compose.prod.yml`):
+
+```bash
+docker compose \
+  -f "$INFRA_ROOT"/runtime/docker-compose.dev.yml \
+  -f "$INFRA_ROOT"/runtime/docker-compose.dev.target-prod.yml \
+  up --build -d
+```
+
+### Dev: что на хосте, что в named volume
+
+| Область | Где живёт |
+|---------|-----------|
+| Исходники `backend/` и `frontend/` | bind с хоста (`${AUTOTEKA_ROOT}/...`) |
+| SQLite и `backend/storage` в dev | внутри bind всего `backend/` на хосте |
+| `ShopAPI/vendor`, `ShopOperator/vendor` | named volumes (ускорение, не в git) |
+| `node_modules`, `frontend/dist` | named volumes |
+| `apps/*/storage/framework` (кэш сессий/views) | named volumes |
+
+## Миграция с Docker volume на диск (ранее именованные тома)
+
+Если на сервере остались старые тома `*_backend_database` / `*_backend_storage`
+с данными, а в compose уже bind mount на `$AUTOTEKA_ROOT/backend/...`:
+
+1. Остановить контейнеры: `autoteka down` или `docker stop …-php …-http`.
+2. При необходимости сделать резервную копию текущих каталогов на хосте.
+3. Скопировать данные из **нужного** тома в каталоги на хосте (пример для
+   томов с префиксом `runtime_autoteka_`; подставьте свои имена из
+   `docker volume ls`):
+
+```bash
+export AUTOTEKA_ROOT=/opt/autoteka
+
+mkdir -p \
+  "$AUTOTEKA_ROOT/backend/database" \
+  "$AUTOTEKA_ROOT/backend/storage" \
+  "$AUTOTEKA_ROOT/backend/apps/ShopOperator/public/vendor"
+
+docker run --rm \
+  -v ИМЯ_ТОМА_database:/from:ro \
+  -v "$AUTOTEKA_ROOT/backend/database:/to" \
+  alpine sh -c 'cp -a /from/. /to/ && chown -R 82:82 /to'
+
+docker run --rm \
+  -v ИМЯ_ТОМА_storage:/from:ro \
+  -v "$AUTOTEKA_ROOT/backend/storage:/to" \
+  alpine sh -c 'cp -a /from/. /to/ && chown -R 82:82 /to'
+
+docker run --rm \
+  -v ИМЯ_ТОМА_admin_vendor:/from:ro \
+  -v "$AUTOTEKA_ROOT/backend/apps/ShopOperator/public/vendor:/to" \
+  alpine sh -c 'cp -a /from/. /to/ && chown -R 82:82 /to'
+```
+
+4. Проверить `ls -la "$AUTOTEKA_ROOT/backend/database/"`, поднять стек.
+5. Старые тома не удалять сразу — оставить как аварийную копию.
+
+`82:82` соответствует `www-data` в образе PHP; при несовпадении выполните
+`docker exec …-php id www-data` и подставьте uid/gid.
 
 ## Подготовка к развёртыванию
 

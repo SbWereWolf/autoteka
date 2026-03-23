@@ -233,6 +233,24 @@ deploy создаст его из `frontend/example.env`.
   копирует его по пути `TELEGRAM_ENV_FILE` и заполняет значениями из
   `$INFRA_ROOT/.env`. Путь задаётся в .env.
 
+### 6.4. Production: где лежат БД, медиа и vendor админки
+
+На сервере контейнеры **монтируют с хоста** (не в отдельных named volumes):
+
+- `$AUTOTEKA_ROOT/backend/database` — SQLite;
+- `$AUTOTEKA_ROOT/backend/storage` — загрузки и файловое хранилище Laravel;
+- `$AUTOTEKA_ROOT/backend/apps/ShopOperator/public/vendor` — статика админки для nginx.
+
+Резервное копирование `autoteka backup` захватывает эти каталоги по правилам
+`backup-rules-autoteka.txt`. Миграция данных со **старых** Docker volumes на
+диск — см. [DEPLOY: миграция с Docker volume](../../infrastructure/DEPLOY.md#миграция-с-docker-volume-на-диск-ранее-именованные-тома).
+
+**`sudo` и `autoteka`:** у интерактивного root переменные из
+`/etc/profile.d/autoteka.sh` видны, но `sudo команда` по умолчанию **сбрасывает**
+окружение — `AUTOTEKA_OPTIONS_FILE` не дойдёт. Варианты: работать уже под root
+без `sudo`, либо `sudo AUTOTEKA_OPTIONS_FILE=/etc/autoteka/options.env autoteka …`,
+либо `sudo -E autoteka …` (если разрешено в sudoers).
+
 ## 7. Запуск и рабочие инструкции администратора
 
 ### 7.1. Политика env-файлов
@@ -315,6 +333,13 @@ docker compose -f $env:INFRA_ROOT\runtime\docker-compose.dev.yml -f $env:INFRA_R
 ```powershell
 docker compose -f $env:INFRA_ROOT\runtime\docker-compose.dev.yml -f $env:INFRA_ROOT\runtime\docker-compose.dev.target-prod.yml up --build -d
 ```
+
+Файл `docker-compose.dev.target-prod.yml` задаёт те же переменные окружения
+`services.php.environment`, что и серверный `docker-compose.prod.yml` (FPM, OpCache,
+`RUN_LARAVEL_OPTIMIZE`), чтобы локальная проверка совпадала с prod по PHP.
+
+Какие каталоги в dev идут с хоста, а какие в named volumes — таблица в
+[DEPLOY § Runtime](../../infrastructure/DEPLOY.md#dev-что-на-хосте-что-в-named-volume).
 
 Остановить dev/debug-контур:
 
@@ -496,7 +521,8 @@ telegram, watchdog, metrics.
 - `$INFRA_ROOT/maintenance/server-maintenance.sh` или
   `autoteka maintenance` — периодическое техобслуживание.
 - `$INFRA_ROOT/maintenance/backup.sh` или `autoteka backup` — backup
-  runtime-конфигурации и секретов (три архива по glob-правилам).
+  runtime-конфигурации, секретов и данных на диске `$AUTOTEKA_ROOT` (три архива
+  по glob-правилам; в prod включают БД и `backend/storage`).
 - `$INFRA_ROOT/maintenance/restore.sh` или `autoteka restore` —
   восстановление из архивов (`--archive-root`, `--archive-autoteka`, `--archive-infra`).
 - `$INFRA_ROOT/bootstrap/uninstall.sh` или `autoteka uninstall <mode>` —
@@ -520,7 +546,8 @@ telegram, watchdog, metrics.
 
 Основные команды администратора:
 
-- `autoteka backup` — backup runtime-настроек и секретов (три архива по glob-правилам);
+- `autoteka backup` — backup runtime-настроек, секретов и данных из
+  `$AUTOTEKA_ROOT` на диске (три архива по glob-правилам);
 - `autoteka restore` — restore из архивов (`--archive-root`, `--archive-autoteka`, `--archive-infra`);
 - `autoteka uninstall <mode>` — удаление установленной системы.
 
@@ -547,7 +574,11 @@ sudo autoteka uninstall soft
 - **apt-пакеты** (docker, logrotate, fail2ban и т.д.) — установлены
   через apt, uninstall их не трогает;
 - **Docker images и volumes** — `compose down` удаляет контейнеры, но
-  не образы и не volumes. Для их удаления при nuke используйте
+  не образы и не именованные volumes (в т.ч. от dev-стека или старых
+  версий compose). Данные prod БД и storage при текущей схеме — **в каталогах
+  под** `$AUTOTEKA_ROOT/backend/`, их удаляет только `autoteka uninstall` с
+  соответствующими флагами (например `--rm-root`), а не `compose down` один.
+  Для удаления неиспользуемых образов и томов при nuke используйте
   `--prune-images` и `--prune-volumes`:
   `sudo autoteka uninstall nuke --force --rm-root --prune-images --prune-volumes`;
 - **`/root/uninstall-backup-*`** — создаётся при nuke для бэкапа
