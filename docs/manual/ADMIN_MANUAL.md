@@ -288,8 +288,10 @@ systemctl status autoteka.service
 systemctl status watch-changes.timer
 systemctl status server-watchdog.timer
 systemctl status server-maintenance.timer
-docker compose -f $INFRA_ROOT/runtime/docker-compose.yml ps
+autoteka diagnose
 ```
+
+(`autoteka diagnose` вызывает `docker compose` с тем же набором `-f`, что и `autoteka up` / deploy: при `DEPLOY_ENV=prod` подключается `docker-compose.prod.yml`. Подробнее — [DEPLOY](../../infrastructure/DEPLOY.md).)
 
 Подробности:
 
@@ -365,7 +367,7 @@ docker exec autoteka-dev-php sh
 Проверить контейнеры production:
 
 ```bash
-docker compose -f $INFRA_ROOT/runtime/docker-compose.yml ps
+autoteka diagnose
 ```
 
 Проверить контейнеры local dev/debug:
@@ -705,14 +707,14 @@ Telegram dedup lock'и хранятся отдельно в:
 
 ### 12.4. Сайт недоступен
 
-1. `docker compose -f $INFRA_ROOT/runtime/docker-compose.yml ps` — состояние контейнеров.
-2. `docker compose logs web` — логи nginx.
+1. `autoteka diagnose` — контейнеры и проверка HTTP endpoints.
+2. Логи nginx/php: `docker compose` с тем же набором файлов, что при deploy ([DEPLOY](../../infrastructure/DEPLOY.md)), либо `docker logs` по имени контейнера из вывода `docker ps`.
 3. `curl -i http://127.0.0.1/healthcheck` — ответ nginx.
 4. При необходимости: `autoteka repair-health nginx`, `autoteka repair-runtime`.
 
 ### 12.5. Backend/API не отвечает
 
-1. `docker compose logs php` — логи PHP-FPM.
+1. Логи PHP-FPM: `docker compose` с набором файлов из [DEPLOY](../../infrastructure/DEPLOY.md) (`logs php`) или `docker logs` по имени контейнера `php`.
 2. `curl -i http://127.0.0.1/up` — backend.
 3. `curl -i http://127.0.0.1/api/v1/category-list` — API.
 4. При необходимости: 

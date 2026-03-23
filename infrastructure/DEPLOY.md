@@ -156,11 +156,28 @@ export AUTOTEKA_ROOT=/opt/vue-app
 
 Production:
 
+Стек задаётся через [`lib/runtime-compose.sh`](lib/runtime-compose.sh): базовый файл
+`runtime/docker-compose.yml`, при `DEPLOY_ENV=prod` в options.env (или `.env` на этапе install)
+дополнительно подключается `runtime/docker-compose.prod.yml`. Руками, эквивалентно:
+
 ```bash
-docker compose -f "$INFRA_ROOT"/runtime/docker-compose.yml ps
-docker compose -f "$INFRA_ROOT"/runtime/docker-compose.yml logs -f web
-docker compose -f "$INFRA_ROOT"/runtime/docker-compose.yml logs -f php
+# при DEPLOY_ENV=prod
+docker compose \
+  -f "$INFRA_ROOT"/runtime/docker-compose.yml \
+  -f "$INFRA_ROOT"/runtime/docker-compose.prod.yml \
+  ps
+docker compose \
+  -f "$INFRA_ROOT"/runtime/docker-compose.yml \
+  -f "$INFRA_ROOT"/runtime/docker-compose.prod.yml \
+  logs -f web
+docker compose \
+  -f "$INFRA_ROOT"/runtime/docker-compose.yml \
+  -f "$INFRA_ROOT"/runtime/docker-compose.prod.yml \
+  logs -f php
 ```
+
+При `DEPLOY_ENV` не равном `prod` второй `-f` не используется. Для типовых операций удобнее
+`autoteka up` / `autoteka down` (тот же набор файлов).
 
 Dev:
 
