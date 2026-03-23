@@ -172,9 +172,12 @@ export AUTOTEKA_ROOT=/opt/autoteka
 
 **Install/deploy и Composer:** перед `docker compose up --build` сценарий
 [`lib/deploy-flow.sh`](lib/deploy-flow.sh) вызывает `composer install
---no-dev` в `backend/apps/ShopAPI` и `backend/apps/ShopOperator` через образ
-`composer:2` (нужен работающий Docker). Так `vendor` и `composer.lock` на диске
-совпадают с репозиторием до сборки PHP-образа.
+--no-dev --no-scripts` в `backend/apps/ShopAPI` и `backend/apps/ShopOperator`
+через образ `composer:2` (нужен работающий Docker). Флаг `--no-scripts`
+отключает `php artisan` в хуках Composer (на хосте ещё нет полного runtime
+Laravel); обнаружение пакетов выполняется в контейнере `php` при
+`prepare_laravel_runtime`. Так `vendor` на диске соответствует lock до сборки
+образа.
 
 Production:
 

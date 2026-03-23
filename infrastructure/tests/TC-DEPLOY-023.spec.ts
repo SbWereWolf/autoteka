@@ -65,6 +65,9 @@ describe("TC-DEPLOY-023", () => {
     expect(read("lib/deploy-flow.sh")).toMatch(
       /autoteka_composer_install_backend_apps/,
     );
+    expect(read("lib/deploy-flow.sh")).toMatch(
+      /composer install --no-dev --no-interaction --optimize-autoloader --no-scripts/,
+    );
     expect(read("repair/repair-health.sh")).toMatch(
       /source "\$INFRA_ROOT\/lib\/runtime-compose\.sh"/,
     );

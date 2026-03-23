@@ -17,6 +17,8 @@ if [ -z "${AUTOTEKA_LIB_DEPLOY_FLOW_SH:-}" ]; then
   # Используется образ composer:2 (нужен работающий docker).
   # Монтируем весь AUTOTEKA_ROOT, а не только apps/*: в composer.json path-репозитории
   # вида ../../packages/... относительно каталога приложения.
+  # --no-scripts: post-autoload-dump вызывает artisan до готовых storage/bootstrap в контейнере
+  # composer:2; package:discover выполняется в php-контейнере (prepare_laravel_runtime).
   autoteka_composer_install_backend_apps() {
     local root="${AUTOTEKA_ROOT:?AUTOTEKA_ROOT must be set}"
     local api="$root/backend/apps/ShopAPI"
@@ -33,12 +35,12 @@ if [ -z "${AUTOTEKA_LIB_DEPLOY_FLOW_SH:-}" ]; then
       -v "$root:/app" \
       -w /app/backend/apps/ShopAPI \
       composer:2 \
-      composer install --no-dev --no-interaction --optimize-autoloader
+      composer install --no-dev --no-interaction --optimize-autoloader --no-scripts
     docker run --rm \
       -v "$root:/app" \
       -w /app/backend/apps/ShopOperator \
       composer:2 \
-      composer install --no-dev --no-interaction --optimize-autoloader
+      composer install --no-dev --no-interaction --optimize-autoloader --no-scripts
   }
 
   autoteka_run_deploy_flow() {
