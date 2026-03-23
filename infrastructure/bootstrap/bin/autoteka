@@ -1,16 +1,13 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-if [ -z "${AUTOTEKA_OPTIONS_FILE:-}" ]; then
-  echo "AUTOTEKA_OPTIONS_FILE не задан. Задайте вручную: export AUTOTEKA_OPTIONS_FILE=/path или source options.env. См. ADMIN_MANUAL." >&2
-  exit 3
-fi
-ENV_FILE="$AUTOTEKA_OPTIONS_FILE"
-
 load_env_if_present() {
-  if [ -f "$ENV_FILE" ]; then
-        set -a
-    source "$ENV_FILE" || true
+  if [ -z "${AUTOTEKA_OPTIONS_FILE:-}" ]; then
+    return 0
+  fi
+  if [ -f "$AUTOTEKA_OPTIONS_FILE" ]; then
+    set -a
+    source "$AUTOTEKA_OPTIONS_FILE" || true
     set +a
   fi
 }
@@ -18,7 +15,7 @@ load_env_if_present() {
 ensure_autoteka_root() {
   load_env_if_present
   if [ -z "${AUTOTEKA_ROOT:-}" ]; then
-    echo "AUTOTEKA_ROOT is not set. Set it in $ENV_FILE or export AUTOTEKA_ROOT." >&2
+    echo "AUTOTEKA_ROOT is not set. Set it in $AUTOTEKA_OPTIONS_FILE or export AUTOTEKA_ROOT." >&2
     exit 1
   fi
 }
@@ -89,7 +86,6 @@ Commands:
   timers-start      Start all autoteka timers.
   maintenance       Run periodic maintenance tasks.
   backup            Create a configuration and data backup archive.
-  backup-storage    Create storage+database backup archive.
   restore           Restore configuration and data from a backup archive.
   uninstall         Remove installed services/configuration by mode.
 
@@ -384,24 +380,6 @@ Accepted values:
 USAGE
 }
 
-print_backup_storage_usage() {
-  cat <<'USAGE'
-Usage:
-  autoteka backup-storage [--dry-run]
-
-Purpose:
-  Create an archive with backend storage and SQLite database, then rotate
-  old archives according to retention policy from /etc/autoteka/options.env.
-
-Arguments:
-  --dry-run, -n      Print planned actions without creating archive.
-  --help, -h         Show this help.
-
-Accepted values:
-  --dry-run          Boolean flag. No value.
-USAGE
-}
-
 print_uninstall_usage() {
   cat <<'USAGE'
 Usage:
@@ -447,7 +425,6 @@ print_command_usage() {
     timers-start) print_timers_start_usage ;;
     maintenance) print_maintenance_usage ;;
     backup) print_backup_usage ;;
-    backup-storage) print_backup_storage_usage ;;
     restore) print_restore_usage ;;
     uninstall) print_uninstall_usage ;;
     ""|-h|--help|help) print_global_usage ;;
@@ -468,6 +445,19 @@ fi
 
 if [ $# -gt 0 ]; then
   shift
+fi
+
+if [ -z "${AUTOTEKA_OPTIONS_FILE:-}" ]; then
+  case "$CMD" in
+    ""|-h|--help)
+      ;;
+    *)
+      if [ "${1:-}" != "-h" ] && [ "${1:-}" != "--help" ]; then
+        echo "AUTOTEKA_OPTIONS_FILE не задан. Задайте вручную: export AUTOTEKA_OPTIONS_FILE=/path или source options.env. См. ADMIN_MANUAL." >&2
+        exit 3
+      fi
+      ;;
+  esac
 fi
 
 case "$CMD" in
@@ -631,16 +621,6 @@ case "$CMD" in
     ensure_infra_root
     validate_required_paths
     exec "$INFRA_ROOT/maintenance/backup.sh" "$@"
-    ;;
-  backup-storage)
-    if [ "${1:-}" = "-h" ] || [ "${1:-}" = "--help" ]; then
-      print_backup_storage_usage
-      exit 0
-    fi
-    ensure_autoteka_root
-    ensure_infra_root
-    validate_required_paths
-    exec bash "$INFRA_ROOT/maintenance/storage-backup.sh" "$@"
     ;;
   restore)
     if [ "${1:-}" = "-h" ] || [ "${1:-}" = "--help" ]; then
