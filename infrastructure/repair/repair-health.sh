@@ -5,6 +5,7 @@ SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/../init-roots.sh"
 autoteka_init_roots "$@"
 set -- "${AUTOTEKA_ARGS[@]}"
+source "$INFRA_ROOT/lib/runtime-compose.sh"
 source "$INFRA_ROOT/lib/laravel-runtime.sh"
 source "$INFRA_ROOT/lib/dry-run.sh"
 
@@ -74,12 +75,20 @@ restart_or_up() {
       docker restart "$container" >/dev/null
     fi
   else
-    run_cmd /usr/bin/docker compose -f "$INFRA_ROOT/runtime/docker-compose.yml" up -d --build --remove-orphans "$service"
+    if is_dry_run; then
+      dry_run_log "$(autoteka_runtime_compose_describe) up -d --build --remove-orphans $service"
+    else
+      autoteka_runtime_compose up -d --build --remove-orphans "$service"
+    fi
   fi
 }
 
 repair_backend_runtime() {
-  run_cmd /usr/bin/docker compose -f "$INFRA_ROOT/runtime/docker-compose.yml" up -d --build --remove-orphans php
+  if is_dry_run; then
+    dry_run_log "$(autoteka_runtime_compose_describe) up -d --build --remove-orphans php"
+  else
+    autoteka_runtime_compose up -d --build --remove-orphans php
+  fi
 
   if ! is_dry_run; then
     wait_for_php_exec_ready
@@ -87,14 +96,14 @@ repair_backend_runtime() {
     ensure_public_storage_link
     clear_laravel_optimizations
     check_sqlite_write_access
-    compose up -d --build --remove-orphans web
+    autoteka_runtime_compose up -d --build --remove-orphans web
   else
     dry_run_log "wait_for_php_exec_ready"
     dry_run_log "prepare_laravel_runtime"
     dry_run_log "ensure_public_storage_link"
     dry_run_log "clear_laravel_optimizations"
     dry_run_log "check_sqlite_write_access"
-    dry_run_log "/usr/bin/docker compose -f $INFRA_ROOT/runtime/docker-compose.yml up -d --build --remove-orphans web"
+    dry_run_log "$(autoteka_runtime_compose_describe) up -d --build --remove-orphans web"
   fi
 }
 

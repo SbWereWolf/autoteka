@@ -105,8 +105,9 @@ Usage:
   autoteka up
 
 Purpose:
-  Start or recreate the deployment Docker Compose stack defined in
-  INFRA_ROOT/runtime/docker-compose.yml.
+  Start or recreate the deployment Docker Compose stack: базовый файл
+  INFRA_ROOT/runtime/docker-compose.yml; при DEPLOY_ENV=prod дополнительно
+  подключается INFRA_ROOT/runtime/docker-compose.prod.yml (см. options.env).
 
 Arguments:
   none
@@ -122,7 +123,8 @@ Usage:
   autoteka down
 
 Purpose:
-  Stop the deployment Docker Compose stack defined in INFRA_ROOT/runtime/docker-compose.yml.
+  Stop the deployment Docker Compose stack (тот же набор compose-файлов,
+  что и у autoteka up: базовый yml и при DEPLOY_ENV=prod — prod-оверлей).
 
 Arguments:
   none
@@ -481,7 +483,9 @@ case "$CMD" in
     ensure_autoteka_root
     ensure_infra_root
     validate_required_paths
-    exec /usr/bin/docker compose -f "$INFRA_ROOT/runtime/docker-compose.yml" up -d --remove-orphans
+    source "$INFRA_ROOT/lib/runtime-compose.sh"
+    autoteka_runtime_compose up -d --remove-orphans
+    exit $?
     ;;
   down)
     if [ "${1:-}" = "-h" ] || [ "${1:-}" = "--help" ]; then
@@ -491,7 +495,9 @@ case "$CMD" in
     ensure_autoteka_root
     ensure_infra_root
     validate_required_paths
-    exec /usr/bin/docker compose -f "$INFRA_ROOT/runtime/docker-compose.yml" down
+    source "$INFRA_ROOT/lib/runtime-compose.sh"
+    autoteka_runtime_compose down
+    exit $?
     ;;
   watch-changes)
     if [ "${1:-}" = "-h" ] || [ "${1:-}" = "--help" ]; then

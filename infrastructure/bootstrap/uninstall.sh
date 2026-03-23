@@ -52,7 +52,7 @@ if [ "$(id -u)" -ne 0 ]; then
   exit 1
 fi
 
-source "$INFRA_ROOT/lib/laravel-runtime.sh"
+source "$INFRA_ROOT/lib/runtime-compose.sh"
 
 UNITS=(
   autoteka.service
@@ -146,7 +146,7 @@ soft() {
 
   if command -v docker >/dev/null 2>&1; then
     say "docker compose down"
-    compose down --remove-orphans >/dev/null 2>&1 || true
+    autoteka_runtime_compose down --remove-orphans >/dev/null 2>&1 || true
 
     if docker ps -a --format '{{.Names}}' | grep -qx 'autoteka-http'; then
       say "docker rm -f autoteka-http"

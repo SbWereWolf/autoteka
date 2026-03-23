@@ -4,6 +4,7 @@ set -euo pipefail
 if [ -z "${AUTOTEKA_LIB_DEPLOY_FLOW_SH:-}" ]; then
   AUTOTEKA_LIB_DEPLOY_FLOW_SH=1
 
+  source "$INFRA_ROOT/lib/runtime-compose.sh"
   source "$INFRA_ROOT/lib/laravel-runtime.sh"
 
   autoteka_deploy_flow_set_stage() {
@@ -52,7 +53,7 @@ if [ -z "${AUTOTEKA_LIB_DEPLOY_FLOW_SH:-}" ]; then
     esac
 
     autoteka_deploy_flow_set_stage "compose_up_php"
-    compose up -d --build --remove-orphans php
+    autoteka_runtime_compose up -d --build --remove-orphans php
 
     autoteka_deploy_flow_set_stage "wait_for_php"
     wait_for_php_exec_ready
@@ -82,7 +83,7 @@ if [ -z "${AUTOTEKA_LIB_DEPLOY_FLOW_SH:-}" ]; then
 
     autoteka_deploy_flow_set_stage "compose_up_web"
     ensure_package_lock_for_deploy
-    compose up -d --build --remove-orphans web
+    autoteka_runtime_compose up -d --build --remove-orphans web
 
     if [ "$mode" = "deploy" ]; then
       autoteka_deploy_flow_set_stage "admin_smoke_check"

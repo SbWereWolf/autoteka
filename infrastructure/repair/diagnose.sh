@@ -6,6 +6,7 @@ SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/../init-roots.sh"
 autoteka_init_roots "$@"
 set -- "${AUTOTEKA_ARGS[@]}"
+source "$INFRA_ROOT/lib/runtime-compose.sh"
 
 echo "=== autoteka diagnose ==="
 echo "$(date +"%Y-%m-%d %H:%M:%S")"
@@ -14,7 +15,7 @@ echo ""
 # Контейнеры
 echo "--- Контейнеры ---"
 if [ -f "$INFRA_ROOT/runtime/docker-compose.yml" ]; then
-  docker compose -f "$INFRA_ROOT/runtime/docker-compose.yml" ps 2>/dev/null || echo "docker compose недоступен или контейнеры не запущены"
+  autoteka_runtime_compose ps 2>/dev/null || echo "docker compose недоступен или контейнеры не запущены"
 else
   echo "docker-compose.yml не найден"
 fi

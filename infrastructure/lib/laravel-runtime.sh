@@ -5,14 +5,12 @@ if [ -z "${AUTOTEKA_LIB_LARAVEL_RUNTIME_SH:-}" ]; then
   AUTOTEKA_LIB_LARAVEL_RUNTIME_SH=1
 
   source "$INFRA_ROOT/init-roots.sh"
+  source "$INFRA_ROOT/lib/runtime-compose.sh"
 
-  # INFRA_ROOT должен быть задан и провалидирован вызывающим скриптом.
-  compose() {
-    /usr/bin/docker compose -f "$INFRA_ROOT/runtime/docker-compose.yml" "$@"
-  }
+  # INFRA_ROOT и переменные окружения (в т.ч. DEPLOY_ENV) задаёт вызывающий скрипт.
 
   sync_shared_envs() {
-    compose exec -T php sh -lc '
+    autoteka_runtime_compose exec -T php sh -lc '
       set -eu
       cd /var/www/backend
       [ -f apps/ShopAPI/.env ] || cp apps/ShopAPI/example.env apps/ShopAPI/.env
@@ -21,7 +19,7 @@ if [ -z "${AUTOTEKA_LIB_LARAVEL_RUNTIME_SH:-}" ]; then
   }
 
   ensure_module_dependencies() {
-    compose exec -T php sh -lc '
+    autoteka_runtime_compose exec -T php sh -lc '
       set -eu
       cd /var/www/backend
       module_requires_path_package() {
@@ -70,7 +68,7 @@ if [ -z "${AUTOTEKA_LIB_LARAVEL_RUNTIME_SH:-}" ]; then
   }
 
   ensure_app_key() {
-    compose exec -T php sh -lc '
+    autoteka_runtime_compose exec -T php sh -lc '
       set -eu
       cd /var/www/backend
       cp -n apps/ShopAPI/example.env apps/ShopAPI/.env
@@ -87,7 +85,7 @@ if [ -z "${AUTOTEKA_LIB_LARAVEL_RUNTIME_SH:-}" ]; then
   }
 
   prepare_laravel_runtime() {
-    compose exec -T php sh -lc '
+    autoteka_runtime_compose exec -T php sh -lc '
       set -eu
       cd /var/www/backend
       cp -n apps/ShopAPI/example.env apps/ShopAPI/.env
@@ -181,7 +179,7 @@ if [ -z "${AUTOTEKA_LIB_LARAVEL_RUNTIME_SH:-}" ]; then
   api_artisan_in_php() {
     local command="$1"
 
-    compose exec -T php sh -lc "
+    autoteka_runtime_compose exec -T php sh -lc "
       set -eu
       cd /var/www/backend/apps/ShopAPI
       php artisan $command
@@ -191,7 +189,7 @@ if [ -z "${AUTOTEKA_LIB_LARAVEL_RUNTIME_SH:-}" ]; then
   admin_artisan_in_php() {
     local command="$1"
 
-    compose exec -T php sh -lc "
+    autoteka_runtime_compose exec -T php sh -lc "
       set -eu
       cd /var/www/backend/apps/ShopOperator
       php artisan $command
@@ -236,7 +234,7 @@ if [ -z "${AUTOTEKA_LIB_LARAVEL_RUNTIME_SH:-}" ]; then
     started_at="$(date +%s)"
 
     while true; do
-      if compose exec -T php sh -lc 'cd /var/www/backend/apps/ShopAPI && pwd >/dev/null && cd /var/www/backend/apps/ShopOperator && pwd >/dev/null' >/dev/null 2>&1; then
+      if autoteka_runtime_compose exec -T php sh -lc 'cd /var/www/backend/apps/ShopAPI && pwd >/dev/null && cd /var/www/backend/apps/ShopOperator && pwd >/dev/null' >/dev/null 2>&1; then
         return 0
       fi
 

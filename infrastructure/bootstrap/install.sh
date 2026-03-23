@@ -24,6 +24,11 @@ set -a
 source "$INFRA_ENV" || { echo "Ошибка загрузки $INFRA_ENV" >&2; exit 1; }
 set +a
 
+if [ -z "${DEPLOY_ENV:-}" ]; then
+  echo "DEPLOY_ENV не задан в $INFRA_ENV. Укажите, например DEPLOY_ENV=prod или DEPLOY_ENV=dev (см. prod.env / dev.env)." >&2
+  exit 3
+fi
+
 if [ -z "${AUTOTEKA_OPTIONS_FILE:-}" ]; then
   echo "AUTOTEKA_OPTIONS_FILE не задан в $INFRA_ENV. Задайте путь к options.env." >&2
   exit 3
