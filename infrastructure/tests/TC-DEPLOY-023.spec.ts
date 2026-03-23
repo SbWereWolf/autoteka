@@ -19,6 +19,9 @@ describe("TC-DEPLOY-023", () => {
     expect(
       existsSync(join(INFRA_ROOT_PATH, "lib/laravel-runtime.sh")),
     ).toBe(true);
+    expect(
+      existsSync(join(INFRA_ROOT_PATH, "lib/runtime-compose.sh")),
+    ).toBe(true);
     expect(existsSync(join(INFRA_ROOT_PATH, "lib/dry-run.sh"))).toBe(
       true,
     );
@@ -54,7 +57,16 @@ describe("TC-DEPLOY-023", () => {
   it("ключевые скрипты подключают предметные библиотеки по назначению", () => {
     expect(read("maintenance/backup.sh")).toMatch(/init-roots\.sh/);
     expect(read("lib/deploy-flow.sh")).toMatch(
+      /source "\$INFRA_ROOT\/lib\/runtime-compose\.sh"/,
+    );
+    expect(read("lib/deploy-flow.sh")).toMatch(
       /source "\$INFRA_ROOT\/lib\/laravel-runtime\.sh"/,
+    );
+    expect(read("repair/repair-health.sh")).toMatch(
+      /source "\$INFRA_ROOT\/lib\/runtime-compose\.sh"/,
+    );
+    expect(read("repair/repair-runtime.sh")).toMatch(
+      /source "\$INFRA_ROOT\/lib\/runtime-compose\.sh"/,
     );
     expect(read("runtime/deploy.sh")).toMatch(
       /source "\$INFRA_ROOT\/lib\/telegram\.sh"/,
@@ -65,9 +77,15 @@ describe("TC-DEPLOY-023", () => {
     );
     expect(
       read("observability/infrastructure/server-watchdog.sh"),
-    ).toMatch(/source "\$INFRA_ROOT\/lib\/laravel-runtime\.sh"/);
+    ).not.toMatch(/source "\$INFRA_ROOT\/lib\/laravel-runtime\.sh"/);
     expect(
       read("observability/infrastructure/server-watchdog.sh"),
     ).toMatch(/source "\$INFRA_ROOT\/lib\/health-state\.sh"/);
+    expect(read("bootstrap/uninstall.sh")).toMatch(
+      /source "\$INFRA_ROOT\/lib\/runtime-compose\.sh"/,
+    );
+    expect(read("maintenance/server-maintenance.sh")).toMatch(
+      /source "\$INFRA_ROOT\/lib\/runtime-compose\.sh"/,
+    );
   });
 });

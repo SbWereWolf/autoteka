@@ -19,4 +19,27 @@ describe("TC-DEPLOY-001", () => {
     expect(content).toMatch(/\bweb\s*:/);
     expect(content).toMatch(/\bphp\s*:/);
   });
+
+  it("runtime-compose.sh: единая обёртка docker compose и prod по DEPLOY_ENV", () => {
+    const content = readFileSync(
+      join(INFRA_ROOT_PATH, "lib/runtime-compose.sh"),
+      "utf-8",
+    );
+    expect(content).toMatch(/autoteka_runtime_compose\(\)/);
+    expect(content).toMatch(/DEPLOY_ENV/);
+    expect(content).toMatch(/docker-compose\.prod\.yml/);
+    expect(content).toMatch(/\/usr\/bin\/docker compose/);
+  });
+
+  it("laravel-runtime.sh: source runtime-compose.sh и вызовы autoteka_runtime_compose", () => {
+    const content = readFileSync(
+      join(INFRA_ROOT_PATH, "lib/laravel-runtime.sh"),
+      "utf-8",
+    );
+    expect(content).toMatch(/autoteka_runtime_compose exec/);
+    expect(content).not.toMatch(/^\s*compose\(\)\s*\{/m);
+    expect(content).toMatch(
+      /source "\$INFRA_ROOT\/lib\/runtime-compose\.sh"/,
+    );
+  });
 });
