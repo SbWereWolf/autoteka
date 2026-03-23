@@ -62,6 +62,9 @@ describe("TC-DEPLOY-023", () => {
     expect(read("lib/deploy-flow.sh")).toMatch(
       /source "\$INFRA_ROOT\/lib\/laravel-runtime\.sh"/,
     );
+    expect(read("lib/deploy-flow.sh")).toMatch(
+      /autoteka_composer_install_backend_apps/,
+    );
     expect(read("repair/repair-health.sh")).toMatch(
       /source "\$INFRA_ROOT\/lib\/runtime-compose\.sh"/,
     );

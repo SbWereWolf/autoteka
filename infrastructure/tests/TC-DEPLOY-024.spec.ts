@@ -101,8 +101,11 @@ describe("TC-DEPLOY-024 backup.sh (B1-B8)", () => {
     ).toBe(true);
   });
 
-  it("storage-backup.sh удалён (B8)", () => {
+  it("B8: storage-backup.sh отсутствует; отдельная команда backup-storage не используется", () => {
     expect(existsSync(join(INFRA_ROOT_PATH, "maintenance/storage-backup.sh"))).toBe(false);
+    const autoteka = read("bootstrap/bin/autoteka");
+    expect(autoteka).not.toMatch(/backup-storage/);
+    expect(autoteka).not.toMatch(/storage-backup\.sh/);
   });
 
   it("B1: backup --dry-run выводит список и завершается с exit 0", () => {
@@ -230,6 +233,15 @@ describe("TC-DEPLOY-024 autoteka CLI", () => {
     const content = read("bootstrap/bin/autoteka");
     expect(content).toMatch(/timers-stop/);
     expect(content).toMatch(/timers-start/);
+  });
+
+  it("autoteka: глобальная справка не блокируется проверкой AUTOTEKA_OPTIONS_FILE в начале файла", () => {
+    const content = read("bootstrap/bin/autoteka");
+    const headLines = content.split("\n").slice(0, 20).join("\n");
+    expect(headLines).not.toMatch(/AUTOTEKA_OPTIONS_FILE не задан/);
+    expect(content).toMatch(
+      /if \[ -z "\$\{AUTOTEKA_OPTIONS_FILE:-\}" \]; then\r?\n  case "\$CMD" in/,
+    );
   });
 });
 
