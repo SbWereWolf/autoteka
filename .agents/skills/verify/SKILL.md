@@ -33,6 +33,22 @@ It does not by itself prove:
 It also uses a cache over selected source trees, so changes in tests,
 docs, scripts, configs, and workflow files can evade direct coverage.
 
+## Test-integrity rule
+
+When reviewing or verifying a change, treat suspicious test edits as a
+first-class risk.
+
+Flag the change when a failing test appears to have been silenced by:
+
+- weakening or deleting assertions;
+- removing coverage for the changed behavior;
+- reshaping the test expectation without a corresponding approved
+  requirement change, review finding, or documented exception.
+
+Prefer fixing the implementation first. Test changes are acceptable
+only when the test is shown to be wrong, obsolete, or inconsistent with
+the accepted specification.
+
 ## Direct-check rule
 
 After the baseline gate, run the strongest relevant direct checks for
@@ -60,6 +76,7 @@ Return only:
 - baseline gate result;
 - direct checks run;
 - short summary of what failed or passed;
+- any suspicious test-silencing pattern that needs review attention;
 - the minimal next repair target if something failed.
 
 Do not implement unrelated fixes.

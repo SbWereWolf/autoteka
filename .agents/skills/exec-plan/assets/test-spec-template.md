@@ -51,5 +51,5 @@ State why not, and define the strongest available alternative:
 
 ## Evidence log
 
-- <date> — red phase observed: <yes/no + note>
-- <date> — green phase observed: <yes/no + note>
+- `<YYYY-MM-DD HH:MM:SS UTC> — red phase observed: <yes/no + note>`
+- `<YYYY-MM-DD HH:MM:SS UTC> — green phase observed: <yes/no + note>`

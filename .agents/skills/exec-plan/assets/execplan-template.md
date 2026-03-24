@@ -68,7 +68,7 @@ failure.
 
 ## Surprises & Discoveries
 
-### <Date> — <Short finding>
+### <YYYY-MM-DD HH:MM:SS UTC> — <Short finding>
 
 Observation:
 
@@ -78,7 +78,7 @@ Impact on plan:
 
 ## Decision Log
 
-### <Date> — <Decision title>
+### <YYYY-MM-DD HH:MM:SS UTC> — <Decision title>
 
 Decision:
 

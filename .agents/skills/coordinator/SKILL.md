@@ -1,6 +1,6 @@
 ---
 name: coordinator
-description: Use this meta-skill for staged multi-agent work where requirements, test contracts, implementation results, and documentation updates must be handed off between subagents through task files in tasks/<task-slug>/ rather than through shared conversational memory.
+description: Use this meta-skill for staged multi-agent work where requirements, test authoring, implementation, review, remediation, and documentation updates must be handed off between subagents through task files in tasks/<task-slug>/ rather than through shared conversational memory.
 ---
 
 # Coordinator
@@ -76,6 +76,37 @@ traceability:
 - `tasks/<task-slug>/tests/<area>.md`
 - `tasks/<task-slug>/implementation/<area>.md`
 - `tasks/<task-slug>/validation/<area>.md`
+- `tasks/<task-slug>/REVIEW.md`
+- `tasks/<task-slug>/REFACTOR-REQS.md`
+
+## Surface classes and phase write authority
+
+Treat repository surfaces as belonging to one of these classes:
+
+- **test surfaces** — automated tests, fixtures, mocks, test harnesses,
+  test-only configs, and `system-tests/**`;
+- **production/runtime surfaces** — application code, shared runtime
+  packages, runtime configs, infra configs, migrations, scripts, and
+  executable wiring used by the shipped system;
+- **documentation surfaces** — manuals, runbooks, usage docs, and other
+  human-facing documentation outside the task folder;
+- **task artifacts** — files under `tasks/<task-slug>/`.
+
+The coordinator must assign and enforce phase-specific write authority:
+
+- Phase 0 and Phase 1 -> task artifacts only;
+- Phase 2 -> test surfaces + task artifacts only;
+- Phase 3 -> production/runtime surfaces + task artifacts only;
+- Phase 4 -> task artifacts only, with repository code/tests/configs/docs
+  treated as read-only;
+- Phase 5 -> only the exact surfaces required by approved review
+  findings, plus task artifacts;
+- Phase 6 -> documentation surfaces + task artifacts only;
+- Phase 7 -> task artifacts only.
+
+If a phase discovers a required change outside its write authority, do
+not make the change silently. Record the needed follow-up or exception
+in `PLAN.md` and `HANDOFFS.md`.
 
 ## Default phase pipeline
 
@@ -119,14 +150,30 @@ Each requirement entry should contain:
 - the verification method;
 - dependencies or ordering notes.
 
-### Phase 2 — test design
+### Phase 2 — test authoring and failing-signal establishment
 
-Typical subagent role: `scribe` working with `verify` guidance.
+Typical subagent role: `scribe` working with `verify` guidance or the
+`system-tests` domain skill when the authored tests are end-to-end.
+
+Allowed writes:
+
+- test surfaces;
+- `TEST-SPEC.md`;
+- `tests/<area>.md`;
+- other task artifacts.
+
+Forbidden writes:
+
+- production/runtime code, configs, migrations, or docs outside the
+  task folder.
 
 Outputs:
 
-- `TEST-SPEC.md`
-- `tests/<area>.md` for each significant area when useful
+- `TEST-SPEC.md`;
+- updated or newly authored repository tests for the covered areas;
+- `tests/<area>.md` for each significant area when useful;
+- a recorded failing signal or a documented reason why a true red/green
+  cycle is not meaningful or not supported.
 
 For each requirement record:
 
@@ -148,10 +195,21 @@ Typical areas:
 - `backend`
 - `infrastructure`
 - `repo-tooling`
-- `system-tests`
 
 Each implementation phase receives only its own inputs and minimal notes
 about cross-area dependencies.
+
+Allowed writes:
+
+- production/runtime/config surfaces for the owned area;
+- `implementation/<area>.md`;
+- `validation/<area>.md`;
+- other task artifacts.
+
+Forbidden writes:
+
+- tests, fixtures, mocks, harnesses, `system-tests/**`, and other test
+  surfaces.
 
 Expected outputs for an area:
 
@@ -162,10 +220,13 @@ Expected outputs for an area:
 
 Rules:
 
-1. strictly follow the root code-change loop;
-2. do not start a dependent area until its prerequisite phase is marked
+1. strictly follow the root code-change loop and its test-edit
+   restrictions;
+2. a failing test is not, by itself, justification to edit the test;
+   prefer repairing the implementation first;
+3. do not start a dependent area until its prerequisite phase is marked
    `done`, unless an exception is recorded in `PLAN.md`;
-3. keep each subagent inside its own area unless the plan explicitly
+4. keep each subagent inside its own area unless the plan explicitly
    widens that scope.
 
 Default order when the task does not define a better one:
@@ -173,9 +234,65 @@ Default order when the task does not define a better one:
 1. `layout-and-design`
 2. `frontend` and `backend`
 3. `infrastructure`
-4. `system-tests`
+4. `repo-tooling`
 
-### Phase 4 — documentation and operator-facing updates
+### Phase 4 — change review
+
+Typical subagent role: `reviewer` or `explorer` operating in read-only
+mode.
+
+Allowed writes:
+
+- `REVIEW.md`;
+- `REFACTOR-REQS.md`;
+- `HANDOFFS.md`;
+- `PLAN.md` status updates.
+
+Forbidden writes:
+
+- repository code, tests, configs, migrations, scripts, or docs.
+
+Outputs:
+
+- `REVIEW.md` with structured findings, evidence, and severity;
+- `REFACTOR-REQS.md` with explicit remediation items and affected
+  surfaces;
+- a decision on whether remediation is required before the task may
+  proceed.
+
+Review findings must use stable IDs and state:
+
+- evidence reference;
+- affected surface class;
+- required action;
+- whether the item blocks completion.
+
+### Phase 5 — refactor and review remediation
+
+Typical subagent role: `scribe` with the owning domain skill.
+
+Allowed writes:
+
+- only the repository surfaces needed to satisfy approved review
+  findings or documented exceptions;
+- task artifacts.
+
+Rules:
+
+1. every code or test edit must reference a review finding ID or an
+   approved exception recorded in `PLAN.md`;
+2. do not widen the scope beyond review remediation;
+3. rerun the strongest relevant verification after each meaningful
+   remediation milestone.
+
+Outputs:
+
+- remediation changes tied to review finding IDs;
+- updated `implementation/<area>.md` or `validation/<area>.md` when
+  needed;
+- updated `REVIEW.md` / `REFACTOR-REQS.md` status.
+
+### Phase 6 — documentation and operator-facing updates
 
 Typical subagent role: `tech-writer` or the owning implementation skill
 when the documentation is tightly coupled to the change.
@@ -186,7 +303,7 @@ Outputs:
 - updated `DOC-IMPACT.md`;
 - update and usage instructions when behavior or deployment changed.
 
-### Phase 5 — final synthesis
+### Phase 7 — final synthesis
 
 The coordinator produces `FINAL-REPORT.md`.
 
@@ -198,7 +315,8 @@ The report must explicitly state:
 - which tests and checks support the result;
 - which docs were updated;
 - how to update or operate the system after the change;
-- what changed in the internal system design.
+- what changed in the internal system design;
+- which review findings were resolved or intentionally deferred.
 
 ## Handoff protocol
 
@@ -213,6 +331,8 @@ Mandatory handoff fields:
 - purpose;
 - input artifacts;
 - output artifacts expected;
+- allowed surface classes or paths;
+- forbidden surface classes or paths;
 - fixed decisions;
 - open questions;
 - risks or blockers;
@@ -232,6 +352,7 @@ It must contain:
 - documentation and config updates;
 - operator guidance;
 - internal-design impact;
+- review and remediation summary;
 - known limitations or deferred work.
 
 ## Verification discipline
@@ -240,8 +361,10 @@ The coordinator does not weaken repository verification rules.
 
 Rules:
 
-- every meaningful implementation milestone must be followed by the
-  strongest relevant verification available at that point;
+- every meaningful implementation or remediation milestone must be
+  followed by the strongest relevant verification available at that
+  point;
+- the review phase must remain read-only for repository surfaces;
 - the final state must still pass the baseline gate and all mandatory
   direct checks;
 - if verification is blocked by the environment, record the blocker
@@ -259,10 +382,12 @@ Typical combinations:
 
 - product/UI change across design, frontend, and backend ->
   `coordinator` + `exec-plan` + `layout-and-design`/`frontend`/`backend`
+  + `reviewer`
 - delivery or platform change spanning app code and infra ->
-  `coordinator` + `exec-plan` + `backend`/`infrastructure`
+  `coordinator` + `exec-plan` + `backend`/`infrastructure` + `reviewer`
 - repo workflow or tooling change with documentation impact ->
   `coordinator` + `exec-plan` + `repo-tooling` + `tech-writer`
+  + `reviewer`
 
 ## Anti-patterns
 
@@ -270,6 +395,8 @@ Do not use this skill to:
 
 - avoid selecting an owning implementation skill;
 - preserve huge chat transcripts as the handoff mechanism;
-- merge requirement writing, test design, implementation, and
-  documentation into an untracked blob of work;
+- merge requirement writing, test authoring, implementation, review,
+  remediation, and documentation into an untracked blob of work;
+- edit tests during Phase 3 or production/runtime code during Phase 2
+  without a recorded exception;
 - skip the repository code-change loop or verification contract.

@@ -123,6 +123,11 @@ queries, templates, or executable configuration in any language
    `tasks/<task-slug>/DOC-IMPACT.md`;
 8. run repository verification and direct checks.
 
+When tests fail, fix the implementation first, not the tests. Change
+tests only when they are incorrect, obsolete, or inconsistent with the
+accepted specification, an approved review finding, or a documented
+exception in the active task records.
+
 If a true red-green cycle is not meaningful, not possible, or not
 supported by the environment, record the reason in both `PLAN.md` and
 `TEST-SPEC.md`, then use the strongest available alternative such as
@@ -131,7 +136,28 @@ manual verification steps.
 
 Pure documentation-only tasks are excluded from this loop.
 
-### 1.3.1 Migration discipline
+### 1.3.1 Coordinator phase authority
+
+When the `coordinator` meta-skill is active, the phase-specific write
+authority defined by that skill overrides generic domain defaults about
+editing code and tests together.
+
+Mandatory coordinator-mode rules:
+
+- Phase 2 may edit only test surfaces and task artifacts. It must not
+  edit production/runtime code.
+- Phase 3 may edit only production/runtime/config surfaces and task
+  artifacts. It must not edit tests.
+- Phase 4 review is read-only for repository code, tests, configs, and
+  docs. It may write only review artifacts under `tasks/<task-slug>/`.
+- Phase 5 may edit only the surfaces required to satisfy explicit
+  approved review findings or documented exceptions.
+
+If a needed change does not fit the active phase authority, stop and
+record the gap in `PLAN.md` and `HANDOFFS.md` instead of silently
+editing a forbidden surface.
+
+### 1.3.2 Migration discipline
 
 - Do not edit an existing migration file under
   `backend/packages/SchemaDefinition/database/migrations`.
@@ -346,6 +372,7 @@ Large refactors must use subagents:
 
 - `explorer` -> map impact and instruction layers;
 - `scribe` -> implement scoped milestone work;
+- `reviewer` -> inspect diffs and task artifacts without editing code;
 - `verifier` -> run baseline + direct checks and report blockers;
 - `commit_curator` -> finalize only when a commit was requested.
 

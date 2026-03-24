@@ -64,7 +64,9 @@ is a living execution record.
    `Outcomes & Retrospective` current.
 6. Validate after each meaningful milestone.
 7. Keep diffs scoped to the current milestone.
-8. Update documentation continuously; do not leave it all for the end.
+8. Keep task records current throughout the task. Repository docs may
+   be updated continuously or in a dedicated later phase, but planned
+   doc work must never be left untracked.
 9. Separate baseline verification from direct checks in the plan.
 
 ## Code-change loop
@@ -85,6 +87,29 @@ or executable configuration:
 If a true red-green cycle is not possible, record the reason in both
 `PLAN.md` and `TEST-SPEC.md` and use the strongest available
 alternative.
+
+### Coordinator-mode phased mutation model
+
+When the `coordinator` skill is active, keep the same engineering
+intent but enforce the coordinator's phase-specific write authority.
+
+Rules:
+
+1. Phase 2 authors tests and establishes the failing signal. It may
+   edit only test surfaces and task artifacts.
+2. Phase 3 implements production/runtime changes. It may edit only
+   production/runtime/config surfaces and task artifacts.
+3. During implementation, fix the implementation before changing tests.
+   Change tests only when they are proven inconsistent with the
+   accepted specification, an approved review finding, or a documented
+   exception.
+4. Phase 4 is read-only for repository surfaces and produces review
+   findings plus remediation requirements.
+5. Phase 5 performs only review-driven remediation and must tie each
+   code or test edit to a review finding ID or a documented exception.
+
+Record the active phase authority in `PLAN.md` whenever coordinator-mode
+is used.
 
 ## Clarification behavior
 

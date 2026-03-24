@@ -2,7 +2,7 @@
 
 ## Changed surface
 
-- <path or subsystem>
+- `<path or subsystem>`
 
 ## Why the baseline gate is insufficient on its own
 
@@ -16,4 +16,4 @@
 
 ## Result log
 
-- <date> — <command> — <exit/result>
+- `<YYYY-MM-DD HH:MM:SS UTC> — <command> — <exit/result>`

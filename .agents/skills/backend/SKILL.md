@@ -50,7 +50,12 @@ When using this skill:
 2. keep changes aligned with the nearest nested `AGENTS.md`;
 3. preserve public contracts unless the task explicitly changes them;
 4. prefer the narrowest safe change before broad refactoring;
-5. update tests and related documentation together with code.
+5. keep tests and related documentation aligned with code, but obey the root and coordinator phase rules before editing tests.
+
+When the `coordinator` skill is active, this domain skill does not
+override phase write authority. If the active phase forbids test edits,
+do not modify tests in that phase; record the required follow-up in the
+task artifacts instead.
 
 ## Test selection
 

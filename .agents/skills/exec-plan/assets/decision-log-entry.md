@@ -1,4 +1,4 @@
-### <Date> — <Decision title>
+### <YYYY-MM-DD HH:MM:SS UTC> — <Decision title>
 
 Decision:
 
