@@ -98,10 +98,10 @@ final class AdminHttpShopCrudFullCycleTest extends TestCase
             'schedule_note' => 'Old note',
             'is_published' => '0',
             'category_links' => [
-                ['category_id' => $categoryA->getKey()],
+                ['category_id' => $categoryA->getKey(), 'is_published' => true],
             ],
             'feature_links' => [
-                ['feature_id' => $featureA->getKey()],
+                ['feature_id' => $featureA->getKey(), 'is_published' => true],
             ],
             'contact_entries' => [
                 [
@@ -133,8 +133,16 @@ final class AdminHttpShopCrudFullCycleTest extends TestCase
         $shop = Shop::query()->where('code', 'shop-cycle')->firstOrFail();
 
         $this->assertDatabaseHas('shop', ['id' => $shop->id, 'is_published' => 0]);
-        $this->assertDatabaseHas('shop_category', ['shop_id' => $shop->id, 'category_id' => $categoryA->getKey()]);
-        $this->assertDatabaseHas('shop_feature', ['shop_id' => $shop->id, 'feature_id' => $featureA->getKey()]);
+        $this->assertDatabaseHas('shop_category', [
+            'shop_id' => $shop->id,
+            'category_id' => $categoryA->getKey(),
+            'is_published' => 1,
+        ]);
+        $this->assertDatabaseHas('shop_feature', [
+            'shop_id' => $shop->id,
+            'feature_id' => $featureA->getKey(),
+            'is_published' => 1,
+        ]);
         $this->assertDatabaseHas('shop', ['id' => $shop->id, 'schedule_note' => 'Old note']);
 
         $contact = ShopContact::query()->where('shop_id', $shop->id)->firstOrFail();
@@ -158,10 +166,10 @@ final class AdminHttpShopCrudFullCycleTest extends TestCase
             'schedule_note' => 'New note',
             'is_published' => '1',
             'category_links' => [
-                ['category_id' => $categoryB->getKey()],
+                ['category_id' => $categoryB->getKey(), 'is_published' => true],
             ],
             'feature_links' => [
-                ['feature_id' => $featureB->getKey()],
+                ['feature_id' => $featureB->getKey(), 'is_published' => true],
             ],
             'contact_entries' => [
                 [
@@ -206,9 +214,17 @@ final class AdminHttpShopCrudFullCycleTest extends TestCase
             'code' => 'shop-cycle-updated',
         ]);
         $this->assertDatabaseMissing('shop_category', ['shop_id' => $shop->id, 'category_id' => $categoryA->getKey()]);
-        $this->assertDatabaseHas('shop_category', ['shop_id' => $shop->id, 'category_id' => $categoryB->getKey()]);
+        $this->assertDatabaseHas('shop_category', [
+            'shop_id' => $shop->id,
+            'category_id' => $categoryB->getKey(),
+            'is_published' => 1,
+        ]);
         $this->assertDatabaseMissing('shop_feature', ['shop_id' => $shop->id, 'feature_id' => $featureA->getKey()]);
-        $this->assertDatabaseHas('shop_feature', ['shop_id' => $shop->id, 'feature_id' => $featureB->getKey()]);
+        $this->assertDatabaseHas('shop_feature', [
+            'shop_id' => $shop->id,
+            'feature_id' => $featureB->getKey(),
+            'is_published' => 1,
+        ]);
         $this->assertDatabaseHas('shop_contact', [
             'id' => $contact->id,
             'contact_type_id' => $contactTypeEmail->getKey(),

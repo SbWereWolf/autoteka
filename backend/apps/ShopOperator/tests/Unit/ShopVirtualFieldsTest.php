@@ -13,8 +13,8 @@ final class ShopVirtualFieldsTest extends TestCase
     {
         $shop = new Shop();
 
-        $shop->category_links = [['category_id' => 1]];
-        $shop->feature_links = [['feature_id' => 2]];
+        $shop->category_links = [['category_id' => 1, 'is_published' => true]];
+        $shop->feature_links = [['feature_id' => 2, 'is_published' => true]];
         $shop->contact_entries = [['contact_type_id' => 1, 'value' => 'x']];
         $shop->gallery_entries = [['file_path' => 'shops/a.png']];
         $shop->schedule_entries = [['weekday' => 1, 'time_from' => '09:00', 'time_to' => '18:00']];

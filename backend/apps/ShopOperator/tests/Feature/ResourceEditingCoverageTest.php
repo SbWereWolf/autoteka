@@ -89,10 +89,10 @@ final class ResourceEditingCoverageTest extends TestCase
             'thumb_path' => 'shops/thumbs/updated.webp',
             'is_published' => false,
             'category_links' => [
-                ['category_id' => $category->getKey()],
+                ['category_id' => $category->getKey(), 'is_published' => true],
             ],
             'feature_links' => [
-                ['feature_id' => $feature->getKey()],
+                ['feature_id' => $feature->getKey(), 'is_published' => true],
             ],
             'contact_entries' => [
                 [
@@ -140,10 +140,12 @@ final class ResourceEditingCoverageTest extends TestCase
         $this->assertDatabaseHas('shop_category', [
             'shop_id' => $shop->getKey(),
             'category_id' => $category->getKey(),
+            'is_published' => 1,
         ]);
         $this->assertDatabaseHas('shop_feature', [
             'shop_id' => $shop->getKey(),
             'feature_id' => $feature->getKey(),
+            'is_published' => 1,
         ]);
         $this->assertDatabaseHas('shop_contact', [
             'shop_id' => $shop->getKey(),

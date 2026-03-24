@@ -82,10 +82,10 @@ final class SaveShopResourceHandlerTest extends TestCase
             'thumb_path' => null,
             'is_published' => true,
             'category_links' => [
-                ['category_id' => $category->getKey()],
+                ['category_id' => $category->getKey(), 'is_published' => true],
             ],
             'feature_links' => [
-                ['feature_id' => $feature->getKey()],
+                ['feature_id' => $feature->getKey(), 'is_published' => true],
             ],
             'contact_entries' => [
                 [
@@ -116,11 +116,13 @@ final class SaveShopResourceHandlerTest extends TestCase
         $this->assertDatabaseHas('shop_category', [
             'shop_id' => $shop->getKey(),
             'category_id' => $category->getKey(),
+            'is_published' => 1,
         ]);
 
         $this->assertDatabaseHas('shop_feature', [
             'shop_id' => $shop->getKey(),
             'feature_id' => $feature->getKey(),
+            'is_published' => 1,
         ]);
 
         $this->assertDatabaseHas('shop_contact', [
@@ -594,8 +596,12 @@ final class SaveShopResourceHandlerTest extends TestCase
             'is_published' => true,
         ]);
 
-        $shop->categories()->sync([$categoryOld->getKey()]);
-        $shop->features()->sync([$featureOld->getKey()]);
+        $shop->categories()->sync([
+            $categoryOld->getKey() => ['is_published' => true],
+        ]);
+        $shop->features()->sync([
+            $featureOld->getKey() => ['is_published' => true],
+        ]);
 
         $handler = app(SaveShopResourceHandler::class);
 
@@ -609,10 +615,10 @@ final class SaveShopResourceHandlerTest extends TestCase
             'thumb_path' => null,
             'is_published' => true,
             'category_links' => [
-                ['category_id' => $categoryNew->getKey()],
+                ['category_id' => $categoryNew->getKey(), 'is_published' => true],
             ],
             'feature_links' => [
-                ['feature_id' => $featureNew->getKey()],
+                ['feature_id' => $featureNew->getKey(), 'is_published' => true],
             ],
             'contact_entries' => [],
             'gallery_entries' => [],
@@ -636,5 +642,203 @@ final class SaveShopResourceHandlerTest extends TestCase
             'shop_id' => $shop->getKey(),
             'feature_id' => $featureOld->getKey(),
         ]);
+    }
+
+    public function test_save_handler_rejects_category_link_row_without_is_published(): void
+    {
+        $city = City::query()->create([
+            'code' => 'no-pivot-city',
+            'title' => 'No Pivot City',
+            'sort' => 0,
+            'is_published' => true,
+        ]);
+        $category = Category::query()->create([
+            'code' => 'no-pivot-cat',
+            'title' => 'No Pivot Cat',
+            'sort' => 0,
+            'is_published' => true,
+        ]);
+        $shop = Shop::query()->create([
+            'code' => 'no-pivot-shop',
+            'title' => 'No Pivot Shop',
+            'sort' => 0,
+            'city_id' => $city->getKey(),
+            'description' => '',
+            'site_url' => '',
+            'slogan' => null,
+            'latitude' => null,
+            'longitude' => null,
+            'schedule_note' => null,
+            'thumb_path' => null,
+            'is_published' => true,
+        ]);
+
+        $handler = app(SaveShopResourceHandler::class);
+
+        try {
+            $handler($shop, [
+                'code' => 'no-pivot-shop',
+                'title' => 'No Pivot Shop',
+                'sort' => 0,
+                'city_id' => $city->getKey(),
+                'description' => '',
+                'site_url' => '',
+                'slogan' => null,
+                'latitude' => null,
+                'longitude' => null,
+                'schedule_note' => null,
+                'thumb_path' => null,
+                'is_published' => true,
+                'category_links' => [
+                    ['category_id' => $category->getKey()],
+                ],
+                'feature_links' => [],
+                'contact_entries' => [],
+                'gallery_entries' => [],
+                'schedule_entries' => [],
+            ]);
+            self::fail('Expected ValidationException for missing category is_published.');
+        } catch (ValidationException $exception) {
+            self::assertArrayHasKey('category_links', $exception->errors());
+        }
+    }
+
+    public function test_save_handler_persists_pivot_is_published_false(): void
+    {
+        $city = City::query()->create([
+            'code' => 'pivot-f-city',
+            'title' => 'Pivot F City',
+            'sort' => 0,
+            'is_published' => true,
+        ]);
+        $category = Category::query()->create([
+            'code' => 'pivot-f-cat',
+            'title' => 'Pivot F Cat',
+            'sort' => 0,
+            'is_published' => true,
+        ]);
+        $feature = Feature::query()->create([
+            'code' => 'pivot-f-feat',
+            'title' => 'Pivot F Feat',
+            'sort' => 0,
+            'is_published' => true,
+        ]);
+        $shop = Shop::query()->create([
+            'code' => 'pivot-f-shop',
+            'title' => 'Pivot F Shop',
+            'sort' => 0,
+            'city_id' => $city->getKey(),
+            'description' => '',
+            'site_url' => '',
+            'slogan' => null,
+            'latitude' => null,
+            'longitude' => null,
+            'schedule_note' => null,
+            'thumb_path' => null,
+            'is_published' => true,
+        ]);
+
+        $handler = app(SaveShopResourceHandler::class);
+
+        $handler($shop, [
+            'code' => 'pivot-f-shop',
+            'title' => 'Pivot F Shop',
+            'sort' => 0,
+            'city_id' => $city->getKey(),
+            'description' => '',
+            'site_url' => '',
+            'slogan' => null,
+            'latitude' => null,
+            'longitude' => null,
+            'schedule_note' => null,
+            'thumb_path' => null,
+            'is_published' => true,
+            'category_links' => [
+                ['category_id' => $category->getKey(), 'is_published' => false],
+            ],
+            'feature_links' => [
+                ['feature_id' => $feature->getKey(), 'is_published' => false],
+            ],
+            'contact_entries' => [],
+            'gallery_entries' => [],
+            'schedule_entries' => [],
+        ]);
+
+        $this->assertDatabaseHas('shop_category', [
+            'shop_id' => $shop->getKey(),
+            'category_id' => $category->getKey(),
+            'is_published' => 0,
+        ]);
+        $this->assertDatabaseHas('shop_feature', [
+            'shop_id' => $shop->getKey(),
+            'feature_id' => $feature->getKey(),
+            'is_published' => 0,
+        ]);
+    }
+
+    public function test_save_handler_rejects_duplicate_contacts_when_values_normalize_to_same_digits(): void
+    {
+        $city = City::query()->create([
+            'code' => 'dup-norm-city',
+            'title' => 'Dup Norm City',
+            'sort' => 0,
+            'is_published' => true,
+        ]);
+        $contactType = ContactType::query()->create([
+            'code' => 'dup-norm-phone',
+            'title' => 'Dup Norm Phone',
+            'sort' => 0,
+            'is_published' => true,
+        ]);
+        $shop = Shop::query()->create([
+            'code' => 'dup-norm-shop',
+            'title' => 'Dup Norm Shop',
+            'sort' => 0,
+            'city_id' => $city->getKey(),
+            'description' => '',
+            'site_url' => '',
+            'slogan' => null,
+            'latitude' => null,
+            'longitude' => null,
+            'schedule_note' => null,
+            'thumb_path' => null,
+            'is_published' => true,
+        ]);
+
+        $handler = app(SaveShopResourceHandler::class);
+
+        try {
+            $handler($shop, [
+                'code' => 'dup-norm-shop',
+                'title' => 'Dup Norm Shop',
+                'sort' => 0,
+                'city_id' => $city->getKey(),
+                'description' => '',
+                'site_url' => '',
+                'thumb_path' => null,
+                'is_published' => true,
+                'category_links' => [],
+                'feature_links' => [],
+                'contact_entries' => [
+                    [
+                        'contact_type_id' => $contactType->getKey(),
+                        'value' => '+7 (900) 111-22-33',
+                        'sort' => 0,
+                        'is_published' => true,
+                    ],
+                    [
+                        'contact_type_id' => $contactType->getKey(),
+                        'value' => '79001112233',
+                        'sort' => 1,
+                        'is_published' => true,
+                    ],
+                ],
+                'gallery_entries' => [],
+                'schedule_entries' => [],
+            ]);
+            self::fail('Expected ValidationException for duplicate normalized contacts.');
+        } catch (ValidationException $exception) {
+            self::assertArrayHasKey('contact_entries', $exception->errors());
+        }
     }
 }

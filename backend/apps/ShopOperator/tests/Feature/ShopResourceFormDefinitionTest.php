@@ -31,6 +31,13 @@ final class ShopResourceFormDefinitionTest extends TestCase
         self::assertArrayHasKey('schedule_note', $indexedFields);
         self::assertArrayNotHasKey('schedule_note_text', $indexedFields);
         self::assertSame('Логотип', $indexedFields['thumb_path']->getLabel());
+
+        self::assertSame('time', $indexedFields['time_from']->getAttribute('type'));
+        self::assertSame(900, (int) $indexedFields['time_from']->getAttribute('step'));
+        self::assertSame('ru', $indexedFields['time_from']->getAttribute('lang'));
+        self::assertSame('time', $indexedFields['time_to']->getAttribute('type'));
+        self::assertSame(900, (int) $indexedFields['time_to']->getAttribute('step'));
+        self::assertSame('ru', $indexedFields['time_to']->getAttribute('lang'));
     }
 
     /**
