@@ -683,6 +683,80 @@ function Validate-Type {
     Add-OperationalError -TypeName $State.TypeName -StatusActive $State.StatusActive -StatusCurrentEnv $State.StatusCurrentEnv -HintActions $hintActions -Missing:$isMissing -Mismatch:$isMismatch -DryRun:$DryRun
 }
 
+function Get-CopyArtifactPlanCounts {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$LiteralPath,
+        [Parameter(Mandatory = $true)]
+        [ValidateSet('File', 'Directory')]
+        [string]$Kind
+    )
+
+    if ($Kind -eq 'File') {
+        return [pscustomobject]@{ Files = 1; Dirs = 0 }
+    }
+
+    if (-not (Test-Path -LiteralPath $LiteralPath)) {
+        return [pscustomobject]@{ Files = 0; Dirs = 0 }
+    }
+
+    $files = 0
+    $dirs = 0
+    Get-ChildItem -LiteralPath $LiteralPath -Recurse -Force -ErrorAction SilentlyContinue | ForEach-Object {
+        $isSymLink = $_.LinkType -eq 'SymbolicLink'
+        if ($_.PSIsContainer -and -not $isSymLink) {
+            $dirs++
+        }
+        else {
+            $files++
+        }
+    }
+
+    return [pscustomobject]@{ Files = $files; Dirs = $dirs }
+}
+
+function Write-SwapEnvCopyPlanLine {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$TypeName,
+        [Parameter(Mandatory = $true)]
+        [int]$Files,
+        [Parameter(Mandatory = $true)]
+        [int]$Dirs
+    )
+
+    if ($Files -eq 1 -and $Dirs -eq 0) {
+        Write-Host "[swap-env] ${TypeName}: будет скопировано: 1 файл"
+    }
+    elseif ($Files -eq 0 -and $Dirs -eq 0) {
+        Write-Host "[swap-env] ${TypeName}: будет скопировано: пустой каталог"
+    }
+    else {
+        Write-Host "[swap-env] ${TypeName}: будет скопировано: файлов $Files, папок $Dirs"
+    }
+}
+
+function Write-SwapEnvCopyDoneLine {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$TypeName,
+        [Parameter(Mandatory = $true)]
+        [int]$Files,
+        [Parameter(Mandatory = $true)]
+        [int]$Dirs
+    )
+
+    if ($Files -eq 1 -and $Dirs -eq 0) {
+        Write-Host "[swap-env] ${TypeName}: скопировано: 1 файл"
+    }
+    elseif ($Files -eq 0 -and $Dirs -eq 0) {
+        Write-Host "[swap-env] ${TypeName}: скопировано: пустой каталог"
+    }
+    else {
+        Write-Host "[swap-env] ${TypeName}: скопировано: файлов $Files, папок $Dirs"
+    }
+}
+
 function Copy-FileForce {
     param(
         [Parameter(Mandatory = $true)]
@@ -769,20 +843,21 @@ function Invoke-SaveOrLoadType {
             $actionLine = "  active  -> current-env будет выполнено."
         }
         Write-Host (Format-StatusLine -StatusActive $State.StatusActive -StatusCurrentEnv $State.StatusCurrentEnv -TypeName $typeName)
-        if (-not $DryRun) {
-            Write-Host "[swap-env] ${typeName}: копирование..."
-        }
         if ($DryRun) {
             Write-Host $actionLine
             return
         }
         try {
+            $plan = Get-CopyArtifactPlanCounts -LiteralPath $State.ActivePath -Kind $State.Kind
+            Write-SwapEnvCopyPlanLine -TypeName $typeName -Files $plan.Files -Dirs $plan.Dirs
+            Write-Host "[swap-env] ${typeName}: копирование..."
             if ($State.Kind -eq "File") {
                 Copy-FileForce -SourcePath $State.ActivePath -DestinationPath $State.CurrentEnvPath
             }
             else {
                 Copy-DirectoryForce -SourcePath $State.ActivePath -DestinationPath $State.CurrentEnvPath
             }
+            Write-SwapEnvCopyDoneLine -TypeName $typeName -Files $plan.Files -Dirs $plan.Dirs
             Write-Host $actionLine
         }
         catch {
@@ -803,20 +878,21 @@ function Invoke-SaveOrLoadType {
         $actionLine = "  active <-  current-env будет выполнено."
     }
     Write-Host (Format-StatusLine -StatusActive $State.StatusActive -StatusCurrentEnv $State.StatusCurrentEnv -TypeName $typeName)
-    if (-not $DryRun) {
-        Write-Host "[swap-env] ${typeName}: копирование..."
-    }
     if ($DryRun) {
         Write-Host $actionLine
         return
     }
     try {
+        $plan = Get-CopyArtifactPlanCounts -LiteralPath $State.CurrentEnvPath -Kind $State.Kind
+        Write-SwapEnvCopyPlanLine -TypeName $typeName -Files $plan.Files -Dirs $plan.Dirs
+        Write-Host "[swap-env] ${typeName}: копирование..."
         if ($State.Kind -eq "File") {
             Copy-FileForce -SourcePath $State.CurrentEnvPath -DestinationPath $State.ActivePath
         }
         else {
             Copy-DirectoryForce -SourcePath $State.CurrentEnvPath -DestinationPath $State.ActivePath
         }
+        Write-SwapEnvCopyDoneLine -TypeName $typeName -Files $plan.Files -Dirs $plan.Dirs
         Write-Host $actionLine
     }
     catch {

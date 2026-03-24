@@ -32,6 +32,35 @@ _parse_env_file() {
     fi
   done < "$file"
 }
+
+# Согласовано с Convert-ConfiguredRootPath в swap-env.ps1: в WSL пути вида
+# C:/... не видны для [[ -f ]]; в Git Bash наоборот удобнее C:/... чем /mnt/...
+_autoteka_normalize_configured_root_path() {
+  local path="$1"
+  local drive tail
+
+  if [[ -f /proc/version ]] && grep -qiE '(microsoft|wsl)' /proc/version; then
+    if [[ "$path" =~ ^([A-Za-z]):[/\\](.*)$ ]]; then
+      drive="${BASH_REMATCH[1],,}"
+      tail="${BASH_REMATCH[2]//\\//}"
+      printf '/mnt/%s/%s' "$drive" "$tail"
+      return
+    fi
+  fi
+
+  if [[ -n "${OS:-}" && "$OS" == *[Ww][Ii][Nn][Dd][Oo][Ww][Ss]* ]]; then
+    if [[ "$path" =~ ^/mnt/([A-Za-z])/(.*)$ ]]; then
+      drive="${BASH_REMATCH[1]}"
+      tail="${BASH_REMATCH[2]//\\//}"
+      drive="$(printf '%s' "$drive" | tr '[:lower:]' '[:upper:]')"
+      printf '%s:/%s' "$drive" "$tail"
+      return
+    fi
+  fi
+
+  printf '%s' "$path"
+}
+
 _parse_env_file "$script_dir/.env" "AUTOTEKA_ROOT INFRA_ROOT"
 
 if [[ -z "${AUTOTEKA_ROOT:-}" ]]; then
@@ -42,6 +71,10 @@ if [[ -z "${INFRA_ROOT:-}" ]]; then
   printf "[swap-env] Отсутствует scripts/.env или переменные AUTOTEKA_ROOT, INFRA_ROOT. Скопируйте scripts/example.env в scripts/.env и задайте пути.\n" >&2
   exit 3
 fi
+
+AUTOTEKA_ROOT="$(_autoteka_normalize_configured_root_path "$AUTOTEKA_ROOT")"
+INFRA_ROOT="$(_autoteka_normalize_configured_root_path "$INFRA_ROOT")"
+
 repo_root="$AUTOTEKA_ROOT"
 infra_root="$INFRA_ROOT"
 
@@ -551,38 +584,72 @@ remove_destination_path() {
   return 0
 }
 
-count_directory_files() {
+# Подсчёт как при копировании: обычные каталоги — «папки», файлы и симлинки — «файлы».
+get_copy_plan_counts() {
   local source_path="$1"
-  find "$source_path" -mindepth 1 \( ! -type d -o -type l \) | wc -l | tr -d '[:space:]'
+  local kind="$2"
+  local entry files=0 dirs=0
+
+  if [[ "$kind" == "file" ]]; then
+    printf '%s %s\n' "1" "0"
+    return
+  fi
+
+  while IFS= read -r -d '' entry; do
+    if [[ -d "$entry" && ! -L "$entry" ]]; then
+      dirs=$((dirs + 1))
+    else
+      files=$((files + 1))
+    fi
+  done < <(find "$source_path" -mindepth 1 -print0 | LC_ALL=C sort -z)
+
+  printf '%s %s\n' "$files" "$dirs"
 }
 
-print_copy_progress() {
+print_swap_env_copy_plan() {
   local type_name="$1"
-  local copied_count="$2"
-  local total_count="$3"
-  printf "[swap-env] %s: копирование файлов %s/%s\n" "$type_name" "$copied_count" "$total_count"
+  local files="$2"
+  local dirs="$3"
+
+  printf "[swap-env] %s: " "$type_name"
+  if [[ "$files" -eq 1 && "$dirs" -eq 0 ]]; then
+    printf "будет скопировано: 1 файл\n"
+  elif [[ "$files" -eq 0 && "$dirs" -eq 0 ]]; then
+    printf "будет скопировано: пустой каталог\n"
+  else
+    printf "будет скопировано: файлов %s, папок %s\n" "$files" "$dirs"
+  fi
+}
+
+print_swap_env_copy_done() {
+  local type_name="$1"
+  local files="$2"
+  local dirs="$3"
+
+  printf "[swap-env] %s: " "$type_name"
+  if [[ "$files" -eq 1 && "$dirs" -eq 0 ]]; then
+    printf "скопировано: 1 файл\n"
+  elif [[ "$files" -eq 0 && "$dirs" -eq 0 ]]; then
+    printf "скопировано: пустой каталог\n"
+  else
+    printf "скопировано: файлов %s, папок %s\n" "$files" "$dirs"
+  fi
 }
 
 copy_file_artifact() {
   local source_path="$1"
   local destination_path="$2"
-  local type_name="${3:-artifact}"
-  print_copy_progress "$type_name" "0" "1"
+
   mkdir -p "$(dirname "$destination_path")"
   cp "$source_path" "$destination_path"
-  print_copy_progress "$type_name" "1" "1"
 }
 
 copy_directory_artifact() {
-  local type_name="$1"
-  local source_path="$2"
-  local destination_path="$3"
-  local total_files copied_count source_entry relative_path target_path
-  total_files="$(count_directory_files "$source_path")"
-  copied_count=0
+  local source_path="$1"
+  local destination_path="$2"
+  local source_entry relative_path target_path
 
   mkdir -p "$destination_path"
-  print_copy_progress "$type_name" "$copied_count" "$total_files"
 
   while IFS= read -r -d '' source_entry; do
     relative_path="${source_entry#$source_path/}"
@@ -595,9 +662,25 @@ copy_directory_artifact() {
 
     mkdir -p "$(dirname "$target_path")"
     cp -a "$source_entry" "$target_path"
-    copied_count=$((copied_count + 1))
-    print_copy_progress "$type_name" "$copied_count" "$total_files"
   done < <(find "$source_path" -mindepth 1 -print0 | LC_ALL=C sort -z)
+}
+
+_perform_artifact_copy() {
+  local type_name="$1"
+  local kind="$2"
+  local source_path="$3"
+  local destination_path="$4"
+  local plan_files plan_dirs
+
+  read -r plan_files plan_dirs < <(get_copy_plan_counts "$source_path" "$kind")
+  print_swap_env_copy_plan "$type_name" "$plan_files" "$plan_dirs"
+  printf "[swap-env] %s: копирование...\n" "$type_name"
+  if [[ "$kind" == "file" ]]; then
+    copy_file_artifact "$source_path" "$destination_path"
+  else
+    copy_directory_artifact "$source_path" "$destination_path"
+  fi
+  print_swap_env_copy_done "$type_name" "$plan_files" "$plan_dirs"
 }
 
 save_or_load_from_state() {
@@ -634,16 +717,9 @@ save_or_load_from_state() {
       return
     fi
 
-    if [[ "$kind" == "file" ]]; then
-      if ! copy_file_artifact "$active_path" "$current_env_path" "$type_name"; then
-        add_operational_error "$type_name" "same" "same" "не удалось заменить артефакт current-env." 0 1 "save"
-        return
-      fi
-    else
-      if ! copy_directory_artifact "$type_name" "$active_path" "$current_env_path"; then
-        add_operational_error "$type_name" "same" "same" "не удалось заменить артефакт current-env." 0 1 "save"
-        return
-      fi
+    if ! _perform_artifact_copy "$type_name" "$kind" "$active_path" "$current_env_path"; then
+      add_operational_error "$type_name" "same" "same" "не удалось заменить артефакт current-env." 0 1 "save"
+      return
     fi
 
     printf "  active  -> current-env выполнено.\n"
@@ -669,16 +745,9 @@ save_or_load_from_state() {
     return
   fi
 
-  if [[ "$kind" == "file" ]]; then
-    if ! copy_file_artifact "$current_env_path" "$active_path" "$type_name"; then
-      add_operational_error "$type_name" "same" "same" "не удалось заменить active-артефакт." 0 1 "load"
-      return
-    fi
-  else
-    if ! copy_directory_artifact "$type_name" "$current_env_path" "$active_path"; then
-      add_operational_error "$type_name" "same" "same" "не удалось заменить active-артефакт." 0 1 "load"
-      return
-    fi
+  if ! _perform_artifact_copy "$type_name" "$kind" "$current_env_path" "$active_path"; then
+    add_operational_error "$type_name" "same" "same" "не удалось заменить active-артефакт." 0 1 "load"
+    return
   fi
 
   printf "  active <-  current-env выполнено.\n"
