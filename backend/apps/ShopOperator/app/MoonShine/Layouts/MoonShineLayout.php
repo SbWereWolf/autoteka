@@ -24,6 +24,15 @@ final class MoonShineLayout extends AppLayout
      */
     protected ?string $palette = PurplePalette::class;
 
+    /**
+     * 24-часовой нативный {@code input type="time"} в браузерах зависит от локали;
+     * {@code lang="ru"} на корне страницы задаёт ожидаемое отображение (без AM/PM).
+     */
+    protected function getHeadLang(): string
+    {
+        return 'ru';
+    }
+
     protected function assets(): array
     {
         return [

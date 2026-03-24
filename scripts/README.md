@@ -25,8 +25,17 @@
 
 ## Локальная конфигурация
 
-1. Скопируй `scripts/example.env` в `scripts/.env`.
-2. Заполни нужные переменные.
+1. Шаблон формата — [`example.env`](example.env); рабочий файл — `scripts/.env`
+   (его не коммитим).
+2. Перед запуском репозиторных скриптов и ручных команд с PHP **сверь активные
+   артефакты с сохранённым набором для текущей ОС**:
+   - `pwsh ./scripts/swap-env.ps1 validate` (или `./scripts/swap-env.sh validate`);
+   - при расхождении — `pwsh ./scripts/swap-env.ps1 load` (или `load` в `.sh`),
+     чтобы подтянуть `scripts/.env`, lock-файлы и связанные пути.
+3. Пути к интерпретаторам брать из **уже согласованного** `scripts/.env`, в частности
+   **`SCRIPT_PHP_PATH`** — для `php artisan`, `php artisan test` (например в
+   `backend/apps/ShopOperator`) и для скриптов, которые читают env через
+   [`read-scripts-env.ps1`](read-scripts-env.ps1) (в т.ч. [`scripts/agent/verify.ps1`](agent/verify.ps1)).
 
 Поддерживаемые переменные:
 

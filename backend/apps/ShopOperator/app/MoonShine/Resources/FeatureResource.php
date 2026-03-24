@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace ShopOperator\MoonShine\Resources;
 
 use ShopOperator\Models\Feature;
+use MoonShine\Laravel\Pages\Crud\DetailPage;
 use MoonShine\Laravel\Pages\Crud\FormPage;
 use MoonShine\Laravel\Pages\Crud\IndexPage;
 use MoonShine\Laravel\Resources\ModelResource;
@@ -12,8 +13,9 @@ use MoonShine\MenuManager\Attributes\Group;
 use MoonShine\MenuManager\Attributes\Order;
 use MoonShine\Support\Attributes\Icon;
 use MoonShine\Support\Enums\Action;
+use MoonShine\Support\Enums\PageType;
 use MoonShine\Support\ListOf;
-use MoonShine\UI\Fields\Date;
+use ShopOperator\Support\MoonShine\SortDefault;
 use MoonShine\UI\Fields\ID;
 use MoonShine\UI\Fields\Number;
 use MoonShine\UI\Fields\Preview;
@@ -29,9 +31,11 @@ class FeatureResource extends ModelResource
 
     protected string $column = 'title';
 
+    protected ?PageType $redirectAfterSave = PageType::INDEX;
+
     protected function activeActions(): ListOf
     {
-        return parent::activeActions()->except(Action::VIEW, Action::DELETE, Action::MASS_DELETE);
+        return parent::activeActions()->except(Action::DELETE, Action::MASS_DELETE);
     }
 
     protected function pages(): array
@@ -39,6 +43,7 @@ class FeatureResource extends ModelResource
         return [
             IndexPage::class,
             FormPage::class,
+            DetailPage::class,
         ];
     }
 
@@ -49,18 +54,24 @@ class FeatureResource extends ModelResource
 
     protected function search(): array
     {
-        return ['id', 'title'];
+        return ['id', 'code', 'title'];
+    }
+
+    protected function detailFields(): iterable
+    {
+        return $this->indexFields();
     }
 
     protected function indexFields(): iterable
     {
         return [
             ID::make()->sortable(),
+            Preview::make('Код', formatted: fn ($item) => (string) ($item->code ?? '')),
             Text::make('Название', 'title')->sortable(),
             Number::make('Sort', 'sort')->sortable(),
             Switcher::make('Опубликован', 'is_published'),
-            Date::make('Создан', 'created_at')->format('d.m.Y H:i'),
-            Date::make('Обновлён', 'updated_at')->format('d.m.Y H:i'),
+            Preview::make('Создан', formatted: fn ($item) => $item->created_at?->format('d.m.Y H:i') ?? ''),
+            Preview::make('Обновлён', formatted: fn ($item) => $item->updated_at?->format('d.m.Y H:i') ?? ''),
         ];
     }
 
@@ -68,10 +79,12 @@ class FeatureResource extends ModelResource
     {
         return [
             ID::make(),
+            Preview::make('Код', formatted: fn ($item) => (string) ($item->code ?? '')),
             Text::make('Название', 'title')
-                ->required(),
+                ->required()
+                ->placeholder('Например: Шиномонтаж'),
             Number::make('Sort', 'sort')
-                ->default(0)
+                ->default(SortDefault::tableMaxPlusTen(Feature::class))
                 ->min(0)
                 ->required(),
             Switcher::make('Опубликован', 'is_published')

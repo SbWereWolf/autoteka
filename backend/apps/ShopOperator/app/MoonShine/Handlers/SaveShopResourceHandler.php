@@ -20,6 +20,7 @@ final class SaveShopResourceHandler
     public function __invoke(Shop $shop, array $data): Shop
     {
         $this->validateRequiredFields($data);
+        $this->validateCategoryFeatureLinkRows($data);
 
         $uploadOriginalNames = app(UploadOriginalNameStore::class);
 
@@ -68,28 +69,71 @@ final class SaveShopResourceHandler
 
     private function syncCategoryLinks(Shop $shop, mixed $rows): void
     {
-        $ids = collect(is_iterable($rows) ? $rows : [])
-            ->pluck('category_id')
-            ->filter()
-            ->map(static fn(mixed $id): int => (int) $id)
-            ->unique()
-            ->values()
-            ->all();
+        $sync = [];
 
-        $shop->categories()->sync($ids);
+        foreach (collect(is_iterable($rows) ? $rows : []) as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
+
+            $id = (int) ($row['category_id'] ?? 0);
+            if ($id <= 0) {
+                continue;
+            }
+
+            $sync[$id] = ['is_published' => (bool) $row['is_published']];
+        }
+
+        $shop->categories()->sync($sync);
     }
 
     private function syncFeatureLinks(Shop $shop, mixed $rows): void
     {
-        $ids = collect(is_iterable($rows) ? $rows : [])
-            ->pluck('feature_id')
-            ->filter()
-            ->map(static fn(mixed $id): int => (int) $id)
-            ->unique()
-            ->values()
-            ->all();
+        $sync = [];
 
-        $shop->features()->sync($ids);
+        foreach (collect(is_iterable($rows) ? $rows : []) as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
+
+            $id = (int) ($row['feature_id'] ?? 0);
+            if ($id <= 0) {
+                continue;
+            }
+
+            $sync[$id] = ['is_published' => (bool) $row['is_published']];
+        }
+
+        $shop->features()->sync($sync);
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     */
+    private function validateCategoryFeatureLinkRows(array $data): void
+    {
+        $this->assertPivotLinkRowsHavePublishedFlag($data['category_links'] ?? [], 'category_id', 'category_links');
+        $this->assertPivotLinkRowsHavePublishedFlag($data['feature_links'] ?? [], 'feature_id', 'feature_links');
+    }
+
+    private function assertPivotLinkRowsHavePublishedFlag(mixed $rows, string $idKey, string $errorKey): void
+    {
+        foreach (is_iterable($rows) ? $rows : [] as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
+
+            $id = (int) ($row[$idKey] ?? 0);
+            if ($id <= 0) {
+                continue;
+            }
+
+            if (! array_key_exists('is_published', $row)) {
+                throw ValidationException::withMessages([
+                    $errorKey => ['Для каждой выбранной связи необходимо явно указать «Опубликован».'],
+                ]);
+            }
+        }
     }
 
     private function syncContacts(Shop $shop, mixed $rows): void
@@ -306,6 +350,19 @@ final class SaveShopResourceHandler
                 ]);
             }
 
+            $rawSort = $request->input('sort');
+            if ($rawSort === null || trim((string) $rawSort) === '') {
+                throw ValidationException::withMessages([
+                    'sort' => ['Поле «Порядок» (sort) обязательно для магазина.'],
+                ]);
+            }
+
+            if (is_numeric($rawSort) && (int) $rawSort < 0) {
+                throw ValidationException::withMessages([
+                    'sort' => ['Поле «Порядок» (sort) не может быть отрицательным.'],
+                ]);
+            }
+
             $this->assertNullableNumeric(
                 $request->input('latitude'),
                 'latitude',
@@ -329,6 +386,18 @@ final class SaveShopResourceHandler
         if ($cityId <= 0) {
             throw ValidationException::withMessages([
                 'city_id' => ['Поле "Город" обязательно для магазина.'],
+            ]);
+        }
+
+        if (! array_key_exists('sort', $data) || trim((string) ($data['sort'] ?? '')) === '') {
+            throw ValidationException::withMessages([
+                'sort' => ['Поле «Порядок» (sort) обязательно для магазина.'],
+            ]);
+        }
+
+        if ((int) ($data['sort'] ?? 0) < 0) {
+            throw ValidationException::withMessages([
+                'sort' => ['Поле «Порядок» (sort) не может быть отрицательным.'],
             ]);
         }
 

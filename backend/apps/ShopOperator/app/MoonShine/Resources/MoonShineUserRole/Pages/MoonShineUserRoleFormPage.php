@@ -28,7 +28,8 @@ final class MoonShineUserRoleFormPage extends FormPage
             Box::make([
                 ID::make(),
                 Text::make(__('moonshine::ui.resource.role_name'), 'name')
-                    ->required(),
+                    ->required()
+                    ->placeholder('Например: Оператор магазина'),
             ]),
         ];
     }

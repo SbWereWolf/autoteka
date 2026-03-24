@@ -15,6 +15,17 @@ final class ShopContactUniqueness
     }
 
     /**
+     * Нормализация только для сравнения на дубликаты: буквы и цифры (Unicode), без изменения хранимого значения.
+     */
+    public static function normalizeForUniquenessCompare(mixed $value): string
+    {
+        $trimmed = trim((string) $value);
+        $alnum = preg_replace('/[^\p{L}\p{N}]/u', '', $trimmed);
+
+        return mb_strtolower($alnum ?? '');
+    }
+
+    /**
      * @param  iterable<int, array<string, mixed>>  $rows
      */
     public static function assertUnique(iterable $rows, string $errorKey = 'contact_entries'): void
@@ -29,7 +40,7 @@ final class ShopContactUniqueness
                 continue;
             }
 
-            $duplicateKey = $typeKey.'|'.mb_strtolower($value);
+            $duplicateKey = $typeKey.'|'.self::normalizeForUniquenessCompare($value);
             if (array_key_exists($duplicateKey, $seen)) {
                 throw ValidationException::withMessages([
                     $errorKey => [

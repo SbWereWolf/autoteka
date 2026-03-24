@@ -14,10 +14,10 @@ use ShopOperator\MoonShine\Resources\MoonShineUser\MoonShineUserResource;
 use ShopOperator\MoonShine\Resources\MoonShineUserRole\MoonShineUserRoleResource;
 use MoonShine\Support\Enums\Color;
 use MoonShine\UI\Components\Table\TableBuilder;
-use MoonShine\UI\Fields\Date;
 use MoonShine\UI\Fields\Email;
 use MoonShine\UI\Fields\ID;
 use MoonShine\UI\Fields\Image;
+use MoonShine\UI\Fields\Preview;
 use MoonShine\UI\Fields\Text;
 
 /**
@@ -46,9 +46,15 @@ final class MoonShineUserIndexPage extends IndexPage
                 ?string $raw
             ): string => $raw ?? ''),
 
-            Date::make(__('moonshine::ui.resource.created_at'), 'created_at')
-                ->format("d.m.Y")
-                ->sortable(),
+            Preview::make(
+                __('moonshine::ui.resource.created_at'),
+                formatted: fn ($item) => $item->created_at?->format('d.m.Y H:i') ?? '',
+            ),
+
+            Preview::make(
+                'Обновлён',
+                formatted: fn ($item) => $item->updated_at?->format('d.m.Y H:i') ?? '',
+            ),
 
             Email::make(__('moonshine::ui.resource.email'), 'email')
                 ->sortable(),

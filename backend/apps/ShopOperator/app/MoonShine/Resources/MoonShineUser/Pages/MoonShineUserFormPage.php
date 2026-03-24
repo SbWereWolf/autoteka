@@ -21,10 +21,10 @@ use MoonShine\UI\Components\Layout\Box;
 use MoonShine\UI\Components\Layout\Flex;
 use MoonShine\UI\Components\Tabs;
 use MoonShine\UI\Components\Tabs\Tab;
-use MoonShine\UI\Fields\Date;
 use MoonShine\UI\Fields\Email;
 use MoonShine\UI\Fields\ID;
 use MoonShine\UI\Fields\Image;
+use MoonShine\UI\Fields\Preview;
 use MoonShine\UI\Fields\Password;
 use MoonShine\UI\Fields\PasswordRepeat;
 use MoonShine\UI\Fields\Text;
@@ -56,10 +56,12 @@ final class MoonShineUserFormPage extends FormPage
 
                         Flex::make([
                             Text::make(__('moonshine::ui.resource.name'), 'name')
-                                ->required(),
+                                ->required()
+                                ->placeholder('Например: Иван Оператор'),
 
                             Email::make(__('moonshine::ui.resource.email'), 'email')
-                                ->required(),
+                                ->required()
+                                ->placeholder('operator@example.com'),
                         ]),
 
                         Image::make(__('moonshine::ui.resource.avatar'), 'avatar')
@@ -67,19 +69,26 @@ final class MoonShineUserFormPage extends FormPage
                             ->dir(moonshineConfig()->getUserAvatarsDir())
                             ->allowedExtensions(['jpg', 'png', 'jpeg', 'gif']),
 
-                        Date::make(__('moonshine::ui.resource.created_at'), 'created_at')
-                            ->format("d.m.Y")
-                            ->default(now()->toDateTimeString()),
+                        Preview::make(
+                            __('moonshine::ui.resource.created_at'),
+                            formatted: fn ($item) => $item->created_at?->format('d.m.Y H:i') ?? '',
+                        ),
+                        Preview::make(
+                            'Обновлён',
+                            formatted: fn ($item) => $item->updated_at?->format('d.m.Y H:i') ?? '',
+                        ),
                     ])->icon('user-circle'),
 
                     Tab::make(__('moonshine::ui.resource.password'), [
                         Collapse::make(__('moonshine::ui.resource.change_password'), [
                             Password::make(__('moonshine::ui.resource.password'), 'password')
                                 ->customAttributes(['autocomplete' => 'new-password'])
+                                ->placeholder('Не менее 8 символов')
                                 ->eye(),
 
                             PasswordRepeat::make(__('moonshine::ui.resource.repeat_password'), 'password_confirmation')
                                 ->customAttributes(['autocomplete' => 'confirm-password'])
+                                ->placeholder('Повторите пароль')
                                 ->eye(),
                         ])->icon('lock-closed'),
                     ])->icon('lock-closed'),
