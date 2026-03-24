@@ -371,7 +371,6 @@ watchdog/maintenance и серверные runbook-процедуры описа
   аргументов, не из расположения (см. [DEPLOY § Контракты
   путей](../../infrastructure/DEPLOY.md#контракты-путей)).
 - Файл по `TELEGRAM_ENV_FILE` — optional Telegram secrets
-- `backend/.env` — backend runtime config
 
 ## 7. Проверки
 
@@ -394,7 +393,6 @@ watchdog/maintenance и серверные runbook-процедуры описа
 
 - В репозитории нет полноценного CI-пайплайна, который автоматически
   запускает все frontend/backend/deploy проверки.
-- Theme editor зависит от `localStorage` и runtime CSS overrides.
 - Часть пользовательского поведения сохраняется локально в браузере,
   поэтому диагностика UI должна учитывать localStorage.
 - Deployment-контур ориентирован на Debian/Ubuntu и systemd.
