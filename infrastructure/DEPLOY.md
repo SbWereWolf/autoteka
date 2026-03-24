@@ -19,6 +19,7 @@
 1. Переменные окружения (например, `export INFRA_ROOT=...`).
 2. Аргументы запуска (если скрипт поддерживает `--infra-root=` и `--autoteka-root=`).
 3. Загрузка из файла (например, `source prod.env`).
+4. Только для `bootstrap/install.sh`: если `INFRA_ROOT` или `AUTOTEKA_ROOT` ещё не заданы, скрипт пытается выполнить `source` для файла `.env` в каталоге на уровень выше `bootstrap/`, пока он существует до переноса в `backup.env`.
 
 При пустых или
 относительных путях скрипт завершается с кодом 2 и выводит примеры запуска.
@@ -70,7 +71,7 @@ sudo ./infrastructure/bootstrap/install.sh --infra-root=/opt/autoteka/infrastruc
 
 - `AUTOTEKA_OPTIONS_FILE` — путь к options.env (в prod.env: `/etc/autoteka/options.env`).
 - options.env — `AUTOTEKA_ROOT`, `INFRA_ROOT`, `AUTOTEKA_LOG_DIR`, `TELEGRAM_LOCK_DIR`,
-  `BRANCH`, `REMOTE`, `HTTP_PORT`. Скрипты берут пути только из env или аргументов.
+  `BRANCH`, `REMOTE`, `HTTP_BIND_HOST`, `HTTP_PORT`, smoke-URL (`BACKEND_SMOKE_URL`, `API_SMOKE_URL`, `ADMIN_SMOKE_URL` для watchdog и repair). Скрипты берут пути только из env или аргументов.
 - Файл по пути `TELEGRAM_ENV_FILE` — `TELEGRAM_TOKEN`, `TELEGRAM_CHAT`
   (см. выше в «Основные файлы»).
 

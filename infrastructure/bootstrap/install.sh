@@ -3,6 +3,18 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/../init-roots.sh"
+if [ -z "${INFRA_ROOT:-}" ] || [ -z "${AUTOTEKA_ROOT:-}" ]; then
+  _install_bootstrap_env="$SCRIPT_DIR/../.env"
+  if [ -f "$_install_bootstrap_env" ]; then
+    set -a
+    # shellcheck disable=SC1090
+    source "$_install_bootstrap_env" || {
+      echo "Ошибка загрузки $_install_bootstrap_env" >&2
+      exit 1
+    }
+    set +a
+  fi
+fi
 autoteka_init_roots "$@"
 set -- "${AUTOTEKA_ARGS[@]}"
 if [ "$(id -u)" -ne 0 ]; then
