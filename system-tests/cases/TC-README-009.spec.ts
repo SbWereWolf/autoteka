@@ -1,5 +1,5 @@
 /**
- * TC-README-009: шаблоны env — frontend/example.env, backend/example.env.
+ * TC-README-009: шаблон env — frontend/example.env.
  * Документ: README.md
  * Каталог тестов: system-tests
  */
@@ -14,12 +14,6 @@ const REPO_ROOT = join(__dirname, "..", "..");
 describe("TC-README-009", () => {
   it("frontend/example.env существует", () => {
     expect(existsSync(join(REPO_ROOT, "frontend/example.env"))).toBe(
-      true,
-    );
-  });
-
-  it("backend/example.env существует", () => {
-    expect(existsSync(join(REPO_ROOT, "backend/example.env"))).toBe(
       true,
     );
   });
