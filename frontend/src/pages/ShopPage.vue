@@ -132,8 +132,29 @@
 
           <ul class="shop-contact-list">
             <li v-for="item in contactRows" :key="item.key">
+              <div
+                v-if="item.kind === 'address'"
+                class="shop-contact-address-row"
+              >
+                <button
+                  type="button"
+                  class="shop-contact-navi-button ui-transition ui-interactive ui-bounce rounded-2xl min-h-12 px-4 py-3 text-sm font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900"
+                  :aria-describedby="item.addressTextId"
+                  data-testid="shop-contact-open-navi"
+                  @click="openYandexNavigatorMapSearch(item.addressText)"
+                >
+                  Открыть в Навигаторе
+                </button>
+                <a
+                  :id="item.addressTextId"
+                  class="shop-contact-link"
+                  :href="item.mapsHref"
+                  target="_blank"
+                  rel="noreferrer"
+                >{{ item.addressText }}</a>
+              </div>
               <a
-                v-if="item.href"
+                v-else-if="item.href"
                 class="shop-contact-link"
                 :href="item.href"
                 :target="item.target"
@@ -192,6 +213,10 @@ import { apiClient } from "../api/HttpApiClient";
 import { ApiError } from "../api/ApiClient";
 import { state } from "../state";
 import { mapIdsToTitles } from "../utils/mapCodesToNames";
+import {
+  buildYandexMapsWebUrl,
+  openYandexNavigatorMapSearch,
+} from "../utils/yandexAddressOpen";
 import ErrorStatePanel from "../components/ErrorStatePanel.vue";
 
 const route = useRoute();
@@ -244,23 +269,64 @@ function goToCatalog() {
   router.push({ name: "catalog" });
 }
 
-const contactRows = computed(() => {
-  const rows: Array<{
-    key: string;
-    label: string;
-    href: string | null;
-    target?: string;
-  }> = [];
+type ContactRow =
+  | {
+      key: string;
+      kind: "address";
+      addressText: string;
+      addressTextId: string;
+      mapsHref: string;
+    }
+  | {
+      key: string;
+      kind: "link";
+      label: string;
+      href: string;
+      target: string;
+    }
+  | {
+      key: string;
+      kind: "plain";
+      label: string;
+    };
+
+const contactRows = computed((): ContactRow[] => {
+  const rows: ContactRow[] = [];
 
   for (const type of ACCEPTABLE_TYPES) {
     for (const value of contacts.value[type] ?? []) {
+      if (type === "address") {
+        const addressText = String(value ?? "");
+        if (!addressText.trim()) {
+          continue;
+        }
+        const addressTextId = `shop-address-text-${rows.length}`;
+        rows.push({
+          key: `address:${rows.length}:${addressText}`,
+          kind: "address",
+          addressText,
+          addressTextId,
+          mapsHref: buildYandexMapsWebUrl(addressText),
+        });
+        continue;
+      }
+
       const href = hrefFor(type, value);
-      rows.push({
-        key: `${type}:${value}`,
-        label: labelFor(type, value),
-        href,
-        target: href?.startsWith("http") ? "_blank" : "_self",
-      });
+      if (href) {
+        rows.push({
+          key: `${type}:${value}`,
+          kind: "link",
+          label: labelFor(type, value),
+          href,
+          target: href.startsWith("http") ? "_blank" : "_self",
+        });
+      } else {
+        rows.push({
+          key: `${type}:${value}`,
+          kind: "plain",
+          label: labelFor(type, value),
+        });
+      }
     }
   }
 
@@ -278,10 +344,6 @@ function hrefFor(type: string, value: string) {
 
   if (type === "telegram" || type === "whatsapp") {
     return value;
-  }
-
-  if (type === "address") {
-    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(value)}`;
   }
 
   return null;
