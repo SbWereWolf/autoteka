@@ -11,8 +11,6 @@ services:
     container_name: ${AUTOTEKA_RUNTIME_INSTANCE:-autoteka}-php
     restart: unless-stopped
     working_dir: /var/www/backend
-    environment:
-      RUN_MIGRATIONS: ${RUN_MIGRATIONS}
     healthcheck:
       test: >-
         SCRIPT_NAME=/fpm-ping SCRIPT_FILENAME=/fpm-ping

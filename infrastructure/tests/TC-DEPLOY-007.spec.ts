@@ -15,6 +15,7 @@ const EXPECTED_VARS = [
   "AUTOTEKA_LOG_DIR",
   "BRANCH",
   "REMOTE",
+  "HTTP_BIND_HOST",
   "HTTP_PORT",
   "PHP_READY_TIMEOUT",
   "ADMIN_SMOKE_URL",
@@ -72,6 +73,7 @@ describe("TC-DEPLOY-007", () => {
       join(INFRA_ROOT_PATH, "runtime/docker-compose.yml"),
       "utf-8",
     );
+    expect(composeContent).toMatch(/HTTP_BIND_HOST/);
     expect(composeContent).toMatch(/HTTP_PORT/);
 
     const runtimeHelpersContent = readFileSync(

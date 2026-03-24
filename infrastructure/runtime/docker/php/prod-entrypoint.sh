@@ -32,7 +32,6 @@ chown -R www-data:www-data \
   /var/www/backend/apps/ShopOperator/storage \
   /var/www/backend/apps/ShopOperator/bootstrap/cache
 
-(cd apps/ShopOperator && php artisan migrate --force >/dev/null 2>&1 || true)
 (cd apps/ShopOperator && php artisan package:discover --ansi >/dev/null 2>&1 || true)
 (cd apps/ShopOperator && php artisan optimize:clear --ansi >/dev/null 2>&1 || true)
 if ! grep -qE '^APP_KEY=base64:' apps/ShopOperator/.env; then

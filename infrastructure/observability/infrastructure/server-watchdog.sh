@@ -49,9 +49,9 @@ API_MAX_REPAIRS="${WATCHDOG_API_MAX_REPAIRS}"
 NGINX_REPAIR_VERIFY_TIMEOUT="${WATCHDOG_NGINX_REPAIR_VERIFY_TIMEOUT}"
 PHP_REPAIR_VERIFY_TIMEOUT="${WATCHDOG_PHP_REPAIR_VERIFY_TIMEOUT}"
 CONTAINER_REPAIR_VERIFY_INTERVAL="${WATCHDOG_CONTAINER_REPAIR_VERIFY_INTERVAL}"
-BACKEND_UP_URL="${BACKEND_UP_URL}"
-API_HEALTH_URL="${API_HEALTH_URL}"
-ADMIN_HEALTH_URL="${ADMIN_HEALTH_URL}"
+BACKEND_SMOKE_URL="${BACKEND_SMOKE_URL}"
+API_SMOKE_URL="${API_SMOKE_URL}"
+ADMIN_SMOKE_URL="${ADMIN_SMOKE_URL}"
 
 DRY_RUN=0
 SCRIPT_ID="server-watchdog"
@@ -277,18 +277,18 @@ probe_domain() {
       [ "$status" = "healthy" ]
       ;;
     backend)
-      status="$(http_status_once "$BACKEND_UP_URL")"
-      PROBE_DETAIL="url=$BACKEND_UP_URL status=$status"
+      status="$(http_status_once "$BACKEND_SMOKE_URL")"
+      PROBE_DETAIL="url=$BACKEND_SMOKE_URL status=$status"
       [ "$status" -ge 200 ] && [ "$status" -lt 400 ]
       ;;
     admin)
-      status="$(http_status_once "$ADMIN_HEALTH_URL")"
-      PROBE_DETAIL="url=$ADMIN_HEALTH_URL status=$status"
+      status="$(http_status_once "$ADMIN_SMOKE_URL")"
+      PROBE_DETAIL="url=$ADMIN_SMOKE_URL status=$status"
       [ "$status" -ge 200 ] && [ "$status" -lt 400 ]
       ;;
     api)
-      status="$(http_status_once "$API_HEALTH_URL")"
-      PROBE_DETAIL="url=$API_HEALTH_URL status=$status"
+      status="$(http_status_once "$API_SMOKE_URL")"
+      PROBE_DETAIL="url=$API_SMOKE_URL status=$status"
       [ "$status" -ge 200 ] && [ "$status" -lt 400 ]
       ;;
     *)
