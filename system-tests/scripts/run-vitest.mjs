@@ -17,26 +17,8 @@ const getArgValue = (name) => {
   return undefined;
 };
 
-const profile = getArgValue("--profile") ?? "quick-local";
 const cliBaseUrl = getArgValue("--base-url");
-const waitProfile = (process.env.TEST_WAIT_PROFILE ?? "normal").toLowerCase();
-const hostFrontendPort = Number(process.env.AUTOTEKA_DEV_FRONTEND_PORT ?? "4174");
 
-const profileMap = {
-  "quick-local": { mode: "quick", stack: "local", headed: "0" },
-  "quick-dev": { mode: "quick", stack: "dev", headed: "0" },
-  "ui-headless-dev": { mode: "ui", stack: "dev", headed: "0" },
-  "ui-headless-prod": { mode: "ui", stack: "prod", headed: "0" },
-  "ui-headed-local": { mode: "ui", stack: "local", headed: "1" },
-  "ui-headed-prod": { mode: "ui", stack: "prod", headed: "1" },
-};
-
-if (!profileMap[profile]) {
-  console.error(`Unknown profile: ${profile}`);
-  process.exit(2);
-}
-
-const profileInfo = profileMap[profile];
 const repoRoot = fileURLToPath(new URL("../..", import.meta.url));
 const systemTestsDir = path.join(repoRoot, "system-tests");
 const systemTestsEnvPath = path.join(systemTestsDir, ".env");
@@ -63,6 +45,112 @@ const fail = (message) => {
   process.exit(3);
 };
 
+if (!fs.existsSync(systemTestsEnvPath)) {
+  console.error(
+    "[run-vitest] Не найден system-tests/.env. Создайте: 1) скопируйте system-tests/example.env в system-tests/win.env и system-tests/nix.env; 2) заполните INFRA_ROOT; 3) выполните: pwsh ./scripts/swap-env.ps1 load -t system-tests-env",
+  );
+  process.exit(3);
+}
+
+const systemTestsEnv = parseEnvFile(systemTestsEnvPath);
+const infraRoot = systemTestsEnv.INFRA_ROOT?.trim();
+
+if (!infraRoot) {
+  console.error(
+    "[run-vitest] В system-tests/.env не задан INFRA_ROOT. Задайте абсолютный путь к каталогу infrastructure (например: INFRA_ROOT=C:\\path\\to\\infrastructure).",
+  );
+  process.exit(3);
+}
+
+const requireFromSystemTestsEnv = (key) => {
+  const value = systemTestsEnv[key]?.trim();
+  if (!value) {
+    fail(
+      `[run-vitest] В system-tests/.env не задан ${key}. Скопируйте ключ из system-tests/example.env и задайте значение.`,
+    );
+  }
+  return value;
+};
+
+const requirePositiveIntFromSystemTestsEnv = (key) => {
+  const raw = requireFromSystemTestsEnv(key);
+  const n = Number.parseInt(raw, 10);
+  if (!Number.isFinite(n) || n <= 0) {
+    fail(
+      `[run-vitest] В system-tests/.env переменная ${key} должна быть положительным целым числом (сейчас: ${raw}).`,
+    );
+  }
+  return n;
+};
+
+const dockerStartupTimeoutSec = requirePositiveIntFromSystemTestsEnv(
+  "SYSTEM_TESTS_DOCKER_STARTUP_TIMEOUT_SEC",
+);
+const dockerPollIntervalSec = requirePositiveIntFromSystemTestsEnv(
+  "SYSTEM_TESTS_DOCKER_POLL_INTERVAL_SEC",
+);
+const curlMaxTimeSec = requirePositiveIntFromSystemTestsEnv("SYSTEM_TESTS_CURL_MAX_TIME_SEC");
+const hostFrontendReadyTimeoutSec = requirePositiveIntFromSystemTestsEnv(
+  "SYSTEM_TESTS_HOST_FRONTEND_READY_TIMEOUT_SEC",
+);
+const hostFrontendPollIntervalSec = requirePositiveIntFromSystemTestsEnv(
+  "SYSTEM_TESTS_HOST_FRONTEND_POLL_INTERVAL_SEC",
+);
+const viteDevBindHost = requireFromSystemTestsEnv("SYSTEM_TESTS_VITE_DEV_BIND_HOST");
+const viteDevUrlHost = requireFromSystemTestsEnv("SYSTEM_TESTS_VITE_DEV_URL_HOST");
+const frontendUpstreamHost = requireFromSystemTestsEnv("SYSTEM_TESTS_FRONTEND_UPSTREAM_HOST");
+const localBaseUrl = requireFromSystemTestsEnv("SYSTEM_TESTS_LOCAL_BASE_URL");
+const hostFrontendPort = requirePositiveIntFromSystemTestsEnv("AUTOTEKA_DEV_FRONTEND_PORT");
+
+const profile =
+  getArgValue("--profile")?.trim() ||
+  requireFromSystemTestsEnv("AUTOTEKA_SYSTEM_TESTS_PROFILE").trim();
+
+const profileMap = {
+  "quick-local": { mode: "quick", stack: "local", headed: "0" },
+  "quick-dev": { mode: "quick", stack: "dev", headed: "0" },
+  "ui-headless-dev": { mode: "ui", stack: "dev", headed: "0" },
+  "ui-headless-prod": { mode: "ui", stack: "prod", headed: "0" },
+  "ui-headed-local": { mode: "ui", stack: "local", headed: "1" },
+  "ui-headed-prod": { mode: "ui", stack: "prod", headed: "1" },
+};
+
+if (!profileMap[profile]) {
+  console.error(`Unknown profile: ${profile}`);
+  process.exit(2);
+}
+
+const profileInfo = profileMap[profile];
+
+const deployEnvPath = path.join(infraRoot, "prod.test.env");
+const devEnvPath = path.join(infraRoot, "dev.test.env");
+
+if (profileInfo.stack === "dev" && !fs.existsSync(devEnvPath)) {
+  console.error(
+    `[run-vitest] Не найден ${devEnvPath}. Создайте копию: cp ${path.join(infraRoot, "dev.env")} ${devEnvPath} (или аналог для Windows).`,
+  );
+  process.exit(3);
+}
+if (profileInfo.stack === "prod" && !fs.existsSync(deployEnvPath)) {
+  console.error(
+    `[run-vitest] Не найден ${deployEnvPath}. Создайте копию: cp ${path.join(infraRoot, "prod.env")} ${deployEnvPath} (или аналог для Windows).`,
+  );
+  process.exit(3);
+}
+
+const deployEnv = parseEnvFile(deployEnvPath);
+const devEnv = parseEnvFile(devEnvPath);
+
+const requireFromStackFile = (stackLabel, envObj, fileHint, key) => {
+  const value = envObj[key]?.trim();
+  if (!value) {
+    fail(
+      `[run-vitest] В ${fileHint} не задан ${key} (нужен для stack=${stackLabel}). Уберите пустое значение и задайте его явно.`,
+    );
+  }
+  return value;
+};
+
 const isWindowsAbsolutePath = (value) => /^[A-Za-z]:[\\/]/.test(value);
 
 const resolveEnvRootPath = (rawPath, label) => {
@@ -82,8 +170,15 @@ const resolvePath = (basePath, targetPath) => {
   return path.resolve(basePath, targetPath);
 };
 
-const getRuntimeInstance = (stackEnvForProfile) =>
-  stackEnvForProfile.AUTOTEKA_RUNTIME_INSTANCE?.trim() || "autoteka";
+const getRuntimeInstance = (stackEnvForProfile) => {
+  const fromStack = stackEnvForProfile.AUTOTEKA_RUNTIME_INSTANCE?.trim();
+  if (fromStack) return fromStack;
+  const fromSystemTests = systemTestsEnv.AUTOTEKA_RUNTIME_INSTANCE?.trim();
+  if (fromSystemTests) return fromSystemTests;
+  fail(
+    "[run-vitest] Не задан AUTOTEKA_RUNTIME_INSTANCE: добавьте в infrastructure/*.test.env или в system-tests/.env (см. system-tests/example.env).",
+  );
+};
 
 const getResolvedRuntimeState = (stackEnvForProfile) => {
   const autotekaRootRaw = stackEnvForProfile.AUTOTEKA_ROOT?.trim();
@@ -118,57 +213,15 @@ const getResolvedRuntimeState = (stackEnvForProfile) => {
     testDbPath,
   };
 };
+
 const logTestRuntimeEnv = (stackEnvForProfile) => {
   if (profileInfo.stack === "local") return;
 
   const runtimeState = getResolvedRuntimeState(stackEnvForProfile);
-  const dbConnection = stackEnvForProfile.DB_CONNECTION?.trim() ?? "sqlite";
-  const runMigrations = stackEnvForProfile.RUN_MIGRATIONS?.trim() ?? "false";
+  const dbConnection = stackEnvForProfile.DB_CONNECTION?.trim() ?? "<unset>";
   console.log(
-    `[run-vitest] runtime instance=${runtimeState.instance} dbConnection=${dbConnection} dbPath=${runtimeState.resolvedDbPath ?? "<unset>"} runMigrations=${runMigrations}`,
+    `[run-vitest] runtime instance=${runtimeState.instance} dbConnection=${dbConnection} dbPath=${runtimeState.resolvedDbPath ?? "<unset>"}`,
   );
-};
-
-if (!fs.existsSync(systemTestsEnvPath)) {
-  console.error(
-    "[run-vitest] Не найден system-tests/.env. Создайте: 1) скопируйте system-tests/example.env в system-tests/win.env и system-tests/nix.env; 2) заполните INFRA_ROOT; 3) выполните: pwsh ./scripts/swap-env.ps1 load -t system-tests-env",
-  );
-  process.exit(3);
-}
-
-const systemTestsEnv = parseEnvFile(systemTestsEnvPath);
-const infraRoot = systemTestsEnv.INFRA_ROOT?.trim();
-
-if (!infraRoot) {
-  console.error(
-    "[run-vitest] В system-tests/.env не задан INFRA_ROOT. Задайте абсолютный путь к каталогу infrastructure (например: INFRA_ROOT=C:\\path\\to\\infrastructure).",
-  );
-  process.exit(3);
-}
-
-const deployEnvPath = path.join(infraRoot, "prod.test.env");
-const devEnvPath = path.join(infraRoot, "dev.test.env");
-
-if (profileInfo.stack === "dev" && !fs.existsSync(devEnvPath)) {
-  console.error(
-    `[run-vitest] Не найден ${devEnvPath}. Создайте копию: cp ${path.join(infraRoot, "dev.env")} ${devEnvPath} (или аналог для Windows).`,
-  );
-  process.exit(3);
-}
-if (profileInfo.stack === "prod" && !fs.existsSync(deployEnvPath)) {
-  console.error(
-    `[run-vitest] Не найден ${deployEnvPath}. Создайте копию: cp ${path.join(infraRoot, "prod.env")} ${deployEnvPath} (или аналог для Windows).`,
-  );
-  process.exit(3);
-}
-
-const deployEnv = parseEnvFile(deployEnvPath);
-const devEnv = parseEnvFile(devEnvPath);
-
-const stackDefaultBaseUrl = {
-  local: "http://127.0.0.1:8081",
-  dev: `http://${devEnv.DEV_BIND_HOST ?? "127.0.0.1"}:${devEnv.DEV_WEB_PORT ?? "8081"}`,
-  prod: `http://${deployEnv.HTTP_BIND_HOST ?? "127.0.0.1"}:${deployEnv.HTTP_PORT ?? "80"}`,
 };
 
 const normalizeHost = (host) => {
@@ -177,17 +230,30 @@ const normalizeHost = (host) => {
   return host;
 };
 
+const stackBaseUrlFromEnv = () => {
+  if (profileInfo.stack === "local") {
+    return localBaseUrl;
+  }
+  if (profileInfo.stack === "dev") {
+    const host = requireFromStackFile("dev", devEnv, devEnvPath, "HTTP_BIND_HOST");
+    const port = requireFromStackFile("dev", devEnv, devEnvPath, "HTTP_PORT");
+    return `http://${normalizeHost(host)}:${port}`;
+  }
+  const host = requireFromStackFile("prod", deployEnv, deployEnvPath, "HTTP_BIND_HOST");
+  const port = requireFromStackFile("prod", deployEnv, deployEnvPath, "HTTP_PORT");
+  return `http://${normalizeHost(host)}:${port}`;
+};
+
 const resolveBaseUrl = () => {
   const envBaseUrl =
     process.env.BASE_URL && process.env.BASE_URL !== "/" ? process.env.BASE_URL : undefined;
-  const candidate =
-    cliBaseUrl ?? envBaseUrl ?? stackDefaultBaseUrl[profileInfo.stack] ?? "http://127.0.0.1:8081";
+  const candidate = cliBaseUrl ?? envBaseUrl ?? stackBaseUrlFromEnv();
   try {
     const parsed = new URL(candidate);
     parsed.hostname = normalizeHost(parsed.hostname);
     return parsed.toString();
   } catch {
-    return "http://127.0.0.1:8081/";
+    fail(`[run-vitest] Некорректный URL для BASE_URL/стека: ${candidate}`);
   }
 };
 
@@ -212,7 +278,7 @@ const waitForHttpStatus = ({
       [
         "-sS",
         "--max-time",
-        "5",
+        String(curlMaxTimeSec),
         "-o",
         nullDevice,
         "-w",
@@ -257,13 +323,18 @@ const composeEnv = {
   ...stackEnv,
 };
 
+const frontendModeForDev =
+  profileInfo.stack === "dev"
+    ? requireFromStackFile("dev", stackEnv, devEnvPath, "FRONTEND_MODE")
+    : undefined;
+
 const shouldUseHostFrontendDevServer =
   profile === "ui-headless-dev" &&
   profileInfo.stack === "dev" &&
-  (stackEnv.FRONTEND_MODE?.trim() ?? "source") === "source";
+  frontendModeForDev === "source";
 
 if (shouldUseHostFrontendDevServer) {
-  composeEnv.FRONTEND_UPSTREAM_HOST = "host.docker.internal";
+  composeEnv.FRONTEND_UPSTREAM_HOST = frontendUpstreamHost;
   composeEnv.FRONTEND_UPSTREAM_PORT = String(hostFrontendPort);
 }
 
@@ -281,7 +352,7 @@ const startHostFrontendDevServer = () => {
       "dev",
       "--",
       "--host",
-      "127.0.0.1",
+      viteDevBindHost,
       "--port",
       String(hostFrontendPort),
     ],
@@ -315,17 +386,17 @@ const waitForHostFrontendDevServer = () => {
   if (!shouldUseHostFrontendDevServer) return;
 
   waitForHttpStatus({
-    url: `http://127.0.0.1:${hostFrontendPort}/`,
-    timeoutSec: 120,
-    intervalSec: 2,
+    url: `http://${viteDevUrlHost}:${hostFrontendPort}/`,
+    timeoutSec: hostFrontendReadyTimeoutSec,
+    intervalSec: hostFrontendPollIntervalSec,
     expectedStatuses: new Set(["200"]),
     label: `host frontend / on ${hostFrontendPort}`,
   });
 
   waitForHttpStatus({
-    url: `http://127.0.0.1:${hostFrontendPort}/@vite/client`,
-    timeoutSec: 120,
-    intervalSec: 2,
+    url: `http://${viteDevUrlHost}:${hostFrontendPort}/@vite/client`,
+    timeoutSec: hostFrontendReadyTimeoutSec,
+    intervalSec: hostFrontendPollIntervalSec,
     expectedStatuses: new Set(["200"]),
     label: `host frontend /@vite/client on ${hostFrontendPort}`,
   });
@@ -354,13 +425,6 @@ const preflightRuntime = (baseUrl) => {
     console.error("[run-vitest] Не удалось получить статус контейнеров");
     process.exit(ps.status ?? 1);
   }
-
-  const waitProfiles = {
-    short: { startupTimeoutSec: 45, intervalSec: 2, smokeTimeoutSec: 8 },
-    normal: { startupTimeoutSec: 120, intervalSec: 2, smokeTimeoutSec: 10 },
-    long: { startupTimeoutSec: 240, intervalSec: 3, smokeTimeoutSec: 15 },
-  };
-  const effectiveWait = waitProfiles[waitProfile] ?? waitProfiles.normal;
 
   const listContainers = spawnSync(
     "docker",
@@ -410,9 +474,9 @@ const preflightRuntime = (baseUrl) => {
     if (allReady) break;
 
     const elapsedSec = Math.floor((Date.now() - startedAt) / 1000);
-    if (elapsedSec >= effectiveWait.startupTimeoutSec) {
+    if (elapsedSec >= dockerStartupTimeoutSec) {
       console.error(
-        `[run-vitest] Контейнеры не перешли в healthy/running за ${effectiveWait.startupTimeoutSec}s (profile=${waitProfile})`,
+        `[run-vitest] Контейнеры не перешли в healthy/running за ${dockerStartupTimeoutSec}s (SYSTEM_TESTS_DOCKER_STARTUP_TIMEOUT_SEC)`,
       );
       const psAfterTimeout = spawnSync("docker", ["compose", "-f", composeFile, "ps"], {
         stdio: "inherit",
@@ -422,7 +486,7 @@ const preflightRuntime = (baseUrl) => {
       process.exit(psAfterTimeout.status ?? 1);
     }
 
-    spawnSync("sleep", [String(effectiveWait.intervalSec)], {
+    spawnSync("sleep", [String(dockerPollIntervalSec)], {
       stdio: "inherit",
       cwd: repoRoot,
       env: composeEnv,
@@ -431,24 +495,24 @@ const preflightRuntime = (baseUrl) => {
 
   waitForHttpStatus({
     url: new URL("/healthcheck", baseUrl).toString(),
-    timeoutSec: effectiveWait.startupTimeoutSec,
-    intervalSec: effectiveWait.intervalSec,
+    timeoutSec: dockerStartupTimeoutSec,
+    intervalSec: dockerPollIntervalSec,
     expectedStatuses: new Set(["200", "204"]),
     label: "/healthcheck",
   });
 
   waitForHttpStatus({
     url: new URL("/up", baseUrl).toString(),
-    timeoutSec: effectiveWait.startupTimeoutSec,
-    intervalSec: effectiveWait.intervalSec,
+    timeoutSec: dockerStartupTimeoutSec,
+    intervalSec: dockerPollIntervalSec,
     expectedStatuses: new Set(["200"]),
     label: "/up",
   });
 
   waitForHttpStatus({
     url: new URL("/api/v1/category-list", baseUrl).toString(),
-    timeoutSec: effectiveWait.startupTimeoutSec,
-    intervalSec: effectiveWait.intervalSec,
+    timeoutSec: dockerStartupTimeoutSec,
+    intervalSec: dockerPollIntervalSec,
     expectedStatuses: new Set(["200"]),
     label: "/api/v1/category-list",
   });
@@ -456,15 +520,15 @@ const preflightRuntime = (baseUrl) => {
   if (profileInfo.mode === "ui") {
     waitForHttpStatus({
       url: new URL("/admin/login", baseUrl).toString(),
-      timeoutSec: effectiveWait.startupTimeoutSec,
-      intervalSec: effectiveWait.intervalSec,
+      timeoutSec: dockerStartupTimeoutSec,
+      intervalSec: dockerPollIntervalSec,
       expectedStatuses: new Set(["200"]),
       label: "/admin/login",
     });
     waitForHttpStatus({
       url: new URL("/", baseUrl).toString(),
-      timeoutSec: effectiveWait.startupTimeoutSec,
-      intervalSec: effectiveWait.intervalSec,
+      timeoutSec: dockerStartupTimeoutSec,
+      intervalSec: dockerPollIntervalSec,
       expectedStatuses: new Set(["200"]),
       label: "/",
     });

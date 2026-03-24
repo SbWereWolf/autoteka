@@ -79,8 +79,8 @@ if [ -f "$INFRA_ROOT/dev.env" ]; then
   cp "$INFRA_ROOT/dev.env" "$INFRA_ROOT/dev.test.env"
   sed -i "s|^AUTOTEKA_ROOT=.*|AUTOTEKA_ROOT=$AUTOTEKA_ROOT|" "$INFRA_ROOT/dev.test.env"
   sed -i "s|^INFRA_ROOT=.*|INFRA_ROOT=$INFRA_ROOT|" "$INFRA_ROOT/dev.test.env"
-  sed -i "s|^DEV_BIND_HOST=.*|DEV_BIND_HOST=127.0.0.1|" "$INFRA_ROOT/dev.test.env"
-  sed -i "s|^DEV_WEB_PORT=.*|DEV_WEB_PORT=8081|" "$INFRA_ROOT/dev.test.env"
+  sed -i "s|^HTTP_BIND_HOST=.*|HTTP_BIND_HOST=127.0.0.1|" "$INFRA_ROOT/dev.test.env"
+  sed -i "s|^HTTP_PORT=.*|HTTP_PORT=8081|" "$INFRA_ROOT/dev.test.env"
   if grep -q '^DB_DATABASE=' "$INFRA_ROOT/dev.test.env"; then
     sed -i "s|^DB_DATABASE=.*|DB_DATABASE=../../database/database.test.sqlite|" "$INFRA_ROOT/dev.test.env"
   else
@@ -101,8 +101,9 @@ sed -i "s|^INFRA_ROOT=.*|INFRA_ROOT=$INFRA_ROOT|" "$TEST_ROOT/scripts/.env"
 
 # system-tests/nix.env и system-tests/.env
 mkdir -p "$TEST_ROOT/system-tests"
-cp -n "$TEST_ROOT/system-tests/example.env" "$TEST_ROOT/system-tests/nix.env" 2>/dev/null || true
-printf '%s\n' "INFRA_ROOT=$INFRA_ROOT" "BASH_PATH=/usr/bin/bash" > "$TEST_ROOT/system-tests/nix.env"
+cp -f "$TEST_ROOT/system-tests/example.env" "$TEST_ROOT/system-tests/nix.env"
+sed -i "s|^INFRA_ROOT=.*|INFRA_ROOT=$INFRA_ROOT|" "$TEST_ROOT/system-tests/nix.env"
+sed -i "s|^BASH_PATH=.*|BASH_PATH=/usr/bin/bash|" "$TEST_ROOT/system-tests/nix.env"
 cp "$TEST_ROOT/system-tests/nix.env" "$TEST_ROOT/system-tests/.env"
 
 echo ">>> Готово. Тестовая копия: $TEST_ROOT"
