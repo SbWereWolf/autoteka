@@ -23,9 +23,11 @@ final class CityCatalogController extends Controller
             ->with([
                 'categories' => static fn ($query) => $query
                     ->where('category.is_published', true)
+                    ->wherePivot('is_published', true)
                     ->select('category.id'),
                 'features' => static fn ($query) => $query
                     ->where('feature.is_published', true)
+                    ->wherePivot('is_published', true)
                     ->select('feature.id'),
             ])
             ->where('city_id', $city->getKey())

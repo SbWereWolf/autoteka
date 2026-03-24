@@ -29,8 +29,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string|null $thumb_path
  * @property string|null $thumb_original_name
  * @property bool $is_published
- * @property array<int, array{category_id: int}> $category_links
- * @property array<int, array{feature_id: int}> $feature_links
+ * @property array<int, array{category_id: int, is_published: bool}> $category_links
+ * @property array<int, array{feature_id: int, is_published: bool}> $feature_links
  * @property array<int, array{id: int, contact_type_id: int, value: string, sort: int, is_published: bool}> $contact_entries
  * @property array<int, array{id: int, file_path: string, sort: int, is_published: bool}> $gallery_entries
  * @property array<int, array{id: int, weekday: int, time_from: string, time_to: string, sort: int, is_published: bool}> $schedule_entries
@@ -97,7 +97,8 @@ class Shop extends Model
             TableName::SHOP_CATEGORY->value,
             'shop_id',
             'category_id',
-        );
+        )->withPivot(['is_published'])
+            ->withTimestamps();
     }
 
     public function features(): BelongsToMany
@@ -107,7 +108,8 @@ class Shop extends Model
             TableName::SHOP_FEATURE->value,
             'shop_id',
             'feature_id',
-        );
+        )->withPivot(['is_published'])
+            ->withTimestamps();
     }
 
     public function contacts(): HasMany
@@ -129,7 +131,10 @@ class Shop extends Model
     {
         return $this->relationLoaded('categories')
             ? $this->categories
-                ->map(fn (Category $category): array => ['category_id' => $category->getKey()])
+                ->map(fn (Category $category): array => [
+                    'category_id' => $category->getKey(),
+                    'is_published' => (bool) $category->pivot->getAttribute('is_published'),
+                ])
                 ->values()
                 ->all()
             : [];
@@ -139,7 +144,10 @@ class Shop extends Model
     {
         return $this->relationLoaded('features')
             ? $this->features
-                ->map(fn (Feature $feature): array => ['feature_id' => $feature->getKey()])
+                ->map(fn (Feature $feature): array => [
+                    'feature_id' => $feature->getKey(),
+                    'is_published' => (bool) $feature->pivot->getAttribute('is_published'),
+                ])
                 ->values()
                 ->all()
             : [];

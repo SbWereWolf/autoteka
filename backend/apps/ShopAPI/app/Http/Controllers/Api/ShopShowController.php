@@ -17,9 +17,11 @@ final class ShopShowController extends Controller
             ->with([
                 'categories' => static fn ($query) => $query
                     ->where('category.is_published', true)
+                    ->wherePivot('is_published', true)
                     ->select('category.id'),
                 'features' => static fn ($query) => $query
                     ->where('feature.is_published', true)
+                    ->wherePivot('is_published', true)
                     ->select('feature.id'),
                 'galleryImages' => static fn ($query) => $query
                     ->where('is_published', true)

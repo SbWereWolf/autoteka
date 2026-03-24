@@ -151,6 +151,69 @@ final class ApiEndpointsCoverageTest extends TestCase
         $response->assertJsonMissingPath('workHours');
     }
 
+    public function test_shop_show_hides_categories_and_features_when_pivot_is_unpublished(): void
+    {
+        Storage::fake((string) config('autoteka.media.disk', 'public'));
+
+        $city = City::query()->create([
+            'code' => 'city-pivot',
+            'title' => 'City Pivot',
+            'sort' => 1,
+            'is_published' => true,
+        ]);
+        $categoryVisible = Category::query()->create([
+            'code' => 'cat-visible',
+            'title' => 'Cat Visible',
+            'sort' => 1,
+            'is_published' => true,
+        ]);
+        $categoryPivotHidden = Category::query()->create([
+            'code' => 'cat-pivot-hidden',
+            'title' => 'Cat Pivot Hidden',
+            'sort' => 2,
+            'is_published' => true,
+        ]);
+        $featureVisible = Feature::query()->create([
+            'code' => 'feat-visible',
+            'title' => 'Feat Visible',
+            'sort' => 1,
+            'is_published' => true,
+        ]);
+        $featurePivotHidden = Feature::query()->create([
+            'code' => 'feat-pivot-hidden',
+            'title' => 'Feat Pivot Hidden',
+            'sort' => 2,
+            'is_published' => true,
+        ]);
+        $shop = Shop::query()->create([
+            'code' => 'shop-pivot',
+            'title' => 'Shop Pivot',
+            'sort' => 1,
+            'city_id' => $city->getKey(),
+            'description' => '',
+            'site_url' => '',
+            'slogan' => null,
+            'latitude' => null,
+            'longitude' => null,
+            'thumb_path' => null,
+            'schedule_note' => null,
+            'is_published' => true,
+        ]);
+        $shop->categories()->sync([
+            $categoryVisible->getKey() => ['is_published' => true],
+            $categoryPivotHidden->getKey() => ['is_published' => false],
+        ]);
+        $shop->features()->sync([
+            $featureVisible->getKey() => ['is_published' => true],
+            $featurePivotHidden->getKey() => ['is_published' => false],
+        ]);
+
+        $response = $this->getJson('/api/v1/shop/shop-pivot');
+        $response->assertOk();
+        $response->assertJsonPath('categoryIds', [$categoryVisible->getKey()]);
+        $response->assertJsonPath('featureIds', [$featureVisible->getKey()]);
+    }
+
     public function test_shop_show_returns_404_for_unknown_or_unpublished_shop(): void
     {
         $city = City::query()->create([
@@ -336,9 +399,15 @@ final class ApiEndpointsCoverageTest extends TestCase
             'is_published' => false,
         ]);
 
-        $shop->categories()->sync([$category->getKey()]);
-        $shop->features()->sync([$feature->getKey()]);
-        $shopHidden->features()->sync([$feature->getKey()]);
+        $shop->categories()->sync([
+            $category->getKey() => ['is_published' => true],
+        ]);
+        $shop->features()->sync([
+            $feature->getKey() => ['is_published' => true],
+        ]);
+        $shopHidden->features()->sync([
+            $feature->getKey() => ['is_published' => true],
+        ]);
 
         ShopContact::query()->create([
             'shop_id' => $shop->getKey(),
