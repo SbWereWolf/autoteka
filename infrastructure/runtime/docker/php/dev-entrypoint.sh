@@ -41,23 +41,22 @@ if ! grep -qE '^APP_KEY=base64:' apps/ShopOperator/.env; then
   (cd apps/ShopOperator && php artisan key:generate --force --ansi || true)
 fi
 
-if [ "${RUN_MIGRATIONS}" = "true" ]; then
-  admin_email="${MOONSHINE_ADMIN_EMAIL}"
-  (cd apps/ShopOperator && php artisan migrate --force --ansi)
-  set +e
-  (cd apps/ShopOperator && php artisan autoteka:is-there-an-admin "$admin_email" --ansi)
-  admin_check_status=$?
-  set -e
-  case "$admin_check_status" in
-    0)
-      (cd apps/ShopOperator && php artisan db:seed --class=AdminUserSeeder --force --ansi)
-      ;;
-    4)
-      :
-      ;;
-    *)
-      exit "$admin_check_status"
-      ;;
-  esac
-fi
+admin_email="${MOONSHINE_ADMIN_EMAIL}"
+(cd apps/ShopOperator && php artisan migrate --force --ansi)
+set +e
+(cd apps/ShopOperator && php artisan autoteka:is-there-an-admin "$admin_email" --ansi)
+admin_check_status=$?
+set -e
+case "$admin_check_status" in
+  0)
+    (cd apps/ShopOperator && php artisan db:seed --class=AdminUserSeeder --force --ansi)
+    ;;
+  4)
+    :
+    ;;
+  *)
+    exit "$admin_check_status"
+    ;;
+esac
+
 exec "$@"
