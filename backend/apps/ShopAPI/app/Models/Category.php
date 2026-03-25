@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace ShopAPI\Models;
 
-use ShopAPI\Models\Concerns\UsesTableName;
 use ShopAPI\Models\Concerns\GeneratesCodeOnSave;
 use Autoteka\SchemaDefinition\Enums\TableName;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -22,7 +21,8 @@ class Category extends Model
 {
     use HasFactory;
     use GeneratesCodeOnSave;
-    use UsesTableName;
+
+    protected $table = TableName::CATEGORY->value;
 
     protected $fillable = [
         'code',
@@ -35,11 +35,6 @@ class Category extends Model
         'sort' => 'integer',
         'is_published' => 'boolean',
     ];
-
-    protected static function tableName(): TableName
-    {
-        return TableName::CATEGORY;
-    }
 
     public function shops(): BelongsToMany
     {

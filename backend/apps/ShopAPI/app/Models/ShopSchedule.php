@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace ShopAPI\Models;
 
-use ShopAPI\Models\Concerns\UsesTableName;
 use Autoteka\SchemaDefinition\Enums\TableName;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -22,7 +21,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class ShopSchedule extends Model
 {
     use HasFactory;
-    use UsesTableName;
+
+    protected $table = TableName::SHOP_SCHEDULE->value;
 
     protected $fillable = [
         'shop_id',
@@ -38,11 +38,6 @@ class ShopSchedule extends Model
         'sort' => 'integer',
         'is_published' => 'boolean',
     ];
-
-    protected static function tableName(): TableName
-    {
-        return TableName::SHOP_SCHEDULE;
-    }
 
     public function shop(): BelongsTo
     {

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace ShopOperator\Models;
 
-use ShopOperator\Models\Concerns\UsesTableName;
 use ShopOperator\Models\Concerns\GeneratesCodeOnSave;
 use ShopOperator\Models\Concerns\NormalizesSiteUrlOnSave;
 use Autoteka\SchemaDefinition\Enums\TableName;
@@ -46,7 +45,8 @@ class Shop extends Model
     use HasFactory;
     use GeneratesCodeOnSave;
     use NormalizesSiteUrlOnSave;
-    use UsesTableName;
+
+    protected $table = TableName::SHOP->value;
 
     protected $fillable = [
         'code',
@@ -84,11 +84,6 @@ class Shop extends Model
      * @var array<string, mixed>
      */
     protected array $virtualInput = [];
-
-    protected static function tableName(): TableName
-    {
-        return TableName::SHOP;
-    }
 
     public function city(): BelongsTo
     {
