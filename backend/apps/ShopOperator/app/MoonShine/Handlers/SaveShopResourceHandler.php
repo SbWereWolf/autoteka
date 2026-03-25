@@ -14,6 +14,7 @@ use ShopOperator\Support\Shop\ShopContactUniqueness;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
+use ShopOperator\Support\Shop\ShopPayloadAssertions;
 
 final class SaveShopResourceHandler
 {
@@ -363,12 +364,12 @@ final class SaveShopResourceHandler
                 ]);
             }
 
-            $this->assertNullableNumeric(
+            ShopPayloadAssertions::assertNullableNumeric(
                 $request->input('latitude'),
                 'latitude',
                 'Поле "Широта" должно быть числом.',
             );
-            $this->assertNullableNumeric(
+            ShopPayloadAssertions::assertNullableNumeric(
                 $request->input('longitude'),
                 'longitude',
                 'Поле "Долгота" должно быть числом.',
@@ -407,33 +408,15 @@ final class SaveShopResourceHandler
             ]);
         }
 
-        $this->assertNullableNumeric(
+        ShopPayloadAssertions::assertNullableNumeric(
             $data['latitude'] ?? null,
             'latitude',
             'Поле "Широта" должно быть числом.',
         );
-        $this->assertNullableNumeric(
+        ShopPayloadAssertions::assertNullableNumeric(
             $data['longitude'] ?? null,
             'longitude',
             'Поле "Долгота" должно быть числом.',
         );
-    }
-
-    private function assertNullableNumeric(mixed $value, string $field, string $message): void
-    {
-        if ($value === null) {
-            return;
-        }
-
-        $normalized = trim((string) $value);
-        if ($normalized === '') {
-            return;
-        }
-
-        if (! is_numeric($normalized)) {
-            throw ValidationException::withMessages([
-                $field => [$message],
-            ]);
-        }
     }
 }
