@@ -7,6 +7,10 @@ explicitly (e.g. exit 3) with a clear message instead.
 
 MANDATORY !! NEVER .env.example, ALWAYS example.env
 
+Use scripts/swap-env to sync env/config with the real environment.
+Use scripts/.env SCRIPT_PHP_PATH to run PHP scripts.
+
+
 ## Language
 
 The agent must write in Russian. Project text artifacts must also be
