@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace ShopAPI\Support\Shop;
 
+use Autoteka\SchemaDefinition\Enums\Columns\ContactTypeColumns;
+use Autoteka\SchemaDefinition\Enums\Columns\ShopContactColumns;
 use Illuminate\Support\Arr;
 use Illuminate\Validation\ValidationException;
 
@@ -23,7 +25,7 @@ final class ShopContactUniqueness
 
         foreach ($rows as $index => $row) {
             $typeKey = self::resolveTypeKey($row);
-            $value = self::normalizeValue($row['value'] ?? null);
+            $value = self::normalizeValue($row[ShopContactColumns::VALUE->value] ?? null);
 
             if ($typeKey === '' || $value === '') {
                 continue;
@@ -53,11 +55,11 @@ final class ShopContactUniqueness
      */
     private static function resolveTypeKey(array $row): string
     {
-        $typeId = trim((string) Arr::get($row, 'contact_type_id', ''));
+        $typeId = trim((string) Arr::get($row, ShopContactColumns::CONTACT_TYPE_ID->value, ''));
         if ($typeId !== '') {
             return $typeId;
         }
 
-        return trim((string) Arr::get($row, 'contact_type_code', ''));
+        return trim((string) Arr::get($row, 'contact_type_' . ContactTypeColumns::CODE->value, ''));
     }
 }

@@ -2,8 +2,11 @@
 
 namespace ShopOperator\Providers;
 
+use Illuminate\Foundation\Http\Events\RequestHandled;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
+use MoonShine\Crud\Resources\CrudResource;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -14,6 +17,21 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        // MoonShine держит текущую запись на экземпляре ресурса между HTTP-вызовами в одном
+        // PHP-процессе (типично PHPUnit: несколько post/patch подряд). Полный flushState()
+        // ломает страницы/валидацию; достаточно отвязать item, чтобы store снова создавал запись.
+        Event::listen(RequestHandled::class, static function (): void {
+            if (! function_exists('moonshine')) {
+                return;
+            }
+            foreach (moonshine()->getResources() as $resource) {
+                if ($resource instanceof CrudResource) {
+                    $resource->setItem(null);
+                    $resource->setItemID(null);
+                }
+            }
+        });
+
         if (config('database.default') !== 'sqlite') {
             return;
         }

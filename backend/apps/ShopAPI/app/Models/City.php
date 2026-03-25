@@ -5,7 +5,10 @@ declare(strict_types=1);
 namespace ShopAPI\Models;
 
 use ShopAPI\Models\Concerns\GeneratesCodeOnSave;
+use Autoteka\SchemaDefinition\Enums\Columns\CityColumns;
 use Autoteka\SchemaDefinition\Enums\TableName;
+use Autoteka\SchemaDefinition\SchemaTables\SchemaCity as SchemaCityTable;
+use Autoteka\SchemaDefinition\SchemaTables\SchemaShop;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -25,19 +28,31 @@ class City extends Model
     protected $table = TableName::CITY->value;
 
     protected $fillable = [
-        'code',
-        'title',
-        'sort',
-        'is_published',
+        CityColumns::CODE->value,
+        CityColumns::TITLE->value,
+        CityColumns::SORT->value,
+        CityColumns::IS_PUBLISHED->value,
     ];
 
     protected $casts = [
-        'sort' => 'integer',
-        'is_published' => 'boolean',
+        CityColumns::SORT->value => 'integer',
+        CityColumns::IS_PUBLISHED->value => 'boolean',
     ];
+
+    protected static function slugTitleColumn(): string
+    {
+        return (new SchemaCityTable())->title();
+    }
+
+    protected static function slugCodeColumn(): string
+    {
+        return (new SchemaCityTable())->code();
+    }
 
     public function shops(): HasMany
     {
-        return $this->hasMany(Shop::class, 'city_id');
+        $sch = new SchemaShop();
+
+        return $this->hasMany(Shop::class, $sch->cityId());
     }
 }

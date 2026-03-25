@@ -14,6 +14,8 @@ use MoonShine\Laravel\Fields\Relationships\BelongsTo;
 use MoonShine\Laravel\Models\MoonshineUser;
 use MoonShine\Laravel\Models\MoonshineUserRole;
 use MoonShine\Laravel\Pages\Crud\FormPage;
+use Autoteka\SchemaDefinition\SchemaTables\SchemaMoonshineUserRoles;
+use Autoteka\SchemaDefinition\SchemaTables\SchemaMoonshineUsers;
 use ShopOperator\MoonShine\Resources\MoonShineUser\MoonShineUserResource;
 use ShopOperator\MoonShine\Resources\MoonShineUserRole\MoonShineUserRoleResource;
 use MoonShine\UI\Components\Collapse;
@@ -39,6 +41,9 @@ final class MoonShineUserFormPage extends FormPage
      */
     protected function fields(): iterable
     {
+        $schUser = new SchemaMoonshineUsers();
+        $schRole = new SchemaMoonshineUserRoles();
+
         return [
             Box::make([
                 Tabs::make([
@@ -52,19 +57,21 @@ final class MoonShineUserFormPage extends FormPage
                             resource: MoonShineUserRoleResource::class,
                         )
                             ->creatable()
-                            ->valuesQuery(static fn (Builder $q) => $q->select(['id', 'name'])),
+                            ->valuesQuery(static function (Builder $q) use ($schRole): Builder {
+                                return $q->select([$schRole->id(), $schRole->name()]);
+                            }),
 
                         Flex::make([
-                            Text::make(__('moonshine::ui.resource.name'), 'name')
+                            Text::make(__('moonshine::ui.resource.name'), $schUser->name())
                                 ->required()
                                 ->placeholder('Например: Иван Оператор'),
 
-                            Email::make(__('moonshine::ui.resource.email'), 'email')
+                            Email::make(__('moonshine::ui.resource.email'), $schUser->email())
                                 ->required()
                                 ->placeholder('operator@example.com'),
                         ]),
 
-                        Image::make(__('moonshine::ui.resource.avatar'), 'avatar')
+                        Image::make(__('moonshine::ui.resource.avatar'), $schUser->avatar())
                             ->disk(moonshineConfig()->getDisk())
                             ->dir(moonshineConfig()->getUserAvatarsDir())
                             ->allowedExtensions(['jpg', 'png', 'jpeg', 'gif']),
@@ -81,7 +88,7 @@ final class MoonShineUserFormPage extends FormPage
 
                     Tab::make(__('moonshine::ui.resource.password'), [
                         Collapse::make(__('moonshine::ui.resource.change_password'), [
-                            Password::make(__('moonshine::ui.resource.password'), 'password')
+                            Password::make(__('moonshine::ui.resource.password'), $schUser->password())
                                 ->customAttributes(['autocomplete' => 'new-password'])
                                 ->placeholder('Не менее 8 символов')
                                 ->eye(),
@@ -99,18 +106,20 @@ final class MoonShineUserFormPage extends FormPage
 
     protected function rules(DataWrapperContract $item): array
     {
+        $schUser = new SchemaMoonshineUsers();
+
         return [
-            'name' => 'required',
-            'moonshine_user_role_id' => 'required',
-            'email' => [
+            $schUser->name() => 'required',
+            $schUser->moonshineUserRoleId() => 'required',
+            $schUser->email() => [
                 'sometimes',
                 'bail',
                 'required',
                 'email',
                 Rule::unique($item->getOriginal()::class)->ignoreModel($item->getOriginal()),
             ],
-            'avatar' => ['sometimes', 'nullable', 'image', 'mimes:jpeg,jpg,png,gif'],
-            'password' => [
+            $schUser->avatar() => ['sometimes', 'nullable', 'image', 'mimes:jpeg,jpg,png,gif'],
+            $schUser->password() => [
                 ...$item->getKey() !== null ? ['sometimes', 'nullable'] : ['required'],
                 PasswordRule::defaults(),
                 'confirmed',

@@ -11,10 +11,16 @@ use ShopOperator\Models\ShopGalleryImage;
 use ShopOperator\Models\ShopSchedule;
 use ShopOperator\Support\Media\UploadOriginalNameStore;
 use ShopOperator\Support\Shop\ShopContactUniqueness;
+use ShopOperator\Support\Shop\ShopPayloadAssertions;
+use Autoteka\SchemaDefinition\SchemaTables\SchemaShop;
+use Autoteka\SchemaDefinition\SchemaTables\SchemaShopCategory;
+use Autoteka\SchemaDefinition\SchemaTables\SchemaShopContact;
+use Autoteka\SchemaDefinition\SchemaTables\SchemaShopFeature;
+use Autoteka\SchemaDefinition\SchemaTables\SchemaShopGalleryImage;
+use Autoteka\SchemaDefinition\SchemaTables\SchemaShopSchedule;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
-use ShopOperator\Support\Shop\ShopPayloadAssertions;
 
 final class SaveShopResourceHandler
 {
@@ -26,25 +32,27 @@ final class SaveShopResourceHandler
         $uploadOriginalNames = app(UploadOriginalNameStore::class);
 
         return DB::transaction(function () use ($shop, $data, $uploadOriginalNames): Shop {
+            $schShop = new SchemaShop();
+
             $shop->fill([
-                'code' => $data['code'] ?? '',
-                'title' => $data['title'] ?? '',
-                'sort' => (int) ($data['sort'] ?? 0),
-                'city_id' => (int) ($data['city_id'] ?? 0),
-                'description' => (string) ($data['description'] ?? ''),
-                'site_url' => (string) ($data['site_url'] ?? ''),
-                'slogan' => $this->nullableString($data['slogan'] ?? null),
-                'latitude' => $this->nullableFloat($data['latitude'] ?? null),
-                'longitude' => $this->nullableFloat($data['longitude'] ?? null),
-                'schedule_note' => $this->nullableString($data['schedule_note'] ?? null),
-                'thumb_path' => $this->nullableString($data['thumb_path'] ?? null),
-                'thumb_original_name' => $uploadOriginalNames->pullByPath(
-                    $this->nullableString($data['thumb_path'] ?? null),
+                $schShop->code() => $data[$schShop->code()] ?? '',
+                $schShop->title() => $data[$schShop->title()] ?? '',
+                $schShop->sort() => (int) ($data[$schShop->sort()] ?? 0),
+                $schShop->cityId() => (int) ($data[$schShop->cityId()] ?? 0),
+                $schShop->description() => (string) ($data[$schShop->description()] ?? ''),
+                $schShop->siteUrl() => (string) ($data[$schShop->siteUrl()] ?? ''),
+                $schShop->slogan() => $this->nullableString($data[$schShop->slogan()] ?? null),
+                $schShop->latitude() => $this->nullableFloat($data[$schShop->latitude()] ?? null),
+                $schShop->longitude() => $this->nullableFloat($data[$schShop->longitude()] ?? null),
+                $schShop->scheduleNote() => $this->nullableString($data[$schShop->scheduleNote()] ?? null),
+                $schShop->thumbPath() => $this->nullableString($data[$schShop->thumbPath()] ?? null),
+                $schShop->thumbOriginalName() => $uploadOriginalNames->pullByPath(
+                    $this->nullableString($data[$schShop->thumbPath()] ?? null),
                 ) ?? $shop->thumb_original_name,
-                'is_published' => (bool) ($data['is_published'] ?? false),
+                $schShop->isPublished() => (bool) ($data[$schShop->isPublished()] ?? false),
             ]);
 
-            $originalThumb = $shop->getOriginal('thumb_path');
+            $originalThumb = $shop->getOriginal($schShop->thumbPath());
             $shop->save();
 
             if ($originalThumb && $originalThumb !== $shop->thumb_path) {
@@ -70,6 +78,7 @@ final class SaveShopResourceHandler
 
     private function syncCategoryLinks(Shop $shop, mixed $rows): void
     {
+        $p = new SchemaShopCategory();
         $sync = [];
 
         foreach (collect(is_iterable($rows) ? $rows : []) as $row) {
@@ -77,12 +86,12 @@ final class SaveShopResourceHandler
                 continue;
             }
 
-            $id = (int) ($row['category_id'] ?? 0);
+            $id = (int) ($row[$p->categoryId()] ?? 0);
             if ($id <= 0) {
                 continue;
             }
 
-            $sync[$id] = ['is_published' => (bool) $row['is_published']];
+            $sync[$id] = [$p->isPublished() => (bool) $row[$p->isPublished()]];
         }
 
         $shop->categories()->sync($sync);
@@ -90,6 +99,7 @@ final class SaveShopResourceHandler
 
     private function syncFeatureLinks(Shop $shop, mixed $rows): void
     {
+        $p = new SchemaShopFeature();
         $sync = [];
 
         foreach (collect(is_iterable($rows) ? $rows : []) as $row) {
@@ -97,12 +107,12 @@ final class SaveShopResourceHandler
                 continue;
             }
 
-            $id = (int) ($row['feature_id'] ?? 0);
+            $id = (int) ($row[$p->featureId()] ?? 0);
             if ($id <= 0) {
                 continue;
             }
 
-            $sync[$id] = ['is_published' => (bool) $row['is_published']];
+            $sync[$id] = [$p->isPublished() => (bool) $row[$p->isPublished()]];
         }
 
         $shop->features()->sync($sync);
@@ -113,12 +123,18 @@ final class SaveShopResourceHandler
      */
     private function validateCategoryFeatureLinkRows(array $data): void
     {
-        $this->assertPivotLinkRowsHavePublishedFlag($data['category_links'] ?? [], 'category_id', 'category_links');
-        $this->assertPivotLinkRowsHavePublishedFlag($data['feature_links'] ?? [], 'feature_id', 'feature_links');
+        $pCat = new SchemaShopCategory();
+        $pFeat = new SchemaShopFeature();
+        $this->assertPivotLinkRowsHavePublishedFlag($data['category_links'] ?? [], $pCat->categoryId(), 'category_links', $pCat);
+        $this->assertPivotLinkRowsHavePublishedFlag($data['feature_links'] ?? [], $pFeat->featureId(), 'feature_links', $pFeat);
     }
 
-    private function assertPivotLinkRowsHavePublishedFlag(mixed $rows, string $idKey, string $errorKey): void
-    {
+    private function assertPivotLinkRowsHavePublishedFlag(
+        mixed $rows,
+        string $idKey,
+        string $errorKey,
+        SchemaShopCategory|SchemaShopFeature $pivotSch,
+    ): void {
         foreach (is_iterable($rows) ? $rows : [] as $row) {
             if (! is_array($row)) {
                 continue;
@@ -129,7 +145,7 @@ final class SaveShopResourceHandler
                 continue;
             }
 
-            if (! array_key_exists('is_published', $row)) {
+            if (! array_key_exists($pivotSch->isPublished(), $row)) {
                 throw ValidationException::withMessages([
                     $errorKey => ['Для каждой выбранной связи необходимо явно указать «Опубликован».'],
                 ]);
@@ -139,24 +155,26 @@ final class SaveShopResourceHandler
 
     private function syncContacts(Shop $shop, mixed $rows): void
     {
+        $c = new SchemaShopContact();
+
         $desired = collect(is_iterable($rows) ? $rows : [])
-            ->map(static function (mixed $row): ?array {
+            ->map(static function (mixed $row) use ($c): ?array {
                 if (! is_array($row)) {
                     return null;
                 }
 
-                $typeId = (int) ($row['contact_type_id'] ?? 0);
-                $value = ShopContactUniqueness::normalizeValue($row['value'] ?? '');
+                $typeId = (int) ($row[$c->contactTypeId()] ?? 0);
+                $value = ShopContactUniqueness::normalizeValue($row[$c->value()] ?? '');
                 if ($typeId === 0 || $value === '') {
                     return null;
                 }
 
                 return [
-                    'id' => isset($row['id']) ? (int) $row['id'] : null,
-                    'contact_type_id' => $typeId,
-                    'value' => $value,
-                    'sort' => (int) ($row['sort'] ?? 0),
-                    'is_published' => (bool) ($row['is_published'] ?? true),
+                    $c->id() => isset($row[$c->id()]) ? (int) $row[$c->id()] : null,
+                    $c->contactTypeId() => $typeId,
+                    $c->value() => $value,
+                    $c->sort() => (int) ($row[$c->sort()] ?? 0),
+                    $c->isPublished() => (bool) ($row[$c->isPublished()] ?? true),
                 ];
             })
             ->filter()
@@ -164,21 +182,21 @@ final class SaveShopResourceHandler
 
         ShopContactUniqueness::assertUnique($desired->all());
 
-        $existing = $shop->contacts()->get()->keyBy('id');
+        $existing = $shop->contacts()->get()->keyBy($c->id());
         $keptIds = [];
 
         foreach ($desired as $item) {
-            $contact = $item['id'] ? $existing->get($item['id']) : null;
+            $contact = $item[$c->id()] ? $existing->get($item[$c->id()]) : null;
             if (! $contact instanceof ShopContact) {
                 $contact = new ShopContact();
-                $contact->shop_id = $shop->getKey();
+                $contact->setAttribute($c->shopId(), $shop->getKey());
             }
 
             $contact->fill([
-                'contact_type_id' => $item['contact_type_id'],
-                'value' => $item['value'],
-                'sort' => $item['sort'],
-                'is_published' => $item['is_published'],
+                $c->contactTypeId() => $item[$c->contactTypeId()],
+                $c->value() => $item[$c->value()],
+                $c->sort() => $item[$c->sort()],
+                $c->isPublished() => $item[$c->isPublished()],
             ]);
             $contact->save();
             $keptIds[] = $contact->getKey();
@@ -190,50 +208,52 @@ final class SaveShopResourceHandler
             return;
         }
 
-        $shop->contacts()->whereNotIn('id', $keptIds)->delete();
+        $shop->contacts()->whereNotIn($c->id(), $keptIds)->delete();
     }
 
     private function syncGallery(Shop $shop, mixed $rows, UploadOriginalNameStore $uploadOriginalNames): void
     {
+        $g = new SchemaShopGalleryImage();
+
         $desired = collect(is_iterable($rows) ? $rows : [])
-            ->map(function (mixed $row) use ($uploadOriginalNames): ?array {
+            ->map(function (mixed $row) use ($uploadOriginalNames, $g): ?array {
                 if (! is_array($row)) {
                     return null;
                 }
 
-                $filePath = trim((string) ($row['file_path'] ?? ''));
+                $filePath = trim((string) ($row[$g->filePath()] ?? ''));
                 if ($filePath === '') {
                     return null;
                 }
 
                 return [
-                    'id' => isset($row['id']) ? (int) $row['id'] : null,
-                    'file_path' => $filePath,
-                    'original_name' => $uploadOriginalNames->pullByPath($filePath),
-                    'sort' => (int) ($row['sort'] ?? 0),
-                    'is_published' => (bool) ($row['is_published'] ?? true),
+                    $g->id() => isset($row[$g->id()]) ? (int) $row[$g->id()] : null,
+                    $g->filePath() => $filePath,
+                    $g->originalName() => $uploadOriginalNames->pullByPath($filePath),
+                    $g->sort() => (int) ($row[$g->sort()] ?? 0),
+                    $g->isPublished() => (bool) ($row[$g->isPublished()] ?? true),
                 ];
             })
             ->filter()
             ->values();
 
-        $existing = $shop->galleryImages()->get()->keyBy('id');
+        $existing = $shop->galleryImages()->get()->keyBy($g->id());
         $keptIds = [];
         $disk = Storage::disk(config('autoteka.media.disk'));
 
         foreach ($desired as $item) {
-            $image = $item['id'] ? $existing->get($item['id']) : null;
+            $image = $item[$g->id()] ? $existing->get($item[$g->id()]) : null;
             $oldPath = $image?->file_path;
             if (! $image instanceof ShopGalleryImage) {
                 $image = new ShopGalleryImage();
-                $image->shop_id = $shop->getKey();
+                $image->setAttribute($g->shopId(), $shop->getKey());
             }
 
             $image->fill([
-                'file_path' => $item['file_path'],
-                'original_name' => $item['original_name'] ?? $image->original_name,
-                'sort' => $item['sort'],
-                'is_published' => $item['is_published'],
+                $g->filePath() => $item[$g->filePath()],
+                $g->originalName() => $item[$g->originalName()] ?? $image->original_name,
+                $g->sort() => $item[$g->sort()],
+                $g->isPublished() => $item[$g->isPublished()],
             ]);
             $image->save();
 
@@ -245,7 +265,7 @@ final class SaveShopResourceHandler
         }
 
         $toDelete = $shop->galleryImages()
-            ->when($keptIds !== [], static fn($query) => $query->whereNotIn('id', $keptIds))
+            ->when($keptIds !== [], fn ($query) => $query->whereNotIn($g->id(), $keptIds))
             ->get();
 
         foreach ($toDelete as $image) {
@@ -256,53 +276,55 @@ final class SaveShopResourceHandler
 
     private function syncSchedules(Shop $shop, mixed $rows): void
     {
+        $s = new SchemaShopSchedule();
+
         $desiredByWeekday = collect(is_iterable($rows) ? $rows : [])
-            ->map(static function (mixed $row): ?array {
+            ->map(static function (mixed $row) use ($s): ?array {
                 if (! is_array($row)) {
                     return null;
                 }
 
-                $weekday = (int) ($row['weekday'] ?? 0);
-                $timeFrom = trim((string) ($row['time_from'] ?? ''));
-                $timeTo = trim((string) ($row['time_to'] ?? ''));
+                $weekday = (int) ($row[$s->weekday()] ?? 0);
+                $timeFrom = trim((string) ($row[$s->timeFrom()] ?? ''));
+                $timeTo = trim((string) ($row[$s->timeTo()] ?? ''));
                 if ($weekday < 1 || $weekday > 7 || $timeFrom === '' || $timeTo === '') {
                     return null;
                 }
 
                 return [
-                    'id' => isset($row['id']) ? (int) $row['id'] : null,
-                    'weekday' => $weekday,
-                    'time_from' => $timeFrom,
-                    'time_to' => $timeTo,
-                    'sort' => (int) ($row['sort'] ?? 0),
-                    'is_published' => (bool) ($row['is_published'] ?? true),
+                    $s->id() => isset($row[$s->id()]) ? (int) $row[$s->id()] : null,
+                    $s->weekday() => $weekday,
+                    $s->timeFrom() => $timeFrom,
+                    $s->timeTo() => $timeTo,
+                    $s->sort() => (int) ($row[$s->sort()] ?? 0),
+                    $s->isPublished() => (bool) ($row[$s->isPublished()] ?? true),
                 ];
             })
             ->filter()
-            ->keyBy('weekday');
+            ->keyBy($s->weekday());
 
-        $existing = $shop->schedules()->get()->keyBy('weekday');
+        $existing = $shop->schedules()->get()->keyBy($s->weekday());
         $keptIds = [];
 
         foreach ($desiredByWeekday as $weekday => $item) {
             $schedule = $existing->get($weekday);
-            if (! $schedule instanceof ShopSchedule && $item['id']) {
+            if (! $schedule instanceof ShopSchedule && $item[$s->id()]) {
                 $schedule = ShopSchedule::query()
-                    ->where('shop_id', $shop->getKey())
-                    ->find($item['id']);
+                    ->where($s->shopId(), $shop->getKey())
+                    ->find($item[$s->id()]);
             }
 
             if (! $schedule instanceof ShopSchedule) {
                 $schedule = new ShopSchedule();
-                $schedule->shop_id = $shop->getKey();
+                $schedule->setAttribute($s->shopId(), $shop->getKey());
             }
 
             $schedule->fill([
-                'weekday' => $item['weekday'],
-                'time_from' => $item['time_from'],
-                'time_to' => $item['time_to'],
-                'sort' => $item['sort'],
-                'is_published' => $item['is_published'],
+                $s->weekday() => $item[$s->weekday()],
+                $s->timeFrom() => $item[$s->timeFrom()],
+                $s->timeTo() => $item[$s->timeTo()],
+                $s->sort() => $item[$s->sort()],
+                $s->isPublished() => $item[$s->isPublished()],
             ]);
             $schedule->save();
             $keptIds[] = $schedule->getKey();
@@ -314,7 +336,7 @@ final class SaveShopResourceHandler
             return;
         }
 
-        $shop->schedules()->whereNotIn('id', $keptIds)->delete();
+        $shop->schedules()->whereNotIn($s->id(), $keptIds)->delete();
     }
 
     private function nullableString(mixed $value): ?string
@@ -333,89 +355,90 @@ final class SaveShopResourceHandler
 
     private function validateRequiredFields(array $data): void
     {
+        $sch = new SchemaShop();
         $request = request();
         $hasRawInput = $request->all() !== [];
 
         if ($hasRawInput) {
-            $rawTitle = $request->input('title');
+            $rawTitle = $request->input($sch->title());
             if ($rawTitle === null || trim((string) $rawTitle) === '') {
                 throw ValidationException::withMessages([
-                    'title' => ['Поле "Название" обязательно для магазина.'],
+                    $sch->title() => ['Поле "Название" обязательно для магазина.'],
                 ]);
             }
 
-            $rawCityId = $request->input('city_id');
+            $rawCityId = $request->input($sch->cityId());
             if ($rawCityId === null || trim((string) $rawCityId) === '') {
                 throw ValidationException::withMessages([
-                    'city_id' => ['Поле "Город" обязательно для магазина.'],
+                    $sch->cityId() => ['Поле "Город" обязательно для магазина.'],
                 ]);
             }
 
-            $rawSort = $request->input('sort');
+            $rawSort = $request->input($sch->sort());
             if ($rawSort === null || trim((string) $rawSort) === '') {
                 throw ValidationException::withMessages([
-                    'sort' => ['Поле «Порядок» (sort) обязательно для магазина.'],
+                    $sch->sort() => ['Поле «Порядок» (sort) обязательно для магазина.'],
                 ]);
             }
 
             if (is_numeric($rawSort) && (int) $rawSort < 0) {
                 throw ValidationException::withMessages([
-                    'sort' => ['Поле «Порядок» (sort) не может быть отрицательным.'],
+                    $sch->sort() => ['Поле «Порядок» (sort) не может быть отрицательным.'],
                 ]);
             }
 
             ShopPayloadAssertions::assertNullableNumeric(
-                $request->input('latitude'),
-                'latitude',
+                $request->input($sch->latitude()),
+                $sch->latitude(),
                 'Поле "Широта" должно быть числом.',
             );
             ShopPayloadAssertions::assertNullableNumeric(
-                $request->input('longitude'),
-                'longitude',
+                $request->input($sch->longitude()),
+                $sch->longitude(),
                 'Поле "Долгота" должно быть числом.',
             );
         }
 
-        $title = trim((string) ($data['title'] ?? ''));
+        $title = trim((string) ($data[$sch->title()] ?? ''));
         if ($title === '') {
             throw ValidationException::withMessages([
-                'title' => ['Поле "Название" обязательно для магазина.'],
+                $sch->title() => ['Поле "Название" обязательно для магазина.'],
             ]);
         }
 
-        $cityId = (int) ($data['city_id'] ?? 0);
+        $cityId = (int) ($data[$sch->cityId()] ?? 0);
         if ($cityId <= 0) {
             throw ValidationException::withMessages([
-                'city_id' => ['Поле "Город" обязательно для магазина.'],
+                $sch->cityId() => ['Поле "Город" обязательно для магазина.'],
             ]);
         }
 
-        if (! array_key_exists('sort', $data) || trim((string) ($data['sort'] ?? '')) === '') {
+        if (! array_key_exists($sch->sort(), $data) || trim((string) ($data[$sch->sort()] ?? '')) === '') {
             throw ValidationException::withMessages([
-                'sort' => ['Поле «Порядок» (sort) обязательно для магазина.'],
+                $sch->sort() => ['Поле «Порядок» (sort) обязательно для магазина.'],
             ]);
         }
 
-        if ((int) ($data['sort'] ?? 0) < 0) {
+        if ((int) ($data[$sch->sort()] ?? 0) < 0) {
             throw ValidationException::withMessages([
-                'sort' => ['Поле «Порядок» (sort) не может быть отрицательным.'],
+                $sch->sort() => ['Поле «Порядок» (sort) не может быть отрицательным.'],
             ]);
         }
 
         if (! City::query()->whereKey($cityId)->exists()) {
             throw ValidationException::withMessages([
-                'city_id' => ['Выбранный город не существует.'],
+                $sch->cityId() => ['Выбранный город не существует.'],
             ]);
         }
 
         ShopPayloadAssertions::assertNullableNumeric(
-            $data['latitude'] ?? null,
-            'latitude',
+            $data[$sch->latitude()] ?? null,
+            $sch->latitude(),
             'Поле "Широта" должно быть числом.',
         );
         ShopPayloadAssertions::assertNullableNumeric(
-            $data['longitude'] ?? null,
-            'longitude',
+            $data[$sch->longitude()] ?? null,
+            $sch->longitude(),
             'Поле "Долгота" должно быть числом.',
         );
     }

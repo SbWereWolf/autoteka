@@ -5,7 +5,10 @@ declare(strict_types=1);
 namespace ShopOperator\Models;
 
 use ShopOperator\Models\Concerns\GeneratesCodeOnSave;
+use Autoteka\SchemaDefinition\Enums\Columns\ContactTypeColumns;
 use Autoteka\SchemaDefinition\Enums\TableName;
+use Autoteka\SchemaDefinition\SchemaTables\SchemaContactType as SchemaContactTypeTable;
+use Autoteka\SchemaDefinition\SchemaTables\SchemaShopContact;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -25,19 +28,31 @@ class ContactType extends Model
     protected $table = TableName::CONTACT_TYPE->value;
 
     protected $fillable = [
-        'code',
-        'title',
-        'sort',
-        'is_published',
+        ContactTypeColumns::CODE->value,
+        ContactTypeColumns::TITLE->value,
+        ContactTypeColumns::SORT->value,
+        ContactTypeColumns::IS_PUBLISHED->value,
     ];
 
     protected $casts = [
-        'sort' => 'integer',
-        'is_published' => 'boolean',
+        ContactTypeColumns::SORT->value => 'integer',
+        ContactTypeColumns::IS_PUBLISHED->value => 'boolean',
     ];
+
+    protected static function slugTitleColumn(): string
+    {
+        return (new SchemaContactTypeTable())->title();
+    }
+
+    protected static function slugCodeColumn(): string
+    {
+        return (new SchemaContactTypeTable())->code();
+    }
 
     public function shopContacts(): HasMany
     {
-        return $this->hasMany(ShopContact::class, 'contact_type_id');
+        $c = new SchemaShopContact();
+
+        return $this->hasMany(ShopContact::class, $c->contactTypeId());
     }
 }

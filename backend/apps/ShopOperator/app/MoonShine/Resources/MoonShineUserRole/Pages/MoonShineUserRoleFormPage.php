@@ -9,6 +9,7 @@ use MoonShine\Contracts\UI\ComponentContract;
 use MoonShine\Contracts\UI\FieldContract;
 use MoonShine\Laravel\Models\MoonshineUserRole;
 use MoonShine\Laravel\Pages\Crud\FormPage;
+use Autoteka\SchemaDefinition\SchemaTables\SchemaMoonshineUserRoles;
 use ShopOperator\MoonShine\Resources\MoonShineUserRole\MoonShineUserRoleResource;
 use MoonShine\UI\Components\Layout\Box;
 use MoonShine\UI\Fields\ID;
@@ -24,10 +25,12 @@ final class MoonShineUserRoleFormPage extends FormPage
      */
     protected function fields(): iterable
     {
+        $sch = new SchemaMoonshineUserRoles();
+
         return [
             Box::make([
                 ID::make(),
-                Text::make(__('moonshine::ui.resource.role_name'), 'name')
+                Text::make(__('moonshine::ui.resource.role_name'), $sch->name())
                     ->required()
                     ->placeholder('Например: Оператор магазина'),
             ]),
@@ -36,8 +39,10 @@ final class MoonShineUserRoleFormPage extends FormPage
 
     protected function rules(DataWrapperContract $item): array
     {
+        $sch = new SchemaMoonshineUserRoles();
+
         return [
-            'name' => ['required', 'min:5'],
+            $sch->name() => ['required', 'min:5'],
         ];
     }
 }

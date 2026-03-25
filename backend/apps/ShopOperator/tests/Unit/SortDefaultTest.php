@@ -8,6 +8,8 @@ use ShopOperator\Models\City;
 use ShopOperator\Models\ContactType;
 use ShopOperator\Models\Shop;
 use ShopOperator\Models\ShopContact;
+use Autoteka\SchemaDefinition\SchemaTables\SchemaCity;
+use Autoteka\SchemaDefinition\SchemaTables\SchemaShopContact;
 use ShopOperator\Support\MoonShine\SortDefault;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -25,7 +27,7 @@ final class SortDefaultTest extends TestCase
             'is_published' => true,
         ]);
 
-        self::assertSame(35, SortDefault::tableMaxPlusTen(City::class));
+        self::assertSame(35, SortDefault::tableMaxPlusTen(City::class, (new SchemaCity())->sort()));
     }
 
     public function test_next_shop_sort_scopes_by_city(): void
@@ -131,6 +133,10 @@ final class SortDefaultTest extends TestCase
             'is_published' => true,
         ]);
 
-        self::assertSame(40, SortDefault::forShopOwned(ShopContact::class, $shop1->getKey()));
+        self::assertSame(40, SortDefault::forShopOwned(
+            ShopContact::class,
+            $shop1->getKey(),
+            (new SchemaShopContact())->sort(),
+        ));
     }
 }

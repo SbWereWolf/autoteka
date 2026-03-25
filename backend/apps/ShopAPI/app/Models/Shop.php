@@ -6,7 +6,19 @@ namespace ShopAPI\Models;
 
 use ShopAPI\Models\Concerns\GeneratesCodeOnSave;
 use ShopAPI\Models\Concerns\NormalizesSiteUrlOnSave;
+use Autoteka\SchemaDefinition\Enums\Columns\ShopCategoryColumns;
+use Autoteka\SchemaDefinition\Enums\Columns\ShopColumns;
+use Autoteka\SchemaDefinition\Enums\Columns\ShopContactColumns;
+use Autoteka\SchemaDefinition\Enums\Columns\ShopFeatureColumns;
+use Autoteka\SchemaDefinition\Enums\Columns\ShopGalleryImageColumns;
+use Autoteka\SchemaDefinition\Enums\Columns\ShopScheduleColumns;
 use Autoteka\SchemaDefinition\Enums\TableName;
+use Autoteka\SchemaDefinition\SchemaTables\SchemaShop;
+use Autoteka\SchemaDefinition\SchemaTables\SchemaShopCategory;
+use Autoteka\SchemaDefinition\SchemaTables\SchemaShopContact;
+use Autoteka\SchemaDefinition\SchemaTables\SchemaShopFeature;
+use Autoteka\SchemaDefinition\SchemaTables\SchemaShopGalleryImage;
+use Autoteka\SchemaDefinition\SchemaTables\SchemaShopSchedule;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -49,27 +61,27 @@ class Shop extends Model
     protected $table = TableName::SHOP->value;
 
     protected $fillable = [
-        'code',
-        'title',
-        'sort',
-        'city_id',
-        'description',
-        'site_url',
-        'slogan',
-        'latitude',
-        'longitude',
-        'schedule_note',
-        'thumb_path',
-        'thumb_original_name',
-        'is_published',
+        ShopColumns::CODE->value,
+        ShopColumns::TITLE->value,
+        ShopColumns::SORT->value,
+        ShopColumns::CITY_ID->value,
+        ShopColumns::DESCRIPTION->value,
+        ShopColumns::SITE_URL->value,
+        ShopColumns::SLOGAN->value,
+        ShopColumns::LATITUDE->value,
+        ShopColumns::LONGITUDE->value,
+        ShopColumns::SCHEDULE_NOTE->value,
+        ShopColumns::THUMB_PATH->value,
+        ShopColumns::THUMB_ORIGINAL_NAME->value,
+        ShopColumns::IS_PUBLISHED->value,
     ];
 
     protected $casts = [
-        'sort' => 'integer',
-        'city_id' => 'integer',
-        'latitude' => 'float',
-        'longitude' => 'float',
-        'is_published' => 'boolean',
+        ShopColumns::SORT->value => 'integer',
+        ShopColumns::CITY_ID->value => 'integer',
+        ShopColumns::LATITUDE->value => 'float',
+        ShopColumns::LONGITUDE->value => 'float',
+        ShopColumns::IS_PUBLISHED->value => 'boolean',
     ];
 
     protected $appends = [
@@ -80,55 +92,79 @@ class Shop extends Model
         'schedule_entries',
     ];
 
+    protected static function slugTitleColumn(): string
+    {
+        return (new SchemaShop())->title();
+    }
+
+    protected static function slugCodeColumn(): string
+    {
+        return (new SchemaShop())->code();
+    }
+
     public function city(): BelongsTo
     {
-        return $this->belongsTo(City::class, 'city_id');
+        $sch = new SchemaShop();
+
+        return $this->belongsTo(City::class, $sch->cityId());
     }
 
     public function categories(): BelongsToMany
     {
+        $p = new SchemaShopCategory();
+
         return $this->belongsToMany(
             Category::class,
-            TableName::SHOP_CATEGORY->value,
-            'shop_id',
-            'category_id',
-        )->withPivot(['is_published'])
+            $p->table(),
+            $p->shopId(),
+            $p->categoryId(),
+        )->withPivot([$p->isPublished()])
             ->withTimestamps();
     }
 
     public function features(): BelongsToMany
     {
+        $p = new SchemaShopFeature();
+
         return $this->belongsToMany(
             Feature::class,
-            TableName::SHOP_FEATURE->value,
-            'shop_id',
-            'feature_id',
-        )->withPivot(['is_published'])
+            $p->table(),
+            $p->shopId(),
+            $p->featureId(),
+        )->withPivot([$p->isPublished()])
             ->withTimestamps();
     }
 
     public function contacts(): HasMany
     {
-        return $this->hasMany(ShopContact::class, 'shop_id');
+        $sch = new SchemaShopContact();
+
+        return $this->hasMany(ShopContact::class, $sch->shopId());
     }
 
     public function galleryImages(): HasMany
     {
-        return $this->hasMany(ShopGalleryImage::class, 'shop_id');
+        $sch = new SchemaShopGalleryImage();
+
+        return $this->hasMany(ShopGalleryImage::class, $sch->shopId());
     }
 
     public function schedules(): HasMany
     {
-        return $this->hasMany(ShopSchedule::class, 'shop_id');
+        $sch = new SchemaShopSchedule();
+
+        return $this->hasMany(ShopSchedule::class, $sch->shopId());
     }
 
     public function getCategoryLinksAttribute(): array
     {
+        $p = new SchemaShopCategory();
+
         return $this->relationLoaded('categories')
             ? $this->categories
                 ->map(fn (Category $category): array => [
-                    'category_id' => $category->getKey(),
-                    'is_published' => (bool) $category->pivot->getAttribute('is_published'),
+                    ShopCategoryColumns::CATEGORY_ID->value => $category->getKey(),
+                    ShopCategoryColumns::IS_PUBLISHED->value => (bool) $category->pivot->getAttribute($p->isPublished()),
                 ])
                 ->values()
                 ->all()
@@ -137,11 +173,13 @@ class Shop extends Model
 
     public function getFeatureLinksAttribute(): array
     {
+        $p = new SchemaShopFeature();
+
         return $this->relationLoaded('features')
             ? $this->features
                 ->map(fn (Feature $feature): array => [
-                    'feature_id' => $feature->getKey(),
-                    'is_published' => (bool) $feature->pivot->getAttribute('is_published'),
+                    ShopFeatureColumns::FEATURE_ID->value => $feature->getKey(),
+                    ShopFeatureColumns::IS_PUBLISHED->value => (bool) $feature->pivot->getAttribute($p->isPublished()),
                 ])
                 ->values()
                 ->all()
@@ -150,14 +188,16 @@ class Shop extends Model
 
     public function getContactEntriesAttribute(): array
     {
+        $c = new SchemaShopContact();
+
         return $this->relationLoaded('contacts')
             ? $this->contacts
                 ->map(fn (ShopContact $contact): array => [
-                    'id' => $contact->getKey(),
-                    'contact_type_id' => $contact->contact_type_id,
-                    'value' => $contact->value,
-                    'sort' => $contact->sort,
-                    'is_published' => $contact->is_published,
+                    ShopContactColumns::ID->value => $contact->getKey(),
+                    ShopContactColumns::CONTACT_TYPE_ID->value => $contact->contact_type_id,
+                    ShopContactColumns::VALUE->value => $contact->value,
+                    ShopContactColumns::SORT->value => $contact->sort,
+                    ShopContactColumns::IS_PUBLISHED->value => $contact->is_published,
                 ])
                 ->values()
                 ->all()
@@ -166,13 +206,15 @@ class Shop extends Model
 
     public function getGalleryEntriesAttribute(): array
     {
+        $g = new SchemaShopGalleryImage();
+
         return $this->relationLoaded('galleryImages')
             ? $this->galleryImages
                 ->map(fn (ShopGalleryImage $image): array => [
-                    'id' => $image->getKey(),
-                    'file_path' => $image->file_path,
-                    'sort' => $image->sort,
-                    'is_published' => $image->is_published,
+                    ShopGalleryImageColumns::ID->value => $image->getKey(),
+                    ShopGalleryImageColumns::FILE_PATH->value => $image->file_path,
+                    ShopGalleryImageColumns::SORT->value => $image->sort,
+                    ShopGalleryImageColumns::IS_PUBLISHED->value => $image->is_published,
                 ])
                 ->values()
                 ->all()
@@ -181,19 +223,20 @@ class Shop extends Model
 
     public function getScheduleEntriesAttribute(): array
     {
+        $s = new SchemaShopSchedule();
+
         return $this->relationLoaded('schedules')
             ? $this->schedules
                 ->map(fn (ShopSchedule $schedule): array => [
-                    'id' => $schedule->getKey(),
-                    'weekday' => $schedule->weekday,
-                    'time_from' => $schedule->time_from,
-                    'time_to' => $schedule->time_to,
-                    'sort' => $schedule->sort,
-                    'is_published' => $schedule->is_published,
+                    ShopScheduleColumns::ID->value => $schedule->getKey(),
+                    ShopScheduleColumns::WEEKDAY->value => $schedule->weekday,
+                    ShopScheduleColumns::TIME_FROM->value => $schedule->time_from,
+                    ShopScheduleColumns::TIME_TO->value => $schedule->time_to,
+                    ShopScheduleColumns::SORT->value => $schedule->sort,
+                    ShopScheduleColumns::IS_PUBLISHED->value => $schedule->is_published,
                 ])
                 ->values()
                 ->all()
             : [];
     }
-
 }

@@ -5,7 +5,10 @@ declare(strict_types=1);
 namespace ShopAPI\Models;
 
 use ShopAPI\Models\Concerns\GeneratesCodeOnSave;
+use Autoteka\SchemaDefinition\Enums\Columns\FeatureColumns;
 use Autoteka\SchemaDefinition\Enums\TableName;
+use Autoteka\SchemaDefinition\SchemaTables\SchemaFeature as SchemaFeatureTable;
+use Autoteka\SchemaDefinition\SchemaTables\SchemaShopFeature;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -25,24 +28,36 @@ class Feature extends Model
     protected $table = TableName::FEATURE->value;
 
     protected $fillable = [
-        'code',
-        'title',
-        'sort',
-        'is_published',
+        FeatureColumns::CODE->value,
+        FeatureColumns::TITLE->value,
+        FeatureColumns::SORT->value,
+        FeatureColumns::IS_PUBLISHED->value,
     ];
 
     protected $casts = [
-        'sort' => 'integer',
-        'is_published' => 'boolean',
+        FeatureColumns::SORT->value => 'integer',
+        FeatureColumns::IS_PUBLISHED->value => 'boolean',
     ];
+
+    protected static function slugTitleColumn(): string
+    {
+        return (new SchemaFeatureTable())->title();
+    }
+
+    protected static function slugCodeColumn(): string
+    {
+        return (new SchemaFeatureTable())->code();
+    }
 
     public function shops(): BelongsToMany
     {
+        $p = new SchemaShopFeature();
+
         return $this->belongsToMany(
             Shop::class,
-            TableName::SHOP_FEATURE->value,
-            'feature_id',
-            'shop_id',
+            $p->table(),
+            $p->featureId(),
+            $p->shopId(),
         );
     }
 }

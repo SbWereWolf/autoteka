@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace ShopAPI\Models;
 
+use Autoteka\SchemaDefinition\Enums\Columns\ShopGalleryImageColumns;
 use Autoteka\SchemaDefinition\Enums\TableName;
+use Autoteka\SchemaDefinition\SchemaTables\SchemaShopGalleryImage;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -24,21 +26,23 @@ class ShopGalleryImage extends Model
     protected $table = TableName::SHOP_GALLERY_IMAGE->value;
 
     protected $fillable = [
-        'shop_id',
-        'file_path',
-        'original_name',
-        'sort',
-        'is_published',
+        ShopGalleryImageColumns::SHOP_ID->value,
+        ShopGalleryImageColumns::FILE_PATH->value,
+        ShopGalleryImageColumns::ORIGINAL_NAME->value,
+        ShopGalleryImageColumns::SORT->value,
+        ShopGalleryImageColumns::IS_PUBLISHED->value,
     ];
 
     protected $casts = [
-        'shop_id' => 'integer',
-        'sort' => 'integer',
-        'is_published' => 'boolean',
+        ShopGalleryImageColumns::SHOP_ID->value => 'integer',
+        ShopGalleryImageColumns::SORT->value => 'integer',
+        ShopGalleryImageColumns::IS_PUBLISHED->value => 'boolean',
     ];
 
     public function shop(): BelongsTo
     {
-        return $this->belongsTo(Shop::class, 'shop_id');
+        $g = new SchemaShopGalleryImage();
+
+        return $this->belongsTo(Shop::class, $g->shopId());
     }
 }

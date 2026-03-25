@@ -10,6 +10,8 @@ use MoonShine\Contracts\UI\FieldContract;
 use MoonShine\Laravel\Fields\Relationships\BelongsTo;
 use MoonShine\Laravel\Models\MoonshineUserRole;
 use MoonShine\Laravel\Pages\Crud\IndexPage;
+use Autoteka\SchemaDefinition\SchemaTables\SchemaMoonshineUserRoles;
+use Autoteka\SchemaDefinition\SchemaTables\SchemaMoonshineUsers;
 use ShopOperator\MoonShine\Resources\MoonShineUser\MoonShineUserResource;
 use ShopOperator\MoonShine\Resources\MoonShineUserRole\MoonShineUserRoleResource;
 use MoonShine\Support\Enums\Color;
@@ -30,6 +32,8 @@ final class MoonShineUserIndexPage extends IndexPage
      */
     protected function fields(): iterable
     {
+        $schUser = new SchemaMoonshineUsers();
+
         return [
             ID::make()->sortable(),
 
@@ -40,9 +44,9 @@ final class MoonShineUserIndexPage extends IndexPage
                 resource: MoonShineUserRoleResource::class,
             )->badge(Color::PURPLE),
 
-            Text::make(__('moonshine::ui.resource.name'), 'name'),
+            Text::make(__('moonshine::ui.resource.name'), $schUser->name()),
 
-            Image::make(__('moonshine::ui.resource.avatar'), 'avatar')->modifyRawValue(fn (
+            Image::make(__('moonshine::ui.resource.avatar'), $schUser->avatar())->modifyRawValue(fn (
                 ?string $raw
             ): string => $raw ?? ''),
 
@@ -56,22 +60,27 @@ final class MoonShineUserIndexPage extends IndexPage
                 formatted: fn ($item) => $item->updated_at?->format('d.m.Y H:i') ?? '',
             ),
 
-            Email::make(__('moonshine::ui.resource.email'), 'email')
+            Email::make(__('moonshine::ui.resource.email'), $schUser->email())
                 ->sortable(),
         ];
     }
 
     protected function filters(): iterable
     {
+        $schRole = new SchemaMoonshineUserRoles();
+        $schUser = new SchemaMoonshineUsers();
+
         return [
             BelongsTo::make(
                 __('moonshine::ui.resource.role'),
                 'moonshineUserRole',
                 formatted: static fn (MoonshineUserRole $model) => $model->name,
                 resource: MoonShineUserRoleResource::class,
-            )->valuesQuery(static fn (Builder $q) => $q->select(['id', 'name'])),
+            )->valuesQuery(static function (Builder $q) use ($schRole): Builder {
+                return $q->select([$schRole->id(), $schRole->name()]);
+            }),
 
-            Email::make('E-mail', 'email'),
+            Email::make('E-mail', $schUser->email()),
         ];
     }
 

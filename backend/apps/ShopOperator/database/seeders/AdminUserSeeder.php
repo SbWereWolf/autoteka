@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use Autoteka\SchemaDefinition\Enums\Columns\MoonshineUsersColumns;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -17,12 +18,12 @@ class AdminUserSeeder extends Seeder
         $name = (string) env('MOONSHINE_ADMIN_NAME', 'MoonShine Admin');
 
         MoonshineUser::query()->updateOrCreate(
-            ['email' => $email],
+            [MoonshineUsersColumns::EMAIL->value => $email],
             [
-                'moonshine_user_role_id' => MoonshineUserRole::DEFAULT_ROLE_ID,
-                'name' => $name,
-                'password' => Hash::make($password),
-                'remember_token' => Str::random(10),
+                MoonshineUsersColumns::MOONSHINE_USER_ROLE_ID->value => MoonshineUserRole::DEFAULT_ROLE_ID,
+                MoonshineUsersColumns::NAME->value => $name,
+                MoonshineUsersColumns::PASSWORD->value => Hash::make($password),
+                MoonshineUsersColumns::REMEMBER_TOKEN->value => Str::random(10),
             ]
         );
     }

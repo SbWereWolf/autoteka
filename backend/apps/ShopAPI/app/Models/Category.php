@@ -5,7 +5,10 @@ declare(strict_types=1);
 namespace ShopAPI\Models;
 
 use ShopAPI\Models\Concerns\GeneratesCodeOnSave;
+use Autoteka\SchemaDefinition\Enums\Columns\CategoryColumns;
 use Autoteka\SchemaDefinition\Enums\TableName;
+use Autoteka\SchemaDefinition\SchemaTables\SchemaCategory as SchemaCategoryTable;
+use Autoteka\SchemaDefinition\SchemaTables\SchemaShopCategory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -25,24 +28,36 @@ class Category extends Model
     protected $table = TableName::CATEGORY->value;
 
     protected $fillable = [
-        'code',
-        'title',
-        'sort',
-        'is_published',
+        CategoryColumns::CODE->value,
+        CategoryColumns::TITLE->value,
+        CategoryColumns::SORT->value,
+        CategoryColumns::IS_PUBLISHED->value,
     ];
 
     protected $casts = [
-        'sort' => 'integer',
-        'is_published' => 'boolean',
+        CategoryColumns::SORT->value => 'integer',
+        CategoryColumns::IS_PUBLISHED->value => 'boolean',
     ];
+
+    protected static function slugTitleColumn(): string
+    {
+        return (new SchemaCategoryTable())->title();
+    }
+
+    protected static function slugCodeColumn(): string
+    {
+        return (new SchemaCategoryTable())->code();
+    }
 
     public function shops(): BelongsToMany
     {
+        $p = new SchemaShopCategory();
+
         return $this->belongsToMany(
             Shop::class,
-            TableName::SHOP_CATEGORY->value,
-            'category_id',
-            'shop_id',
+            $p->table(),
+            $p->categoryId(),
+            $p->shopId(),
         );
     }
 }

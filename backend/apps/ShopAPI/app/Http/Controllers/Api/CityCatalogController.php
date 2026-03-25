@@ -7,6 +7,12 @@ namespace ShopAPI\Http\Controllers\Api;
 use ShopAPI\Http\Controllers\Controller;
 use ShopAPI\Models\City;
 use ShopAPI\Models\Shop;
+use Autoteka\SchemaDefinition\SchemaTables\SchemaCategory;
+use Autoteka\SchemaDefinition\SchemaTables\SchemaCity;
+use Autoteka\SchemaDefinition\SchemaTables\SchemaFeature;
+use Autoteka\SchemaDefinition\SchemaTables\SchemaShop;
+use Autoteka\SchemaDefinition\SchemaTables\SchemaShopCategory;
+use Autoteka\SchemaDefinition\SchemaTables\SchemaShopFeature;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Storage;
 
@@ -14,26 +20,37 @@ final class CityCatalogController extends Controller
 {
     public function __invoke(string $code): JsonResponse
     {
+        $schCity = new SchemaCity();
+        $schShop = new SchemaShop();
+        $schCategory = new SchemaCategory();
+        $schFeature = new SchemaFeature();
+        $pivotCategory = new SchemaShopCategory();
+        $pivotFeature = new SchemaShopFeature();
+
         $city = City::query()
-            ->where('code', $code)
-            ->where('is_published', true)
+            ->where($schCity->code(), $code)
+            ->where($schCity->isPublished(), true)
             ->firstOrFail();
 
         $shops = Shop::query()
             ->with([
-                'categories' => static fn ($query) => $query
-                    ->where('category.is_published', true)
-                    ->wherePivot('is_published', true)
-                    ->select('category.id'),
-                'features' => static fn ($query) => $query
-                    ->where('feature.is_published', true)
-                    ->wherePivot('is_published', true)
-                    ->select('feature.id'),
+                'categories' => static function ($query) use ($schCategory, $pivotCategory): void {
+                    $query
+                        ->where($schCategory->dotIsPublished(), true)
+                        ->wherePivot($pivotCategory->isPublished(), true)
+                        ->select($schCategory->dotId());
+                },
+                'features' => static function ($query) use ($schFeature, $pivotFeature): void {
+                    $query
+                        ->where($schFeature->dotIsPublished(), true)
+                        ->wherePivot($pivotFeature->isPublished(), true)
+                        ->select($schFeature->dotId());
+                },
             ])
-            ->where('city_id', $city->getKey())
-            ->where('is_published', true)
-            ->orderBy('sort')
-            ->orderBy('id')
+            ->where($schShop->cityId(), $city->getKey())
+            ->where($schShop->isPublished(), true)
+            ->orderBy($schShop->sort())
+            ->orderBy($schShop->id())
             ->get();
 
         return response()->json([
@@ -43,7 +60,7 @@ final class CityCatalogController extends Controller
                 'title' => $city->title,
                 'sort' => $city->sort,
             ],
-            'items' => $shops->map(function (Shop $shop): array {
+            'items' => $shops->map(function (Shop $shop) use ($schCategory, $schFeature): array {
                 return [
                     'id' => $shop->getKey(),
                     'code' => $shop->code,
@@ -51,8 +68,8 @@ final class CityCatalogController extends Controller
                     'sort' => $shop->sort,
                     'cityId' => $shop->city_id,
                     'thumbUrl' => $shop->thumb_path === null ? null : Storage::disk((string) config('autoteka.media.disk'))->url($shop->thumb_path),
-                    'categoryIds' => $shop->categories->pluck('id')->values()->all(),
-                    'featureIds' => $shop->features->pluck('id')->values()->all(),
+                    'categoryIds' => $shop->categories->pluck($schCategory->id())->values()->all(),
+                    'featureIds' => $shop->features->pluck($schFeature->id())->values()->all(),
                 ];
             })->values(),
         ]);

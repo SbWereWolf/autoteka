@@ -8,10 +8,19 @@ use ShopAPI\Support\Slug\GeneratesStableCode;
 
 trait GeneratesCodeOnSave
 {
+    abstract protected static function slugTitleColumn(): string;
+
+    abstract protected static function slugCodeColumn(): string;
+
     protected static function bootGeneratesCodeOnSave(): void
     {
         static::saving(static function ($model): void {
-            GeneratesStableCode::ensure($model);
+            $class = $model::class;
+            GeneratesStableCode::ensure(
+                $model,
+                $class::slugTitleColumn(),
+                $class::slugCodeColumn(),
+            );
         });
     }
 }

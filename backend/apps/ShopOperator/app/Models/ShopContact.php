@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace ShopOperator\Models;
 
+use Autoteka\SchemaDefinition\Enums\Columns\ShopContactColumns;
 use Autoteka\SchemaDefinition\Enums\TableName;
+use Autoteka\SchemaDefinition\SchemaTables\SchemaShopContact;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -24,27 +26,31 @@ class ShopContact extends Model
     protected $table = TableName::SHOP_CONTACT->value;
 
     protected $fillable = [
-        'shop_id',
-        'contact_type_id',
-        'value',
-        'sort',
-        'is_published',
+        ShopContactColumns::SHOP_ID->value,
+        ShopContactColumns::CONTACT_TYPE_ID->value,
+        ShopContactColumns::VALUE->value,
+        ShopContactColumns::SORT->value,
+        ShopContactColumns::IS_PUBLISHED->value,
     ];
 
     protected $casts = [
-        'shop_id' => 'integer',
-        'contact_type_id' => 'integer',
-        'sort' => 'integer',
-        'is_published' => 'boolean',
+        ShopContactColumns::SHOP_ID->value => 'integer',
+        ShopContactColumns::CONTACT_TYPE_ID->value => 'integer',
+        ShopContactColumns::SORT->value => 'integer',
+        ShopContactColumns::IS_PUBLISHED->value => 'boolean',
     ];
 
     public function shop(): BelongsTo
     {
-        return $this->belongsTo(Shop::class, 'shop_id');
+        $c = new SchemaShopContact();
+
+        return $this->belongsTo(Shop::class, $c->shopId());
     }
 
     public function contactType(): BelongsTo
     {
-        return $this->belongsTo(ContactType::class, 'contact_type_id');
+        $c = new SchemaShopContact();
+
+        return $this->belongsTo(ContactType::class, $c->contactTypeId());
     }
 }

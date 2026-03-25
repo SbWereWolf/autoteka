@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace ShopOperator\MoonShine\Resources\MoonShineUserRole;
 
+use Autoteka\SchemaDefinition\Enums\Columns\MoonshineUserRolesColumns;
+use Autoteka\SchemaDefinition\SchemaTables\SchemaMoonshineUserRoles;
 use MoonShine\Laravel\Models\MoonshineUserRole;
 use MoonShine\Laravel\Resources\ModelResource;
 use ShopOperator\MoonShine\Resources\MoonShineUserRole\Pages\MoonShineUserRoleFormPage;
@@ -24,7 +26,7 @@ class MoonShineUserRoleResource extends ModelResource
 {
     protected string $model = MoonshineUserRole::class;
 
-    protected string $column = 'name';
+    protected string $column = MoonshineUserRolesColumns::NAME->value;
 
     protected bool $createInModal = true;
 
@@ -54,9 +56,11 @@ class MoonShineUserRoleResource extends ModelResource
 
     protected function search(): array
     {
+        $s = new SchemaMoonshineUserRoles();
+
         return [
-            'id',
-            'name',
+            $s->id(),
+            $s->name(),
         ];
     }
 }

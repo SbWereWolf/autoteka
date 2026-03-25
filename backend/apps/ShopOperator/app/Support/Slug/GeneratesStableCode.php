@@ -9,7 +9,7 @@ use Illuminate\Support\Str;
 
 final class GeneratesStableCode
 {
-    public static function ensure(Model $model, string $titleColumn = 'title', string $codeColumn = 'code'): void
+    public static function ensure(Model $model, string $titleColumn, string $codeColumn): void
     {
         $currentCode = trim((string) $model->getAttribute($codeColumn));
         if ($currentCode !== '') {

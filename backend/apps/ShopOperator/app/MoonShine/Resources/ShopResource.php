@@ -16,6 +16,17 @@ use ShopOperator\MoonShine\Handlers\SaveShopResourceHandler;
 use ShopOperator\Support\MoonShine\SortDefault;
 use ShopOperator\Support\Media\UploadFileNameGenerator;
 use ShopOperator\Support\Media\UploadOriginalNameStore;
+use Autoteka\SchemaDefinition\Enums\Columns\ShopColumns;
+use Autoteka\SchemaDefinition\SchemaTables\SchemaCategory;
+use Autoteka\SchemaDefinition\SchemaTables\SchemaCity;
+use Autoteka\SchemaDefinition\SchemaTables\SchemaContactType;
+use Autoteka\SchemaDefinition\SchemaTables\SchemaFeature;
+use Autoteka\SchemaDefinition\SchemaTables\SchemaShop;
+use Autoteka\SchemaDefinition\SchemaTables\SchemaShopCategory;
+use Autoteka\SchemaDefinition\SchemaTables\SchemaShopContact;
+use Autoteka\SchemaDefinition\SchemaTables\SchemaShopFeature;
+use Autoteka\SchemaDefinition\SchemaTables\SchemaShopGalleryImage;
+use Autoteka\SchemaDefinition\SchemaTables\SchemaShopSchedule;
 use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -50,7 +61,7 @@ class ShopResource extends ModelResource
 {
     protected string $model = Shop::class;
 
-    protected string $column = 'title';
+    protected string $column = ShopColumns::TITLE->value;
 
     protected array $with = [
         'city',
@@ -84,7 +95,9 @@ class ShopResource extends ModelResource
 
     protected function search(): array
     {
-        return ['id', 'code', 'title', 'description', 'site_url'];
+        $s = new SchemaShop();
+
+        return [$s->id(), $s->code(), $s->title(), $s->description(), $s->siteUrl()];
     }
 
     protected function detailFields(): iterable
@@ -102,7 +115,7 @@ class ShopResource extends ModelResource
             Preview::make('Широта', formatted: fn (Shop $shop): string => $shop->latitude !== null ? (string) $shop->latitude : '—'),
             Preview::make('Долгота', formatted: fn (Shop $shop): string => $shop->longitude !== null ? (string) $shop->longitude : '—'),
             Preview::make('Текст расписания', formatted: fn (Shop $shop): string => trim((string) ($shop->schedule_note ?? '')) !== '' ? (string) $shop->schedule_note : '—'),
-            Image::make('Логотип', 'thumb_path')
+            Image::make('Логотип', (new SchemaShop())->thumbPath())
                 ->disk((string) config('autoteka.media.disk'))
                 ->dir((string) config('autoteka.media.shop_thumb_dir')),
             Preview::make('Создан', formatted: fn (Shop $shop): string => $shop->created_at?->format('d.m.Y H:i') ?? ''),
@@ -112,9 +125,11 @@ class ShopResource extends ModelResource
                     return '—';
                 }
 
+                $p = new SchemaShopCategory();
+
                 return $shop->categories
-                    ->map(function (Category $c): string {
-                        $pub = (bool) ($c->pivot->is_published ?? true);
+                    ->map(function (Category $c) use ($p): string {
+                        $pub = (bool) ($c->pivot->getAttribute($p->isPublished()) ?? true);
 
                         return $c->title.($pub ? '' : ' (не опубликовано)');
                     })
@@ -125,9 +140,11 @@ class ShopResource extends ModelResource
                     return '—';
                 }
 
+                $p = new SchemaShopFeature();
+
                 return $shop->features
-                    ->map(function (Feature $f): string {
-                        $pub = (bool) ($f->pivot->is_published ?? true);
+                    ->map(function (Feature $f) use ($p): string {
+                        $pub = (bool) ($f->pivot->getAttribute($p->isPublished()) ?? true);
 
                         return $f->title.($pub ? '' : ' (не опубликовано)');
                     })
@@ -138,8 +155,10 @@ class ShopResource extends ModelResource
                     return '—';
                 }
 
+                $schC = new SchemaShopContact();
+
                 return $shop->contacts
-                    ->sortBy('sort')
+                    ->sortBy($schC->sort())
                     ->values()
                     ->map(function ($c): string {
                         $type = $c->contactType?->title ?? '?';
@@ -157,8 +176,10 @@ class ShopResource extends ModelResource
 
                 $days = $this->weekdayOptions();
 
+                $schS = new SchemaShopSchedule();
+
                 return $shop->schedules
-                    ->sortBy('sort')
+                    ->sortBy($schS->sort())
                     ->values()
                     ->map(function (ShopSchedule $s) use ($days): string {
                         $day = $days[$s->weekday] ?? (string) $s->weekday;
@@ -178,13 +199,15 @@ class ShopResource extends ModelResource
 
     protected function indexFields(): iterable
     {
+        $s = new SchemaShop();
+
         return [
             ID::make()->sortable(),
             Preview::make('Код', formatted: fn ($item) => (string) ($item->code ?? '')),
-            Text::make('Название', 'title')->sortable(),
+            Text::make('Название', $s->title())->sortable(),
             Text::make('Город', 'city.title'),
-            Number::make('Sort', 'sort')->sortable(),
-            Switcher::make('Опубликован', 'is_published'),
+            Number::make('Sort', $s->sort())->sortable(),
+            Switcher::make('Опубликован', $s->isPublished()),
             Preview::make('Создан', formatted: fn ($item) => $item->created_at?->format('d.m.Y H:i') ?? ''),
             Preview::make('Обновлён', formatted: fn ($item) => $item->updated_at?->format('d.m.Y H:i') ?? ''),
         ];
@@ -192,38 +215,45 @@ class ShopResource extends ModelResource
 
     protected function formFields(): iterable
     {
+        $s = new SchemaShop();
+        $pCat = new SchemaShopCategory();
+        $pFeat = new SchemaShopFeature();
+        $c = new SchemaShopContact();
+        $g = new SchemaShopGalleryImage();
+        $sch = new SchemaShopSchedule();
+
         return [
             ID::make(),
             Preview::make('Код', formatted: fn ($item) => (string) ($item->code ?? '')),
-            Text::make('Название', 'title')
+            Text::make('Название', $s->title())
                 ->required()
                 ->placeholder('Например: АвтоТека на Гоголя'),
-            Number::make('Sort', 'sort')
+            Number::make('Sort', $s->sort())
                 ->default(SortDefault::nextShopSort(SortDefault::cityIdFromRequest()))
                 ->min(0)
                 ->required(),
-            Select::make('Город', 'city_id')
+            Select::make('Город', $s->cityId())
                 ->options($this->cityOptions())
                 ->searchable()
                 ->placeholder('Выберите город')
                 ->required(),
-            Switcher::make('Опубликован', 'is_published')
+            Switcher::make('Опубликован', $s->isPublished())
                 ->default(true),
-            Textarea::make('Описание', 'description')
+            Textarea::make('Описание', $s->description())
                 ->placeholder('Кратко опишите магазин, чем полезен клиенту'),
-            Text::make('Ссылка на сайт', 'site_url')
+            Text::make('Ссылка на сайт', $s->siteUrl())
                 ->placeholder('https://example.com'),
-            Text::make('Слоган', 'slogan')
+            Text::make('Слоган', $s->slogan())
                 ->placeholder('Например: Всё для вашего авто'),
-            Number::make('Широта', 'latitude')
+            Number::make('Широта', $s->latitude())
                 ->step(0.000001)
                 ->placeholder('55.0287'),
-            Number::make('Долгота', 'longitude')
+            Number::make('Долгота', $s->longitude())
                 ->step(0.000001)
                 ->placeholder('82.9235'),
-            Textarea::make('Текст расписания', 'schedule_note')
+            Textarea::make('Текст расписания', $s->scheduleNote())
                 ->placeholder('Например: Воскресенье — выходной'),
-            Image::make('Логотип', 'thumb_path')
+            Image::make('Логотип', $s->thumbPath())
                 ->disk((string) config('autoteka.media.disk'))
                 ->dir((string) config('autoteka.media.shop_thumb_dir'))
                 ->allowedExtensions(['jpg', 'jpeg', 'png', 'webp'])
@@ -240,12 +270,12 @@ class ShopResource extends ModelResource
                 ->removable(),
             Json::make('Категории', 'category_links')
                 ->fields([
-                    Select::make('Категория', 'category_id')
+                    Select::make('Категория', $pCat->categoryId())
                         ->options($this->categoryOptions())
                         ->searchable()
                         ->placeholder('Выберите категорию')
                         ->required(),
-                    Switcher::make('Опубликован', 'is_published')
+                    Switcher::make('Опубликован', $pCat->isPublished())
                         ->default(true),
                 ])
                 ->vertical()
@@ -254,12 +284,12 @@ class ShopResource extends ModelResource
                 ->removable(),
             Json::make('Фичи', 'feature_links')
                 ->fields([
-                    Select::make('Фича', 'feature_id')
+                    Select::make('Фича', $pFeat->featureId())
                         ->options($this->featureOptions())
                         ->searchable()
                         ->placeholder('Выберите фичу')
                         ->required(),
-                    Switcher::make('Опубликован', 'is_published')
+                    Switcher::make('Опубликован', $pFeat->isPublished())
                         ->default(true),
                 ])
                 ->vertical()
@@ -268,20 +298,20 @@ class ShopResource extends ModelResource
                 ->removable(),
             Json::make('Контакты', 'contact_entries')
                 ->fields([
-                    Hidden::make(column: 'id'),
-                    Select::make('Тип', 'contact_type_id')
+                    Hidden::make(column: $c->id()),
+                    Select::make('Тип', $c->contactTypeId())
                         ->options($this->contactTypeOptions())
                         ->searchable()
                         ->placeholder('Тип контакта')
                         ->required(),
-                    Text::make('Значение', 'value')
+                    Text::make('Значение', $c->value())
                         ->required()
                         ->placeholder('+7 900 000-00-00'),
-                    Number::make('Sort', 'sort')
+                    Number::make('Sort', $c->sort())
                         ->default($this->nestedSortDefault(ShopContact::class))
                         ->min(0)
                         ->required(),
-                    Switcher::make('Опубликован', 'is_published')
+                    Switcher::make('Опубликован', $c->isPublished())
                         ->default(true),
                 ])
                 ->vertical()
@@ -289,8 +319,8 @@ class ShopResource extends ModelResource
                 ->removable(),
             Json::make('Галерея', 'gallery_entries')
                 ->fields([
-                    Hidden::make(column: 'id'),
-                    Image::make('Файл', 'file_path')
+                    Hidden::make(column: $g->id()),
+                    Image::make('Файл', $g->filePath())
                         ->disk((string) config('autoteka.media.disk'))
                         ->dir((string) config('autoteka.media.shop_gallery_dir'))
                         ->allowedExtensions(['jpg', 'jpeg', 'png', 'webp'])
@@ -305,11 +335,11 @@ class ShopResource extends ModelResource
                             return $stored;
                         })
                         ->removable(),
-                    Number::make('Sort', 'sort')
+                    Number::make('Sort', $g->sort())
                         ->default($this->nestedSortDefault(ShopGalleryImage::class))
                         ->min(0)
                         ->required(),
-                    Switcher::make('Опубликован', 'is_published')
+                    Switcher::make('Опубликован', $g->isPublished())
                         ->default(true),
                 ])
                 ->vertical()
@@ -317,30 +347,30 @@ class ShopResource extends ModelResource
                 ->removable(),
             Json::make('Расписание по дням', 'schedule_entries')
                 ->fields([
-                    Hidden::make(column: 'id'),
-                    Select::make('День недели', 'weekday')
+                    Hidden::make(column: $sch->id()),
+                    Select::make('День недели', $sch->weekday())
                         ->options($this->weekdayOptions())
                         ->placeholder('День')
                         ->required(),
-                    Text::make('Начало', 'time_from')
+                    Text::make('Начало', $sch->timeFrom())
                         ->customAttributes([
                             'type' => 'time',
                             'step' => 900,
                             'lang' => 'ru',
                         ], override: true)
                         ->required(),
-                    Text::make('Конец', 'time_to')
+                    Text::make('Конец', $sch->timeTo())
                         ->customAttributes([
                             'type' => 'time',
                             'step' => 900,
                             'lang' => 'ru',
                         ], override: true)
                         ->required(),
-                    Number::make('Sort', 'sort')
+                    Number::make('Sort', $sch->sort())
                         ->default($this->nestedSortDefault(ShopSchedule::class))
                         ->min(0)
                         ->required(),
-                    Switcher::make('Опубликован', 'is_published')
+                    Switcher::make('Опубликован', $sch->isPublished())
                         ->default(true),
                 ])
                 ->vertical()
@@ -353,37 +383,45 @@ class ShopResource extends ModelResource
 
     private function cityOptions(): array
     {
+        $sc = new SchemaCity();
+
         return City::query()
-            ->orderBy('sort')
-            ->orderBy('id')
-            ->pluck('title', 'id')
+            ->orderBy($sc->sort())
+            ->orderBy($sc->id())
+            ->pluck($sc->title(), $sc->id())
             ->all();
     }
 
     private function categoryOptions(): array
     {
+        $sc = new SchemaCategory();
+
         return Category::query()
-            ->orderBy('sort')
-            ->orderBy('id')
-            ->pluck('title', 'id')
+            ->orderBy($sc->sort())
+            ->orderBy($sc->id())
+            ->pluck($sc->title(), $sc->id())
             ->all();
     }
 
     private function featureOptions(): array
     {
+        $sc = new SchemaFeature();
+
         return Feature::query()
-            ->orderBy('sort')
-            ->orderBy('id')
-            ->pluck('title', 'id')
+            ->orderBy($sc->sort())
+            ->orderBy($sc->id())
+            ->pluck($sc->title(), $sc->id())
             ->all();
     }
 
     private function contactTypeOptions(): array
     {
+        $sc = new SchemaContactType();
+
         return ContactType::query()
-            ->orderBy('sort')
-            ->orderBy('id')
-            ->pluck('title', 'id')
+            ->orderBy($sc->sort())
+            ->orderBy($sc->id())
+            ->pluck($sc->title(), $sc->id())
             ->all();
     }
 
@@ -411,9 +449,10 @@ class ShopResource extends ModelResource
 
         $disk = Storage::disk((string) config('autoteka.media.disk'));
 
+        $schG = new SchemaShopGalleryImage();
         $parts = [];
-        foreach ($shop->galleryImages->sortBy('sort')->values() as $img) {
-            $path = trim((string) $img->file_path);
+        foreach ($shop->galleryImages->sortBy($schG->sort())->values() as $img) {
+            $path = trim((string) $img->getAttribute($schG->filePath()));
             if ($path === '') {
                 continue;
             }
@@ -444,9 +483,15 @@ class ShopResource extends ModelResource
     private function nestedSortDefault(string $modelClass): int
     {
         $shopId = $this->editingShopId();
+        $sortColumn = match ($modelClass) {
+            ShopContact::class => (new SchemaShopContact())->sort(),
+            ShopGalleryImage::class => (new SchemaShopGalleryImage())->sort(),
+            ShopSchedule::class => (new SchemaShopSchedule())->sort(),
+            default => (new SchemaShop())->sort(),
+        };
 
         return $shopId !== null
-            ? SortDefault::forShopOwned($modelClass, $shopId)
+            ? SortDefault::forShopOwned($modelClass, $shopId, $sortColumn)
             : 10;
     }
 

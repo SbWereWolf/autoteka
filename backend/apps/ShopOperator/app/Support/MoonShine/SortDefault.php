@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace ShopOperator\Support\MoonShine;
 
+use Autoteka\SchemaDefinition\SchemaTables\SchemaShop;
+use Autoteka\SchemaDefinition\SchemaTables\SchemaShopContact;
 use Illuminate\Database\Eloquent\Model;
 use ShopOperator\Models\Shop;
 
@@ -15,7 +17,7 @@ final class SortDefault
     /**
      * @param  class-string<Model>  $modelClass
      */
-    public static function tableMaxPlusTen(string $modelClass, string $column = 'sort'): int
+    public static function tableMaxPlusTen(string $modelClass, string $column): int
     {
         $max = $modelClass::query()->max($column);
 
@@ -31,14 +33,16 @@ final class SortDefault
             return self::globalShopMaxPlusTen();
         }
 
-        $max = Shop::query()->where('city_id', $cityId)->max('sort');
+        $sch = new SchemaShop();
+        $max = Shop::query()->where($sch->cityId(), $cityId)->max($sch->sort());
 
         return (int) ($max ?? 0) + 10;
     }
 
     public static function globalShopMaxPlusTen(): int
     {
-        $max = Shop::query()->max('sort');
+        $sch = new SchemaShop();
+        $max = Shop::query()->max($sch->sort());
 
         return (int) ($max ?? 0) + 10;
     }
@@ -46,11 +50,12 @@ final class SortDefault
     /**
      * @param  class-string<Model>  $modelClass
      */
-    public static function forShopOwned(string $modelClass, int $shopId, string $column = 'sort'): int
+    public static function forShopOwned(string $modelClass, int $shopId, string $sortColumn): int
     {
+        $shopFk = (new SchemaShopContact())->shopId();
         $max = $modelClass::query()
-            ->where('shop_id', $shopId)
-            ->max($column);
+            ->where($shopFk, $shopId)
+            ->max($sortColumn);
 
         return (int) ($max ?? 0) + 10;
     }
@@ -60,7 +65,9 @@ final class SortDefault
      */
     public static function cityIdFromRequest(): ?int
     {
-        $raw = request()->old('city_id', request()->input('city_id'));
+        $sch = new SchemaShop();
+        $col = $sch->cityId();
+        $raw = request()->old($col, request()->input($col));
         if ($raw === null || $raw === '') {
             return null;
         }
