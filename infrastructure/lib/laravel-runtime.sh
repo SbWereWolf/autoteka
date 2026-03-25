@@ -7,7 +7,7 @@ if [ -z "${AUTOTEKA_LIB_LARAVEL_RUNTIME_SH:-}" ]; then
   source "$INFRA_ROOT/init-roots.sh"
   source "$INFRA_ROOT/lib/runtime-compose.sh"
 
-  # INFRA_ROOT и переменные окружения (в т.ч. DEPLOY_ENV) задаёт вызывающий скрипт.
+  # INFRA_ROOT и переменные окружения (в т.ч. DEPLOY_MODE) задаёт вызывающий скрипт.
 
   sync_shared_envs() {
     autoteka_runtime_compose exec -T php sh -lc '
@@ -263,8 +263,8 @@ if [ -z "${AUTOTEKA_LIB_LARAVEL_RUNTIME_SH:-}" ]; then
 
   http_smoke_check() {
     local url="$1"
-    local retries="${HTTP_SMOKE_RETRIES}"
-    local delay="${HTTP_SMOKE_DELAY_SEC}"
+    local retries="${HEALTH_RETRY}"
+    local delay="${HEALTH_DELAY}"
     local attempt=1
 
     while [ "$attempt" -le "$retries" ]; do
@@ -280,5 +280,17 @@ if [ -z "${AUTOTEKA_LIB_LARAVEL_RUNTIME_SH:-}" ]; then
     done
 
     return 1
+  }
+
+  # Идемпотентное восстановление симлинков public/storage (после рестартов php).
+  ensure_public_storage_link() {
+    autoteka_runtime_compose exec -T php sh -lc '
+      set -eu
+      cd /var/www/backend
+      mkdir -p apps/ShopAPI/public apps/ShopOperator/public
+      rm -rf apps/ShopAPI/public/storage apps/ShopOperator/public/storage
+      ln -sfn ../../../storage/app/public apps/ShopAPI/public/storage
+      ln -sfn ../../../storage/app/public apps/ShopOperator/public/storage
+    '
   }
 fi

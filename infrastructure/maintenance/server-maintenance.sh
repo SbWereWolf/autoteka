@@ -16,7 +16,7 @@ source "$INFRA_ROOT/lib/runtime-compose.sh"
 source "$INFRA_ROOT/lib/telegram.sh"
 load_telegram_env
 
-LOG="${AUTOTEKA_LOG_DIR}/server-maintenance.log"
+LOG="${LOG_DIR}/server-maintenance.log"
 SCRIPT_ID="server-maintenance"
 MAINTENANCE_ACTION="ежедневное обслуживание сервера"
 MAINTENANCE_HAS_ERRORS=0

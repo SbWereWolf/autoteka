@@ -4,7 +4,7 @@ set -euo pipefail
 # Git polling watcher:
 # - fetch origin/<branch>
 # - if new commits -> stash local changes, reset --hard and start rollout
-# - logs to $AUTOTEKA_LOG_DIR/autoteka-deploy.log
+# - logs to $LOG_DIR/autoteka-deploy.log
 # - protected from parallel runs via flock
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
@@ -14,9 +14,9 @@ set -- "${AUTOTEKA_ARGS[@]}"
 source "$INFRA_ROOT/lib/telegram.sh"
 load_telegram_env
 
-BRANCH="${BRANCH}"
-REMOTE="${REMOTE}"
-LOG="${AUTOTEKA_LOG_DIR}/autoteka-deploy.log"
+GIT_BRANCH="${GIT_BRANCH}"
+GIT_REMOTE="${GIT_REMOTE}"
+LOG="${LOG_DIR}/autoteka-deploy.log"
 LOCK="/var/lock/autoteka-watch-changes.lock"
 STATE_DIR="/var/lib"
 SCRIPT_ID="watch_changes"
@@ -78,10 +78,10 @@ fi
   cd "$AUTOTEKA_ROOT"
 
   WATCH_STAGE="git_fetch"
-  git fetch "$REMOTE" "$BRANCH"
+  git fetch "$GIT_REMOTE" "$GIT_BRANCH"
 
   LOCAL="$(git rev-parse HEAD)"
-  REMOTE_HASH="$(git rev-parse "$REMOTE/$BRANCH")"
+  REMOTE_HASH="$(git rev-parse "$GIT_REMOTE/$GIT_BRANCH")"
 
   if [ "$LOCAL" = "$REMOTE_HASH" ]; then
     clear_script_notification_locks "$SCRIPT_ID"
@@ -122,7 +122,7 @@ fi
   printf '%s\n' "$LOCAL" > "$STATE_DIR/autoteka-http-prev-commit" || true
 
   WATCH_STAGE="git_reset"
-  git reset --hard "$REMOTE/$BRANCH"
+  git reset --hard "$GIT_REMOTE/$GIT_BRANCH"
 
   clear_script_notification_locks "$SCRIPT_ID"
 

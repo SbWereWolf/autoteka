@@ -47,24 +47,46 @@ autoteka_path_for_test() {
 }
 
 # Временная папка ОС. Используется в install.sh для вычисления TELEGRAM_LOCK_DIR.
-# nix: TMPDIR; win: TEMP или TMP (обычно заданы ОС).
+# Не задаётся в dev.env/prod.env: только окружение процесса или запись в $OPTIONS_FILE.
 autoteka_get_os_temp_dir() {
   local platform
   platform="$(autoteka_get_current_platform)"
   if [[ "$platform" == "nix" ]]; then
     if [ -z "${TMPDIR:-}" ]; then
-      echo "TMPDIR не задан. Добавьте в .env (prod.env/dev.env)." >&2
+      cat >&2 <<'EOF'
+TMPDIR не задан или пуст. Задайте переменную окружения процесса, например:
+  export TMPDIR=/tmp
+или
+  printf '%s\n' 'TMPDIR=/путь/к/каталогу' | sudo tee -a "$OPTIONS_FILE"
+EOF
       exit 3
     fi
     printf '%s' "$TMPDIR"
-  else
-    if [ -n "${TEMP:-}" ]; then
-      printf '%s' "$TEMP"
-    elif [ -n "${TMP:-}" ]; then
-      printf '%s' "$TMP"
-    else
-      echo "TEMP или TMP не заданы. Добавьте в .env (prod.env/dev.env)." >&2
-      exit 3
-    fi
+    return
   fi
+  if [ -n "${TEMP:-}" ]; then
+    printf '%s' "$TEMP"
+    return
+  fi
+  if [ -n "${TMP:-}" ]; then
+    printf '%s' "$TMP"
+    return
+  fi
+  cat >&2 <<'EOF'
+TEMP и TMP не заданы или пусты. Задайте переменные окружения процесса (cmd.exe или PowerShell).
+
+Текущая сессия cmd.exe:
+  set "TEMP=%LOCALAPPDATA%\Temp"
+
+Текущая сессия pwsh.exe или powershell.exe:
+  $env:TEMP = Join-Path $env:LOCALAPPDATA 'Temp'
+
+Задайте значение в OPTIONS_FILE
+pwsh.exe (в этой сессии должен быть задан $env:OPTIONS_FILE):
+  pwsh -NoProfile -Command "Add-Content -LiteralPath $env:OPTIONS_FILE -Encoding utf8 -Value ('TEMP=' + (Join-Path $env:LOCALAPPDATA 'Temp'))"
+
+cmd.exe (в этой сессии должна быть задана переменная OPTIONS_FILE):
+  (echo TEMP=%LOCALAPPDATA%\Temp)>>"%OPTIONS_FILE%"
+EOF
+  exit 3
 }

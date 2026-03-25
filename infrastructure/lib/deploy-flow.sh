@@ -120,7 +120,7 @@ if [ -z "${AUTOTEKA_LIB_DEPLOY_FLOW_SH:-}" ]; then
 
     if [ "$mode" = "deploy" ]; then
       autoteka_deploy_flow_set_stage "admin_smoke_check"
-      http_smoke_check "$ADMIN_SMOKE_URL"
+      http_smoke_check "$ADMIN_HEALTH_URL"
     fi
   }
 fi

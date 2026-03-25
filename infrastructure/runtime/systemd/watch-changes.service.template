@@ -5,5 +5,5 @@ Wants=network-online.target
 
 [Service]
 Type=oneshot
-EnvironmentFile=-${AUTOTEKA_OPTIONS_FILE}
+EnvironmentFile=-${OPTIONS_FILE}
 ExecStart=/usr/local/bin/autoteka watch-changes

@@ -9,11 +9,11 @@ if [ -z "${AUTOTEKA_LIB_HEALTH_STATE_SH:-}" ]; then
     source "$INFRA_ROOT/lib/telegram.sh"
 
   health_state_dir() {
-    if [ -z "${HEALTH_STATE_DIR:-}" ]; then
-      echo "HEALTH_STATE_DIR не задан. Задайте в options.env." >&2
+    if [ -z "${HEALTH_DIR:-}" ]; then
+      echo "HEALTH_DIR не задан. Задайте в options.env." >&2
       exit 3
     fi
-    printf '%s\n' "$HEALTH_STATE_DIR"
+    printf '%s\n' "$HEALTH_DIR"
   }
 
   health_state_path() {

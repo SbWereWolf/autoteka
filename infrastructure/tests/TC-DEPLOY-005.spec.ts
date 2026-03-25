@@ -23,6 +23,6 @@ describe("TC-DEPLOY-005", () => {
     expect(flowContent).toMatch(/prepare_laravel_runtime/);
     expect(flowContent).toMatch(/migrate/);
     expect(flowContent).toMatch(/seed_admin_user_if_missing_in_php/);
-    expect(flowContent).toMatch(/admin\/login|ADMIN_SMOKE/);
+    expect(flowContent).toMatch(/admin\/login|ADMIN_HEALTH/);
   });
 });

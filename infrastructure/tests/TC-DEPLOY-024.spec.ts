@@ -138,9 +138,9 @@ describe("TC-DEPLOY-024 backup.sh (B1-B8)", () => {
     expect(out.status).toBe(1);
   });
 
-  it("backup.sh использует STORAGE_BACKUP_RETENTION_DAYS и удаляет старые архивы", () => {
+  it("backup.sh использует BACKUP_DAYS и удаляет старые архивы", () => {
     const content = read("maintenance/backup.sh");
-    expect(content).toMatch(/STORAGE_BACKUP_RETENTION_DAYS|RETENTION_DAYS/);
+    expect(content).toMatch(/BACKUP_DAYS|RETENTION_DAYS/);
     expect(content).toMatch(/find.*-mtime|removed old/);
   });
 
@@ -235,12 +235,12 @@ describe("TC-DEPLOY-024 autoteka CLI", () => {
     expect(content).toMatch(/timers-start/);
   });
 
-  it("autoteka: глобальная справка не блокируется проверкой AUTOTEKA_OPTIONS_FILE в начале файла", () => {
+  it("autoteka: глобальная справка не блокируется проверкой OPTIONS_FILE в начале файла", () => {
     const content = read("bootstrap/bin/autoteka");
     const headLines = content.split("\n").slice(0, 20).join("\n");
-    expect(headLines).not.toMatch(/AUTOTEKA_OPTIONS_FILE не задан/);
+    expect(headLines).not.toMatch(/OPTIONS_FILE не задан/);
     expect(content).toMatch(
-      /if \[ -z "\$\{AUTOTEKA_OPTIONS_FILE:-\}" \]; then\r?\n  case "\$CMD" in/,
+      /if \[ -z "\$\{OPTIONS_FILE:-\}" \]; then\r?\n  case "\$CMD" in/,
     );
   });
 });

@@ -3,9 +3,9 @@
 FROM node:20-alpine AS frontend-build
 WORKDIR /app/frontend
 ARG VITE_API_BASE_URL=/api/v1
-ARG FRONTEND_BUILD_SOURCEMAP=false
+ARG VITE_BUILD_SOURCEMAP=false
 ENV VITE_API_BASE_URL=${VITE_API_BASE_URL}
-ENV VITE_BUILD_SOURCEMAP=${FRONTEND_BUILD_SOURCEMAP}
+ENV VITE_BUILD_SOURCEMAP=${VITE_BUILD_SOURCEMAP}
 COPY frontend/package.json frontend/package-lock.json ./
 RUN --mount=type=cache,target=/root/.npm npm ci
 COPY frontend ./

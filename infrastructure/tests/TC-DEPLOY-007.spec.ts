@@ -10,15 +10,15 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const INFRA_ROOT_PATH = join(__dirname, "..");
 
 const EXPECTED_VARS = [
-  "AUTOTEKA_OPTIONS_FILE",
+  "OPTIONS_FILE",
   "AUTOTEKA_ROOT",
-  "AUTOTEKA_LOG_DIR",
-  "BRANCH",
-  "REMOTE",
-  "HTTP_BIND_HOST",
+  "LOG_DIR",
+  "GIT_BRANCH",
+  "GIT_REMOTE",
+  "HTTP_BIND_IP",
   "HTTP_PORT",
   "PHP_READY_TIMEOUT",
-  "ADMIN_SMOKE_URL",
+  "ADMIN_HEALTH_URL",
 ];
 
 describe("TC-DEPLOY-007", () => {
@@ -36,7 +36,7 @@ describe("TC-DEPLOY-007", () => {
     const path = join(INFRA_ROOT_PATH, "prod.test.env");
     expect(existsSync(path)).toBe(true);
     const content = readFileSync(path, "utf-8");
-    expect(content).toMatch(/AUTOTEKA_RUNTIME_INSTANCE=autoteka-[\w-]+/);
+    expect(content).toMatch(/RUN_INSTANCE=autoteka-[\w-]+/);
     expect(content).toMatch(/DB_DATABASE=.*database\.test\.sqlite/);
   });
 
@@ -44,7 +44,7 @@ describe("TC-DEPLOY-007", () => {
     const path = join(INFRA_ROOT_PATH, "dev.test.env");
     expect(existsSync(path)).toBe(true);
     const content = readFileSync(path, "utf-8");
-    expect(content).toMatch(/AUTOTEKA_RUNTIME_INSTANCE=autoteka/);
+    expect(content).toMatch(/RUN_INSTANCE=autoteka/);
     expect(content).toMatch(/DB_DATABASE=.*database\.sqlite/);
   });
 
@@ -56,7 +56,7 @@ describe("TC-DEPLOY-007", () => {
     for (const v of [
       "AUTOTEKA_ROOT",
       "PHP_READY_TIMEOUT",
-      "ADMIN_SMOKE_URL",
+      "ADMIN_HEALTH_URL",
     ]) {
       expect(deployContent).toMatch(new RegExp(v));
     }
@@ -65,7 +65,7 @@ describe("TC-DEPLOY-007", () => {
       join(INFRA_ROOT_PATH, "runtime/watch-changes.sh"),
       "utf-8",
     );
-    for (const v of ["AUTOTEKA_ROOT", "BRANCH", "REMOTE"]) {
+    for (const v of ["AUTOTEKA_ROOT", "GIT_BRANCH", "GIT_REMOTE"]) {
       expect(watchChangesContent).toMatch(new RegExp(v));
     }
 
@@ -73,7 +73,7 @@ describe("TC-DEPLOY-007", () => {
       join(INFRA_ROOT_PATH, "runtime/docker-compose.yml"),
       "utf-8",
     );
-    expect(composeContent).toMatch(/HTTP_BIND_HOST/);
+    expect(composeContent).toMatch(/HTTP_BIND_IP/);
     expect(composeContent).toMatch(/HTTP_PORT/);
 
     const runtimeHelpersContent = readFileSync(

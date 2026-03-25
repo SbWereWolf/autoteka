@@ -2,12 +2,12 @@
 set -euo pipefail
 
 load_env_if_present() {
-  if [ -z "${AUTOTEKA_OPTIONS_FILE:-}" ]; then
+  if [ -z "${OPTIONS_FILE:-}" ]; then
     return 0
   fi
-  if [ -f "$AUTOTEKA_OPTIONS_FILE" ]; then
+  if [ -f "$OPTIONS_FILE" ]; then
     set -a
-    source "$AUTOTEKA_OPTIONS_FILE" || true
+    source "$OPTIONS_FILE" || true
     set +a
   fi
 }
@@ -15,7 +15,7 @@ load_env_if_present() {
 ensure_autoteka_root() {
   load_env_if_present
   if [ -z "${AUTOTEKA_ROOT:-}" ]; then
-    echo "AUTOTEKA_ROOT is not set. Set it in $AUTOTEKA_OPTIONS_FILE or export AUTOTEKA_ROOT." >&2
+    echo "AUTOTEKA_ROOT is not set. Set it in $OPTIONS_FILE or export AUTOTEKA_ROOT." >&2
     exit 1
   fi
 }
@@ -102,7 +102,7 @@ Usage:
 
 Purpose:
   Start or recreate the deployment Docker Compose stack: базовый файл
-  INFRA_ROOT/runtime/docker-compose.yml; при DEPLOY_ENV=prod дополнительно
+  INFRA_ROOT/runtime/docker-compose.yml; при DEPLOY_MODE=prod дополнительно
   подключается INFRA_ROOT/runtime/docker-compose.prod.yml (см. options.env).
 
 Arguments:
@@ -120,7 +120,7 @@ Usage:
 
 Purpose:
   Stop the deployment Docker Compose stack (тот же набор compose-файлов,
-  что и у autoteka up: базовый yml и при DEPLOY_ENV=prod — prod-оверлей).
+  что и у autoteka up: базовый yml и при DEPLOY_MODE=prod — prod-оверлей).
 
 Arguments:
   none
@@ -447,13 +447,13 @@ if [ $# -gt 0 ]; then
   shift
 fi
 
-if [ -z "${AUTOTEKA_OPTIONS_FILE:-}" ]; then
+if [ -z "${OPTIONS_FILE:-}" ]; then
   case "$CMD" in
     ""|-h|--help)
       ;;
     *)
       if [ "${1:-}" != "-h" ] && [ "${1:-}" != "--help" ]; then
-        echo "AUTOTEKA_OPTIONS_FILE не задан. Задайте вручную: export AUTOTEKA_OPTIONS_FILE=/path или source options.env. См. ADMIN_MANUAL." >&2
+        echo "OPTIONS_FILE не задан. Задайте вручную: export OPTIONS_FILE=/path или source options.env. См. ADMIN_MANUAL." >&2
         exit 3
       fi
       ;;

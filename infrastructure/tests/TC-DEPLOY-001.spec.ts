@@ -20,13 +20,13 @@ describe("TC-DEPLOY-001", () => {
     expect(content).toMatch(/\bphp\s*:/);
   });
 
-  it("runtime-compose.sh: единая обёртка docker compose и prod по DEPLOY_ENV", () => {
+  it("runtime-compose.sh: единая обёртка docker compose и prod по DEPLOY_MODE", () => {
     const content = readFileSync(
       join(INFRA_ROOT_PATH, "lib/runtime-compose.sh"),
       "utf-8",
     );
     expect(content).toMatch(/autoteka_runtime_compose\(\)/);
-    expect(content).toMatch(/DEPLOY_ENV/);
+    expect(content).toMatch(/DEPLOY_MODE/);
     expect(content).toMatch(/docker-compose\.prod\.yml/);
     expect(content).toMatch(/\/usr\/bin\/docker compose/);
   });
@@ -75,7 +75,7 @@ describe("TC-DEPLOY-001", () => {
     for (const key of [
       "PHP_FPM_PM_MAX_CHILDREN",
       "PHP_OPCACHE_VALIDATE_TIMESTAMPS",
-      "RUN_LARAVEL_OPTIMIZE",
+      "LARAVEL_OPTIMIZE",
     ]) {
       expect(target).toMatch(new RegExp(key));
       expect(prod).toMatch(new RegExp(key));

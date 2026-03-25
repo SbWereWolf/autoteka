@@ -49,12 +49,12 @@ sudo ./infrastructure/bootstrap/install.sh --infra-root=/opt/autoteka/infrastruc
 
 ## Основные файлы
 
-- `$INFRA_ROOT/prod.env` — шаблон переменных для production (включая `AUTOTEKA_OPTIONS_FILE`, `AUTOTEKA_LOG_DIR`).
+- `$INFRA_ROOT/prod.env` — шаблон переменных для production (включая `OPTIONS_FILE`, `LOG_DIR`).
 - `$INFRA_ROOT/dev.env` — шаблон переменных для dev-среды.
 - `$INFRA_ROOT/.env` — создаётся из prod.env перед install, используется только install.sh.
   После успешной установки install.sh перемещает .env в `$INFRA_ROOT/backup.env`.
   Для повторного install: `cp backup.env .env`.
-- `$AUTOTEKA_OPTIONS_FILE` (обычно `/etc/autoteka/options.env`) — рабочий конфиг после установки;
+- `$OPTIONS_FILE` (обычно `/etc/autoteka/options.env`) — рабочий конфиг после установки;
   все изменения вносить в options.env.
 - Файл по пути `TELEGRAM_ENV_FILE` — `TELEGRAM_TOKEN`, `TELEGRAM_CHAT`.
   Путь задаётся в .env, install.sh копирует его в options.env.
@@ -69,9 +69,10 @@ sudo ./infrastructure/bootstrap/install.sh --infra-root=/opt/autoteka/infrastruc
 
 ### 5. Настройки окружения
 
-- `AUTOTEKA_OPTIONS_FILE` — путь к options.env (в prod.env: `/etc/autoteka/options.env`).
-- options.env — `AUTOTEKA_ROOT`, `INFRA_ROOT`, `AUTOTEKA_LOG_DIR`, `TELEGRAM_LOCK_DIR`,
-  `BRANCH`, `REMOTE`, `HTTP_BIND_HOST`, `HTTP_PORT`, smoke-URL (`BACKEND_SMOKE_URL`, `API_SMOKE_URL`, `ADMIN_SMOKE_URL` для watchdog и repair). Скрипты берут пути только из env или аргументов.
+- `OPTIONS_FILE` — путь к options.env (в prod.env: `/etc/autoteka/options.env`).
+- options.env — `AUTOTEKA_ROOT`, `INFRA_ROOT`, `LOG_DIR`, `TELEGRAM_LOCK_DIR`,
+  `GIT_BRANCH`, `GIT_REMOTE`, `HTTP_BIND_IP`, `HTTP_PORT`, smoke-URL (`BACKEND_HEALTH_URL`, `API_HEALTH_URL`, `ADMIN_HEALTH_URL` для watchdog и repair). Скрипты берут пути только из env или аргументов.
+- Каталог временных файлов для вычисления `TELEGRAM_LOCK_DIR` в `bootstrap/install.sh` берётся из окружения процесса: на Unix обязателен **`TMPDIR`** (в `dev.env`/`prod.env` не задаётся; скрипт не подставляет значение по умолчанию). Перед `sudo ./install.sh` задайте `export TMPDIR=/tmp` и запускайте с сохранением окружения, например `sudo -E ./install.sh`. Для других сценариев строку `TMPDIR=…` можно держать в **`$OPTIONS_FILE`** (часто `/etc/autoteka/options.env`), если этот файл подгружается в окружение до вызова скриптов, использующих `lib/operational_system.sh`. На Windows — `TEMP` или `TMP`; примеры для **cmd.exe** и **pwsh** — в сообщении об ошибке в `lib/operational_system.sh`.
 - Файл по пути `TELEGRAM_ENV_FILE` — `TELEGRAM_TOKEN`, `TELEGRAM_CHAT`
   (см. выше в «Основные файлы»).
 
@@ -81,7 +82,7 @@ sudo ./infrastructure/bootstrap/install.sh --infra-root=/opt/autoteka/infrastruc
 задаются в `$INFRA_ROOT/.env` перед install. install.sh копирует шаблон
 `bootstrap/config/telegram.example.env` по пути `TELEGRAM_ENV_FILE` и
 переписывает туда значения из .env. В `options.env` — `TELEGRAM_ENV_FILE`
-(путь задаётся в .env). Лог Telegram: `$AUTOTEKA_LOG_DIR/telegram.log`.
+(путь задаётся в .env). Лог Telegram: `$LOG_DIR/telegram.log`.
 
 `TELEGRAM_ENV_FILE` опционален: если не задан, watchdog, watch-changes и
 maintenance работают без Telegram-уведомлений.
@@ -98,6 +99,10 @@ maintenance работают без Telegram-уведомлений.
 Таймеры запускают скрипты из `$INFRA_ROOT`. При изменении `$INFRA_ROOT` или
 путей к скриптам требуется обновление unit-файлов — см.
 [ADMIN_MANUAL: инструкция по обновлению](../docs/manual/ADMIN_MANUAL.md#инструкция-по-обновлению-при-изменении-infra_root).
+
+### Смена имён переменных в шаблонах env
+
+Отдельной процедуры переименования ключей в уже установленном `options.env` нет. После обновления репозитория, где изменились имена переменных в `prod.env` / `dev.env`, на уже развёрнутом хосте: `autoteka uninstall purge` (при необходимости с `--force`), затем снова `bootstrap/install.sh` с актуальным содержимым `.env`, скопированным из шаблона.
 
 ## Команды
 
@@ -139,7 +144,7 @@ export AUTOTEKA_ROOT=/opt/autoteka
   Второй параллельный prod на том же дереве каталогов без смены
   `AUTOTEKA_ROOT` конфликтует по файлам БД и storage — для изоляции нужен
   отдельный клон репозитория или другой `AUTOTEKA_ROOT`.
-- `AUTOTEKA_RUNTIME_INSTANCE` по-прежнему задаёт **имена контейнеров** и
+- `RUN_INSTANCE` по-прежнему задаёт **имена контейнеров** и
   полезен, если на одном хосте несколько корней приложения.
 - Для изолированной копии (dev) используйте отдельный `DB_DATABASE`, обычно
   `../../database/database.test.sqlite`.
@@ -157,6 +162,10 @@ export AUTOTEKA_ROOT=/opt/autoteka
 - Дополнительный build context `infra` пробрасывает в Docker build
   шаблоны nginx/php и entrypoint-скрипты из `INFRA_ROOT`, чтобы сборка
   не зависела от имени каталога.
+- Сборка статики frontend в образе `web`: build-arg **`VITE_BUILD_SOURCEMAP`**
+  (см. `dev.env` / `prod.env` и `runtime/docker-compose.yml`). Старое имя
+  **`FRONTEND_BUILD_SOURCEMAP`** удалено — при обновлении с кастомных шаблонов
+  переименуйте ключ в `options.env`.
 - Metrics монтируются из
   `$INFRA_ROOT/observability/application/metrics`.
 
@@ -183,11 +192,11 @@ Laravel); обнаружение пакетов выполняется в кон
 Production:
 
 Стек задаётся через [`lib/runtime-compose.sh`](lib/runtime-compose.sh): базовый файл
-`runtime/docker-compose.yml`, при `DEPLOY_ENV=prod` в options.env (или `.env` на этапе install)
+`runtime/docker-compose.yml`, при `DEPLOY_MODE=prod` в options.env (или `.env` на этапе install)
 дополнительно подключается `runtime/docker-compose.prod.yml`. Руками, эквивалентно:
 
 ```bash
-# при DEPLOY_ENV=prod
+# при DEPLOY_MODE=prod
 docker compose \
   -f "$INFRA_ROOT"/runtime/docker-compose.yml \
   -f "$INFRA_ROOT"/runtime/docker-compose.prod.yml \
@@ -202,7 +211,7 @@ docker compose \
   logs -f php
 ```
 
-При `DEPLOY_ENV` не равном `prod` второй `-f` не используется. Для типовых операций удобнее
+При `DEPLOY_MODE` не равном `prod` второй `-f` не используется. Для типовых операций удобнее
 `autoteka up` / `autoteka down` (тот же набор файлов).
 
 Dev:
@@ -336,7 +345,7 @@ backup, исправление прав logrotate. Запускается тай
 исключены из git; в репозитории есть `backup-rules-*.example.txt`. При первом
 `install.sh` рабочие файлы создаются из `.example.txt`, если их ещё нет.
 
-При создании backup архивы старше `STORAGE_BACKUP_RETENTION_DAYS` дней (из
+При создании backup архивы старше `BACKUP_DAYS` дней (из
 `/etc/autoteka/options.env`, по умолчанию 7) удаляются.
 
 `autoteka restore` принимает 1–3 архива через `--archive-root`, `--archive-autoteka`,
@@ -379,12 +388,12 @@ flowchart TD
 
 Проверяет health-домены (nginx, php, backend, admin, api) по порогам.
 При сбое: DEGRADED → автопочинка → cooldown → manual_required.
-Пишет метрики в `$AUTOTEKA_LOG_DIR/server-metrics.log`, вызывает
+Пишет метрики в `$LOG_DIR/server-metrics.log`, вызывает
 `metrics-export.sh` при успешной проверке.
 
 ### metrics-export.sh
 
-Читает `$AUTOTEKA_LOG_DIR/server-metrics.log`, конвертирует в JSON, пишет в
+Читает `$LOG_DIR/server-metrics.log`, конвертирует в JSON, пишет в
 `$INFRA_ROOT/observability/application/metrics/data.json`. Nginx раздаёт
 его по `/metrics/data.json`.
 
@@ -402,10 +411,10 @@ flowchart TD
 
 - `journalctl -u autoteka.service -u watch-changes.service`
 - `journalctl -u server-watchdog.service -u server-maintenance.service`
-- `tail -n 100 $AUTOTEKA_LOG_DIR/autoteka-deploy.log`
-- `tail -n 100 $AUTOTEKA_LOG_DIR/server-watchdog.log`
-- `tail -n 100 $AUTOTEKA_LOG_DIR/server-maintenance.log`
-- `tail -n 100 $AUTOTEKA_LOG_DIR/telegram.log`
+- `tail -n 100 $LOG_DIR/autoteka-deploy.log`
+- `tail -n 100 $LOG_DIR/server-watchdog.log`
+- `tail -n 100 $LOG_DIR/server-maintenance.log`
+- `tail -n 100 $LOG_DIR/telegram.log`
 
 ## Верификация
 

@@ -8,13 +8,14 @@ set -- "${AUTOTEKA_ARGS[@]}"
 source "$INFRA_ROOT/lib/runtime-compose.sh"
 source "$INFRA_ROOT/lib/laravel-runtime.sh"
 source "$INFRA_ROOT/lib/health-state.sh"
+source "$INFRA_ROOT/lib/repair-php-web-common.sh"
 
 DRY_RUN=0
 PRESERVE_HEALTH_STATE=0
 PHP_READY_TIMEOUT="${PHP_READY_TIMEOUT}"
-BACKEND_SMOKE_URL="${BACKEND_SMOKE_URL}"
-API_SMOKE_URL="${API_SMOKE_URL}"
-ADMIN_SMOKE_URL="${ADMIN_SMOKE_URL}"
+BACKEND_HEALTH_URL="${BACKEND_HEALTH_URL}"
+API_HEALTH_URL="${API_HEALTH_URL}"
+ADMIN_HEALTH_URL="${ADMIN_HEALTH_URL}"
 SCRIPT_ID="server-watchdog"
 
 usage() {
@@ -69,33 +70,11 @@ run_smoke() {
   fi
 }
 
-if is_dry_run; then
-  dry_run_log "$(autoteka_runtime_compose_describe) up -d --build --remove-orphans php"
-else
-  autoteka_runtime_compose up -d --build --remove-orphans php
-fi
+autoteka_repair_php_and_web_stack --with-package-lock
 
-if ! is_dry_run; then
-  wait_for_php_exec_ready
-  prepare_laravel_runtime
-  ensure_public_storage_link
-  clear_laravel_optimizations
-  check_sqlite_write_access
-  ensure_package_lock_for_deploy
-  autoteka_runtime_compose up -d --build --remove-orphans web
-else
-  dry_run_log "wait_for_php_exec_ready"
-  dry_run_log "prepare_laravel_runtime"
-  dry_run_log "ensure_public_storage_link"
-  dry_run_log "clear_laravel_optimizations"
-  dry_run_log "check_sqlite_write_access"
-  dry_run_log "ensure_package_lock_for_deploy"
-  dry_run_log "$(autoteka_runtime_compose_describe) up -d --build --remove-orphans web"
-fi
-
-run_smoke "$BACKEND_SMOKE_URL"
-run_smoke "$API_SMOKE_URL"
-run_smoke "$ADMIN_SMOKE_URL"
+run_smoke "$BACKEND_HEALTH_URL"
+run_smoke "$API_HEALTH_URL"
+run_smoke "$ADMIN_HEALTH_URL"
 
 if ! is_dry_run; then
   mkdir -p /var/lib
@@ -111,4 +90,4 @@ else
   fi
 fi
 
-echo "Laravel runtime repaired and smoke-checks passed: $BACKEND_SMOKE_URL, $API_SMOKE_URL, $ADMIN_SMOKE_URL"
+echo "Laravel runtime repaired and smoke-checks passed: $BACKEND_HEALTH_URL, $API_HEALTH_URL, $ADMIN_HEALTH_URL"

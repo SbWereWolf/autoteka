@@ -72,13 +72,13 @@ LOGROTATE_FILES=(
 )
 
 APP_LOGS=()
-if [ -n "${AUTOTEKA_LOG_DIR:-}" ]; then
+if [ -n "${LOG_DIR:-}" ]; then
   APP_LOGS=(
-    "${AUTOTEKA_LOG_DIR}/autoteka-deploy.log"
-    "${AUTOTEKA_LOG_DIR}/server-watchdog.log"
-    "${AUTOTEKA_LOG_DIR}/server-metrics.log"
-    "${AUTOTEKA_LOG_DIR}/server-maintenance.log"
-    "${AUTOTEKA_LOG_DIR}/telegram.log"
+    "${LOG_DIR}/autoteka-deploy.log"
+    "${LOG_DIR}/server-watchdog.log"
+    "${LOG_DIR}/server-metrics.log"
+    "${LOG_DIR}/server-maintenance.log"
+    "${LOG_DIR}/telegram.log"
   )
 fi
 
@@ -182,7 +182,7 @@ purge() {
 
   if [ "$RM_ETC_VUE_APP" = "yes" ]; then
     confirm_or_exit "REMOVE /etc/autoteka/* (secrets)"
-    local opts_file="${AUTOTEKA_OPTIONS_FILE:-}"
+    local opts_file="${OPTIONS_FILE:-}"
     if [ -f "$opts_file" ]; then
       set -a
       source "$opts_file" 2>/dev/null || true

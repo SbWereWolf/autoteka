@@ -8,6 +8,7 @@ set -- "${AUTOTEKA_ARGS[@]}"
 source "$INFRA_ROOT/lib/runtime-compose.sh"
 source "$INFRA_ROOT/lib/laravel-runtime.sh"
 source "$INFRA_ROOT/lib/dry-run.sh"
+source "$INFRA_ROOT/lib/repair-php-web-common.sh"
 
 DRY_RUN=0
 DOMAIN=""
@@ -84,27 +85,7 @@ restart_or_up() {
 }
 
 repair_backend_runtime() {
-  if is_dry_run; then
-    dry_run_log "$(autoteka_runtime_compose_describe) up -d --build --remove-orphans php"
-  else
-    autoteka_runtime_compose up -d --build --remove-orphans php
-  fi
-
-  if ! is_dry_run; then
-    wait_for_php_exec_ready
-    prepare_laravel_runtime
-    ensure_public_storage_link
-    clear_laravel_optimizations
-    check_sqlite_write_access
-    autoteka_runtime_compose up -d --build --remove-orphans web
-  else
-    dry_run_log "wait_for_php_exec_ready"
-    dry_run_log "prepare_laravel_runtime"
-    dry_run_log "ensure_public_storage_link"
-    dry_run_log "clear_laravel_optimizations"
-    dry_run_log "check_sqlite_write_access"
-    dry_run_log "$(autoteka_runtime_compose_describe) up -d --build --remove-orphans web"
-  fi
+  autoteka_repair_php_and_web_stack
 }
 
 case "$DOMAIN" in

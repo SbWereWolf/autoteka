@@ -16,8 +16,8 @@ set -- "${AUTOTEKA_ARGS[@]}"
 source "$INFRA_ROOT/lib/health-state.sh"
 load_telegram_env
 
-LOG="${AUTOTEKA_LOG_DIR}/server-watchdog.log"
-METRIC_LOG="${AUTOTEKA_LOG_DIR}/server-metrics.log"
+LOG="${LOG_DIR}/server-watchdog.log"
+METRIC_LOG="${LOG_DIR}/server-metrics.log"
 
 # ===== host/resource settings =====
 LOAD_LIMIT="${WATCHDOG_LOAD_LIMIT}"
@@ -49,9 +49,9 @@ API_MAX_REPAIRS="${WATCHDOG_API_MAX_REPAIRS}"
 NGINX_REPAIR_VERIFY_TIMEOUT="${WATCHDOG_NGINX_REPAIR_VERIFY_TIMEOUT}"
 PHP_REPAIR_VERIFY_TIMEOUT="${WATCHDOG_PHP_REPAIR_VERIFY_TIMEOUT}"
 CONTAINER_REPAIR_VERIFY_INTERVAL="${WATCHDOG_CONTAINER_REPAIR_VERIFY_INTERVAL}"
-BACKEND_SMOKE_URL="${BACKEND_SMOKE_URL}"
-API_SMOKE_URL="${API_SMOKE_URL}"
-ADMIN_SMOKE_URL="${ADMIN_SMOKE_URL}"
+BACKEND_HEALTH_URL="${BACKEND_HEALTH_URL}"
+API_HEALTH_URL="${API_HEALTH_URL}"
+ADMIN_HEALTH_URL="${ADMIN_HEALTH_URL}"
 
 DRY_RUN=0
 SCRIPT_ID="server-watchdog"
@@ -95,7 +95,7 @@ while [ $# -gt 0 ]; do
   shift
 done
 
-mkdir -p /var/lib /var/lock "$(health_state_dir)" "$AUTOTEKA_LOG_DIR"
+mkdir -p /var/lib /var/lock "$(health_state_dir)" "$LOG_DIR"
 exec 9>"$LOCK_FILE"
 if ! flock -n 9; then
   log_action "[watchdog] skip reason=flock"
@@ -277,18 +277,18 @@ probe_domain() {
       [ "$status" = "healthy" ]
       ;;
     backend)
-      status="$(http_status_once "$BACKEND_SMOKE_URL")"
-      PROBE_DETAIL="url=$BACKEND_SMOKE_URL status=$status"
+      status="$(http_status_once "$BACKEND_HEALTH_URL")"
+      PROBE_DETAIL="url=$BACKEND_HEALTH_URL status=$status"
       [ "$status" -ge 200 ] && [ "$status" -lt 400 ]
       ;;
     admin)
-      status="$(http_status_once "$ADMIN_SMOKE_URL")"
-      PROBE_DETAIL="url=$ADMIN_SMOKE_URL status=$status"
+      status="$(http_status_once "$ADMIN_HEALTH_URL")"
+      PROBE_DETAIL="url=$ADMIN_HEALTH_URL status=$status"
       [ "$status" -ge 200 ] && [ "$status" -lt 400 ]
       ;;
     api)
-      status="$(http_status_once "$API_SMOKE_URL")"
-      PROBE_DETAIL="url=$API_SMOKE_URL status=$status"
+      status="$(http_status_once "$API_HEALTH_URL")"
+      PROBE_DETAIL="url=$API_HEALTH_URL status=$status"
       [ "$status" -ge 200 ] && [ "$status" -lt 400 ]
       ;;
     *)

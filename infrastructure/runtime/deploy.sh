@@ -9,11 +9,11 @@ source "$INFRA_ROOT/lib/deploy-flow.sh"
 source "$INFRA_ROOT/lib/telegram.sh"
 load_telegram_env
 
-LOG="${AUTOTEKA_LOG_DIR}/autoteka-deploy.log"
+LOG="${LOG_DIR}/autoteka-deploy.log"
 LOCK="/var/lock/autoteka-deploy.lock"
 STATE_DIR="/var/lib"
 PHP_READY_TIMEOUT="${PHP_READY_TIMEOUT}"
-ADMIN_SMOKE_URL="${ADMIN_SMOKE_URL}"
+ADMIN_HEALTH_URL="${ADMIN_HEALTH_URL}"
 SCRIPT_ID="deploy"
 DEPLOY_ACTION="обновление приложения"
 DEPLOY_STAGE="init"

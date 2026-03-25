@@ -45,7 +45,7 @@ fi
 (cd apps/ShopAPI && php artisan optimize:clear --ansi >/dev/null 2>&1 || true)
 
 
-if [ "${RUN_LARAVEL_OPTIMIZE}" = "true" ]; then
+if [ "${LARAVEL_OPTIMIZE}" = "true" ]; then
   (cd apps/ShopAPI && php artisan config:cache --ansi || true)
   (cd apps/ShopAPI && php artisan route:cache --ansi || true)
   (cd apps/ShopAPI && php artisan event:cache --ansi || true)

@@ -1,3 +1,3 @@
 # Autoteka options — загружается при логине. Сгенерировано install.sh.
-export AUTOTEKA_OPTIONS_FILE="${AUTOTEKA_OPTIONS_FILE}"
-[ -f "$AUTOTEKA_OPTIONS_FILE" ] && . "$AUTOTEKA_OPTIONS_FILE"
+export OPTIONS_FILE="${OPTIONS_FILE}"
+[ -f "$OPTIONS_FILE" ] && . "$OPTIONS_FILE"

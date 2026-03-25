@@ -15,7 +15,7 @@ if [ -z "${AUTOTEKA_LIB_RUNTIME_COMPOSE_SH:-}" ]; then
     local base="$INFRA_ROOT/runtime/docker-compose.yml"
     local prod_overlay="$INFRA_ROOT/runtime/docker-compose.prod.yml"
 
-    if [ "${DEPLOY_ENV:-}" = "prod" ]; then
+    if [ "${DEPLOY_MODE:-}" = "prod" ]; then
       /usr/bin/docker compose -f "$base" -f "$prod_overlay" "$@"
     else
       /usr/bin/docker compose -f "$base" "$@"
@@ -32,7 +32,7 @@ if [ -z "${AUTOTEKA_LIB_RUNTIME_COMPOSE_SH:-}" ]; then
     local base="$INFRA_ROOT/runtime/docker-compose.yml"
     local prod_overlay="$INFRA_ROOT/runtime/docker-compose.prod.yml"
 
-    if [ "${DEPLOY_ENV:-}" = "prod" ]; then
+    if [ "${DEPLOY_MODE:-}" = "prod" ]; then
       printf '/usr/bin/docker compose -f %s -f %s' "$base" "$prod_overlay"
     else
       printf '/usr/bin/docker compose -f %s' "$base"

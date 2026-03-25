@@ -51,8 +51,8 @@ echo ""
 
 # Последние записи в логах
 echo "--- Последние записи в логах (tail -3) ---"
-if [ -n "${AUTOTEKA_LOG_DIR:-}" ]; then
-  for log in "${AUTOTEKA_LOG_DIR}/autoteka-deploy.log" "${AUTOTEKA_LOG_DIR}/server-maintenance.log" "${AUTOTEKA_LOG_DIR}/telegram.log" "${AUTOTEKA_LOG_DIR}/server-watchdog.log" "${AUTOTEKA_LOG_DIR}/server-metrics.log"; do
+if [ -n "${LOG_DIR:-}" ]; then
+  for log in "${LOG_DIR}/autoteka-deploy.log" "${LOG_DIR}/server-maintenance.log" "${LOG_DIR}/telegram.log" "${LOG_DIR}/server-watchdog.log" "${LOG_DIR}/server-metrics.log"; do
     if [ -f "$log" ]; then
       echo "  $log:"
       tail -3 "$log" 2>/dev/null | sed 's/^/    /'
@@ -61,7 +61,7 @@ if [ -n "${AUTOTEKA_LOG_DIR:-}" ]; then
     fi
   done
 else
-  echo "  AUTOTEKA_LOG_DIR не задан, пропуск"
+  echo "  LOG_DIR не задан, пропуск"
 fi
 echo ""
 

@@ -58,7 +58,7 @@ if [ -z "${AUTOTEKA_LIB_TELEGRAM_SH:-}" ]; then
   telegram_log() {
     local message="$1"
     local line
-    local log_file="${AUTOTEKA_LOG_DIR}/telegram.log"
+    local log_file="${LOG_DIR}/telegram.log"
 
     line="$(date -u '+%Y-%m-%d %H:%M') $message"
     if mkdir -p "$(dirname "$log_file")" 2>/dev/null && printf '%s\n' "$line" >> "$log_file" 2>/dev/null; then
