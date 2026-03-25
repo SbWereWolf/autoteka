@@ -1,3 +1,5 @@
+name = "reviewer"
+description = "Read-only review agent for inspecting diffs, task artifacts, and verification outputs without editing repository files."
 model_reasoning_effort = "medium"
 sandbox_mode = "read-only"
 developer_instructions = """
