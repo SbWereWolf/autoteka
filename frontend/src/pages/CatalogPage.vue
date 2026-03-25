@@ -52,62 +52,22 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from "vue";
 import { useRouter } from "vue-router";
-import { apiClient } from "../api/HttpApiClient";
-import { state } from "../state";
-import { sortShopsByRules } from "../utils/sortShops";
 import ShopTile from "../components/ShopTile.vue";
 import CatalogFeatureStickySelect from "../components/CatalogFeatureStickySelect.vue";
-import type { Shop } from "../types";
-import { ApiError } from "../api/ApiClient";
 import ErrorStatePanel from "../components/ErrorStatePanel.vue";
+import { useCatalogCityShops } from "../composables/useCatalogCityShops";
+import { state } from "../state";
 
 const router = useRouter();
-const cityShops = ref<Shop[]>([]);
-const isLoading = ref(false);
-const loadError = ref(false);
-
-async function loadCityShops() {
-  isLoading.value = true;
-  loadError.value = false;
-  try {
-    const response = await apiClient.getCityShops(state.cityCode);
-    cityShops.value = response.items;
-  } catch (error) {
-    cityShops.value = [];
-    if (error instanceof ApiError && error.status === 404) {
-      loadError.value = false;
-      return;
-    }
-    loadError.value = true;
-  } finally {
-    isLoading.value = false;
-  }
-}
-
-const sorted = computed(() =>
-  sortShopsByRules({
-    shops: cityShops.value,
-    selectedCategoryIds: state.selectedCategoryIds,
-    selectedFeatureId: state.selectedFeatureId,
-  }),
-);
-
-const seedBase = computed(() => state.cityCode.length * 17);
+const { sorted, seedBase, isLoading, loadError, loadCityShops } =
+  useCatalogCityShops({
+    cityCode: () => state.cityCode,
+    selectedCategoryIds: () => state.selectedCategoryIds,
+    selectedFeatureId: () => state.selectedFeatureId,
+  });
 
 function go(code: string) {
   router.push({ name: "shop", params: { code } });
 }
-
-watch(
-  () => state.cityCode,
-  () => {
-    loadCityShops();
-  },
-);
-
-onMounted(() => {
-  loadCityShops();
-});
 </script>

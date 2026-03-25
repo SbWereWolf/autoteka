@@ -218,17 +218,13 @@ import {
   openYandexNavigatorMapSearch,
 } from "../utils/yandexAddressOpen";
 import ErrorStatePanel from "../components/ErrorStatePanel.vue";
+import {
+  SHOP_ACCEPTABLE_CONTACT_TYPES,
+  useShopContactRows,
+} from "../composables/useShopContactRows";
 
 const route = useRoute();
 const router = useRouter();
-
-const ACCEPTABLE_TYPES = [
-  "phone",
-  "email",
-  "telegram",
-  "whatsapp",
-  "address",
-];
 
 const shopCode = computed(() => String(route.params.code ?? ""));
 const shop = ref<Shop | null>(null);
@@ -269,89 +265,7 @@ function goToCatalog() {
   router.push({ name: "catalog" });
 }
 
-type ContactRow =
-  | {
-      key: string;
-      kind: "address";
-      addressText: string;
-      addressTextId: string;
-      mapsHref: string;
-    }
-  | {
-      key: string;
-      kind: "link";
-      label: string;
-      href: string;
-      target: string;
-    }
-  | {
-      key: string;
-      kind: "plain";
-      label: string;
-    };
-
-const contactRows = computed((): ContactRow[] => {
-  const rows: ContactRow[] = [];
-
-  for (const type of ACCEPTABLE_TYPES) {
-    for (const value of contacts.value[type] ?? []) {
-      if (type === "address") {
-        const addressText = String(value ?? "");
-        if (!addressText.trim()) {
-          continue;
-        }
-        const addressTextId = `shop-address-text-${rows.length}`;
-        rows.push({
-          key: `address:${rows.length}:${addressText}`,
-          kind: "address",
-          addressText,
-          addressTextId,
-          mapsHref: buildYandexMapsWebUrl(addressText),
-        });
-        continue;
-      }
-
-      const href = hrefFor(type, value);
-      if (href) {
-        rows.push({
-          key: `${type}:${value}`,
-          kind: "link",
-          label: labelFor(type, value),
-          href,
-          target: href.startsWith("http") ? "_blank" : "_self",
-        });
-      } else {
-        rows.push({
-          key: `${type}:${value}`,
-          kind: "plain",
-          label: labelFor(type, value),
-        });
-      }
-    }
-  }
-
-  return rows;
-});
-
-function hrefFor(type: string, value: string) {
-  if (type === "phone") {
-    return `tel:${value.replace(/\s|\(|\)|-/g, "")}`;
-  }
-
-  if (type === "email") {
-    return `mailto:${value}`;
-  }
-
-  if (type === "telegram" || type === "whatsapp") {
-    return value;
-  }
-
-  return null;
-}
-
-function labelFor(type: string, value: string) {
-  return value;
-}
+const { contactRows } = useShopContactRows(contacts);
 
 async function loadShop() {
   isLoading.value = true;
@@ -368,7 +282,7 @@ async function loadShop() {
     try {
       contacts.value = await apiClient.postAcceptableContactTypes(
         shopCode.value,
-        ACCEPTABLE_TYPES,
+        [...SHOP_ACCEPTABLE_CONTACT_TYPES],
       );
     } catch {
       contacts.value = {};
