@@ -1,3 +1,15 @@
+/**
+ * Запуск system-tests (Vitest) с подготовкой стека.
+ *
+ * Профиль ui-headless-dev + stack dev + FRONTEND_MODE=source: на хосте поднимается
+ * `npm run dev` (Vite), а в env compose прокидывается FRONTEND_UPSTREAM_* — nginx в
+ * контейнере проксирует на этот dev-сервер (HMR). Без остановки дочернего процесса
+ * после прогона остаётся висящий Node/npm.
+ *
+ * Teardown (process.on('exit')) останавливает host Vite и при необходимости
+ * выполняет `docker compose down` для того же compose-файла, что поднимался в
+ * preflight; хвосты, которые нельзя гарантированно убрать, печатаются в stderr.
+ */
 import { spawn, spawnSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
@@ -5,6 +17,14 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const nullDevice = os.platform() === "win32" ? "NUL" : "/dev/null";
+
+/** @type {string[]} */
+const teardownManualHints = [];
+
+let activeComposeFileForCleanup = null;
+/** @type {Record<string, string> | null} */
+let composeEnvSnapshotForDown = null;
+let composeStackWentUpForCleanup = false;
 
 const rawArgs = process.argv.slice(2);
 
@@ -171,12 +191,12 @@ const resolvePath = (basePath, targetPath) => {
 };
 
 const getRuntimeInstance = (stackEnvForProfile) => {
-  const fromStack = stackEnvForProfile.AUTOTEKA_RUNTIME_INSTANCE?.trim();
+  const fromStack = stackEnvForProfile.RUN_INSTANCE?.trim();
   if (fromStack) return fromStack;
-  const fromSystemTests = systemTestsEnv.AUTOTEKA_RUNTIME_INSTANCE?.trim();
+  const fromSystemTests = systemTestsEnv.RUN_INSTANCE?.trim();
   if (fromSystemTests) return fromSystemTests;
   fail(
-    "[run-vitest] Не задан AUTOTEKA_RUNTIME_INSTANCE: добавьте в infrastructure/*.test.env или в system-tests/.env (см. system-tests/example.env).",
+    "[run-vitest] Не задан RUN_INSTANCE: добавьте в infrastructure/*.test.env или в system-tests/.env (см. system-tests/example.env).",
   );
 };
 
@@ -235,11 +255,11 @@ const stackBaseUrlFromEnv = () => {
     return localBaseUrl;
   }
   if (profileInfo.stack === "dev") {
-    const host = requireFromStackFile("dev", devEnv, devEnvPath, "HTTP_BIND_HOST");
+    const host = requireFromStackFile("dev", devEnv, devEnvPath, "HTTP_BIND_IP");
     const port = requireFromStackFile("dev", devEnv, devEnvPath, "HTTP_PORT");
     return `http://${normalizeHost(host)}:${port}`;
   }
-  const host = requireFromStackFile("prod", deployEnv, deployEnvPath, "HTTP_BIND_HOST");
+  const host = requireFromStackFile("prod", deployEnv, deployEnvPath, "HTTP_BIND_IP");
   const port = requireFromStackFile("prod", deployEnv, deployEnvPath, "HTTP_PORT");
   return `http://${normalizeHost(host)}:${port}`;
 };
@@ -340,6 +360,80 @@ if (shouldUseHostFrontendDevServer) {
 
 let hostFrontendProcess = null;
 
+const stopHostFrontendDevServer = () => {
+  if (!hostFrontendProcess) {
+    return;
+  }
+  const proc = hostFrontendProcess;
+  hostFrontendProcess = null;
+  try {
+    const sig = process.platform === "win32" ? undefined : "SIGTERM";
+    proc.kill(sig);
+  } catch (err) {
+    const code =
+      err && typeof err === "object" && "code" in err ? err.code : undefined;
+    if (code === "ESRCH") {
+      return;
+    }
+    console.error(
+      `[run-vitest] teardown: не удалось отправить сигнал host Vite (pid=${proc.pid ?? "?"}): ${err instanceof Error ? err.message : String(err)}`,
+    );
+    teardownManualHints.push(
+      `Завершите вручную дерево процессов npm/node, запущенное для Vite (порт ${hostFrontendPort}), если оно осталось.`,
+    );
+  }
+};
+
+const runTeardownOnExit = () => {
+  stopHostFrontendDevServer();
+
+  if (
+    composeStackWentUpForCleanup &&
+    activeComposeFileForCleanup &&
+    composeEnvSnapshotForDown
+  ) {
+    const skipDown =
+      String(process.env.SYSTEM_TESTS_SKIP_COMPOSE_DOWN ?? "").trim() === "1";
+    if (skipDown) {
+      teardownManualHints.push(
+        `Задан SYSTEM_TESTS_SKIP_COMPOSE_DOWN=1 — контейнеры compose не останавливались. Файл: ${activeComposeFileForCleanup}. При необходимости: docker compose -f "${activeComposeFileForCleanup}" down`,
+      );
+    } else {
+      const down = spawnSync(
+        "docker",
+        ["compose", "-f", activeComposeFileForCleanup, "down"],
+        {
+          stdio: "pipe",
+          encoding: "utf8",
+          cwd: repoRoot,
+          env: composeEnvSnapshotForDown,
+        },
+      );
+      if (down.status !== 0) {
+        const tail = (down.stderr || down.stdout || "").trim();
+        console.error(
+          `[run-vitest] teardown: docker compose down завершился с кодом ${down.status ?? "?"}`,
+        );
+        if (tail) {
+          console.error(tail);
+        }
+        teardownManualHints.push(
+          `Не удалось выполнить docker compose down. Вручную: docker compose -f "${activeComposeFileForCleanup}" down`,
+        );
+      }
+    }
+  }
+
+  if (teardownManualHints.length > 0) {
+    console.error("[run-vitest] teardown: возможные хвосты прогона (ручная проверка):");
+    for (const line of teardownManualHints) {
+      console.error(`  - ${line}`);
+    }
+  }
+};
+
+process.on("exit", runTeardownOnExit);
+
 const startHostFrontendDevServer = () => {
   if (!shouldUseHostFrontendDevServer || hostFrontendProcess) return;
 
@@ -376,12 +470,6 @@ const startHostFrontendDevServer = () => {
   });
 };
 
-const stopHostFrontendDevServer = () => {
-  if (!hostFrontendProcess) return;
-  hostFrontendProcess.kill("SIGTERM");
-  hostFrontendProcess = null;
-};
-
 const waitForHostFrontendDevServer = () => {
   if (!shouldUseHostFrontendDevServer) return;
 
@@ -415,6 +503,10 @@ const preflightRuntime = (baseUrl) => {
     console.error("[run-vitest] Не удалось поднять docker-compose runtime");
     process.exit(up.status ?? 1);
   }
+
+  activeComposeFileForCleanup = composeFile;
+  composeEnvSnapshotForDown = { ...process.env, ...composeEnv };
+  composeStackWentUpForCleanup = true;
 
   const ps = spawnSync("docker", ["compose", "-f", composeFile, "ps"], {
     stdio: "inherit",
@@ -596,8 +688,6 @@ try {
   } else {
     exitCode = result.status ?? 1;
   }
-} finally {
-  stopHostFrontendDevServer();
 }
 
 process.exit(exitCode);

@@ -21,7 +21,7 @@
 - Без isolated режима `quick-dev` может работать по
   `../../database/database.sqlite`.
 - Для isolated copy используйте отдельный
-  `AUTOTEKA_RUNTIME_INSTANCE`.
+  `RUN_INSTANCE`.
 - Для isolated copy используйте отдельный
   `DB_DATABASE=../../database/database.test.sqlite`.
 - Если `database.test.sqlite` отсутствует, создайте её копированием из

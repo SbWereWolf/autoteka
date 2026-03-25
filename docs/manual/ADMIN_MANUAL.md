@@ -209,9 +209,9 @@ deploy создаст его из `frontend/example.env`.
 
 ### 6.3. Серверные env-файлы
 
-- `AUTOTEKA_OPTIONS_FILE` — путь к options.env (обычно `/etc/autoteka/options.env`).
+- `OPTIONS_FILE` — путь к options.env (обычно `/etc/autoteka/options.env`).
   При **ручном запуске** `autoteka` (без systemd) переменная должна быть задана:
-  `export AUTOTEKA_OPTIONS_FILE=/etc/autoteka/options.env` или
+  `export OPTIONS_FILE=/etc/autoteka/options.env` или
   `source /etc/autoteka/options.env` перед вызовом.
 - `/etc/autoteka/options.env` — `AUTOTEKA_ROOT`, `INFRA_ROOT`, `BRANCH`,
   `REMOTE`, `HTTP_PORT` (см. [DEPLOY](../../infrastructure/DEPLOY.md)).
@@ -226,7 +226,7 @@ deploy создаст его из `frontend/example.env`.
 
 - `$INFRA_ROOT/prod.env` — шаблон для production. Перед install создайте
   `$INFRA_ROOT/.env` копированием: `cp -n "$INFRA_ROOT/prod.env" "$INFRA_ROOT/.env"`.
-  install.sh копирует .env в `$AUTOTEKA_OPTIONS_FILE` (например, `/etc/autoteka/options.env`),
+  install.sh копирует .env в `$OPTIONS_FILE` (например, `/etc/autoteka/options.env`),
   затем перемещает .env в `$INFRA_ROOT/backup.env`. Для повторного install:
   `cp "$INFRA_ROOT/backup.env" "$INFRA_ROOT/.env"`. После установки изменяйте только options.env.
 - `$INFRA_ROOT/bootstrap/config/telegram.example.env` — шаблон. install.sh
@@ -247,8 +247,8 @@ deploy создаст его из `frontend/example.env`.
 
 **`sudo` и `autoteka`:** у интерактивного root переменные из
 `/etc/profile.d/autoteka.sh` видны, но `sudo команда` по умолчанию **сбрасывает**
-окружение — `AUTOTEKA_OPTIONS_FILE` не дойдёт. Варианты: работать уже под root
-без `sudo`, либо `sudo AUTOTEKA_OPTIONS_FILE=/etc/autoteka/options.env autoteka …`,
+окружение — `OPTIONS_FILE` не дойдёт. Варианты: работать уже под root
+без `sudo`, либо `sudo OPTIONS_FILE=/etc/autoteka/options.env autoteka …`,
 либо `sudo -E autoteka …` (если разрешено в sudoers).
 
 ## 7. Запуск и рабочие инструкции администратора
@@ -309,7 +309,7 @@ systemctl status server-maintenance.timer
 autoteka diagnose
 ```
 
-(`autoteka diagnose` вызывает `docker compose` с тем же набором `-f`, что и `autoteka up` / deploy: при `DEPLOY_ENV=prod` подключается `docker-compose.prod.yml`. Подробнее — [DEPLOY](../../infrastructure/DEPLOY.md).)
+(`autoteka diagnose` вызывает `docker compose` с тем же набором `-f`, что и `autoteka up` / deploy: при `DEPLOY_MODE=prod` подключается `docker-compose.prod.yml`. Подробнее — [DEPLOY](../../infrastructure/DEPLOY.md).)
 
 Подробности:
 
@@ -336,7 +336,7 @@ docker compose -f $env:INFRA_ROOT\runtime\docker-compose.dev.yml -f $env:INFRA_R
 
 Файл `docker-compose.dev.target-prod.yml` задаёт те же переменные окружения
 `services.php.environment`, что и серверный `docker-compose.prod.yml` (FPM, OpCache,
-`RUN_LARAVEL_OPTIMIZE`), чтобы локальная проверка совпадала с prod по PHP.
+`LARAVEL_OPTIMIZE`), чтобы локальная проверка совпадала с prod по PHP.
 
 Какие каталоги в dev идут с хоста, а какие в named volumes — таблица в
 [DEPLOY § Runtime](../../infrastructure/DEPLOY.md#dev-что-на-хосте-что-в-named-volume).
@@ -477,18 +477,18 @@ telegram, watchdog, metrics.
 
 | Журнал                                                                | Что пишется                           | Когда смотреть               |
 |-----------------------------------------------------------------------|---------------------------------------|------------------------------|
-| `$AUTOTEKA_LOG_DIR/autoteka-deploy.log`                               | deploy, watch-changes                 | Деплой не срабатывает        |
-| `$AUTOTEKA_LOG_DIR/server-maintenance.log`                            | apt, journalctl, docker prune, backup | Проблемы maintenance         |
-| `$AUTOTEKA_LOG_DIR/telegram.log`                                      | Попытки отправки в Telegram           | Не приходят уведомления      |
-| `$AUTOTEKA_LOG_DIR/server-watchdog.log`                               | start, check domain, end, result      | Сайт/API/админка, контейнеры |
-| `$AUTOTEKA_LOG_DIR/server-metrics.log`                                | load, ram, health                     | Нет данных в /metrics        |
+| `$LOG_DIR/autoteka-deploy.log`                               | deploy, watch-changes                 | Деплой не срабатывает        |
+| `$LOG_DIR/server-maintenance.log`                            | apt, journalctl, docker prune, backup | Проблемы maintenance         |
+| `$LOG_DIR/telegram.log`                                      | Попытки отправки в Telegram           | Не приходят уведомления      |
+| `$LOG_DIR/server-watchdog.log`                               | start, check domain, end, result      | Сайт/API/админка, контейнеры |
+| `$LOG_DIR/server-metrics.log`                                | load, ram, health                     | Нет данных в /metrics        |
 | `backend/apps/ShopAPI/storage/logs/laravel.log`                       | Laravel-логи ShopAPI                  | Ошибки API, админки, БД      |
 | `backend/apps/ShopOperator/storage/logs/laravel.log`                  | Laravel-логи ShopOperator             | Ошибки API, админки, БД      |
 | `journalctl -u autoteka.service -u watch-changes.service`             | systemd-юниты deploy                  | Деплой, таймеры              |
 | `journalctl -u server-watchdog.service -u server-maintenance.service` | watchdog, maintenance                 | Здоровье системы             |
 | `docker compose logs web`, `docker compose logs php`                  | nginx, php-fpm                        | Веб-сервер, PHP              |
 
-`AUTOTEKA_LOG_DIR` задаётся в `/etc/autoteka/options.env` (по умолчанию `/var/log/autoteka`).
+`LOG_DIR` задаётся в `/etc/autoteka/options.env` (по умолчанию `/var/log/autoteka`).
 Пути к Laravel-логам — относительно корня приложения в контейнере или на хосте.
 
 ## 8. Серверные скрипты deploy
@@ -713,7 +713,7 @@ Telegram dedup lock'и хранятся отдельно в:
 
 ### 12.1. Нет метрик в /metrics
 
-1. Проверить `tail -n 50 $AUTOTEKA_LOG_DIR/server-metrics.log` — пишет ли watchdog.
+1. Проверить `tail -n 50 $LOG_DIR/server-metrics.log` — пишет ли watchdog.
 2. Проверить `ls -la $INFRA_ROOT/observability/application/metrics/data.json`.
 3. Выполнить вручную: `$INFRA_ROOT/observability/application/metrics-export.sh`.
 4. Проверить монтирование в nginx: `docker compose exec web ls /usr/share/nginx/html/metrics/`.
@@ -722,7 +722,7 @@ Telegram dedup lock'и хранятся отдельно в:
 ### 12.2. Не приходят сообщения в Telegram
 
 1. Проверить файл по `TELEGRAM_ENV_FILE`: `TELEGRAM_TOKEN`, `TELEGRAM_CHAT`.
-2. Проверить `tail -n 50 $AUTOTEKA_LOG_DIR/telegram.log` — попытки отправки и ошибки.
+2. Проверить `tail -n 50 $LOG_DIR/telegram.log` — попытки отправки и ошибки.
 3. Проверить lock-файлы: `autoteka diagnose` выводит их список, или вручную `ls $TELEGRAM_LOCK_DIR` (обычно `/tmp/autoteka-telegram-locks/`).
 4. При необходимости: `autoteka health-reset all` — сброс lock'ов.
 5. Проверить доступность `api.telegram.org` с сервера.
@@ -819,8 +819,8 @@ Telegram dedup lock'и хранятся отдельно в:
 5. Проверить server-metrics.log (создаётся при каждом успешном прогоне):
 
    ```bash
-   ls -la $AUTOTEKA_LOG_DIR/server-metrics.log
-   tail -5 $AUTOTEKA_LOG_DIR/server-metrics.log
+   ls -la $LOG_DIR/server-metrics.log
+   tail -5 $LOG_DIR/server-metrics.log
    ```
 
 6. Проверить options.env (WATCHDOG_* переменные):

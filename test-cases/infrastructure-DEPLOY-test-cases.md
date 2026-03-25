@@ -40,7 +40,7 @@
 - Проверка:
   1. Смоделировать локальные изменения перед запуском watcher.
   2. Проверить появление stash и запись в
-     `$AUTOTEKA_LOG_DIR/autoteka-deploy.log`.
+     `$LOG_DIR/autoteka-deploy.log`.
 - Ожидаемый результат:
   - stash создаётся;
   - в deploy log есть статус `git stash` и идентификатор stash.
@@ -86,7 +86,7 @@
 ### TC-DEPLOY-007
 
 - Утверждение: `AUTOTEKA_ROOT`, `BRANCH`, `REMOTE`, `HTTP_PORT`,
-  `PHP_READY_TIMEOUT`, `ADMIN_SMOKE_URL` задаются через
+  `PHP_READY_TIMEOUT`, `ADMIN_HEALTH_URL` задаются через
   `/etc/autoteka/options.env`.
 - Проверка:
   1. Проверить чтение переменных в deploy wrapper/скриптах.
@@ -171,7 +171,7 @@
 ### TC-DEPLOY-014
 
 - Утверждение: `/metrics/data.json` формируется из
-  `$AUTOTEKA_LOG_DIR/server-metrics.log` и содержит `timestamp`, `load`, `ram`,
+  `$LOG_DIR/server-metrics.log` и содержит `timestamp`, `load`, `ram`,
   `health`.
 - Проверка:
   1. Запустить `server-watchdog.sh` + `metrics-export.sh`.
@@ -197,7 +197,9 @@
 ### TC-DEPLOY-016
 
 - Утверждение: Telegram lock-механизм использует каталог
-  `${TMPDIR:-/tmp}/autoteka-telegram-locks`; повторные error по одному
+  `$TMPDIR/autoteka-telegram-locks` на Unix при **заданном** `TMPDIR` в окружении
+  (или после записи `TMPDIR` в `$OPTIONS_FILE` и подгрузки env до запуска
+  скриптов); на Windows — каталог из `TEMP` или `TMP`. Повторные error по одному
   code блокируются до очистки lock.
 - Проверка:
   1. Смоделировать повторяющуюся ошибку с одинаковым code.

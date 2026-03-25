@@ -44,7 +44,7 @@
   gitignored).
 - Обычный `quick-dev` допускает работу по
   `backend/database/database.sqlite`.
-- Для isolated copy используйте отдельный `AUTOTEKA_RUNTIME_INSTANCE`.
+- Для isolated copy используйте отдельный `RUN_INSTANCE`.
 - В isolated copy `DB_DATABASE` должен указывать на отдельный test
   SQLite, обычно `../../database/database.test.sqlite`.
 - Если `database.test.sqlite` отсутствует, создайте её копированием из
@@ -296,7 +296,7 @@ scripts/.env.
    ```
    Скрипт переводит `dev.test.env` / `prod.test.env` на отдельный
    `backend/database/database.test.sqlite` и отдельный
-   `AUTOTEKA_RUNTIME_INSTANCE`.
+   `RUN_INSTANCE`.
 
 2. **Pre-check**:
    ```bash
@@ -350,7 +350,7 @@ scripts/.env.
 
 - **docker.service не найден** — Docker Desktop; install.sh пропускает
   systemctl, docker compose работает.
-- **INFRA_ROOT/AUTOTEKA_OPTIONS_FILE unbound** — задайте переменные
+- **INFRA_ROOT/OPTIONS_FILE unbound** — задайте переменные
   перед install или передайте `--infra-root=` / `--autoteka-root=`.
 - **system-tests/.env отсутствует** — выполните
   `bash scripts/swap-env.sh load -t system-tests-env`.

@@ -211,6 +211,10 @@ flowchart LR
 - `ErrorStatePanel.vue` — сообщение об ошибке загрузки и повтор запроса;
 - `UiImage.vue` — обёртка для изображений с обработкой ошибки загрузки.
 
+Повторяемая логика страниц вынесена в `frontend/src/composables/`
+(например, загрузка списка магазинов каталога и построение контактных строк
+на карточке магазина).
+
 Cтатические токены в `themes.css` / `tailwind.css`.
 
 ### 2.3. Состояние приложения
@@ -643,7 +647,7 @@ erDiagram
 Production (`$INFRA_ROOT/runtime/docker-compose.yml`):
 
 - `php` — образ backend FPM; имя контейнера по умолчанию
-  `${AUTOTEKA_RUNTIME_INSTANCE:-autoteka}-php` (часто `autoteka-php`);
+  `${RUN_INSTANCE:-autoteka}-php` (часто `autoteka-php`);
 - `web` — nginx + собранный frontend + proxy; контейнер по умолчанию
   `…-http`;
 - volume: `database`, `storage`, admin `public/vendor` (см. файл).
@@ -734,7 +738,7 @@ watchdog/maintenance и серверные runbook-процедуры описа
 ### 6.1. Env и source of truth
 
 - `/etc/autoteka/options.env` — источник `AUTOTEKA_ROOT`, `INFRA_ROOT`,
-  `BRANCH`, `REMOTE`, `HTTP_PORT`. Скрипты берут пути только из env или
+  `GIT_BRANCH`, `GIT_REMOTE`, `HTTP_BIND_IP`, `HTTP_PORT`. Скрипты берут пути только из env или
   аргументов, не из расположения (см. [DEPLOY § Контракты
   путей](../../infrastructure/DEPLOY.md#контракты-путей)).
 - Файл по `TELEGRAM_ENV_FILE` — optional Telegram secrets
