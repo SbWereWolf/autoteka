@@ -50,10 +50,10 @@ echo ">>> Создание env-файлов (AUTOTEKA_ROOT=$AUTOTEKA_ROOT)"
 cp -n "$INFRA_ROOT/prod.env" "$INFRA_ROOT/.env" 2>/dev/null || true
 sed -i "s|^AUTOTEKA_ROOT=.*|AUTOTEKA_ROOT=$AUTOTEKA_ROOT|" "$INFRA_ROOT/.env"
 sed -i "s|^INFRA_ROOT=.*|INFRA_ROOT=$INFRA_ROOT|" "$INFRA_ROOT/.env"
-if grep -q '^AUTOTEKA_RUNTIME_INSTANCE=' "$INFRA_ROOT/.env"; then
-  sed -i "s|^AUTOTEKA_RUNTIME_INSTANCE=.*|AUTOTEKA_RUNTIME_INSTANCE=$RUNTIME_INSTANCE|" "$INFRA_ROOT/.env"
+if grep -q '^RUN_INSTANCE=' "$INFRA_ROOT/.env"; then
+  sed -i "s|^RUN_INSTANCE=.*|RUN_INSTANCE=$RUNTIME_INSTANCE|" "$INFRA_ROOT/.env"
 else
-  printf '%s\n' "AUTOTEKA_RUNTIME_INSTANCE=$RUNTIME_INSTANCE" >> "$INFRA_ROOT/.env"
+  printf '%s\n' "RUN_INSTANCE=$RUNTIME_INSTANCE" >> "$INFRA_ROOT/.env"
 fi
 
 # prod.test.env — синхронизация с prod.env, пути под тестовый корень
@@ -65,10 +65,10 @@ if grep -q '^DB_DATABASE=' "$INFRA_ROOT/prod.test.env"; then
 else
   printf '%s\n' 'DB_DATABASE=../../database/database.test.sqlite' >> "$INFRA_ROOT/prod.test.env"
 fi
-if grep -q '^AUTOTEKA_RUNTIME_INSTANCE=' "$INFRA_ROOT/prod.test.env"; then
-  sed -i "s|^AUTOTEKA_RUNTIME_INSTANCE=.*|AUTOTEKA_RUNTIME_INSTANCE=$RUNTIME_INSTANCE|" "$INFRA_ROOT/prod.test.env"
+if grep -q '^RUN_INSTANCE=' "$INFRA_ROOT/prod.test.env"; then
+  sed -i "s|^RUN_INSTANCE=.*|RUN_INSTANCE=$RUNTIME_INSTANCE|" "$INFRA_ROOT/prod.test.env"
 else
-  printf '%s\n' "AUTOTEKA_RUNTIME_INSTANCE=$RUNTIME_INSTANCE" >> "$INFRA_ROOT/prod.test.env"
+  printf '%s\n' "RUN_INSTANCE=$RUNTIME_INSTANCE" >> "$INFRA_ROOT/prod.test.env"
 fi
 if [ ! -f "$AUTOTEKA_ROOT/backend/database/database.test.sqlite" ] && [ -f "$AUTOTEKA_ROOT/backend/database/database.sqlite" ]; then
   cp "$AUTOTEKA_ROOT/backend/database/database.sqlite" "$AUTOTEKA_ROOT/backend/database/database.test.sqlite"
@@ -79,17 +79,17 @@ if [ -f "$INFRA_ROOT/dev.env" ]; then
   cp "$INFRA_ROOT/dev.env" "$INFRA_ROOT/dev.test.env"
   sed -i "s|^AUTOTEKA_ROOT=.*|AUTOTEKA_ROOT=$AUTOTEKA_ROOT|" "$INFRA_ROOT/dev.test.env"
   sed -i "s|^INFRA_ROOT=.*|INFRA_ROOT=$INFRA_ROOT|" "$INFRA_ROOT/dev.test.env"
-  sed -i "s|^HTTP_BIND_HOST=.*|HTTP_BIND_HOST=127.0.0.1|" "$INFRA_ROOT/dev.test.env"
+  sed -i "s|^HTTP_BIND_IP=.*|HTTP_BIND_IP=127.0.0.1|" "$INFRA_ROOT/dev.test.env"
   sed -i "s|^HTTP_PORT=.*|HTTP_PORT=8081|" "$INFRA_ROOT/dev.test.env"
   if grep -q '^DB_DATABASE=' "$INFRA_ROOT/dev.test.env"; then
     sed -i "s|^DB_DATABASE=.*|DB_DATABASE=../../database/database.test.sqlite|" "$INFRA_ROOT/dev.test.env"
   else
     printf '%s\n' 'DB_DATABASE=../../database/database.test.sqlite' >> "$INFRA_ROOT/dev.test.env"
   fi
-  if grep -q '^AUTOTEKA_RUNTIME_INSTANCE=' "$INFRA_ROOT/dev.test.env"; then
-    sed -i "s|^AUTOTEKA_RUNTIME_INSTANCE=.*|AUTOTEKA_RUNTIME_INSTANCE=$RUNTIME_INSTANCE|" "$INFRA_ROOT/dev.test.env"
+  if grep -q '^RUN_INSTANCE=' "$INFRA_ROOT/dev.test.env"; then
+    sed -i "s|^RUN_INSTANCE=.*|RUN_INSTANCE=$RUNTIME_INSTANCE|" "$INFRA_ROOT/dev.test.env"
   else
-    printf '%s\n' "AUTOTEKA_RUNTIME_INSTANCE=$RUNTIME_INSTANCE" >> "$INFRA_ROOT/dev.test.env"
+    printf '%s\n' "RUN_INSTANCE=$RUNTIME_INSTANCE" >> "$INFRA_ROOT/dev.test.env"
   fi
 fi
 

@@ -129,6 +129,7 @@ if ($LintMode -eq "apply") {
     Write-Warning "[verify] LintMode=apply is treated as check in quick profile."
 }
 
+# Корни репозитория и приложений (деревья для кэша minimal verify — docs/manual/TESTING.md §9).
 $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot "../..")).Path
 $frontendDir = Join-Path $repoRoot "frontend"
 $shopApiDir = Join-Path $repoRoot "backend/apps/ShopAPI"
