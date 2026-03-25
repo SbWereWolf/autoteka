@@ -635,7 +635,8 @@ erDiagram
 - нормализация `siteUrl` при сохранении;
 - отображение интервалов `shop_schedule` в админке:
   `ShopOperator/app/Support/Shop/FormatsWorkHours.php`;
-- вспомогательные колонки и обёртки имён таблиц (`UsesTableName` и др.).
+- вспомогательные колонки; имена таблиц на моделях — свойство `$table` со
+  значением из enum `TableName` пакета SchemaDefinition.
 
 ## 4. Runtime-контур в коде
 

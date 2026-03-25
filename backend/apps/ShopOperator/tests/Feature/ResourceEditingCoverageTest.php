@@ -197,12 +197,16 @@ final class ResourceEditingCoverageTest extends TestCase
         ]);
         $item->save();
 
-        $this->assertDatabaseHas($item->getTable(), [
-            'id' => $item->getKey(),
-            'code' => $codePrefix . '-new',
-            'title' => 'New title',
-            'sort' => 99,
-            'is_published' => 0,
-        ]);
+        $this->assertTrue(
+            $modelClass::query()
+                ->where('id', $item->getKey())
+                ->where([
+                    'code' => $codePrefix . '-new',
+                    'title' => 'New title',
+                    'sort' => 99,
+                    'is_published' => 0,
+                ])
+                ->exists(),
+        );
     }
 }
