@@ -453,7 +453,20 @@ directory_read_state() {
 
 get_directory_list() {
   local path="$1"
-  find "$path" -type d -printf '%P\n' | LC_ALL=C sort
+  find "$path" -type d -printf '%P\n' |
+    awk '
+      BEGIN { FS = "/" }
+      $0 == "" { print; next }
+      {
+        for (i = 1; i <= NF; i++) {
+          if ($i ~ /^\./) {
+            next
+          }
+        }
+        print
+      }
+    ' |
+    LC_ALL=C sort
 }
 
 get_type_state() {

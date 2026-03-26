@@ -476,7 +476,12 @@ function Try-ReadDirectoryList {
         $prefixLength = $basePath.Length + 1
         $items = [System.IO.Directory]::EnumerateDirectories($basePath, "*", [System.IO.SearchOption]::AllDirectories) |
             ForEach-Object {
-                $_.Substring($prefixLength)
+                $relativePath = $_.Substring($prefixLength)
+                $segments = @($relativePath -split '[\\/]')
+                $hasHiddenSegment = $segments | Where-Object { $_.StartsWith(".") }
+                if (-not $hasHiddenSegment) {
+                    $relativePath
+                }
             } |
             Sort-Object
         return @{ Ok = $true; Status = "ok"; Items = @($items) }
