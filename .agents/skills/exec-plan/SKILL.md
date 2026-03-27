@@ -75,7 +75,9 @@ When the task changes code, scripts, migrations, queries, templates,
 or executable configuration:
 
 1. define requirements in `REQUIREMENTS.md`;
-2. define tests in `TEST-SPEC.md`;
+2. Define tests in the `TEST-SPEC.md` file, they should contain:
+   - full descriptions of the corresponding use cases;
+   - test data set;
 3. stage or write the tests first;
 4. run the target tests and confirm a relevant failure exists before
    implementation, unless that is not meaningful or not supported;

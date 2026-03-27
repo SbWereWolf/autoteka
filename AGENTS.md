@@ -10,7 +10,6 @@ MANDATORY !! NEVER .env.example, ALWAYS example.env
 Use scripts/swap-env to sync env/config with the real environment.
 Use scripts/.env SCRIPT_PHP_PATH to run PHP scripts.
 
-
 ## Language
 
 The agent must write in Russian. Project text artifacts must also be
@@ -52,6 +51,8 @@ When a skill instruction conflicts with this root file:
 For the ruleset architecture, see:
 
 - `docs/foundations/AGENT_RULES_ARCHITECTURE.md`
+- `docs/manual/TESTING.md` for concrete verification and migration-cycle
+  commands
 
 ## 1. Canonical workflow (mandatory)
 
@@ -164,13 +165,22 @@ editing a forbidden surface.
 ### 1.3.2 Migration discipline
 
 - Do not edit an existing migration file under
-  `backend/packages/SchemaDefinition/database/migrations`.
-- If the schema must change, create a new migration with a later
-  timestamp and keep the old file untouched.
+  `backend/packages/SchemaDefinition/database/migrations` after it has
+  been saved to version history.
+- If a migration has not yet been saved to version history, it may be
+  corrected in place.
+- If the schema must change after a migration has already been saved to
+  version history, create a new migration with a later timestamp and
+  keep the old file untouched.
 - Before applying any migration that changes schema or data, create a
   database backup first. Use a filename of the form
   `YYYYMMDD-HHMMSS.database.sqlite`; put the purpose in the basename and
   keep the extension aligned with the actual contents.
+- After changing a migration or schema, verify the migration cycle on a
+  backed-up SQLite database: apply the migration, roll it back, then
+  apply it again. If any step fails, fix the code and repeat from the
+  apply step. Use `docs/manual/TESTING.md` for the concrete command
+  sequence and direct checks.
 - Migration code must be explicit and linear. Do not hide required
   schema/data steps behind `if` branches or fallback branches that make
   the migration silently skip work.
@@ -195,11 +205,14 @@ but must not pretend that verification or execution succeeded.
 
 ### 1.5 Migration discipline
 
-Existing migration files are immutable.
+Migration files already saved to version history are immutable.
 
 Rules:
 
-- never edit an existing migration file;
+- never edit an existing migration file that has already been saved to
+  version history;
+- a migration that has not yet been saved to version history may be
+  corrected in place;
 - every schema change must use a new migration file;
 - migration logic must follow the known schema state from the migration
   chain and must not contain fallback logic, discovery branches, or
@@ -214,6 +227,10 @@ Before any migration is executed against a SQLite database:
 - create a backup of `backend/database/database.sqlite`;
 - store it under `backend/database/backup/`;
 - use the filename format `YYYYMMDD-HHMMSS.database.sqlite`.
+- verify the migration cycle as `migrate -> rollback -> migrate`; if a
+  step fails, fix the code and restart the cycle from `migrate`.
+- use `docs/manual/TESTING.md` as the human-facing companion for the
+  exact migration-cycle and direct-check flow.
 
 ### 1.6 File naming and extensions
 
@@ -296,9 +313,8 @@ limitation explicitly in the final answer and record it in the active
 selected source trees. At minimum, it directly tracks:
 
 - `frontend/src`
-- `backend/apps/ShopAPI/app`
-- `backend/apps/ShopOperator/app`
-- `backend/packages/SchemaDefinition/src`
+- `backend/apps/*/app`
+- `backend/packages/*/src`
 
 Therefore changes in tests, docs, scripts, env/config, runtime wiring,
 or verification code can leave the baseline gate looking greener than
@@ -349,8 +365,8 @@ If a commit is requested, it must be created only via:
 
 ```powershell
 pwsh "scripts/agent/commit.ps1" `
-    -Message "<a short summary of the changes>" `
-    -Body "<Explain why the changes were made>" `
+    -Message "<A brief statement of the logical purpose of the changes>" `
+    -Body "<Explain the logical purpose of the changes and their benefits (goals)>" `
     -AISystemName "<AI system name>" `
     -LLMName "<LLM name>"
 ```

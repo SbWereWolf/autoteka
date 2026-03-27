@@ -210,6 +210,8 @@ flowchart LR
   карточке;
 - `ErrorStatePanel.vue` — сообщение об ошибке загрузки и повтор запроса;
 - `UiImage.vue` — обёртка для изображений с обработкой ошибки загрузки.
+- `useShopPageLoader.ts` — orchestration загрузки карточки магазина,
+  promo-first ветки, таймаутов и retry для transient promo ошибок.
 
 Повторяемая логика страниц вынесена в `frontend/src/composables/`
 (например, загрузка списка магазинов каталога и построение контактных строк
@@ -239,6 +241,9 @@ Cтатические токены в `themes.css` / `tailwind.css`.
 ### 2.4. Источник данных
 
 - через `HttpApiClient` backend API.
+- для карточки магазина используются два route:
+  - `GET /api/v1/shop/{code}`
+  - `GET /api/v1/shop/{code}/promotion`
 
 Базовый URL API задаётся через `VITE_API_BASE_URL`.
 
@@ -253,6 +258,39 @@ same-origin, отдельная настройка CORS для этого сце
 В **dev** compose (`infrastructure/runtime/docker-compose.dev.yml`) для
 сервиса `web` заданы переменные `CORS_*` — при разнесённых origin
 фронта и API CORS может быть нужен; см. шаблоны env в `infrastructure/`.
+
+Promo-first поведение страницы магазина:
+
+- promo может отрисоваться раньше полной карточки магазина;
+- ошибка promo не переводит страницу в общий error-state;
+- text-only акция рендерится без пустой галереи.
+
+### 2.4.1. Promotion в общей схеме
+
+Новая доменная сущность разбита на две таблицы:
+
+- `promotion` — магазин, код, название, описание, даты начала и
+  окончания, флаг публикации;
+- `promotion_image` — картинки акции, `original_name`, сортировка и
+  флаг публикации.
+
+ShopOperator:
+
+- регистрирует `PromotionResource`;
+- создаёт акции из контекста магазина;
+- показывает promo-блок на detail магазина;
+- вычисляет код акции из `shop.code + '-' + slug(title)`.
+
+ShopAPI:
+
+- отдаёт отдельный promo endpoint;
+- сериализует text-only акцию как `galleryImages: []`.
+
+Связанные документы:
+
+- [TESTING](../manual/TESTING.md)
+- [ADMIN_MANUAL](../manual/ADMIN_MANUAL.md)
+- [../../frontend/README.md](../../frontend/README.md)
 
 ### 2.5. Алгоритм каталога
 

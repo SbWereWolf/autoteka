@@ -15,11 +15,15 @@ operator-facing flows, and runtime-specific policies or presentation.
    manual.
 3. If admin UI behavior changed in a way users can observe, add direct
    system or UI evidence when quick backend tests are not enough.
+4. It is prohibited to produce bicycles if similar functionality exists.
+
+Use `./backend/apps/ShopOperator/vendor/moonshine/moonshine/src` as
+source of truth for develop MoonShine artifacts
 
 ## Direct checks
 
 Run from `backend/apps/ShopOperator`:
 
 ```bash
-php artisan test --parallel --processes=2
+php artisan test
 ```

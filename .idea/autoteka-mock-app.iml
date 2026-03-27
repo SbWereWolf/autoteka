@@ -434,6 +434,7 @@
       <excludeFolder url="file://$MODULE_DIR$/backend/apps/ShopAPI/vendor/autoteka/laravel-session-prune" />
       <excludeFolder url="file://$MODULE_DIR$/backend/apps/ShopOperator/vendor/autoteka/is-there-an-admin" />
       <excludeFolder url="file://$MODULE_DIR$/backend/apps/ShopOperator/vendor/autoteka/laravel-session-prune" />
+      <excludeFolder url="file://$MODULE_DIR$/backend/apps/ShopOperator/vendor/autoteka/demo-promotion" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

@@ -1,6 +1,6 @@
 # Руководство администратора
 
-**Дата актуализации: 2026-03-21.**
+**Дата актуализации: 2026-03-26.**
 
 Документ описывает:
 
@@ -94,6 +94,7 @@
 - `Feature`
 - `ContactType`
 - `Shop`
+- `Promotion`
 
 ### 3.3. Что редактируется в back office
 
@@ -133,6 +134,15 @@
 - галерея;
 - изображения preview.
 
+На странице просмотра магазина в админке:
+
+- используется стандартный route вида
+  `/admin/resource/shop-resource/detail-page/{id}`;
+- сверху слева есть кнопка `Редактировать`;
+- рядом с ней есть кнопка `Создать рекламную акцию`;
+- под основной карточкой магазина показывается отдельный блок
+  `Акции магазина`.
+
 При сохранении магазина backend:
 
 - генерирует код, если он не задан;
@@ -145,6 +155,13 @@
 
 - магазин открывается во front office;
 - карточка попадает в каталог нужного города;
+- страница просмотра магазина в back office открывается по
+  `detail-page`, а не по кастомному slug;
+- кнопка `Создать рекламную акцию` на странице магазина создаёт
+  черновик и переводит на страницу редактирования акции;
+- блок `Акции магазина` показывает только актуальные для админки
+  акции и позволяет открыть просмотр/редактирование стандартными
+  MoonShine-кнопками;
 - контакты корректно отображаются;
 - сайт отображается последним контактом, если он задан;
 - слоган и `schedule_note` видны там, где ожидаются;
@@ -172,6 +189,8 @@ public media.
 - `cd backend/apps/ShopOperator && php artisan db:seed --class=AdminUserSeeder`
 - `cd backend/apps/ShopAPI && php artisan test`
 - `cd backend/apps/ShopOperator && php artisan test`
+- `cd backend/apps/ShopOperator && vendor/bin/phpunit tests/Feature/PromotionAdminHttpFlowTest.php --colors=never`
+- `cd backend/apps/ShopAPI && php artisan test --parallel --processes=2 --filter='PromotionEndpointTest|ApiEndpointsCoverageTest'`
 
 Перед любым `php artisan migrate` сначала обязателен backup текущей
 SQLite БД в `backend/database/backup/` с именем формата
