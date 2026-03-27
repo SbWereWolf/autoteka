@@ -27,5 +27,7 @@ enum TableName: string
     case SHOP_CONTACT = 'shop_contact';
     case SHOP_GALLERY_IMAGE = 'shop_gallery_image';
     case SHOP_SCHEDULE = 'shop_schedule';
+    case PROMOTION = 'promotion';
+    case PROMOTION_GALLERY_IMAGE = 'promotion_gallery_image';
     case MIGRATIONS = 'migrations';
 }

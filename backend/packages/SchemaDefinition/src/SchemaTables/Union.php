@@ -26,6 +26,6 @@ final class Union
     {
         $name = $column instanceof BackedEnum ? (string) $column->value : $column;
 
-        return $this->base . '.' . $name;
+        return "$this->base.$name";
     }
 }

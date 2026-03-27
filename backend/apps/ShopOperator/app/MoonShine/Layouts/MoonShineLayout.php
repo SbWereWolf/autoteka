@@ -8,12 +8,15 @@ use ShopOperator\MoonShine\Resources\CategoryResource;
 use ShopOperator\MoonShine\Resources\CityResource;
 use ShopOperator\MoonShine\Resources\ContactTypeResource;
 use ShopOperator\MoonShine\Resources\FeatureResource;
+use ShopOperator\MoonShine\Resources\PromotionResource;
 use ShopOperator\MoonShine\Resources\ShopResource;
 use MoonShine\Laravel\Layouts\AppLayout;
+use MoonShine\AssetManager\InlineCss;
 use MoonShine\ColorManager\Palettes\PurplePalette;
 use MoonShine\ColorManager\ColorManager;
 use MoonShine\Contracts\ColorManager\ColorManagerContract;
 use MoonShine\Contracts\ColorManager\PaletteContract;
+use MoonShine\Contracts\AssetManager\AssetElementContract;
 use MoonShine\MenuManager\MenuGroup;
 use MoonShine\MenuManager\MenuItem;
 
@@ -33,10 +36,18 @@ final class MoonShineLayout extends AppLayout
         return 'ru';
     }
 
+    /**
+     * @return list<AssetElementContract>
+     */
     protected function assets(): array
     {
         return [
             ...parent::assets(),
+            InlineCss::make(<<<'CSS'
+.shop-form-repeaters-remove-left .justify-end {
+    justify-content: flex-start;
+}
+CSS),
         ];
     }
 
@@ -51,6 +62,7 @@ final class MoonShineLayout extends AppLayout
             ]),
             MenuGroup::make('Данные', [
                 MenuItem::make(ShopResource::class),
+                MenuItem::make(PromotionResource::class),
             ]),
             ...parent::menu(),
         ];

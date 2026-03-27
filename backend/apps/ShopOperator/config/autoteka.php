@@ -11,5 +11,6 @@ return [
         'disk' => env('AUTOTEKA_MEDIA_DISK', 'public'),
         'shop_thumb_dir' => 'shops/thumbs',
         'shop_gallery_dir' => 'shops/gallery',
+        'promotion_gallery_dir' => 'promotion/gallery',
     ],
 ];

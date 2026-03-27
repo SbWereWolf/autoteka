@@ -7,7 +7,6 @@ namespace ShopOperator\MoonShine\Resources;
 use ShopOperator\Models\Feature;
 use Autoteka\SchemaDefinition\Enums\Columns\FeatureColumns;
 use Autoteka\SchemaDefinition\SchemaTables\SchemaFeature;
-use MoonShine\Laravel\Pages\Crud\DetailPage;
 use ShopOperator\MoonShine\Pages\DictionaryFormPage;
 use MoonShine\Laravel\Pages\Crud\IndexPage;
 use MoonShine\Laravel\Resources\ModelResource;
@@ -18,6 +17,7 @@ use MoonShine\Support\Enums\Action;
 use MoonShine\Support\Enums\PageType;
 use MoonShine\Support\ListOf;
 use ShopOperator\Support\MoonShine\SortDefault;
+use ShopOperator\MoonShine\Pages\OperatorDetailPage;
 use MoonShine\UI\Fields\ID;
 use MoonShine\UI\Fields\Number;
 use MoonShine\UI\Fields\Preview;
@@ -45,7 +45,7 @@ class FeatureResource extends ModelResource
         return [
             IndexPage::class,
             DictionaryFormPage::class,
-            DetailPage::class,
+            OperatorDetailPage::class,
         ];
     }
 

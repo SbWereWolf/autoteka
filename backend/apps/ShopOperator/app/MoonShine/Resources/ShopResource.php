@@ -13,6 +13,7 @@ use ShopOperator\Models\ShopContact;
 use ShopOperator\Models\ShopGalleryImage;
 use ShopOperator\Models\ShopSchedule;
 use ShopOperator\MoonShine\Handlers\SaveShopResourceHandler;
+use ShopOperator\MoonShine\Pages\ShopDetailPage;
 use ShopOperator\Support\MoonShine\SortDefault;
 use ShopOperator\Support\Media\UploadFileNameGenerator;
 use ShopOperator\Support\Media\UploadOriginalNameStore;
@@ -32,7 +33,6 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Js;
 use MoonShine\Crud\Attributes\SaveHandler;
-use MoonShine\Laravel\Pages\Crud\DetailPage;
 use MoonShine\Laravel\Pages\Crud\FormPage;
 use MoonShine\Laravel\Pages\Crud\IndexPage;
 use MoonShine\Laravel\Resources\ModelResource;
@@ -84,7 +84,7 @@ class ShopResource extends ModelResource
         return [
             IndexPage::class,
             FormPage::class,
-            DetailPage::class,
+            ShopDetailPage::class,
         ];
     }
 
@@ -268,8 +268,9 @@ class ShopResource extends ModelResource
                     return $stored;
                 })
                 ->removable(),
-            Json::make('Категории', 'category_links')
-                ->fields([
+            $this->leftAlignedRepeater(
+                Json::make('Категории', 'category_links')
+                    ->fields([
                     Select::make('Категория', $pCat->categoryId())
                         ->options($this->categoryOptions())
                         ->searchable()
@@ -282,8 +283,10 @@ class ShopResource extends ModelResource
                 ->creatable(true)
                 ->reorderable(false)
                 ->removable(),
-            Json::make('Фичи', 'feature_links')
-                ->fields([
+            ),
+            $this->leftAlignedRepeater(
+                Json::make('Фичи', 'feature_links')
+                    ->fields([
                     Select::make('Фича', $pFeat->featureId())
                         ->options($this->featureOptions())
                         ->searchable()
@@ -296,8 +299,10 @@ class ShopResource extends ModelResource
                 ->creatable(true)
                 ->reorderable(false)
                 ->removable(),
-            Json::make('Контакты', 'contact_entries')
-                ->fields([
+            ),
+            $this->leftAlignedRepeater(
+                Json::make('Контакты', 'contact_entries')
+                    ->fields([
                     Hidden::make(column: $c->id()),
                     Select::make('Тип', $c->contactTypeId())
                         ->options($this->contactTypeOptions())
@@ -317,8 +322,10 @@ class ShopResource extends ModelResource
                 ->vertical()
                 ->creatable(true)
                 ->removable(),
-            Json::make('Галерея', 'gallery_entries')
-                ->fields([
+            ),
+            $this->leftAlignedRepeater(
+                Json::make('Галерея', 'gallery_entries')
+                    ->fields([
                     Hidden::make(column: $g->id()),
                     Image::make('Файл', $g->filePath())
                         ->disk((string) config('autoteka.media.disk'))
@@ -345,8 +352,10 @@ class ShopResource extends ModelResource
                 ->vertical()
                 ->creatable(true)
                 ->removable(),
-            Json::make('Расписание по дням', 'schedule_entries')
-                ->fields([
+            ),
+            $this->leftAlignedRepeater(
+                Json::make('Расписание по дням', 'schedule_entries')
+                    ->fields([
                     Hidden::make(column: $sch->id()),
                     Select::make('День недели', $sch->weekday())
                         ->options($this->weekdayOptions())
@@ -376,6 +385,7 @@ class ShopResource extends ModelResource
                 ->vertical()
                 ->creatable(true, 7)
                 ->removable(),
+            ),
             Preview::make('Создан', formatted: fn ($item) => $item->created_at?->format('d.m.Y H:i') ?? ''),
             Preview::make('Обновлён', formatted: fn ($item) => $item->updated_at?->format('d.m.Y H:i') ?? ''),
         ];
@@ -505,5 +515,14 @@ class ShopResource extends ModelResource
         $id = (int) $raw;
 
         return $id > 0 ? $id : null;
+    }
+
+    private function leftAlignedRepeater(Json $field): Json
+    {
+        return $field->modifyTable(
+            static fn ($table) => $table->customAttributes([
+                'class' => 'shop-form-repeaters-remove-left',
+            ]),
+        );
     }
 }

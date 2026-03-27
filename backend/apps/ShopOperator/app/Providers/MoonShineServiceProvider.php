@@ -8,6 +8,7 @@ use ShopOperator\MoonShine\Resources\CategoryResource;
 use ShopOperator\MoonShine\Resources\CityResource;
 use ShopOperator\MoonShine\Resources\ContactTypeResource;
 use ShopOperator\MoonShine\Resources\FeatureResource;
+use ShopOperator\MoonShine\Resources\PromotionResource;
 use ShopOperator\MoonShine\Resources\ShopResource;
 use Illuminate\Support\ServiceProvider;
 use MoonShine\Contracts\Core\DependencyInjection\CoreContract;
@@ -32,6 +33,7 @@ class MoonShineServiceProvider extends ServiceProvider
                 FeatureResource::class,
                 ContactTypeResource::class,
                 ShopResource::class,
+                PromotionResource::class,
             ])
             ->pages([
                 ...$core->getConfig()->getPages(),

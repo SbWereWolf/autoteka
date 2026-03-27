@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
 use MoonShine\Crud\Resources\CrudResource;
+use ShopOperator\Http\Middleware\InterceptMoonShineHtmlCrudPages;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -17,6 +18,8 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        app('router')->pushMiddlewareToGroup('moonshine', InterceptMoonShineHtmlCrudPages::class);
+
         // MoonShine держит текущую запись на экземпляре ресурса между HTTP-вызовами в одном
         // PHP-процессе (типично PHPUnit: несколько post/patch подряд). Полный flushState()
         // ломает страницы/валидацию; достаточно отвязать item, чтобы store снова создавал запись.
