@@ -162,6 +162,19 @@
     filter 160ms ease;
   }
 
+  @media (hover: hover) and (pointer: fine) {
+    .catalog-brand-link:hover {
+      transform: translateY(-0.0625rem) scale(1.01);
+      opacity: 0.92;
+      filter: saturate(1.04);
+    }
+  }
+
+  .catalog-brand-link:active {
+    transform: scale(0.985);
+    opacity: 0.88;
+  }
+
   .catalog-brand-logo {
     display: block;
     height: 2.95rem;
@@ -442,9 +455,6 @@
   .shop-hero-shell {
     display: grid;
     gap: 0;
-    --shop-unit: calc(100cqw / 9);
-    height: calc(var(--shop-unit) * 16);
-    grid-template-rows: calc(var(--shop-unit) * 3) calc(var(--shop-unit) * 13);
   }
 
   .shop-hero-head {
@@ -554,6 +564,50 @@
   .shop-hero-gallery {
     position: relative;
     min-height: 0;
+    --shop-unit: calc(100cqw / 9);
+    height: calc(var(--shop-unit) * 13);
+  }
+
+  .shop-promo-stack {
+    display: grid;
+    gap: 1.5rem;
+  }
+
+  .shop-promo-card {
+    display: grid;
+    gap: 1rem;
+  }
+
+  .shop-promo-card .shop-gallery-shell {
+    height: auto;
+    aspect-ratio: 4 / 3;
+  }
+
+  .shop-promo-copy {
+    display: grid;
+    gap: 0.5rem;
+  }
+
+  .shop-promo-date {
+    margin: 0;
+    color: #64748b;
+    font-size: 0.75rem;
+    font-weight: 700;
+    line-height: 1.3;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+  }
+
+  .shop-promo-title {
+    margin: 0;
+    color: #0f172a;
+    font-size: 1.25rem;
+    font-weight: 700;
+    line-height: 1.15;
+  }
+
+  .shop-promo-copy .shop-description {
+    margin-top: 0.5rem;
   }
 
   .shop-gallery-shell {
@@ -827,7 +881,7 @@
   }
 
   @media (min-width: 48rem) {
-    .shop-hero-shell {
+    .shop-hero-gallery {
       --shop-unit: calc(100cqw / 14);
     }
 
@@ -837,7 +891,7 @@
   }
 
   @media (min-width: 80rem) {
-    .shop-hero-shell {
+    .shop-hero-gallery {
       --shop-unit: calc(100cqw / 18);
     }
   }

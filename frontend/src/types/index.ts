@@ -4,6 +4,7 @@ export type {
   Category,
   Feature,
   ShopPublic,
+  PromotionPublic,
   ContactsResponse,
   CityShopsResponse,
 } from "./api";

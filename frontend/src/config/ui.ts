@@ -8,4 +8,10 @@ export const uiConfig = {
     swipeThresholdPx: 45,
     transitionMs: 220,
   },
+  shopPageLoader: {
+    requestTimeoutMs: 4000,
+    halfTimeoutMs: 2000,
+    retryCount: 1,
+    retryDelayMs: 300,
+  },
 } as const;

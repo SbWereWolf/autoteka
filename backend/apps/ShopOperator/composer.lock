@@ -4,15 +4,49 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "355d730f79092e6f0db5a3baaf626a94",
+    "content-hash": "69413fdc722c877d9bc70377ef39b5e0",
     "packages": [
+        {
+            "name": "autoteka/demo-promotion",
+            "version": "1.0.0",
+            "dist": {
+                "type": "path",
+                "url": "../../packages/DemoPromotion",
+                "reference": "c21f84ef8c7670459d41feb5591075b065f1d084"
+            },
+            "require": {
+                "laravel/framework": "^12.0",
+                "php": "^8.4"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Autoteka\\DemoPromotion\\DemoPromotionServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Autoteka\\DemoPromotion\\": "src/"
+                }
+            },
+            "license": [
+                "proprietary"
+            ],
+            "description": "Laravel package с командами генерации и очистки demo promotions.",
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
+        },
         {
             "name": "autoteka/is-there-an-admin",
             "version": "1.0.0",
             "dist": {
                 "type": "path",
                 "url": "../../packages/IsThereAnAdmin",
-                "reference": "d154945e6e3a2e2dd862a8bdbc42b94eec825a7d"
+                "reference": "bf8140d720bacfcf3cf08759b704310212eadb26"
             },
             "require": {
                 "laravel/framework": "^12.0",
@@ -35,7 +69,7 @@
             "license": [
                 "proprietary"
             ],
-            "description": "Laravel package with a command that checks whether the admin user exists.",
+            "description": "Laravel package с командой проверки существования admin-учётки.",
             "transport-options": {
                 "symlink": true,
                 "relative": true
@@ -47,7 +81,7 @@
             "dist": {
                 "type": "path",
                 "url": "../../packages/SessionPrune",
-                "reference": "37fe9e34104465fe1995cf9b052258e3677495b9"
+                "reference": "0f8ac37861e7b658b528410154b690ef149eba77"
             },
             "require": {
                 "laravel/framework": "^12.0",
@@ -69,7 +103,7 @@
             "license": [
                 "proprietary"
             ],
-            "description": "Laravel package with the session prune command.",
+            "description": "Laravel package с командой очистки истёкших сессий.",
             "transport-options": {
                 "symlink": true,
                 "relative": true

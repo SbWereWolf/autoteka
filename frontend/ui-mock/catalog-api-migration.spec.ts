@@ -47,6 +47,17 @@ test("UI-MOCK-01: каталог показывает новый top bar и пл
   await expect(page.getByRole("img", { name: "TOauto.ru" })).toBeVisible();
   await expect(page.locator(".catalog-shop-tile")).toHaveCount(2);
   await expect(page.getByText("CarsHelps")).toHaveCount(0);
+  await expect(page.locator(".catalog-shop-tile").first()).toHaveAttribute(
+    "href",
+    "/shop/barnaul-01",
+  );
+  await expect(
+    page.locator('.catalog-shop-tile img[alt="CarsHelps"]'),
+  ).toHaveCount(1);
+  await expect(page.locator(".catalog-shop-tile").nth(1)).toHaveAttribute(
+    "aria-label",
+    "Orange Parts",
+  );
 
   const stickyMetrics = await page.evaluate(() => {
     const sticky = document.querySelector(
@@ -159,7 +170,9 @@ test("UI-MOCK-03: страница магазина показывает slogan,
   await expect(page.getByText("carshelps.ru")).toBeVisible();
   await expect(page.getByText("Перейти на сайт")).toHaveCount(0);
   await expect(page.getByText("Возможности")).toHaveCount(0);
-  await expect(page.locator(".shop-gallery-dot")).toHaveCount(2);
+  await expect(
+    page.getByTestId("shop-gallery").locator(".shop-gallery-dot"),
+  ).toHaveCount(2);
 
   const heroLayout = await page.evaluate(() => {
     const slogan = document.querySelector(
@@ -172,7 +185,7 @@ test("UI-MOCK-03: страница магазина показывает slogan,
       '[data-testid="shop-schedule-note"]',
     ) as HTMLElement | null;
     const dots = document.querySelector(
-      '.shop-gallery-dots',
+      '[data-testid="shop-gallery"] .shop-gallery-dots',
     ) as HTMLElement | null;
     const gallery = document.querySelector(
       '.shop-hero-gallery',

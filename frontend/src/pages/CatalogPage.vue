@@ -13,7 +13,6 @@
           :key="shop.code"
           :shop="shop"
           :seed="index + seedBase"
-          @open="go(shop.code)"
         />
       </div>
 
@@ -52,22 +51,16 @@
 </template>
 
 <script setup lang="ts">
-import { useRouter } from "vue-router";
 import ShopTile from "../components/ShopTile.vue";
 import CatalogFeatureStickySelect from "../components/CatalogFeatureStickySelect.vue";
 import ErrorStatePanel from "../components/ErrorStatePanel.vue";
 import { useCatalogCityShops } from "../composables/useCatalogCityShops";
 import { state } from "../state";
 
-const router = useRouter();
 const { sorted, seedBase, isLoading, loadError, loadCityShops } =
   useCatalogCityShops({
     cityCode: () => state.cityCode,
     selectedCategoryIds: () => state.selectedCategoryIds,
     selectedFeatureId: () => state.selectedFeatureId,
   });
-
-function go(code: string) {
-  router.push({ name: "shop", params: { code } });
-}
 </script>

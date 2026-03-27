@@ -32,6 +32,16 @@ export type ShopPublic = {
   featureIds: string[];
 };
 
+export type PromotionPublic = {
+  id: string;
+  code: string;
+  title: string;
+  description: string;
+  startDate: string;
+  endDate: string;
+  galleryImages: string[];
+};
+
 export type Contact = {
   type: string;
   value: string;

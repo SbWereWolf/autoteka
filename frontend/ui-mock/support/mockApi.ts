@@ -37,6 +37,22 @@ type RawShop = RawCityCatalogItem & {
   galleryImages: string[];
 };
 
+type RawPromotionImage = {
+  filePath: string;
+  sort: number;
+  isPublished: boolean;
+};
+
+type RawPromotion = {
+  id: string;
+  code: string;
+  title: string;
+  description: string;
+  startDate: string;
+  endDate: string;
+  galleryImages: RawPromotionImage[];
+};
+
 const cities: RawCity[] = [
   { code: "barnaul", title: "Барнаул", sort: 1 },
   { code: "nizhny", title: "Нижний Новгород", sort: 2 },
@@ -68,7 +84,6 @@ const shopsByCity: Record<string, RawCityCatalogItem[]> = {
       code: "barnaul-02",
       cityId: "barnaul",
       title: "Orange Parts",
-      thumbUrl: "/generated/gen-1x1-x1_0-v2-512x512.png",
       categoryIds: ["japanese"],
       featureIds: ["pickup"],
     },
@@ -130,6 +145,41 @@ const contactsByShop: Record<string, Record<string, string[]>> = {
   },
 };
 
+const promotionsByShop: Record<string, RawPromotion[]> = {
+  "barnaul-01": [
+    {
+      id: "promo-1",
+      code: "barnaul-01-summer-sale",
+      title: "Летняя распродажа",
+      description: "Скидки на расходники и аккумуляторы до конца месяца.",
+      startDate: "2026-03-01",
+      endDate: "2026-03-31",
+      galleryImages: [
+        {
+          filePath: "/generated/promo-summer-1.webp",
+          sort: 1,
+          isPublished: true,
+        },
+        {
+          filePath: "/generated/promo-summer-2.webp",
+          sort: 2,
+          isPublished: true,
+        },
+      ],
+    },
+    {
+      id: "promo-2",
+      code: "barnaul-01-text-only",
+      title: "Текстовая акция",
+      description: "Диагностика бесплатно при заказе ремонта.",
+      startDate: "2026-03-05",
+      endDate: "2026-03-28",
+      galleryImages: [],
+    },
+  ],
+  "nizhny-01": [],
+};
+
 function json(route: Route, payload: unknown, status = 200) {
   return route.fulfill({
     status,
@@ -145,8 +195,10 @@ function notFound(route: Route, message: string) {
 type ErrorScenario = {
   cityCatalogByCode?: Record<string, 404 | 422 | 500>;
   shopByCode?: Record<string, 404 | 422 | 500>;
+  promotionsByCode?: Record<string, 404 | 422 | 500>;
   contactsByCode?: Record<string, 404 | 422 | 500>;
   delaysMs?: {
+    promotionByCode?: Record<string, number>;
     shopByCode?: Record<string, number>;
   };
 };
@@ -244,6 +296,35 @@ export async function installApiMocks(
       }
 
       return json(route, shop);
+    }
+
+    const promotionMatch = path.match(
+      /\/api\/v1\/shop\/([^/]+)\/promotion$/,
+    );
+    if (method === "GET" && promotionMatch) {
+      const shopCode = decodeURIComponent(promotionMatch[1]);
+      const forcedStatus = scenario.promotionsByCode?.[shopCode];
+      if (forcedStatus) {
+        return byStatus(
+          route,
+          forcedStatus,
+          forcedStatus === 500
+            ? "Temporary backend failure"
+            : "Shop Not Found",
+        );
+      }
+
+      const shop = shops[shopCode];
+      if (!shop) {
+        return notFound(route, "Shop Not Found");
+      }
+
+      const delayMs = scenario.delaysMs?.promotionByCode?.[shopCode];
+      if (typeof delayMs === "number" && delayMs > 0) {
+        await new Promise((resolve) => setTimeout(resolve, delayMs));
+      }
+
+      return json(route, promotionsByShop[shopCode] ?? []);
     }
 
     const contactsMatch = path.match(

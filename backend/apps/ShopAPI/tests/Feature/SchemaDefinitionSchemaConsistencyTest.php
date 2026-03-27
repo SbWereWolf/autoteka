@@ -18,6 +18,8 @@ use Autoteka\SchemaDefinition\Enums\Columns\MoonshineUserRolesColumns;
 use Autoteka\SchemaDefinition\Enums\Columns\MoonshineUsersColumns;
 use Autoteka\SchemaDefinition\Enums\Columns\NotificationsColumns;
 use Autoteka\SchemaDefinition\Enums\Columns\PasswordResetTokensColumns;
+use Autoteka\SchemaDefinition\Enums\Columns\PromotionColumns;
+use Autoteka\SchemaDefinition\Enums\Columns\PromotionImageColumns;
 use Autoteka\SchemaDefinition\Enums\Columns\SessionsColumns;
 use Autoteka\SchemaDefinition\Enums\Columns\ShopCategoryColumns;
 use Autoteka\SchemaDefinition\Enums\Columns\ShopColumns;
@@ -56,6 +58,8 @@ final class SchemaDefinitionSchemaConsistencyTest extends TestCase
             TableName::CATEGORY->value => CategoryColumns::class,
             TableName::FEATURE->value => FeatureColumns::class,
             TableName::CONTACT_TYPE->value => ContactTypeColumns::class,
+            TableName::PROMOTION->value => PromotionColumns::class,
+            'promotion_gallery_image' => PromotionImageColumns::class,
             TableName::SHOP->value => ShopColumns::class,
             TableName::SHOP_CATEGORY->value => ShopCategoryColumns::class,
             TableName::SHOP_FEATURE->value => ShopFeatureColumns::class,

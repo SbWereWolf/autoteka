@@ -4,6 +4,7 @@ import type {
   CityShopsResponse,
   ContactsResponse,
   Feature,
+  PromotionPublic,
   ShopPublic,
 } from "../types";
 
@@ -21,10 +22,18 @@ export interface ApiClient {
     cityCode: string,
     query?: CityShopsQuery,
   ): Promise<CityShopsResponse>;
-  getShop(shopCode: string): Promise<ShopPublic>;
+  getShopPromotions(
+    shopCode: string,
+    init?: RequestInit,
+  ): Promise<PromotionPublic[]>;
+  getShop(
+    shopCode: string,
+    init?: RequestInit,
+  ): Promise<ShopPublic>;
   postAcceptableContactTypes(
     shopCode: string,
     types: string[],
+    init?: RequestInit,
   ): Promise<ContactsResponse>;
 }
 

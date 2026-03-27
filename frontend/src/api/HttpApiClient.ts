@@ -4,6 +4,7 @@ import type {
   CityShopsResponse,
   ContactsResponse,
   Feature,
+  PromotionPublic,
   ShopPublic,
 } from "../types";
 import type { ApiClient, CityShopsQuery } from "./ApiClient";
@@ -42,6 +43,25 @@ type RawShop = {
   galleryImages?: string[];
   categoryIds: Array<number | string>;
   featureIds: Array<number | string>;
+};
+
+type RawPromotionImage =
+  | string
+  | {
+      filePath?: string | null;
+      url?: string | null;
+      sort?: number | string | null;
+      isPublished?: boolean;
+    };
+
+type RawPromotion = {
+  id: number | string;
+  code: string;
+  title: string;
+  description: string;
+  startDate: string;
+  endDate: string;
+  galleryImages?: RawPromotionImage[];
 };
 
 type RawCityShopsResponse = {
@@ -86,6 +106,61 @@ function resolveMediaUrl(
   } catch {
     return value;
   }
+}
+
+function normalizeSort(
+  value: number | string | null | undefined,
+): number {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return value;
+  }
+
+  if (typeof value === "string" && value.trim() !== "") {
+    const parsed = Number(value);
+    if (Number.isFinite(parsed)) {
+      return parsed;
+    }
+  }
+
+  return Number.MAX_SAFE_INTEGER;
+}
+
+function normalizePromotionImages(
+  rawItems: RawPromotionImage[] | undefined,
+  baseUrl: string,
+): string[] {
+  if (!Array.isArray(rawItems)) {
+    return [];
+  }
+
+  return rawItems
+    .map((item, index) => {
+      if (typeof item === "string") {
+        return {
+          sort: index,
+          url: resolveMediaUrl(item, baseUrl),
+        };
+      }
+
+      if (item?.isPublished === false) {
+        return null;
+      }
+
+      return {
+        sort: normalizeSort(item?.sort) + index / 1000,
+        url: resolveMediaUrl(item?.filePath ?? item?.url, baseUrl),
+      };
+    })
+    .filter(
+      (
+        item,
+      ): item is {
+        sort: number;
+        url: string;
+      } => item !== null && typeof item.url === "string",
+    )
+    .sort((left, right) => left.sort - right.sort)
+    .map((item) => item.url);
 }
 
 function toCity(raw: RawCity): City {
@@ -157,6 +232,21 @@ function toShop(raw: RawShop, baseUrl: string): ShopPublic {
   };
 }
 
+function toPromotion(
+  raw: RawPromotion,
+  baseUrl: string,
+): PromotionPublic {
+  return {
+    id: normalizeId(raw.id),
+    code: raw.code,
+    title: raw.title,
+    description: raw.description,
+    startDate: raw.startDate,
+    endDate: raw.endDate,
+    galleryImages: normalizePromotionImages(raw.galleryImages, baseUrl),
+  };
+}
+
 export class HttpApiClient implements ApiClient {
   constructor(private readonly baseUrl: string) {}
 
@@ -191,9 +281,27 @@ export class HttpApiClient implements ApiClient {
     };
   }
 
-  async getShop(shopCode: string): Promise<ShopPublic> {
+  async getShopPromotions(
+    shopCode: string,
+    init: RequestInit = {},
+  ): Promise<PromotionPublic[]> {
+    const promotions = await this.request<RawPromotion[]>(
+      `/shop/${encodeURIComponent(shopCode)}/promotion`,
+      init,
+    );
+
+    return Array.isArray(promotions)
+      ? promotions.map((item) => toPromotion(item, this.baseUrl))
+      : [];
+  }
+
+  async getShop(
+    shopCode: string,
+    init: RequestInit = {},
+  ): Promise<ShopPublic> {
     const shop = await this.request<RawShop>(
       `/shop/${encodeURIComponent(shopCode)}`,
+      init,
     );
     return toShop(shop, this.baseUrl);
   }
@@ -201,10 +309,12 @@ export class HttpApiClient implements ApiClient {
   async postAcceptableContactTypes(
     shopCode: string,
     types: string[],
+    init: RequestInit = {},
   ): Promise<ContactsResponse> {
     return this.request<ContactsResponse>(
       `/shop/${encodeURIComponent(shopCode)}/acceptable-contact-types`,
       {
+        ...init,
         method: "POST",
         body: JSON.stringify(types),
       },

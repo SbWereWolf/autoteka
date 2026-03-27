@@ -7,6 +7,7 @@ use ShopAPI\Http\Controllers\Api\CityCatalogController;
 use ShopAPI\Http\Controllers\Api\CityListController;
 use ShopAPI\Http\Controllers\Api\FeatureListController;
 use ShopAPI\Http\Controllers\Api\ShopAcceptableContactTypesController;
+use ShopAPI\Http\Controllers\Api\ShopPromotionListController;
 use ShopAPI\Http\Controllers\Api\ShopShowController;
 use Illuminate\Support\Facades\Route;
 
@@ -16,5 +17,6 @@ Route::prefix('v1')->group(function (): void {
     Route::get('/feature-list', FeatureListController::class);
     Route::get('/city/{code}', CityCatalogController::class);
     Route::get('/shop/{code}', ShopShowController::class);
+    Route::get('/shop/{code}/promotion', ShopPromotionListController::class);
     Route::post('/shop/{code}/acceptable-contact-types', ShopAcceptableContactTypesController::class);
 });

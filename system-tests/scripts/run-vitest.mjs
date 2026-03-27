@@ -351,11 +351,15 @@ const frontendModeForDev =
 const shouldUseHostFrontendDevServer =
   profile === "ui-headless-dev" &&
   profileInfo.stack === "dev" &&
-  frontendModeForDev === "source";
+  frontendModeForDev === "source" &&
+  frontendUpstreamHost !== "frontend";
 
 if (shouldUseHostFrontendDevServer) {
   composeEnv.FRONTEND_UPSTREAM_HOST = frontendUpstreamHost;
-  composeEnv.FRONTEND_UPSTREAM_PORT = String(hostFrontendPort);
+  composeEnv.FRONTEND_UPSTREAM_PORT =
+    frontendUpstreamHost === "frontend"
+      ? requireFromStackFile("dev", stackEnv, devEnvPath, "FRONTEND_PORT")
+      : String(hostFrontendPort);
 }
 
 let hostFrontendProcess = null;
@@ -688,6 +692,9 @@ try {
   } else {
     exitCode = result.status ?? 1;
   }
+} catch (error) {
+  console.error(error);
+  exitCode = 1;
 }
 
 process.exit(exitCode);

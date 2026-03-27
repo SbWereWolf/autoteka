@@ -18,6 +18,12 @@ export default defineConfig(({ mode, command }) => {
   const buildSourcemap =
     (env.VITE_BUILD_SOURCEMAP || "false").toLowerCase() === "true";
   const cacheDir = env.VITE_CACHE_DIR || "node_modules/.vite";
+  const allowedHosts = [
+    "localhost",
+    "127.0.0.1",
+    "frontend",
+    "host.docker.internal",
+  ];
 
   return {
     cacheDir,
@@ -28,6 +34,7 @@ export default defineConfig(({ mode, command }) => {
       host: "0.0.0.0",
       port: frontendPort,
       strictPort: true,
+      allowedHosts,
       hmr:
         hmrHost || hmrPort || hmrProtocol
           ? {
@@ -42,6 +49,7 @@ export default defineConfig(({ mode, command }) => {
       host: "0.0.0.0",
       port: Number(env.FRONTEND_PREVIEW_PORT || 4173),
       strictPort: true,
+      allowedHosts,
     },
     build: {
       sourcemap: buildSourcemap,

@@ -5,7 +5,6 @@
   "type": "module",
   "description": "System tests: quick + UI профили",
   "scripts": {
-    "test": "node ./scripts/run-vitest.mjs --profile quick-local",
     "test:watch": "vitest",
     "test:quick-local": "node ./scripts/run-vitest.mjs --profile quick-local",
     "test:quick-dev": "node ./scripts/run-vitest.mjs --profile quick-dev",

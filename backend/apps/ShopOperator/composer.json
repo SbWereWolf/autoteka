@@ -15,7 +15,8 @@
         "moonshine/moonshine": "^4.8",
         "autoteka/schema-definition": "*",
         "autoteka/laravel-session-prune": "*",
-        "autoteka/is-there-an-admin": "*"
+        "autoteka/is-there-an-admin": "*",
+        "autoteka/demo-promotion": "*"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
@@ -100,6 +101,13 @@
         {
             "type": "path",
             "url": "../../packages/IsThereAnAdmin",
+            "options": {
+                "symlink": true
+            }
+        },
+        {
+            "type": "path",
+            "url": "../../packages/DemoPromotion",
             "options": {
                 "symlink": true
             }

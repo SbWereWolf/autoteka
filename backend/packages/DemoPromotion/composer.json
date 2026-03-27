@@ -1,0 +1,25 @@
+{
+  "name": "autoteka/demo-promotion",
+  "description": "Laravel package с demo-командами генерации и purge promotions.",
+  "version": "1.0.0",
+  "type": "library",
+  "license": "proprietary",
+  "require": {
+    "php": "^8.4",
+    "laravel/framework": "^12.0"
+  },
+  "autoload": {
+    "psr-4": {
+      "Autoteka\\DemoPromotion\\": "src/"
+    }
+  },
+  "extra": {
+    "laravel": {
+      "providers": [
+        "Autoteka\\DemoPromotion\\DemoPromotionServiceProvider"
+      ]
+    }
+  },
+  "minimum-stability": "stable",
+  "prefer-stable": true
+}

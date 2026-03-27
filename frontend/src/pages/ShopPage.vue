@@ -2,7 +2,7 @@
   <div class="shop-page-root">
     <div class="app-container pt-2 pb-4 3xl:pb-6">
       <div
-        v-if="isLoading"
+        v-if="showInitialLoading"
         class="space-y-4"
         aria-busy="true"
         aria-live="polite"
@@ -20,9 +20,9 @@
               />
             </div>
           </div>
-          <div class="shop-hero-gallery">
-            <div class="h-full w-full ui-skeleton" />
-          </div>
+        </div>
+        <div class="shop-hero-gallery" aria-hidden="true">
+          <div class="h-full w-full ui-skeleton" />
         </div>
         <div class="space-y-3">
           <div class="ui-skeleton h-6 w-48 rounded-full" />
@@ -41,155 +41,213 @@
       <div v-else-if="loadError" class="mt-8">
         <ErrorStatePanel
           message="Не удалось загрузить магазин. Попробуйте ещё раз."
-          @retry="loadShop"
+          @retry="reloadShopPage"
         />
       </div>
 
-      <div v-else-if="shop" class="space-y-6">
+      <div v-else-if="showShopScaffold" class="space-y-6">
         <section class="shop-hero-shell">
           <div class="shop-hero-head">
-            <button
-              class="shop-back-button"
-              aria-label="Назад"
-              type="button"
-              @click="goToCatalog"
-            >
-              <img
-                class="shop-back-raster"
-                src="/brand/shop-back-arrow.png"
-                alt=""
-                aria-hidden="true"
-              />
-            </button>
-
-            <div class="shop-logo-shell">
-              <img
-                v-if="shop.thumbUrl"
-                class="shop-logo-image"
-                :src="shop.thumbUrl"
-                :alt="`Логотип ${shop.title}`"
-              />
-              <div
-                v-else
-                class="shop-logo-placeholder"
-                aria-label="Логотип магазина отсутствует"
+            <template v-if="shop">
+              <button
+                class="shop-back-button"
+                aria-label="Назад"
+                type="button"
+                @click="goToCatalog"
               >
-                Нет логотипа
-              </div>
-            </div>
-          </div>
+                <img
+                  class="shop-back-raster"
+                  src="/brand/shop-back-arrow.png"
+                  alt=""
+                  aria-hidden="true"
+                />
+              </button>
 
-          <div class="shop-hero-gallery">
-            <GalleryCarousel
-              :items="galleryImages"
-              empty-title=""
-              empty-text="Для этого магазина изображения ещё не загружены"
-              test-id="shop-gallery"
-            />
-
-            <div
-              v-if="shop.scheduleNote"
-              class="shop-schedule-note"
-              data-testid="shop-schedule-note"
-            >
-              {{ shop.scheduleNote }}
-            </div>
-          </div>
-        </section>
-
-        <section
-          class="shop-content-card"
-          data-testid="shop-text-section"
-        >
-          <h1
-            v-if="shop.slogan"
-            class="shop-slogan"
-            data-testid="shop-slogan"
-          >
-            {{ shop.slogan }}
-          </h1>
-          <p
-            class="shop-description"
-            data-testid="shop-description"
-          >
-            {{ shop.description }}
-          </p>
-        </section>
-
-        <section
-          class="shop-content-card"
-          data-testid="shop-contacts"
-        >
-          <h2 class="shop-contacts-title">
-            Контакты:
-          </h2>
-          <p
-            v-if="contactsLoadError"
-            class="mb-3 mt-0 text-xs text-slate-400"
-          >
-            Часть контактов сейчас недоступна.
-          </p>
-
-          <ul class="shop-contact-list">
-            <li v-for="item in contactRows" :key="item.key">
-              <div
-                v-if="item.kind === 'address'"
-                class="shop-contact-address-row"
-              >
-                <button
-                  type="button"
-                  class="shop-contact-navi-button ui-transition ui-interactive ui-bounce rounded-2xl min-h-12 px-4 py-3 text-sm font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900"
-                  :aria-describedby="item.addressTextId"
-                  data-testid="shop-contact-open-navi"
-                  @click="openYandexNavigatorMapSearch(item.addressText)"
+              <div class="shop-logo-shell">
+                <img
+                  v-if="shop.thumbUrl"
+                  class="shop-logo-image"
+                  :src="shop.thumbUrl"
+                  :alt="`Логотип ${shop.title}`"
+                />
+                <div
+                  v-else
+                  class="shop-logo-placeholder"
+                  aria-label="Логотип магазина отсутствует"
                 >
-                  Открыть в Навигаторе
-                </button>
-                <a
-                  :id="item.addressTextId"
-                  class="shop-contact-link"
-                  :href="item.mapsHref"
-                  target="_blank"
-                  rel="noreferrer"
-                >{{ item.addressText }}</a>
+                  Нет логотипа
+                </div>
               </div>
-              <a
-                v-else-if="item.href"
-                class="shop-contact-link"
-                :href="item.href"
-                :target="item.target"
-                rel="noreferrer"
-              >
-                {{ item.label }}
-              </a>
-              <span v-else class="shop-contact-text">
-                {{ item.label }}
-              </span>
-            </li>
+            </template>
 
-            <li v-if="hasSiteUrl">
-              <a
-                class="shop-contact-link"
-                :href="siteUrl"
-                target="_self"
-              >
-                {{ siteUrl }}
-              </a>
-            </li>
-          </ul>
+            <template v-else>
+              <div
+                class="shop-loading-back-skeleton ui-skeleton"
+                data-testid="shop-loading-back-skeleton"
+              />
+              <div class="shop-loading-logo-skeleton-shell">
+                <div
+                  class="shop-loading-logo-skeleton ui-skeleton"
+                  data-testid="shop-loading-logo-skeleton"
+                />
+              </div>
+            </template>
+          </div>
+
         </section>
 
         <section
-          class="shop-content-card"
-          data-testid="shop-features"
+          v-if="hasPromotions"
+          class="shop-promo-stack"
+          data-testid="shop-promo-section"
         >
-          <ShopMetaBadges
-            :categories="categoryNames"
-            :features="featureNames"
+          <ShopPromotionCard
+            v-for="promotion in promotions"
+            :key="promotion.code"
+            :promotion="promotion"
           />
         </section>
 
-        <div class="shop-overscroll-spacer" aria-hidden="true" />
+        <div v-if="shop" class="shop-hero-gallery">
+          <GalleryCarousel
+            :items="galleryImages"
+            empty-title=""
+            empty-text="Для этого магазина изображения ещё не загружены"
+            test-id="shop-gallery"
+          />
+
+          <div
+            v-if="shop.scheduleNote"
+            class="shop-schedule-note"
+            data-testid="shop-schedule-note"
+          >
+            {{ shop.scheduleNote }}
+          </div>
+        </div>
+
+        <div
+          v-else
+          class="shop-hero-gallery"
+          aria-busy="true"
+          aria-live="polite"
+        >
+          <div class="h-full w-full ui-skeleton" />
+        </div>
+
+        <template v-if="shop">
+          <section
+            class="shop-content-card"
+            data-testid="shop-text-section"
+          >
+            <h1
+              v-if="shop.slogan"
+              class="shop-slogan"
+              data-testid="shop-slogan"
+            >
+              {{ shop.slogan }}
+            </h1>
+            <p
+              class="shop-description"
+              data-testid="shop-description"
+            >
+              {{ shop.description }}
+            </p>
+          </section>
+
+          <section
+            class="shop-content-card"
+            data-testid="shop-contacts"
+          >
+            <h2 class="shop-contacts-title">
+              Контакты:
+            </h2>
+            <p
+              v-if="contactsLoadError"
+              class="mb-3 mt-0 text-xs text-slate-400"
+            >
+              Часть контактов сейчас недоступна.
+            </p>
+
+            <ul class="shop-contact-list">
+              <li v-for="item in contactRows" :key="item.key">
+                <div
+                  v-if="item.kind === 'address'"
+                  class="shop-contact-address-row"
+                >
+                  <button
+                    type="button"
+                    class="shop-contact-navi-button ui-transition ui-interactive ui-bounce rounded-2xl min-h-12 px-4 py-3 text-sm font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900"
+                    :aria-describedby="item.addressTextId"
+                    data-testid="shop-contact-open-navi"
+                    @click="openYandexNavigatorMapSearch(item.addressText)"
+                  >
+                    Открыть в Навигаторе
+                  </button>
+                  <a
+                    :id="item.addressTextId"
+                    class="shop-contact-link"
+                    :href="item.mapsHref"
+                    target="_blank"
+                    rel="noreferrer"
+                  >{{ item.addressText }}</a>
+                </div>
+                <a
+                  v-else-if="item.href"
+                  class="shop-contact-link"
+                  :href="item.href"
+                  :target="item.target"
+                  rel="noreferrer"
+                >
+                  {{ item.label }}
+                </a>
+                <span v-else class="shop-contact-text">
+                  {{ item.label }}
+                </span>
+              </li>
+
+              <li v-if="hasSiteUrl">
+                <a
+                  class="shop-contact-link"
+                  :href="siteUrl"
+                  target="_self"
+                >
+                  {{ siteUrl }}
+                </a>
+              </li>
+            </ul>
+          </section>
+
+          <section
+            class="shop-content-card"
+            data-testid="shop-features"
+          >
+            <ShopMetaBadges
+              :categories="categoryNames"
+              :features="featureNames"
+            />
+          </section>
+
+          <div class="shop-overscroll-spacer" aria-hidden="true" />
+        </template>
+
+        <template v-else>
+          <section class="shop-content-card space-y-3" aria-hidden="true">
+            <div class="ui-skeleton h-8 w-2/3 rounded-full" />
+            <div class="ui-skeleton h-4 w-full rounded-full" />
+            <div class="ui-skeleton h-4 w-[85%] rounded-full" />
+          </section>
+
+          <section class="shop-content-card space-y-3" aria-hidden="true">
+            <div class="ui-skeleton h-6 w-32 rounded-full" />
+            <div class="ui-skeleton h-4 w-full rounded-full" />
+            <div class="ui-skeleton h-4 w-[75%] rounded-full" />
+          </section>
+
+          <section class="shop-content-card space-y-3" aria-hidden="true">
+            <div class="ui-skeleton h-6 w-40 rounded-full" />
+            <div class="ui-skeleton h-4 w-full rounded-full" />
+          </section>
+        </template>
       </div>
     </div>
 
@@ -202,37 +260,36 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from "vue";
+import { computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import GalleryCarousel from "../components/GalleryCarousel.vue";
 import OverscrollOpenLink from "../components/OverscrollOpenLink.vue";
 import ShopMetaBadges from "../components/ShopMetaBadges.vue";
+import ShopPromotionCard from "../components/ShopPromotionCard.vue";
 import { uiConfig } from "../config/ui";
-import type { ContactsResponse, Shop } from "../types";
-import { apiClient } from "../api/HttpApiClient";
-import { ApiError } from "../api/ApiClient";
 import { state } from "../state";
 import { mapIdsToTitles } from "../utils/mapCodesToNames";
-import {
-  buildYandexMapsWebUrl,
-  openYandexNavigatorMapSearch,
-} from "../utils/yandexAddressOpen";
+import { openYandexNavigatorMapSearch } from "../utils/yandexAddressOpen";
 import ErrorStatePanel from "../components/ErrorStatePanel.vue";
-import {
-  SHOP_ACCEPTABLE_CONTACT_TYPES,
-  useShopContactRows,
-} from "../composables/useShopContactRows";
+import { useShopContactRows } from "../composables/useShopContactRows";
+import { useShopPageLoader } from "../composables/useShopPageLoader";
 
 const route = useRoute();
 const router = useRouter();
 
 const shopCode = computed(() => String(route.params.code ?? ""));
-const shop = ref<Shop | null>(null);
-const contacts = ref<ContactsResponse>({});
-const isLoading = ref(false);
-const loadError = ref(false);
-const notFound = ref(false);
-const contactsLoadError = ref(false);
+const {
+  shop,
+  promotions,
+  contacts,
+  isLoading,
+  loadError,
+  notFound,
+  contactsLoadError,
+  loadShopPage,
+} = useShopPageLoader({
+  shopCode,
+});
 
 const featureMap = computed(
   () => new Map(state.features.map((item) => [item.id, item.title])),
@@ -256,6 +313,19 @@ const galleryImages = computed<string[]>(() => {
     : [];
 });
 
+const hasPromotions = computed(() => promotions.value.length > 0);
+const showInitialLoading = computed(
+  () =>
+    isLoading.value &&
+    !hasPromotions.value &&
+    shop.value === null,
+);
+const showShopScaffold = computed(
+  () =>
+    !showInitialLoading.value &&
+    !notFound.value &&
+    !loadError.value,
+);
 const siteUrl = computed(() =>
   String(shop.value?.siteUrl ?? "").trim(),
 );
@@ -265,45 +335,9 @@ function goToCatalog() {
   router.push({ name: "catalog" });
 }
 
-const { contactRows } = useShopContactRows(contacts);
-
-async function loadShop() {
-  isLoading.value = true;
-  loadError.value = false;
-  notFound.value = false;
-  shop.value = null;
-  contacts.value = {};
-  contactsLoadError.value = false;
-
-  try {
-    const loadedShop = await apiClient.getShop(shopCode.value);
-    shop.value = loadedShop;
-
-    try {
-      contacts.value = await apiClient.postAcceptableContactTypes(
-        shopCode.value,
-        [...SHOP_ACCEPTABLE_CONTACT_TYPES],
-      );
-    } catch {
-      contacts.value = {};
-      contactsLoadError.value = true;
-    }
-  } catch (error) {
-    if (error instanceof ApiError && error.status === 404) {
-      notFound.value = true;
-    } else {
-      loadError.value = true;
-    }
-  } finally {
-    isLoading.value = false;
-  }
+function reloadShopPage() {
+  void loadShopPage();
 }
 
-watch(shopCode, () => {
-  loadShop();
-});
-
-onMounted(() => {
-  loadShop();
-});
+const { contactRows } = useShopContactRows(contacts);
 </script>

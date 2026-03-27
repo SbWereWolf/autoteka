@@ -1,6 +1,6 @@
 # Frontend Автотеки
 
-**Актуально по коду на 2026-03-21.**
+**Актуально по коду на 2026-03-26.**
 
 Frontend реализован на Vue 3 + Vite и отвечает за front office:
 
@@ -8,6 +8,7 @@ Frontend реализован на Vue 3 + Vite и отвечает за front o
 - overlay-меню с выбором города и категорий;
 - страницу магазина;
 - offline UI mock-тесты и online e2e для живого контура.
+- promo-first загрузку карточки магазина и promo-секцию.
 
 Система тем и runtime theme editor из публичного интерфейса удалены.
 
@@ -65,6 +66,13 @@ PLAYWRIGHT_BASE_URL=http://127.0.0.1 npm run test:e2e
 каталога, контактные строки карточки магазина и т.п.), чтобы `pages/`
 оставались тонкими оболочками над шаблоном и навигацией.
 
+Для карточки магазина используется `useShopPageLoader.ts`:
+
+- параллелит `GET /shop/{code}` и `GET /shop/{code}/promotion`;
+- допускает ранний рендер promo-секции;
+- не показывает пользователю отдельную ошибку promo;
+- применяет ограниченный retry только для transient promo ошибок.
+
 ## API-конфигурация
 
 Используется `VITE_API_BASE_URL` из `frontend/.env`. Файл
@@ -75,6 +83,12 @@ PLAYWRIGHT_BASE_URL=http://127.0.0.1 npm run test:e2e
 
 ```text
 VITE_API_BASE_URL=/api/v1
+```
+
+Promotion route:
+
+```text
+GET /api/v1/shop/{code}/promotion
 ```
 
 ## Что читать дальше

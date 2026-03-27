@@ -6,6 +6,7 @@ namespace ShopOperator\Models;
 
 use ShopOperator\Models\Concerns\GeneratesCodeOnSave;
 use ShopOperator\Models\Concerns\NormalizesSiteUrlOnSave;
+use Autoteka\SchemaDefinition\Enums\Columns\PromotionColumns;
 use Autoteka\SchemaDefinition\Enums\Columns\ShopCategoryColumns;
 use Autoteka\SchemaDefinition\Enums\Columns\ShopColumns;
 use Autoteka\SchemaDefinition\Enums\Columns\ShopContactColumns;
@@ -49,6 +50,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property \Illuminate\Database\Eloquent\Collection<int, Feature> $features
  * @property \Illuminate\Database\Eloquent\Collection<int, ShopContact> $contacts
  * @property \Illuminate\Database\Eloquent\Collection<int, ShopGalleryImage> $galleryImages
+ * @property \Illuminate\Database\Eloquent\Collection<int, Promotion> $promotions
  * @property \Illuminate\Database\Eloquent\Collection<int, ShopSchedule> $schedules
  * @property City|null $city
  */
@@ -159,6 +161,11 @@ class Shop extends Model
         $sch = new SchemaShopSchedule();
 
         return $this->hasMany(ShopSchedule::class, $sch->shopId());
+    }
+
+    public function promotions(): HasMany
+    {
+        return $this->hasMany(Promotion::class, PromotionColumns::SHOP_ID->value);
     }
 
     public function getCategoryLinksAttribute(): array

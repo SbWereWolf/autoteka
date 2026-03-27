@@ -1,34 +1,37 @@
 <template>
-  <button
+  <RouterLink
     class="catalog-shop-tile ui-bounce"
-    type="button"
-    @click="$emit('open')"
+    :to="{ name: 'shop', params: { code: shop.code } }"
+    :aria-label="shop.thumbUrl ? undefined : shop.title"
   >
     <img
       v-if="shop.thumbUrl"
       class="catalog-shop-tile-media"
       :src="shop.thumbUrl"
-      alt=""
+      :alt="shop.title"
       loading="lazy"
       decoding="async"
-      aria-hidden="true"
     />
 
     <div
       v-else
       class="catalog-shop-tile-placeholder"
-      aria-label="Изображение магазина отсутствует"
+      aria-hidden="true"
     >
       <span>Нет логотипа</span>
     </div>
-  </button>
+  </RouterLink>
 </template>
 
 <script setup lang="ts">
+import { RouterLink } from "vue-router";
+
 defineProps<{
-  shop: { thumbUrl?: string };
+  shop: {
+    code: string;
+    title: string;
+    thumbUrl?: string;
+  };
   seed: number;
 }>();
-
-defineEmits<{ open: [] }>();
 </script>
