@@ -367,8 +367,8 @@ If a commit is requested, it must be created only via:
 pwsh "scripts/agent/commit.ps1" `
     -Message "<A brief statement of the logical purpose of the changes>" `
     -Body "<Explain the logical purpose of the changes and their benefits (goals)>" `
-    -AISystemName "<AI system name>" `
-    -LLMName "<LLM name>"
+    -AISystemName "<AI_system_name>" `
+    -LLMName "<LLM_name>"
 ```
 
 Requirements:
