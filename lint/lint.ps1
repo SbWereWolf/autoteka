@@ -70,11 +70,11 @@ function Convert-InputPath {
   param([string]$InputPath)
 
   if ($InputPath -match '^[A-Za-z]:\\') {
-    if ($IsWindows) {
+    if (Test-IsWindowsHost) {
       return $InputPath
     }
 
-    if ($IsWsl) {
+    if (Test-IsWslHost) {
       $wslpathCmd = Get-Command wslpath -ErrorAction SilentlyContinue
 
       if ($wslpathCmd) {
@@ -126,6 +126,19 @@ function Expand-EnvVariables {
   }
 }
 
+function Test-IsWindowsHost {
+  return [System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform(
+    [System.Runtime.InteropServices.OSPlatform]::Windows
+  )
+}
+
+function Test-IsWslHost {
+  return (-not (Test-IsWindowsHost)) -and (
+    -not [string]::IsNullOrWhiteSpace($env:WSL_DISTRO_NAME) -or
+    -not [string]::IsNullOrWhiteSpace($env:WSL_INTEROP)
+  )
+}
+
 function Invoke-ExternalCommand {
   param(
     [Parameter(Mandatory)][string]$CommandLine,
@@ -154,7 +167,7 @@ function Invoke-ExternalCommand {
   $FullCommand = "$Expanded `"$File`""
   Write-Log "Running: $FullCommand"
 
-  if ($IsWindows) {
+  if (Test-IsWindowsHost) {
     $cmdRunner = Get-Command cmd.exe -ErrorAction SilentlyContinue
     if ($cmdRunner) {
       & $cmdRunner.Source /c $FullCommand
