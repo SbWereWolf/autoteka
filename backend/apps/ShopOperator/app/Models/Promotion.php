@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace ShopOperator\Models;
 
 use Autoteka\SchemaDefinition\Enums\Columns\PromotionColumns;
+use Autoteka\SchemaDefinition\Enums\Columns\PromotionGalleryVideoColumns;
 use Autoteka\SchemaDefinition\Enums\Columns\PromotionImageColumns;
 use Autoteka\SchemaDefinition\Enums\TableName;
 use Autoteka\SchemaDefinition\SchemaTables\SchemaPromotion;
+use Autoteka\SchemaDefinition\SchemaTables\SchemaPromotionGalleryVideo;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -24,7 +26,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string $end_date
  * @property bool $is_published
  * @property array<int, array{id: int, file_path: string, original_name: string|null, sort: int, is_published: bool}> $gallery_entries
+ * @property array<int, array{id: int, file_path: string, original_name: string|null, poster_path: string, poster_original_name: string|null, mime: string, sort: int, is_published: bool}> $gallery_video_entries
  * @property \Illuminate\Database\Eloquent\Collection<int, PromotionImage> $galleryImages
+ * @property \Illuminate\Database\Eloquent\Collection<int, PromotionGalleryVideo> $galleryVideos
  * @property Shop|null $shop
  */
 class Promotion extends Model
@@ -52,6 +56,7 @@ class Promotion extends Model
 
     protected $appends = [
         'gallery_entries',
+        'gallery_video_entries',
     ];
 
     /**
@@ -69,6 +74,13 @@ class Promotion extends Model
     public function galleryImages(): HasMany
     {
         return $this->hasMany(PromotionImage::class, PromotionImageColumns::PROMOTION_ID->value);
+    }
+
+    public function galleryVideos(): HasMany
+    {
+        $schema = new SchemaPromotionGalleryVideo();
+
+        return $this->hasMany(PromotionGalleryVideo::class, $schema->promotionId());
     }
 
     public function getGalleryEntriesAttribute(): array
@@ -95,6 +107,35 @@ class Promotion extends Model
     {
         $this->virtualInput['gallery_entries'] = $value;
         unset($this->attributes['gallery_entries']);
+    }
+
+    public function getGalleryVideoEntriesAttribute(): array
+    {
+        if (array_key_exists('gallery_video_entries', $this->virtualInput)) {
+            return $this->normalizeVirtualList($this->virtualInput['gallery_video_entries']);
+        }
+
+        return $this->relationLoaded('galleryVideos')
+            ? $this->galleryVideos
+                ->map(fn (PromotionGalleryVideo $video): array => [
+                    PromotionGalleryVideoColumns::ID->value => $video->getKey(),
+                    PromotionGalleryVideoColumns::FILE_PATH->value => $video->file_path,
+                    PromotionGalleryVideoColumns::ORIGINAL_NAME->value => $video->original_name,
+                    PromotionGalleryVideoColumns::POSTER_PATH->value => $video->poster_path,
+                    PromotionGalleryVideoColumns::POSTER_ORIGINAL_NAME->value => $video->poster_original_name,
+                    PromotionGalleryVideoColumns::MIME->value => $video->mime,
+                    PromotionGalleryVideoColumns::SORT->value => $video->sort,
+                    PromotionGalleryVideoColumns::IS_PUBLISHED->value => $video->is_published,
+                ])
+                ->values()
+                ->all()
+            : [];
+    }
+
+    public function setGalleryVideoEntriesAttribute(mixed $value): void
+    {
+        $this->virtualInput['gallery_video_entries'] = $value;
+        unset($this->attributes['gallery_video_entries']);
     }
 
     public function scopeFutureOrActiveForAdmin(Builder $query, string $today): Builder

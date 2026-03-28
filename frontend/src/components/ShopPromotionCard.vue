@@ -4,8 +4,8 @@
     data-testid="shop-promo-card"
   >
     <GalleryCarousel
-      v-if="promotion.galleryImages.length > 0"
-      :items="promotion.galleryImages"
+      v-if="promotion.galleryItems.length > 0"
+      :items="promotion.galleryItems"
       empty-title=""
       empty-text=""
       test-id="shop-promo-gallery"

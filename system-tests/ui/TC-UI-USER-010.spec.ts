@@ -310,8 +310,8 @@ describe("TC-UI-USER-010", () => {
       }
 
       if (
-        Array.isArray(currentShopPayload?.galleryImages) &&
-        currentShopPayload.galleryImages.length > 1
+        Array.isArray(currentShopPayload?.galleryItems) &&
+        currentShopPayload.galleryItems.length > 1
       ) {
         expect(
           await page.locator('[data-testid="gallery-prev"]').count(),

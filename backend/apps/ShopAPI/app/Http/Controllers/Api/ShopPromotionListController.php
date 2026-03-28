@@ -6,10 +6,10 @@ namespace ShopAPI\Http\Controllers\Api;
 
 use ShopAPI\Http\Controllers\Controller;
 use ShopAPI\Models\Shop;
+use ShopAPI\Support\Gallery\GalleryItemBuilder;
 use Autoteka\SchemaDefinition\SchemaTables\SchemaPromotion;
 use Autoteka\SchemaDefinition\SchemaTables\SchemaShop;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Storage;
 
 final class ShopPromotionListController extends Controller
 {
@@ -18,6 +18,7 @@ final class ShopPromotionListController extends Controller
         $shopSchema = new SchemaShop();
         $promotionSchema = new SchemaPromotion();
         $utcDate = now('UTC')->toDateString();
+        $galleryItemBuilder = app(GalleryItemBuilder::class);
 
         $shop = Shop::query()
             ->with([
@@ -32,6 +33,11 @@ final class ShopPromotionListController extends Controller
                                     ->published()
                                     ->orderedForApi();
                             },
+                            'galleryVideos' => static function ($galleryQuery): void {
+                                $galleryQuery
+                                    ->published()
+                                    ->orderedForApi();
+                            },
                         ]);
                 },
             ])
@@ -40,7 +46,7 @@ final class ShopPromotionListController extends Controller
             ->firstOrFail();
 
         $payload = $shop->promotions
-            ->map(static function ($promotion) use ($promotionSchema): array {
+            ->map(static function ($promotion) use ($promotionSchema, $galleryItemBuilder): array {
                 return [
                     'id' => $promotion->getKey(),
                     'code' => $promotion->code,
@@ -50,11 +56,10 @@ final class ShopPromotionListController extends Controller
                         ?? (string) $promotion->start_date,
                     'endDate' => $promotion->getAttribute($promotionSchema->endDate())?->format('Y-m-d')
                         ?? (string) $promotion->end_date,
-                    'galleryImages' => $promotion->galleryImages
-                        ->pluck('file_path')
-                        ->map(static fn (string $path): string => Storage::disk((string) config('autoteka.media.disk'))->url($path))
-                        ->values()
-                        ->all(),
+                    'galleryItems' => $galleryItemBuilder->build(
+                        $promotion->galleryImages,
+                        $promotion->galleryVideos,
+                    ),
                 ];
             })
             ->values()

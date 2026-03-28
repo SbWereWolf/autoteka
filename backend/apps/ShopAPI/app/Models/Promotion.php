@@ -7,6 +7,7 @@ namespace ShopAPI\Models;
 use Autoteka\SchemaDefinition\Enums\Columns\PromotionColumns;
 use Autoteka\SchemaDefinition\Enums\TableName;
 use Autoteka\SchemaDefinition\SchemaTables\SchemaPromotion;
+use Autoteka\SchemaDefinition\SchemaTables\SchemaPromotionGalleryVideo;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -23,6 +24,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string $end_date
  * @property bool $is_published
  * @property \Illuminate\Database\Eloquent\Collection<int, PromotionImage> $galleryImages
+ * @property \Illuminate\Database\Eloquent\Collection<int, PromotionGalleryVideo> $galleryVideos
  * @property Shop|null $shop
  */
 class Promotion extends Model
@@ -58,6 +60,13 @@ class Promotion extends Model
     public function galleryImages(): HasMany
     {
         return $this->hasMany(PromotionImage::class, 'promotion_id');
+    }
+
+    public function galleryVideos(): HasMany
+    {
+        $schema = new SchemaPromotionGalleryVideo();
+
+        return $this->hasMany(PromotionGalleryVideo::class, $schema->promotionId());
     }
 
     public function scopePublished(Builder $query): Builder

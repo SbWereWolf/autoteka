@@ -19,38 +19,38 @@ PROD среда это демонстрационный сервер на Ubuntu
   watchdog и maintenance.
 - `frontend/` — клиентское приложение, его сборка и frontend-тесты.
 - `backend/` — серверные Laravel-модули и связанные PHP-пакеты
-  (тесты).
+  (backend-тесты).
 - `test-cases/` — трассировка документации и требований в тест-кейсы и
   checklists.
 - `system-tests/` — системные quick/ui тесты, включая `USER-UI` и
   `CLERK-UI`.
-- `operational/` — журнал текущей работы для LLM-агентов.
 - `backup/` — временные локальные резервные копии.
 - `inbox/` — временные файлы вложений для диалога с LLM-агентом.
-- `logs/` — (логи, журналы) временные локальные журналы работ.
 - `tasks/` — (задачи) временные одноразовые рабочие инструкции.
 
 ## Терминология системы
 
-- Приложений в системе три:
-  - клиентское приложение;
-  - серверное приложение;
-  - приложение для развёртывания и обслуживания установленной Системы
-    (скрипты/infra в `infrastructure/`).
-- Клиентское приложение состоит из двух модулей:
-  - редактор тем оформления;
-  - модуль каталога (front office).
-- Серверные модули:
+- Система состоит из трёх модулей:
+  - клиентское модуль;
+  - серверное модуль;
+  - модуль для развёртывания и обслуживания установленной Системы
+    (скрипты в `infrastructure/`).
+- Клиентское модуль:
+  - Vue приложение каталога магазинов (front office).
+- Серверные модуль:
   - `ShopAPI` (путь в репозитории: `backend/apps/ShopAPI`) - API для
-    клиентского приложения;
+    front office;
   - `ShopOperator` (путь: `backend/apps/ShopOperator`) - GUI для
     работы с картотекой магазинов (back oficce);
   - `SchemaDefinition` (путь: `backend/packages/SchemaDefinition`) -
     модуль источник истины о схеме БД.
+  - `DemoPromotion` Создание демонстрационного набора данных
+  - `SessionPrune` Очистка данных сессий работы с админкой
+  - `IsThereAnAdmin` команда для проверки существования юзера админа
 
 ## Временные оперативные файлы
 
-Каталоги `tasks/`, `logs/`, `inbox/` используются только как временные
+Каталоги `tasks/`, `inbox/` используются только как временные
 оперативные файлы для текущих работ и диагностики.
 
 Для длительного использования этой кодовой базы они не являются
@@ -160,8 +160,8 @@ php artisan serve
 вход в back office MoonShine:
 
 - URL: `/admin/login`
-- Локальные значения учётки берутся из `backend/.env` (создаётся из
-  `backend/example.env`) -> `MOONSHINE_ADMIN_*`
+- Локальные значения учётки берутся из
+  `backend/apps/ShopOperator/.env` -> `MOONSHINE_ADMIN_*`
 
 Архитектурный инвариант backend:
 
@@ -249,4 +249,49 @@ API_BASE_URL=http://127.0.0.1/api/v1 npm --prefix frontend run test:api:online
 
 # frontend online e2e
 PLAYWRIGHT_BASE_URL=http://127.0.0.1 npm --prefix frontend run test:e2e
+```
+
+## Локальное ручное тестирование
+
+### Запустить фронт энд
+
+в файле [frontend/.env](frontend/.env) записать адрес API
+
+```shell
+VITE_API_BASE_URL=http://127.0.0.1:8081/api/v1
+```
+
+```shell
+cd ./frontend/
+npm run dev
+```
+
+### Если нужен бэк энд для Админки
+
+```shell
+cd ./backend/apps/ShopOperator
+php artisan serve --host=127.0.0.1 --port=8081
+```
+
+Перейти в админку
+
+```shell
+http://127.0.0.1:8081/admin/
+```
+
+Реквизиты доступа
+
+```
+admin@example.com
+```
+
+```
+admin12345
+```
+
+### Если надо бэк энд для API
+
+```shell
+cd ./backend/apps/ShopAPI
+php artisan serve --host=127.0.0.1 --port=8081
 ```

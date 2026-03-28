@@ -25,39 +25,33 @@
         :style="trackStyle"
       >
         <div
-          v-for="(item, index) in items"
-          :key="index"
+          v-for="(item, itemIndex) in items"
+          :key="item.id"
           class="shop-gallery-slide"
         >
           <UiImage
-            v-if="typeof item === 'string'"
-            class="h-full w-full"
-            :src="item"
-            alt=""
-            :loading="index === 0 ? 'eager' : 'lazy'"
-            decoding="async"
-            spinner
-            img-class="h-full w-full object-contain"
-          />
-
-          <UiImage
-            v-else-if="item.kind === 'image'"
+            v-if="item.type === 'image'"
             class="h-full w-full"
             :src="item.src"
-            :alt="item.alt"
-            :width="item.width"
-            :height="item.height"
-            :loading="index === 0 ? 'eager' : 'lazy'"
+            alt=""
+            :loading="itemIndex === 0 ? 'eager' : 'lazy'"
             decoding="async"
             spinner
             img-class="h-full w-full object-contain"
           />
 
-          <div v-else class="shop-gallery-empty">
-            <div class="px-6 text-center text-sm text-slate-500">
-              {{ item.label }}
-            </div>
-          </div>
+          <video
+            v-else
+            :ref="(element) => bindVideoRef(itemIndex, element)"
+            class="h-full w-full object-contain"
+            :src="item.src"
+            :poster="item.poster"
+            :autoplay="itemIndex === index"
+            :muted="true"
+            :loop="true"
+            playsinline
+            preload="metadata"
+          />
         </div>
       </div>
     </div>
@@ -97,23 +91,14 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, onBeforeUnmount, ref, watch, watchPostEffect } from "vue";
+import type { GalleryItem } from "../types";
 import UiImage from "./UiImage.vue";
 import { uiConfig } from "../config/ui";
 
-type GalleryItem =
-  | {
-      kind: "image";
-      src: string;
-      alt: string;
-      width: number;
-      height: number;
-    }
-  | { kind: "placeholder"; label: string };
-
 const props = withDefaults(
   defineProps<{
-    items: Array<GalleryItem | string>;
+    items: GalleryItem[];
     emptyTitle?: string;
     emptyText?: string;
     testId?: string;
@@ -126,8 +111,14 @@ const props = withDefaults(
 );
 
 const index = ref(0);
+const videoRefs = ref<Array<HTMLVideoElement | null>>([]);
 
 function clamp() {
+  if (props.items.length === 0) {
+    index.value = 0;
+    return;
+  }
+
   if (index.value < 0) {
     index.value = 0;
   }
@@ -150,6 +141,54 @@ const trackStyle = computed(() => ({
   transform: `translateX(-${index.value * 100}%)`,
   transitionDuration: `${uiConfig.gallery.transitionMs}ms`,
 }));
+
+function bindVideoRef(index: number, element: Element | null) {
+  videoRefs.value[index] =
+    element instanceof HTMLVideoElement ? element : null;
+}
+
+function syncActiveVideo() {
+  videoRefs.value.forEach((video, slideIndex) => {
+    if (!video) {
+      return;
+    }
+
+    if (slideIndex === index.value) {
+      const playPromise = video.play();
+      if (playPromise instanceof Promise) {
+        playPromise.catch(() => {});
+      }
+      return;
+    }
+
+    video.pause();
+    video.currentTime = 0;
+  });
+}
+
+watch(
+  () => props.items.length,
+  () => {
+    clamp();
+    videoRefs.value = videoRefs.value.slice(0, props.items.length);
+  },
+  { immediate: true },
+);
+
+watchPostEffect(() => {
+  syncActiveVideo();
+});
+
+onBeforeUnmount(() => {
+  videoRefs.value.forEach((video) => {
+    if (!video) {
+      return;
+    }
+
+    video.pause();
+    video.currentTime = 0;
+  });
+});
 
 let startX = 0;
 let startY = 0;

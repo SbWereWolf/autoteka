@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace ShopOperator\MoonShine\Resources;
 
 use Autoteka\SchemaDefinition\SchemaTables\SchemaPromotion;
+use Autoteka\SchemaDefinition\SchemaTables\SchemaPromotionGalleryVideo;
 use Autoteka\SchemaDefinition\SchemaTables\SchemaPromotionImage;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -20,6 +21,7 @@ use MoonShine\Support\Enums\Action;
 use MoonShine\Support\Enums\PageType;
 use MoonShine\Support\ListOf;
 use MoonShine\UI\Fields\Date;
+use MoonShine\UI\Fields\File;
 use MoonShine\UI\Fields\Hidden;
 use MoonShine\UI\Fields\ID;
 use MoonShine\UI\Fields\Image;
@@ -30,6 +32,7 @@ use MoonShine\UI\Fields\Switcher;
 use MoonShine\UI\Fields\Textarea;
 use MoonShine\UI\Fields\Text;
 use ShopOperator\Models\Promotion;
+use ShopOperator\Models\PromotionGalleryVideo;
 use ShopOperator\Models\PromotionImage;
 use ShopOperator\Models\Shop;
 use ShopOperator\MoonShine\Handlers\SavePromotionResourceHandler;
@@ -51,6 +54,7 @@ class PromotionResource extends ModelResource
     protected array $with = [
         'shop',
         'galleryImages',
+        'galleryVideos',
     ];
 
     protected ?PageType $redirectAfterSave = PageType::DETAIL;
@@ -134,6 +138,7 @@ class PromotionResource extends ModelResource
             Preview::make('Создана', formatted: fn (Promotion $promotion): string => $promotion->created_at?->format('d.m.Y H:i') ?? ''),
             Preview::make('Обновлена', formatted: fn (Promotion $promotion): string => $promotion->updated_at?->format('d.m.Y H:i') ?? ''),
             Preview::make('Галерея', formatted: fn (Promotion $promotion): string => $this->galleryDetailHtml($promotion)),
+            Preview::make('Видео галереи', formatted: fn (Promotion $promotion): string => $this->galleryVideoDetailHtml($promotion)),
         ];
     }
 
@@ -141,6 +146,7 @@ class PromotionResource extends ModelResource
     {
         $schema = new SchemaPromotion();
         $imageSchema = new SchemaPromotionImage();
+        $videoSchema = new SchemaPromotionGalleryVideo();
         $shop = $this->formContextShop();
 
         return [
@@ -182,6 +188,52 @@ class PromotionResource extends ModelResource
                         ->min(0)
                         ->required(),
                     Switcher::make('Опубликован', $imageSchema->isPublished())
+                        ->default(true),
+                ])
+                ->vertical()
+                ->creatable(true)
+                ->removable(),
+            Json::make('Видео галереи', 'gallery_video_entries')
+                ->fields([
+                    Hidden::make(column: $videoSchema->id()),
+                    Hidden::make(column: $videoSchema->originalName()),
+                    Hidden::make(column: $videoSchema->posterOriginalName()),
+                    Hidden::make(column: $videoSchema->mime()),
+                    File::make('Видеофайл', $videoSchema->filePath())
+                        ->disk((string) config('autoteka.media.disk'))
+                        ->dir((string) config('autoteka.media.promotion_gallery_video_dir'))
+                        ->allowedExtensions(['mp4', 'webm'])
+                        ->customName(static function (mixed $file): string {
+                            if (! $file instanceof UploadedFile) {
+                                return UploadFileNameGenerator::generateFromName((string) $file);
+                            }
+
+                            $stored = UploadFileNameGenerator::generateFromName($file->getClientOriginalName());
+                            app(UploadOriginalNameStore::class)->register($stored, $file->getClientOriginalName());
+
+                            return $stored;
+                        })
+                        ->removable(),
+                    Image::make('Poster', $videoSchema->posterPath())
+                        ->disk((string) config('autoteka.media.disk'))
+                        ->dir((string) config('autoteka.media.promotion_gallery_video_poster_dir'))
+                        ->allowedExtensions(['jpg', 'jpeg', 'png', 'webp'])
+                        ->customName(static function (mixed $file): string {
+                            if (! $file instanceof UploadedFile) {
+                                return UploadFileNameGenerator::generateFromName((string) $file);
+                            }
+
+                            $stored = UploadFileNameGenerator::generateFromName($file->getClientOriginalName());
+                            app(UploadOriginalNameStore::class)->register($stored, $file->getClientOriginalName());
+
+                            return $stored;
+                        })
+                        ->removable(),
+                    Number::make('Sort', $videoSchema->sort())
+                        ->default(0)
+                        ->min(0)
+                        ->required(),
+                    Switcher::make('Опубликован', $videoSchema->isPublished())
                         ->default(true),
                 ])
                 ->vertical()
@@ -288,6 +340,49 @@ class PromotionResource extends ModelResource
 
             $url = $disk->url($path);
             $alt = basename($path).($image->is_published ? '' : ' (скрыто)');
+            $srcAttr = htmlspecialchars($url, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+            $altAttr = htmlspecialchars($alt, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+            $srcJs = (string) Js::from($url);
+
+            $parts[] =
+                '<div class="zoom-in h-10 w-10 shrink-0 overflow-hidden rounded-md bg-white dark:bg-base-700 cursor-pointer">'
+                .'<img class="h-full w-full object-cover" src="'.$srcAttr.'" alt="'.$altAttr.'" '
+                .'@click.stop="$dispatch(\'img-popup\', { open: true, src: '.$srcJs.', wide: false, auto: false, styles: \'\' })"'
+                .'></div>';
+        }
+
+        if ($parts === []) {
+            return '—';
+        }
+
+        return '<div class="flex flex-wrap gap-2 items-start">'.implode('', $parts).'</div>';
+    }
+
+    private function galleryVideoDetailHtml(Promotion $promotion): string
+    {
+        if ($promotion->galleryVideos->isEmpty()) {
+            return '—';
+        }
+
+        $disk = Storage::disk((string) config('autoteka.media.disk'));
+        $schema = new SchemaPromotionGalleryVideo();
+        $parts = [];
+
+        foreach (
+            $promotion->galleryVideos
+                ->sortBy([
+                    [$schema->sort(), 'asc'],
+                    [$schema->id(), 'asc'],
+                ])
+                ->values() as $video
+        ) {
+            $posterPath = trim((string) $video->poster_path);
+            if ($posterPath === '') {
+                continue;
+            }
+
+            $url = $disk->url($posterPath);
+            $alt = basename((string) $video->file_path).($video->is_published ? '' : ' (скрыто)');
             $srcAttr = htmlspecialchars($url, ENT_QUOTES | ENT_HTML5, 'UTF-8');
             $altAttr = htmlspecialchars($alt, ENT_QUOTES | ENT_HTML5, 'UTF-8');
             $srcJs = (string) Js::from($url);

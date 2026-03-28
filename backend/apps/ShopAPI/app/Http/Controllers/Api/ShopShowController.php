@@ -6,12 +6,14 @@ namespace ShopAPI\Http\Controllers\Api;
 
 use ShopAPI\Http\Controllers\Controller;
 use ShopAPI\Models\Shop;
+use ShopAPI\Support\Gallery\GalleryItemBuilder;
 use Autoteka\SchemaDefinition\SchemaTables\SchemaCategory;
 use Autoteka\SchemaDefinition\SchemaTables\SchemaFeature;
 use Autoteka\SchemaDefinition\SchemaTables\SchemaShop;
 use Autoteka\SchemaDefinition\SchemaTables\SchemaShopCategory;
 use Autoteka\SchemaDefinition\SchemaTables\SchemaShopFeature;
 use Autoteka\SchemaDefinition\SchemaTables\SchemaShopGalleryImage;
+use Autoteka\SchemaDefinition\SchemaTables\SchemaShopGalleryVideo;
 use Autoteka\SchemaDefinition\SchemaTables\SchemaShopSchedule;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Storage;
@@ -25,8 +27,10 @@ final class ShopShowController extends Controller
         $pivotCategory = new SchemaShopCategory();
         $pivotFeature = new SchemaShopFeature();
         $schGallery = new SchemaShopGalleryImage();
+        $schVideo = new SchemaShopGalleryVideo();
         $schSchedule = new SchemaShopSchedule();
         $schShop = new SchemaShop();
+        $galleryItemBuilder = app(GalleryItemBuilder::class);
 
         $shop = Shop::query()
             ->with([
@@ -47,6 +51,12 @@ final class ShopShowController extends Controller
                         ->where($schGallery->isPublished(), true)
                         ->orderBy($schGallery->sort())
                         ->orderBy($schGallery->id());
+                },
+                'galleryVideos' => static function ($query) use ($schVideo): void {
+                    $query
+                        ->where($schVideo->isPublished(), true)
+                        ->orderBy($schVideo->sort())
+                        ->orderBy($schVideo->id());
                 },
                 'schedules' => static function ($query) use ($schSchedule): void {
                     $query
@@ -72,11 +82,7 @@ final class ShopShowController extends Controller
             'longitude' => $shop->longitude,
             'scheduleNote' => $shop->schedule_note ?? '',
             'thumbUrl' => $shop->thumb_path === null ? null : Storage::disk((string) config('autoteka.media.disk'))->url($shop->thumb_path),
-            'galleryImages' => $shop->galleryImages
-                ->pluck($schGallery->filePath())
-                ->map(static fn (string $path): string => Storage::disk((string) config('autoteka.media.disk'))->url($path))
-                ->values()
-                ->all(),
+            'galleryItems' => $galleryItemBuilder->build($shop->galleryImages, $shop->galleryVideos),
             'categoryIds' => $shop->categories->pluck($schCategory->id())->values()->all(),
             'featureIds' => $shop->features->pluck($schFeature->id())->values()->all(),
         ]);

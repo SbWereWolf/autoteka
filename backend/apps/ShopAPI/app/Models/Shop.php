@@ -11,6 +11,7 @@ use Autoteka\SchemaDefinition\Enums\Columns\ShopColumns;
 use Autoteka\SchemaDefinition\Enums\Columns\ShopContactColumns;
 use Autoteka\SchemaDefinition\Enums\Columns\ShopFeatureColumns;
 use Autoteka\SchemaDefinition\Enums\Columns\ShopGalleryImageColumns;
+use Autoteka\SchemaDefinition\Enums\Columns\ShopGalleryVideoColumns;
 use Autoteka\SchemaDefinition\Enums\Columns\ShopScheduleColumns;
 use Autoteka\SchemaDefinition\Enums\TableName;
 use Autoteka\SchemaDefinition\SchemaTables\SchemaShop;
@@ -18,6 +19,7 @@ use Autoteka\SchemaDefinition\SchemaTables\SchemaShopCategory;
 use Autoteka\SchemaDefinition\SchemaTables\SchemaShopContact;
 use Autoteka\SchemaDefinition\SchemaTables\SchemaShopFeature;
 use Autoteka\SchemaDefinition\SchemaTables\SchemaShopGalleryImage;
+use Autoteka\SchemaDefinition\SchemaTables\SchemaShopGalleryVideo;
 use Autoteka\SchemaDefinition\SchemaTables\SchemaShopSchedule;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -49,6 +51,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property \Illuminate\Database\Eloquent\Collection<int, Feature> $features
  * @property \Illuminate\Database\Eloquent\Collection<int, ShopContact> $contacts
  * @property \Illuminate\Database\Eloquent\Collection<int, ShopGalleryImage> $galleryImages
+ * @property \Illuminate\Database\Eloquent\Collection<int, ShopGalleryVideo> $galleryVideos
  * @property \Illuminate\Database\Eloquent\Collection<int, Promotion> $promotions
  * @property \Illuminate\Database\Eloquent\Collection<int, ShopSchedule> $schedules
  * @property City|null $city
@@ -150,6 +153,13 @@ class Shop extends Model
         return $this->hasMany(ShopGalleryImage::class, $sch->shopId());
     }
 
+    public function galleryVideos(): HasMany
+    {
+        $schema = new SchemaShopGalleryVideo();
+
+        return $this->hasMany(ShopGalleryVideo::class, $schema->shopId());
+    }
+
     public function schedules(): HasMany
     {
         $sch = new SchemaShopSchedule();
@@ -221,6 +231,25 @@ class Shop extends Model
                     ShopGalleryImageColumns::FILE_PATH->value => $image->file_path,
                     ShopGalleryImageColumns::SORT->value => $image->sort,
                     ShopGalleryImageColumns::IS_PUBLISHED->value => $image->is_published,
+                ])
+                ->values()
+                ->all()
+            : [];
+    }
+
+    public function getGalleryVideoEntriesAttribute(): array
+    {
+        $schema = new SchemaShopGalleryVideo();
+
+        return $this->relationLoaded('galleryVideos')
+            ? $this->galleryVideos
+                ->map(fn (ShopGalleryVideo $video): array => [
+                    ShopGalleryVideoColumns::ID->value => $video->getKey(),
+                    ShopGalleryVideoColumns::FILE_PATH->value => $video->file_path,
+                    ShopGalleryVideoColumns::POSTER_PATH->value => $video->poster_path,
+                    ShopGalleryVideoColumns::MIME->value => $video->mime,
+                    ShopGalleryVideoColumns::SORT->value => $video->sort,
+                    ShopGalleryVideoColumns::IS_PUBLISHED->value => $video->is_published,
                 ])
                 ->values()
                 ->all()

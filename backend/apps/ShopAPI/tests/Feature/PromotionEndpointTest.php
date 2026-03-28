@@ -87,7 +87,7 @@ final class PromotionEndpointTest extends TestCase
                     'description' => 'Visible promo',
                     'startDate' => '2026-03-25',
                     'endDate' => '2026-03-27',
-                    'galleryImages' => [],
+                    'galleryItems' => [],
                 ],
             ]);
     }
@@ -114,13 +114,13 @@ final class PromotionEndpointTest extends TestCase
             'is_published' => true,
         ]);
 
-        $this->insertPromotionImage($firstPromotionId, [
+        $firstEarlyImageId = $this->insertPromotionImage($firstPromotionId, [
             'file_path' => 'promotions/early/b.webp',
             'original_name' => 'b-original.webp',
             'sort' => 2,
             'is_published' => true,
         ]);
-        $this->insertPromotionImage($firstPromotionId, [
+        $secondEarlyImageId = $this->insertPromotionImage($firstPromotionId, [
             'file_path' => 'promotions/early/a.webp',
             'original_name' => 'a-original.webp',
             'sort' => 1,
@@ -133,13 +133,13 @@ final class PromotionEndpointTest extends TestCase
             'is_published' => false,
         ]);
 
-        $this->insertPromotionImage($secondPromotionId, [
+        $firstLateImageId = $this->insertPromotionImage($secondPromotionId, [
             'file_path' => 'promotions/late/c.webp',
             'original_name' => 'c-original.webp',
             'sort' => 1,
             'is_published' => true,
         ]);
-        $this->insertPromotionImage($secondPromotionId, [
+        $secondLateImageId = $this->insertPromotionImage($secondPromotionId, [
             'file_path' => 'promotions/late/d.webp',
             'original_name' => 'd-original.webp',
             'sort' => 1,
@@ -156,9 +156,19 @@ final class PromotionEndpointTest extends TestCase
                     'description' => 'Earlier promo',
                     'startDate' => '2026-03-25',
                     'endDate' => '2026-03-27',
-                    'galleryImages' => [
-                        Storage::disk((string) config('autoteka.media.disk', 'public'))->url('promotions/early/a.webp'),
-                        Storage::disk((string) config('autoteka.media.disk', 'public'))->url('promotions/early/b.webp'),
+                    'galleryItems' => [
+                        [
+                            'id' => $secondEarlyImageId,
+                            'type' => 'image',
+                            'src' => Storage::disk((string) config('autoteka.media.disk', 'public'))->url('promotions/early/a.webp'),
+                            'sort' => 1,
+                        ],
+                        [
+                            'id' => $firstEarlyImageId,
+                            'type' => 'image',
+                            'src' => Storage::disk((string) config('autoteka.media.disk', 'public'))->url('promotions/early/b.webp'),
+                            'sort' => 2,
+                        ],
                     ],
                 ],
                 [
@@ -168,9 +178,88 @@ final class PromotionEndpointTest extends TestCase
                     'description' => 'Later promo',
                     'startDate' => '2026-03-26',
                     'endDate' => '2026-03-28',
-                    'galleryImages' => [
-                        Storage::disk((string) config('autoteka.media.disk', 'public'))->url('promotions/late/c.webp'),
-                        Storage::disk((string) config('autoteka.media.disk', 'public'))->url('promotions/late/d.webp'),
+                    'galleryItems' => [
+                        [
+                            'id' => $firstLateImageId,
+                            'type' => 'image',
+                            'src' => Storage::disk((string) config('autoteka.media.disk', 'public'))->url('promotions/late/c.webp'),
+                            'sort' => 1,
+                        ],
+                        [
+                            'id' => $secondLateImageId,
+                            'type' => 'image',
+                            'src' => Storage::disk((string) config('autoteka.media.disk', 'public'))->url('promotions/late/d.webp'),
+                            'sort' => 1,
+                        ],
+                    ],
+                ],
+            ]);
+    }
+
+    public function test_promotion_endpoint_returns_mixed_gallery_items_in_stable_sort_order(): void
+    {
+        Storage::fake((string) config('autoteka.media.disk', 'public'));
+        $shop = $this->createPublishedShop('shop-mixed-promotion');
+
+        $promotionId = $this->insertPromotion($shop->getKey(), [
+            'code' => 'shop-mixed-promotion-video',
+            'title' => 'Mixed promotion',
+            'description' => 'Mixed promo gallery',
+            'start_date' => '2026-03-25',
+            'end_date' => '2026-03-27',
+            'is_published' => true,
+        ]);
+
+        $imageId = $this->insertPromotionImage($promotionId, [
+            'file_path' => 'promotions/mixed/image.webp',
+            'original_name' => 'image-original.webp',
+            'sort' => 5,
+            'is_published' => true,
+        ]);
+        $videoId = $this->insertPromotionVideo($promotionId, [
+            'file_path' => 'promotions/mixed/video.mp4',
+            'original_name' => 'video-original.mp4',
+            'poster_path' => 'promotions/mixed/video-poster.webp',
+            'poster_original_name' => 'video-poster.webp',
+            'mime' => 'video/mp4',
+            'sort' => 5,
+            'is_published' => true,
+        ]);
+        $this->insertPromotionVideo($promotionId, [
+            'file_path' => 'promotions/mixed/hidden.mp4',
+            'original_name' => 'hidden-original.mp4',
+            'poster_path' => 'promotions/mixed/hidden-poster.webp',
+            'poster_original_name' => 'hidden-poster.webp',
+            'mime' => 'video/mp4',
+            'sort' => 1,
+            'is_published' => false,
+        ]);
+
+        $this->getJson("/api/v1/shop/{$shop->code}/promotion")
+            ->assertOk()
+            ->assertExactJson([
+                [
+                    'id' => $promotionId,
+                    'code' => 'shop-mixed-promotion-video',
+                    'title' => 'Mixed promotion',
+                    'description' => 'Mixed promo gallery',
+                    'startDate' => '2026-03-25',
+                    'endDate' => '2026-03-27',
+                    'galleryItems' => [
+                        [
+                            'id' => $imageId,
+                            'type' => 'image',
+                            'src' => Storage::disk((string) config('autoteka.media.disk', 'public'))->url('promotions/mixed/image.webp'),
+                            'sort' => 5,
+                        ],
+                        [
+                            'id' => $videoId,
+                            'type' => 'video',
+                            'src' => Storage::disk((string) config('autoteka.media.disk', 'public'))->url('promotions/mixed/video.mp4'),
+                            'poster' => Storage::disk((string) config('autoteka.media.disk', 'public'))->url('promotions/mixed/video-poster.webp'),
+                            'mime' => 'video/mp4',
+                            'sort' => 5,
+                        ],
                     ],
                 ],
             ]);
@@ -198,7 +287,7 @@ final class PromotionEndpointTest extends TestCase
                     'description' => 'No images here',
                     'startDate' => '2026-03-25',
                     'endDate' => '2026-03-27',
-                    'galleryImages' => [],
+                    'galleryItems' => [],
                 ],
             ]);
     }
@@ -269,6 +358,33 @@ final class PromotionEndpointTest extends TestCase
             'promotion_id' => $promotionId,
             'file_path' => $data['file_path'],
             'original_name' => $data['original_name'],
+            'sort' => $data['sort'],
+            'is_published' => $data['is_published'],
+            'created_at' => CarbonImmutable::now('UTC')->toDateTimeString(),
+            'updated_at' => CarbonImmutable::now('UTC')->toDateTimeString(),
+        ]);
+    }
+
+    /**
+     * @param  array{
+     *     file_path: string,
+     *     original_name: string,
+     *     poster_path: string,
+     *     poster_original_name: string,
+     *     mime: string,
+     *     sort: int,
+     *     is_published: bool,
+     * }  $data
+     */
+    private function insertPromotionVideo(int $promotionId, array $data): int
+    {
+        return (int) DB::table('promotion_gallery_video')->insertGetId([
+            'promotion_id' => $promotionId,
+            'file_path' => $data['file_path'],
+            'original_name' => $data['original_name'],
+            'poster_path' => $data['poster_path'],
+            'poster_original_name' => $data['poster_original_name'],
+            'mime' => $data['mime'],
             'sort' => $data['sort'],
             'is_published' => $data['is_published'],
             'created_at' => CarbonImmutable::now('UTC')->toDateTimeString(),

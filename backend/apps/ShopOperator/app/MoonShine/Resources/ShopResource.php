@@ -11,6 +11,7 @@ use ShopOperator\Models\Feature;
 use ShopOperator\Models\Shop;
 use ShopOperator\Models\ShopContact;
 use ShopOperator\Models\ShopGalleryImage;
+use ShopOperator\Models\ShopGalleryVideo;
 use ShopOperator\Models\ShopSchedule;
 use ShopOperator\MoonShine\Handlers\SaveShopResourceHandler;
 use ShopOperator\MoonShine\Pages\ShopDetailPage;
@@ -27,6 +28,7 @@ use Autoteka\SchemaDefinition\SchemaTables\SchemaShopCategory;
 use Autoteka\SchemaDefinition\SchemaTables\SchemaShopContact;
 use Autoteka\SchemaDefinition\SchemaTables\SchemaShopFeature;
 use Autoteka\SchemaDefinition\SchemaTables\SchemaShopGalleryImage;
+use Autoteka\SchemaDefinition\SchemaTables\SchemaShopGalleryVideo;
 use Autoteka\SchemaDefinition\SchemaTables\SchemaShopSchedule;
 use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Http\UploadedFile;
@@ -45,6 +47,7 @@ use MoonShine\Support\ListOf;
 use MoonShine\UI\Fields\Hidden;
 use MoonShine\UI\Fields\ID;
 use MoonShine\UI\Fields\Image;
+use MoonShine\UI\Fields\File;
 use MoonShine\UI\Fields\Json;
 use MoonShine\UI\Fields\Number;
 use MoonShine\UI\Fields\Preview;
@@ -69,6 +72,7 @@ class ShopResource extends ModelResource
         'features',
         'contacts.contactType',
         'galleryImages',
+        'galleryVideos',
         'schedules',
     ];
 
@@ -169,6 +173,7 @@ class ShopResource extends ModelResource
                     ->join('; ');
             }),
             Preview::make('Галерея', formatted: fn (Shop $shop): string => $this->galleryDetailHtml($shop)),
+            Preview::make('Видео галереи', formatted: fn (Shop $shop): string => $this->galleryVideoDetailHtml($shop)),
             Preview::make('Расписание по дням', formatted: function (Shop $shop): string {
                 if ($shop->schedules->isEmpty()) {
                     return '—';
@@ -220,6 +225,7 @@ class ShopResource extends ModelResource
         $pFeat = new SchemaShopFeature();
         $c = new SchemaShopContact();
         $g = new SchemaShopGalleryImage();
+        $v = new SchemaShopGalleryVideo();
         $sch = new SchemaShopSchedule();
 
         return [
@@ -347,6 +353,54 @@ class ShopResource extends ModelResource
                         ->min(0)
                         ->required(),
                     Switcher::make('Опубликован', $g->isPublished())
+                        ->default(true),
+                ])
+                ->vertical()
+                ->creatable(true)
+                ->removable(),
+            ),
+            $this->leftAlignedRepeater(
+                Json::make('Видео галереи', 'gallery_video_entries')
+                    ->fields([
+                    Hidden::make(column: $v->id()),
+                    Hidden::make(column: $v->originalName()),
+                    Hidden::make(column: $v->posterOriginalName()),
+                    Hidden::make(column: $v->mime()),
+                    File::make('Видеофайл', $v->filePath())
+                        ->disk((string) config('autoteka.media.disk'))
+                        ->dir((string) config('autoteka.media.shop_gallery_video_dir'))
+                        ->allowedExtensions(['mp4', 'webm'])
+                        ->customName(static function (mixed $file): string {
+                            if (! $file instanceof UploadedFile) {
+                                return UploadFileNameGenerator::generateFromName((string) $file);
+                            }
+
+                            $stored = UploadFileNameGenerator::generateFromName($file->getClientOriginalName());
+                            app(UploadOriginalNameStore::class)->register($stored, $file->getClientOriginalName());
+
+                            return $stored;
+                        })
+                        ->removable(),
+                    Image::make('Poster', $v->posterPath())
+                        ->disk((string) config('autoteka.media.disk'))
+                        ->dir((string) config('autoteka.media.shop_gallery_video_poster_dir'))
+                        ->allowedExtensions(['jpg', 'jpeg', 'png', 'webp'])
+                        ->customName(static function (mixed $file): string {
+                            if (! $file instanceof UploadedFile) {
+                                return UploadFileNameGenerator::generateFromName((string) $file);
+                            }
+
+                            $stored = UploadFileNameGenerator::generateFromName($file->getClientOriginalName());
+                            app(UploadOriginalNameStore::class)->register($stored, $file->getClientOriginalName());
+
+                            return $stored;
+                        })
+                        ->removable(),
+                    Number::make('Sort', $v->sort())
+                        ->default($this->nestedSortDefault(ShopGalleryVideo::class))
+                        ->min(0)
+                        ->required(),
+                    Switcher::make('Опубликован', $v->isPublished())
                         ->default(true),
                 ])
                 ->vertical()
@@ -487,8 +541,45 @@ class ShopResource extends ModelResource
         return '<div class="flex flex-wrap gap-2 items-start">'.implode('', $parts).'</div>';
     }
 
+    private function galleryVideoDetailHtml(Shop $shop): string
+    {
+        if ($shop->galleryVideos->isEmpty()) {
+            return '—';
+        }
+
+        $disk = Storage::disk((string) config('autoteka.media.disk'));
+        $schema = new SchemaShopGalleryVideo();
+        $parts = [];
+
+        foreach ($shop->galleryVideos->sortBy($schema->sort())->values() as $video) {
+            $posterPath = trim((string) $video->getAttribute($schema->posterPath()));
+            if ($posterPath === '') {
+                continue;
+            }
+
+            $url = $disk->url($posterPath);
+            $alt = basename((string) $video->getAttribute($schema->filePath()))
+                .($video->is_published ? '' : ' (скрыто)');
+            $srcAttr = htmlspecialchars($url, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+            $altAttr = htmlspecialchars($alt, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+            $srcJs = (string) Js::from($url);
+
+            $parts[] =
+                '<div class="zoom-in h-10 w-10 shrink-0 overflow-hidden rounded-md bg-white dark:bg-base-700 cursor-pointer">'
+                .'<img class="h-full w-full object-cover" src="'.$srcAttr.'" alt="'.$altAttr.'" '
+                .'@click.stop="$dispatch(\'img-popup\', { open: true, src: '.$srcJs.', wide: false, auto: false, styles: \'\' })"'
+                .'></div>';
+        }
+
+        if ($parts === []) {
+            return '—';
+        }
+
+        return '<div class="flex flex-wrap gap-2 items-start">'.implode('', $parts).'</div>';
+    }
+
     /**
-     * @param  class-string<ShopContact|ShopGalleryImage|ShopSchedule>  $modelClass
+     * @param  class-string<ShopContact|ShopGalleryImage|ShopGalleryVideo|ShopSchedule>  $modelClass
      */
     private function nestedSortDefault(string $modelClass): int
     {
@@ -496,6 +587,7 @@ class ShopResource extends ModelResource
         $sortColumn = match ($modelClass) {
             ShopContact::class => (new SchemaShopContact())->sort(),
             ShopGalleryImage::class => (new SchemaShopGalleryImage())->sort(),
+            ShopGalleryVideo::class => (new SchemaShopGalleryVideo())->sort(),
             ShopSchedule::class => (new SchemaShopSchedule())->sort(),
             default => (new SchemaShop())->sort(),
         };

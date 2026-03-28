@@ -8,6 +8,7 @@ use ShopAPI\Models\Category;
 use ShopAPI\Models\City;
 use ShopAPI\Models\ContactType;
 use ShopAPI\Models\Feature;
+use Illuminate\Support\Facades\DB;
 use ShopAPI\Models\Shop;
 use ShopAPI\Models\ShopContact;
 use ShopAPI\Models\ShopGalleryImage;
@@ -145,10 +146,82 @@ final class ApiEndpointsCoverageTest extends TestCase
         $response->assertJsonPath('longitude', 82.9235);
         $response->assertJsonPath('categoryIds', [$data['category']->getKey()]);
         $response->assertJsonPath('featureIds', [$data['feature']->getKey()]);
-        $response->assertJsonPath('galleryImages.0', Storage::disk((string) config('autoteka.media.disk', 'public'))->url('shops/gallery/a.webp'));
+        $response->assertJsonPath('galleryItems.0.type', 'image');
+        $response->assertJsonPath('galleryItems.0.src', Storage::disk((string) config('autoteka.media.disk', 'public'))->url('shops/gallery/a.webp'));
         $response->assertJsonPath('thumbUrl', Storage::disk((string) config('autoteka.media.disk', 'public'))->url('shops/thumbs/a.webp'));
         $response->assertJsonPath('scheduleNote', 'Без выходных');
         $response->assertJsonMissingPath('workHours');
+    }
+
+    public function test_shop_show_returns_mixed_gallery_items_in_stable_sort_order(): void
+    {
+        Storage::fake((string) config('autoteka.media.disk', 'public'));
+
+        $city = City::query()->create([
+            'code' => 'city-mixed-gallery',
+            'title' => 'City Mixed Gallery',
+            'sort' => 1,
+            'is_published' => true,
+        ]);
+        $shop = Shop::query()->create([
+            'code' => 'shop-mixed-gallery',
+            'title' => 'Shop Mixed Gallery',
+            'sort' => 1,
+            'city_id' => $city->getKey(),
+            'description' => 'Mixed gallery shop',
+            'site_url' => '',
+            'slogan' => null,
+            'latitude' => null,
+            'longitude' => null,
+            'thumb_path' => null,
+            'schedule_note' => null,
+            'is_published' => true,
+        ]);
+
+        $imageId = ShopGalleryImage::query()->create([
+            'shop_id' => $shop->getKey(),
+            'file_path' => 'shops/gallery/image.webp',
+            'sort' => 10,
+            'is_published' => true,
+        ])->getKey();
+
+        $videoId = (int) DB::table('shop_gallery_video')->insertGetId([
+            'shop_id' => $shop->getKey(),
+            'file_path' => 'shops/gallery-video/video.mp4',
+            'original_name' => 'video.mp4',
+            'poster_path' => 'shops/gallery-video-poster/video.webp',
+            'poster_original_name' => 'video.webp',
+            'mime' => 'video/mp4',
+            'sort' => 10,
+            'is_published' => 1,
+            'created_at' => now('UTC'),
+            'updated_at' => now('UTC'),
+        ]);
+
+        DB::table('shop_gallery_video')->insert([
+            'shop_id' => $shop->getKey(),
+            'file_path' => 'shops/gallery-video/hidden.mp4',
+            'original_name' => 'hidden.mp4',
+            'poster_path' => 'shops/gallery-video-poster/hidden.webp',
+            'poster_original_name' => 'hidden.webp',
+            'mime' => 'video/mp4',
+            'sort' => 10,
+            'is_published' => 0,
+            'created_at' => now('UTC'),
+            'updated_at' => now('UTC'),
+        ]);
+
+        $response = $this->getJson('/api/v1/shop/shop-mixed-gallery');
+        $response->assertOk();
+        $response->assertJsonCount(2, 'galleryItems');
+        $response->assertJsonPath('galleryItems.0.type', 'image');
+        $response->assertJsonPath('galleryItems.0.id', $imageId);
+        $response->assertJsonPath('galleryItems.1.type', 'video');
+        $response->assertJsonPath('galleryItems.1.id', $videoId);
+        $response->assertJsonPath(
+            'galleryItems.1.poster',
+            Storage::disk((string) config('autoteka.media.disk', 'public'))->url('shops/gallery-video-poster/video.webp'),
+        );
     }
 
     public function test_shop_show_hides_categories_and_features_when_pivot_is_unpublished(): void
@@ -265,7 +338,7 @@ final class ApiEndpointsCoverageTest extends TestCase
         $response->assertOk();
 
         $thumbUrl = (string) $response->json('thumbUrl');
-        $galleryUrl = (string) $response->json('galleryImages.0');
+        $galleryUrl = (string) $response->json('galleryItems.0.src');
 
         self::assertMatchesRegularExpression(
             '#/shops/thumbs/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\.webp$#',

@@ -7,6 +7,7 @@ namespace Tests\Feature;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 use ShopOperator\Models\Promotion;
 use ShopOperator\Models\City;
 use ShopOperator\Models\Shop;
@@ -228,6 +229,155 @@ final class SavePromotionResourceHandlerTest extends TestCase
         ]);
 
         self::assertSame('promo-suffix-shop-summer-sale-6', $promotion->code);
+    }
+
+    public function test_save_handler_persists_promotion_gallery_video_rows_with_required_poster(): void
+    {
+        $shop = $this->createShop('promo-video-shop', 'Promo Video Shop');
+        $handler = app(SavePromotionResourceHandler::class);
+
+        $promotion = $handler($this->newPromotionModel(), [
+            'shop_id' => $shop->getKey(),
+            'code' => '',
+            'title' => 'Video Promo',
+            'description' => 'Promo with video',
+            'start_date' => '2026-03-20',
+            'end_date' => '2026-03-31',
+            'is_published' => true,
+            'gallery_entries' => [],
+            'gallery_video_entries' => [
+                [
+                    'file_path' => 'promotion/gallery-video/video-1.webm',
+                    'poster_path' => 'promotion/gallery-video-poster/video-1.webp',
+                    'original_name' => 'video-1.webm',
+                    'poster_original_name' => 'video-1.webp',
+                    'mime' => 'video/webm',
+                    'sort' => 1,
+                    'is_published' => true,
+                ],
+            ],
+        ]);
+
+        self::assertNotNull($promotion->getKey());
+        $this->assertDatabaseHas('promotion_gallery_video', [
+            'promotion_id' => $promotion->getKey(),
+            'file_path' => 'promotion/gallery-video/video-1.webm',
+            'poster_path' => 'promotion/gallery-video-poster/video-1.webp',
+            'original_name' => 'video-1.webm',
+            'poster_original_name' => 'video-1.webp',
+            'mime' => 'video/webm',
+            'sort' => 1,
+            'is_published' => 1,
+        ]);
+    }
+
+    public function test_save_handler_rejects_promotion_gallery_video_rows_without_poster(): void
+    {
+        $shop = $this->createShop('promo-video-poster-shop', 'Promo Video Poster Shop');
+        $handler = app(SavePromotionResourceHandler::class);
+
+        try {
+            $handler($this->newPromotionModel(), [
+                'shop_id' => $shop->getKey(),
+                'code' => '',
+                'title' => 'Video Promo',
+                'description' => 'Promo without poster',
+                'start_date' => '2026-03-20',
+                'end_date' => '2026-03-31',
+                'is_published' => true,
+                'gallery_entries' => [],
+                'gallery_video_entries' => [
+                    [
+                        'file_path' => 'promotion/gallery-video/video-2.webm',
+                        'original_name' => 'video-2.webm',
+                        'mime' => 'video/webm',
+                        'sort' => 1,
+                        'is_published' => true,
+                    ],
+                ],
+            ]);
+
+            self::fail('Expected ValidationException for missing poster on promotion video gallery row.');
+        } catch (ValidationException $exception) {
+            self::assertArrayHasKey('gallery_video_entries', $exception->errors());
+        }
+    }
+
+    public function test_save_handler_replaces_promotion_gallery_video_files_and_cleans_up_removed_rows(): void
+    {
+        Storage::fake((string) config('autoteka.media.disk', 'public'));
+        $disk = Storage::disk((string) config('autoteka.media.disk', 'public'));
+
+        $shop = $this->createShop('promo-video-cleanup-shop', 'Promo Video Cleanup Shop');
+        $handler = app(SavePromotionResourceHandler::class);
+
+        $oldVideoPath = 'promotion/gallery-video/old.mp4';
+        $oldPosterPath = 'promotion/gallery-video-poster/old.webp';
+        $updatedVideoPath = 'promotion/gallery-video/new.mp4';
+        $updatedPosterPath = 'promotion/gallery-video-poster/new.webp';
+        $disk->put($oldVideoPath, 'old-video');
+        $disk->put($oldPosterPath, 'old-poster');
+        $disk->put($updatedVideoPath, 'new-video');
+        $disk->put($updatedPosterPath, 'new-poster');
+
+        $promotion = $handler($this->newPromotionModel(), [
+            'shop_id' => $shop->getKey(),
+            'code' => '',
+            'title' => 'Video Promo',
+            'description' => 'Promo with video',
+            'start_date' => '2026-03-20',
+            'end_date' => '2026-03-31',
+            'is_published' => true,
+            'gallery_entries' => [],
+            'gallery_video_entries' => [
+                [
+                    'file_path' => $oldVideoPath,
+                    'poster_path' => $oldPosterPath,
+                    'original_name' => 'old.mp4',
+                    'poster_original_name' => 'old.webp',
+                    'mime' => 'video/mp4',
+                    'sort' => 1,
+                    'is_published' => true,
+                ],
+            ],
+        ]);
+
+        $videoId = (int) DB::table('promotion_gallery_video')
+            ->where('promotion_id', $promotion->getKey())
+            ->where('file_path', $oldVideoPath)
+            ->value('id');
+
+        $handler($promotion, [
+            'shop_id' => $shop->getKey(),
+            'code' => '',
+            'title' => 'Video Promo',
+            'description' => 'Promo with video',
+            'start_date' => '2026-03-20',
+            'end_date' => '2026-03-31',
+            'is_published' => true,
+            'gallery_entries' => [],
+            'gallery_video_entries' => [
+                [
+                    'id' => $videoId,
+                    'file_path' => $updatedVideoPath,
+                    'poster_path' => $updatedPosterPath,
+                    'original_name' => 'new.mp4',
+                    'poster_original_name' => 'new.webp',
+                    'mime' => 'video/mp4',
+                    'sort' => 1,
+                    'is_published' => true,
+                ],
+            ],
+        ]);
+
+        $this->assertDatabaseHas('promotion_gallery_video', [
+            'id' => $videoId,
+            'promotion_id' => $promotion->getKey(),
+            'file_path' => $updatedVideoPath,
+            'poster_path' => $updatedPosterPath,
+        ]);
+        $disk->assertMissing($oldVideoPath);
+        $disk->assertMissing($oldPosterPath);
     }
 
     private function createShop(string $code, string $title): Shop

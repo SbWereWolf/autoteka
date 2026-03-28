@@ -325,6 +325,230 @@ final class SaveShopResourceHandlerTest extends TestCase
         ]);
     }
 
+    public function test_save_handler_persists_shop_gallery_video_rows_with_required_poster(): void
+    {
+        $city = City::query()->create([
+            'code' => 'video-city',
+            'title' => 'Video City',
+            'sort' => 0,
+            'is_published' => true,
+        ]);
+
+        $shop = Shop::query()->create([
+            'code' => 'video-shop',
+            'title' => 'Video Shop',
+            'sort' => 0,
+            'city_id' => $city->getKey(),
+            'description' => '',
+            'site_url' => '',
+            'slogan' => null,
+            'latitude' => null,
+            'longitude' => null,
+            'schedule_note' => null,
+            'thumb_path' => null,
+            'is_published' => true,
+        ]);
+
+        $handler = app(SaveShopResourceHandler::class);
+
+        $handler($shop, [
+            'code' => 'video-shop',
+            'title' => 'Video Shop',
+            'sort' => 1,
+            'city_id' => $city->getKey(),
+            'description' => '',
+            'site_url' => '',
+            'slogan' => null,
+            'latitude' => null,
+            'longitude' => null,
+            'schedule_note' => '',
+            'thumb_path' => null,
+            'is_published' => true,
+            'category_links' => [],
+            'feature_links' => [],
+            'contact_entries' => [],
+            'gallery_entries' => [],
+            'gallery_video_entries' => [
+                [
+                    'file_path' => 'shops/gallery-video/video-1.mp4',
+                    'poster_path' => 'shops/gallery-video-poster/video-1.webp',
+                    'original_name' => 'video-1.mp4',
+                    'poster_original_name' => 'video-1.webp',
+                    'mime' => 'video/mp4',
+                    'sort' => 1,
+                    'is_published' => true,
+                ],
+            ],
+            'schedule_entries' => [],
+        ]);
+
+        $this->assertDatabaseHas('shop_gallery_video', [
+            'shop_id' => $shop->getKey(),
+            'file_path' => 'shops/gallery-video/video-1.mp4',
+            'poster_path' => 'shops/gallery-video-poster/video-1.webp',
+            'original_name' => 'video-1.mp4',
+            'poster_original_name' => 'video-1.webp',
+            'mime' => 'video/mp4',
+            'sort' => 1,
+            'is_published' => 1,
+        ]);
+    }
+
+    public function test_save_handler_rejects_shop_gallery_video_rows_without_poster(): void
+    {
+        $city = City::query()->create([
+            'code' => 'video-poster-city',
+            'title' => 'Video Poster City',
+            'sort' => 0,
+            'is_published' => true,
+        ]);
+
+        $shop = Shop::query()->create([
+            'code' => 'video-poster-shop',
+            'title' => 'Video Poster Shop',
+            'sort' => 0,
+            'city_id' => $city->getKey(),
+            'description' => '',
+            'site_url' => '',
+            'slogan' => null,
+            'latitude' => null,
+            'longitude' => null,
+            'schedule_note' => null,
+            'thumb_path' => null,
+            'is_published' => true,
+        ]);
+
+        $handler = app(SaveShopResourceHandler::class);
+
+        try {
+            $handler($shop, [
+                'code' => 'video-poster-shop',
+                'title' => 'Video Poster Shop',
+                'sort' => 1,
+                'city_id' => $city->getKey(),
+                'description' => '',
+                'site_url' => '',
+                'slogan' => null,
+                'latitude' => null,
+                'longitude' => null,
+                'schedule_note' => '',
+                'thumb_path' => null,
+                'is_published' => true,
+                'category_links' => [],
+                'feature_links' => [],
+                'contact_entries' => [],
+                'gallery_entries' => [],
+                'gallery_video_entries' => [
+                    [
+                        'file_path' => 'shops/gallery-video/video-2.mp4',
+                        'original_name' => 'video-2.mp4',
+                        'mime' => 'video/mp4',
+                        'sort' => 1,
+                        'is_published' => true,
+                    ],
+                ],
+                'schedule_entries' => [],
+            ]);
+
+            self::fail('Expected ValidationException for missing poster on shop video gallery row.');
+        } catch (ValidationException $exception) {
+            self::assertArrayHasKey('gallery_video_entries', $exception->errors());
+        }
+    }
+
+    public function test_save_handler_replaces_shop_gallery_video_files_and_cleans_up_removed_rows(): void
+    {
+        Storage::fake((string) config('autoteka.media.disk', 'public'));
+        $disk = Storage::disk((string) config('autoteka.media.disk', 'public'));
+
+        $city = City::query()->create([
+            'code' => 'video-cleanup-city',
+            'title' => 'Video Cleanup City',
+            'sort' => 0,
+            'is_published' => true,
+        ]);
+
+        $shop = Shop::query()->create([
+            'code' => 'video-cleanup-shop',
+            'title' => 'Video Cleanup Shop',
+            'sort' => 0,
+            'city_id' => $city->getKey(),
+            'description' => '',
+            'site_url' => '',
+            'slogan' => null,
+            'latitude' => null,
+            'longitude' => null,
+            'schedule_note' => null,
+            'thumb_path' => null,
+            'is_published' => true,
+        ]);
+
+        $oldVideoPath = 'shops/gallery-video/old.mp4';
+        $oldPosterPath = 'shops/gallery-video-poster/old.webp';
+        $updatedVideoPath = 'shops/gallery-video/new.mp4';
+        $updatedPosterPath = 'shops/gallery-video-poster/new.webp';
+        $disk->put($oldVideoPath, 'old-video');
+        $disk->put($oldPosterPath, 'old-poster');
+        $disk->put($updatedVideoPath, 'new-video');
+        $disk->put($updatedPosterPath, 'new-poster');
+
+        $videoId = DB::table('shop_gallery_video')->insertGetId([
+            'shop_id' => $shop->getKey(),
+            'file_path' => $oldVideoPath,
+            'original_name' => 'old.mp4',
+            'poster_path' => $oldPosterPath,
+            'poster_original_name' => 'old.webp',
+            'mime' => 'video/mp4',
+            'sort' => 1,
+            'is_published' => 1,
+            'created_at' => now('UTC'),
+            'updated_at' => now('UTC'),
+        ]);
+
+        $handler = app(SaveShopResourceHandler::class);
+
+        $handler($shop, [
+            'code' => 'video-cleanup-shop',
+            'title' => 'Video Cleanup Shop',
+            'sort' => 1,
+            'city_id' => $city->getKey(),
+            'description' => '',
+            'site_url' => '',
+            'slogan' => null,
+            'latitude' => null,
+            'longitude' => null,
+            'schedule_note' => '',
+            'thumb_path' => null,
+            'is_published' => true,
+            'category_links' => [],
+            'feature_links' => [],
+            'contact_entries' => [],
+            'gallery_entries' => [],
+            'gallery_video_entries' => [
+                [
+                    'id' => $videoId,
+                    'file_path' => $updatedVideoPath,
+                    'poster_path' => $updatedPosterPath,
+                    'original_name' => 'new.mp4',
+                    'poster_original_name' => 'new.webp',
+                    'mime' => 'video/mp4',
+                    'sort' => 1,
+                    'is_published' => true,
+                ],
+            ],
+            'schedule_entries' => [],
+        ]);
+
+        $this->assertDatabaseHas('shop_gallery_video', [
+            'id' => $videoId,
+            'shop_id' => $shop->getKey(),
+            'file_path' => $updatedVideoPath,
+            'poster_path' => $updatedPosterPath,
+        ]);
+        $disk->assertMissing($oldVideoPath);
+        $disk->assertMissing($oldPosterPath);
+    }
+
     public function test_save_handler_allows_multiple_contacts_with_same_type_and_preserves_order(): void
     {
         $city = City::query()->create([

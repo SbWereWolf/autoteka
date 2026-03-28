@@ -60,6 +60,39 @@ final class PromotionResourceDefinitionTest extends TestCase
         self::assertArrayNotHasKey('Магазин (название)', $indexedFields);
     }
 
+    public function test_promotion_resource_form_exposes_separate_video_gallery_block(): void
+    {
+        $resource = app(PromotionResource::class);
+        $fields = $this->invokeResourceMethod($resource, 'formFields');
+        $indexedFields = $this->indexFieldsByColumn($fields);
+
+        self::assertArrayHasKey('gallery_video_entries', $indexedFields);
+
+        $videoFields = $this->indexFieldsByColumn(
+            method_exists($indexedFields['gallery_video_entries'], 'getFields')
+                ? $indexedFields['gallery_video_entries']->getFields()
+                : [],
+        );
+
+        self::assertArrayHasKey('file_path', $videoFields);
+        self::assertArrayHasKey('poster_path', $videoFields);
+        self::assertArrayHasKey('poster_original_name', $videoFields);
+        self::assertArrayHasKey('mime', $videoFields);
+        self::assertArrayHasKey('sort', $videoFields);
+        self::assertArrayHasKey('is_published', $videoFields);
+
+        $videoFieldLabels = $this->indexFieldsByLabel(
+            method_exists($indexedFields['gallery_video_entries'], 'getFields')
+                ? $indexedFields['gallery_video_entries']->getFields()
+                : [],
+        );
+
+        self::assertArrayHasKey('Видеофайл', $videoFieldLabels);
+        self::assertArrayHasKey('Poster', $videoFieldLabels);
+        self::assertArrayHasKey('Sort', $videoFieldLabels);
+        self::assertArrayHasKey('Опубликован', $videoFieldLabels);
+    }
+
     public function test_shop_detail_fields_no_longer_expose_promotion_preview_blocks(): void
     {
         $resource = app(ShopResource::class);
@@ -151,6 +184,31 @@ final class PromotionResourceDefinitionTest extends TestCase
             if (method_exists($field, 'getFields')) {
                 foreach ($this->indexFieldsByLabel($field->getFields()) as $label => $nestedField) {
                     $indexed[$label] = $nestedField;
+                }
+            }
+        }
+
+        return $indexed;
+    }
+
+    /**
+     * @param  iterable<int, object>  $fields
+     * @return array<string, object>
+     */
+    private function indexFieldsByColumn(iterable $fields): array
+    {
+        $indexed = [];
+
+        foreach ($fields as $field) {
+            if (! is_object($field) || ! method_exists($field, 'getColumn')) {
+                continue;
+            }
+
+            $indexed[(string) $field->getColumn()] = $field;
+
+            if (method_exists($field, 'getFields')) {
+                foreach ($this->indexFieldsByColumn($field->getFields()) as $column => $nestedField) {
+                    $indexed[$column] = $nestedField;
                 }
             }
         }

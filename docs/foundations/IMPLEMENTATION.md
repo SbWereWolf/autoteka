@@ -1,6 +1,6 @@
 # Документация по реализации
 
-**Дата актуализации: 2026-03-26.**
+**Дата актуализации: 2026-03-28.**
 
 Документ описывает текущее устройство системы по коду: front office,
 backend, back office и deployment-контур.
@@ -204,7 +204,7 @@ flowchart LR
 - `FeatureSelect.vue` — селект фишки (на каталоге — только в составе
   sticky-блока);
 - `ShopTile.vue` — плитка магазина в сетке каталога;
-- `GalleryCarousel.vue` — карусель изображений на карточке магазина;
+- `GalleryCarousel.vue` — карусель медиа на карточке магазина;
 - `ShopMetaBadges.vue` — отображение названий категорий и фишек;
 - `OverscrollOpenLink.vue` — переход на сайт магазина по overscroll на
   карточке;
@@ -271,8 +271,11 @@ Promo-first поведение страницы магазина:
 
 - `promotion` — магазин, код, название, описание, даты начала и
   окончания, флаг публикации;
-- `promotion_image` — картинки акции, `original_name`, сортировка и
-  флаг публикации.
+- `promotion_gallery_image` — изображения акции, `original_name`,
+  сортировка и флаг публикации;
+- `promotion_gallery_video` — видео акции, `file_path`,
+  `poster_path`, `original_name`, `poster_original_name`, `mime`,
+  сортировка и флаг публикации.
 
 ShopOperator:
 
@@ -284,7 +287,7 @@ ShopOperator:
 ShopAPI:
 
 - отдаёт отдельный promo endpoint;
-- сериализует text-only акцию как `galleryImages: []`.
+- сериализует text-only акцию как `galleryItems: []`.
 
 Связанные документы:
 
@@ -493,10 +496,21 @@ Laravel подключает файл `routes/api.php` с префиксом **`
   "longitude": 82.9235,
   "scheduleNote": "Пн–Вс 9:00–21:00, без перерыва",
   "thumbUrl": "https://cdn.example.com/storage/shops/thumbs/alpha.webp",
-  "galleryImages": [
-    "https://cdn.example.com/storage/shops/gallery/showroom-1.webp",
-    "https://cdn.example.com/storage/shops/gallery/parking-2.webp",
-    "https://cdn.example.com/storage/shops/gallery/parts-3.webp"
+  "galleryItems": [
+    {
+      "id": "10101",
+      "type": "image",
+      "src": "https://cdn.example.com/storage/shops/gallery/showroom-1.webp",
+      "sort": 10
+    },
+    {
+      "id": "10102",
+      "type": "video",
+      "src": "https://cdn.example.com/storage/shops/gallery/tour.mp4",
+      "poster": "https://cdn.example.com/storage/shops/gallery/tour-poster.webp",
+      "mime": "video/mp4",
+      "sort": 20
+    }
   ],
   "categoryIds": [
     1,
@@ -509,9 +523,12 @@ Laravel подключает файл `routes/api.php` с префиксом **`
 }
 ```
 
-- `galleryImages` — массив строк с **абсолютными URL** готовых файлов
-  галереи (не путей в БД); порядок соответствует сортировке в API.
-  Если опубликованных изображений нет, приходит пустой массив `[]`.
+- `galleryItems` — массив объектов медиа-галереи. Для изображения это
+  `{ type: "image", src, sort }`, для видео —
+  `{ type: "video", src, poster, mime, sort }`. Все `src`/`poster`
+  приходят как **абсолютные URL** готовых файлов, а порядок соответствует
+  сортировке в API. Если опубликованных медиа нет, приходит пустой
+  массив `[]`.
 - `thumbUrl` — URL миниатюры или `null`, если файл миниатюры не задан.
 - `description`, `siteUrl`, `slogan`, `scheduleNote` — строки; числовые
   поля широты/долготы могут быть `null` в БД, в JSON тогда придут
@@ -832,7 +849,9 @@ watchdog/maintenance и серверные runbook-процедуры описа
 - `ShopPage.vue`: блок hero (назад, логотип, `GalleryCarousel`), под
   галереей при наличии — текст `scheduleNote`; далее секции описание,
   контакты, затем `ShopMetaBadges` (категории/фишки); внизу
-  `OverscrollOpenLink` при наличии URL сайта.
+  `OverscrollOpenLink` при наличии URL сайта. `GalleryCarousel`
+  отображает изображения и видео; video slides autoplay только на
+  активном слайде, с `muted`, `loop`, `playsinline` и без `controls`.
 - Тема: фиксированные CSS-переменные в `themes.css` и утилиты в
   `tailwind.css` (в т.ч. классы `catalog-feature-sticky-*` для sticky
   выбора фишки); редактора темы во фронте нет.

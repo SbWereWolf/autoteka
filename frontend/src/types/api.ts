@@ -16,6 +16,24 @@ export type Feature = {
   sort: number;
 };
 
+export type GalleryImageItem = {
+  id: string;
+  type: "image";
+  src: string;
+  sort: number;
+};
+
+export type GalleryVideoItem = {
+  id: string;
+  type: "video";
+  src: string;
+  poster: string;
+  mime: string;
+  sort: number;
+};
+
+export type GalleryItem = GalleryImageItem | GalleryVideoItem;
+
 export type ShopPublic = {
   code: string;
   cityId: string;
@@ -27,7 +45,7 @@ export type ShopPublic = {
   latitude: string | null;
   longitude: string | null;
   thumbUrl?: string;
-  galleryImages?: string[];
+  galleryItems: GalleryItem[];
   categoryIds: string[];
   featureIds: string[];
 };
@@ -39,7 +57,7 @@ export type PromotionPublic = {
   description: string;
   startDate: string;
   endDate: string;
-  galleryImages: string[];
+  galleryItems: GalleryItem[];
 };
 
 export type Contact = {

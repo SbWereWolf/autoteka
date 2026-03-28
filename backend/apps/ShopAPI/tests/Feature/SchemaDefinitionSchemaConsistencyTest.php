@@ -19,6 +19,7 @@ use Autoteka\SchemaDefinition\Enums\Columns\MoonshineUsersColumns;
 use Autoteka\SchemaDefinition\Enums\Columns\NotificationsColumns;
 use Autoteka\SchemaDefinition\Enums\Columns\PasswordResetTokensColumns;
 use Autoteka\SchemaDefinition\Enums\Columns\PromotionColumns;
+use Autoteka\SchemaDefinition\Enums\Columns\PromotionGalleryVideoColumns;
 use Autoteka\SchemaDefinition\Enums\Columns\PromotionImageColumns;
 use Autoteka\SchemaDefinition\Enums\Columns\SessionsColumns;
 use Autoteka\SchemaDefinition\Enums\Columns\ShopCategoryColumns;
@@ -26,6 +27,7 @@ use Autoteka\SchemaDefinition\Enums\Columns\ShopColumns;
 use Autoteka\SchemaDefinition\Enums\Columns\ShopContactColumns;
 use Autoteka\SchemaDefinition\Enums\Columns\ShopFeatureColumns;
 use Autoteka\SchemaDefinition\Enums\Columns\ShopGalleryImageColumns;
+use Autoteka\SchemaDefinition\Enums\Columns\ShopGalleryVideoColumns;
 use Autoteka\SchemaDefinition\Enums\Columns\ShopScheduleColumns;
 use Autoteka\SchemaDefinition\Enums\Columns\UsersColumns;
 use Autoteka\SchemaDefinition\Enums\TableName;
@@ -60,11 +62,13 @@ final class SchemaDefinitionSchemaConsistencyTest extends TestCase
             TableName::CONTACT_TYPE->value => ContactTypeColumns::class,
             TableName::PROMOTION->value => PromotionColumns::class,
             'promotion_gallery_image' => PromotionImageColumns::class,
+            TableName::PROMOTION_GALLERY_VIDEO->value => PromotionGalleryVideoColumns::class,
             TableName::SHOP->value => ShopColumns::class,
             TableName::SHOP_CATEGORY->value => ShopCategoryColumns::class,
             TableName::SHOP_FEATURE->value => ShopFeatureColumns::class,
             TableName::SHOP_CONTACT->value => ShopContactColumns::class,
             TableName::SHOP_GALLERY_IMAGE->value => ShopGalleryImageColumns::class,
+            TableName::SHOP_GALLERY_VIDEO->value => ShopGalleryVideoColumns::class,
             TableName::SHOP_SCHEDULE->value => ShopScheduleColumns::class,
             TableName::MIGRATIONS->value => MigrationsColumns::class,
         ];

@@ -4,6 +4,9 @@ import type {
   CityShopsResponse,
   ContactsResponse,
   Feature,
+  GalleryImageItem,
+  GalleryItem,
+  GalleryVideoItem,
   PromotionPublic,
   ShopPublic,
 } from "../types";
@@ -40,19 +43,28 @@ type RawShop = {
   latitude?: number | string | null;
   longitude?: number | string | null;
   thumbUrl?: string | null;
+  galleryItems?: RawGalleryItem[];
   galleryImages?: string[];
   categoryIds: Array<number | string>;
   featureIds: Array<number | string>;
 };
 
-type RawPromotionImage =
+type RawGalleryItem =
   | string
   | {
+      id?: number | string | null;
+      type?: "image" | "video" | null;
+      src?: string | null;
       filePath?: string | null;
       url?: string | null;
+      poster?: string | null;
+      posterPath?: string | null;
+      mime?: string | null;
       sort?: number | string | null;
-      isPublished?: boolean;
+      isPublished?: boolean | null;
     };
+
+type RawPromotionImage = RawGalleryItem;
 
 type RawPromotion = {
   id: number | string;
@@ -61,6 +73,7 @@ type RawPromotion = {
   description: string;
   startDate: string;
   endDate: string;
+  galleryItems?: RawGalleryItem[];
   galleryImages?: RawPromotionImage[];
 };
 
@@ -77,6 +90,18 @@ type RawCityCatalogItem = {
   categoryIds: Array<number | string>;
   featureIds: Array<number | string>;
 };
+
+type OrderedGalleryImageItem = GalleryImageItem & {
+  order: number;
+};
+
+type OrderedGalleryVideoItem = GalleryVideoItem & {
+  order: number;
+};
+
+type OrderedGalleryItem =
+  | OrderedGalleryImageItem
+  | OrderedGalleryVideoItem;
 
 function normalizeId(value: number | string): string {
   return String(value);
@@ -128,7 +153,7 @@ function normalizeSort(
 function normalizePromotionImages(
   rawItems: RawPromotionImage[] | undefined,
   baseUrl: string,
-): string[] {
+): GalleryImageItem[] {
   if (!Array.isArray(rawItems)) {
     return [];
   }
@@ -137,8 +162,10 @@ function normalizePromotionImages(
     .map((item, index) => {
       if (typeof item === "string") {
         return {
+          id: `legacy-image-${index}`,
+          order: index,
           sort: index,
-          url: resolveMediaUrl(item, baseUrl),
+          src: resolveMediaUrl(item, baseUrl),
         };
       }
 
@@ -147,20 +174,147 @@ function normalizePromotionImages(
       }
 
       return {
-        sort: normalizeSort(item?.sort) + index / 1000,
-        url: resolveMediaUrl(item?.filePath ?? item?.url, baseUrl),
+        id:
+          item?.id === null || item?.id === undefined
+            ? `legacy-image-${index}`
+            : normalizeId(item.id),
+        sort: normalizeSort(item?.sort),
+        src: resolveMediaUrl(
+          item?.src ?? item?.filePath ?? item?.url,
+          baseUrl,
+        ),
+        order: index,
       };
     })
     .filter(
       (
         item,
       ): item is {
+        id: string;
+        order: number;
         sort: number;
-        url: string;
-      } => item !== null && typeof item.url === "string",
+        src: string;
+      } => item !== null && typeof item.src === "string",
     )
-    .sort((left, right) => left.sort - right.sort)
-    .map((item) => item.url);
+    .sort((left, right) => {
+      if (left.sort !== right.sort) {
+        return left.sort - right.sort;
+      }
+
+      return left.order - right.order;
+    })
+    .map((item) => ({
+      id: item.id,
+      type: "image" as const,
+      src: item.src,
+      sort: item.sort,
+    }));
+}
+
+function galleryTypeWeight(item: GalleryItem): number {
+  return item.type === "image" ? 0 : 1;
+}
+
+function normalizeGalleryItems(
+  rawItems: RawGalleryItem[] | undefined,
+  baseUrl: string,
+): GalleryItem[] {
+  if (!Array.isArray(rawItems)) {
+    return [];
+  }
+
+  return rawItems
+    .map((item, index) => {
+      if (typeof item === "string") {
+        const src = resolveMediaUrl(item, baseUrl);
+        if (!src) {
+          return null;
+        }
+
+        const normalized: OrderedGalleryImageItem = {
+          id: `legacy-image-${index}`,
+          order: index,
+          type: "image",
+          src,
+          sort: index,
+        };
+
+        return normalized;
+      }
+
+      if (item?.isPublished === false) {
+        return null;
+      }
+
+      const id =
+        item?.id === null || item?.id === undefined
+          ? `gallery-item-${index}`
+          : normalizeId(item.id);
+      const src = resolveMediaUrl(
+        item?.src ?? item?.filePath ?? item?.url,
+        baseUrl,
+      );
+      const sort = normalizeSort(item?.sort);
+
+      if (!src) {
+        return null;
+      }
+
+      if (item?.type === "video") {
+        const poster = resolveMediaUrl(
+          item?.poster ?? item?.posterPath,
+          baseUrl,
+        );
+        const mime = String(item?.mime ?? "").trim();
+
+        if (!poster || mime === "") {
+          return null;
+        }
+
+        const normalized: OrderedGalleryVideoItem = {
+          id,
+          type: "video",
+          src,
+          poster,
+          mime,
+          sort,
+          order: index,
+        };
+
+        return normalized;
+      }
+
+      const normalized: OrderedGalleryImageItem = {
+        id,
+        type: "image",
+        src,
+        sort,
+        order: index,
+      };
+
+      return normalized;
+    })
+    .filter(
+      (
+        item,
+      ): item is OrderedGalleryItem => item !== null,
+    )
+    .sort((left, right) => {
+      if (left.sort !== right.sort) {
+        return left.sort - right.sort;
+      }
+
+      const weightDiff = galleryTypeWeight(left) - galleryTypeWeight(right);
+      if (weightDiff !== 0) {
+        return weightDiff;
+      }
+
+      if (left.id !== right.id) {
+        return left.id.localeCompare(right.id);
+      }
+
+      return left.order - right.order;
+    });
 }
 
 function toCity(raw: RawCity): City {
@@ -202,13 +356,15 @@ function toShopSummary(
     latitude: null,
     longitude: null,
     thumbUrl: resolveMediaUrl(raw.thumbUrl, baseUrl),
-    galleryImages: [],
+    galleryItems: [],
     categoryIds: raw.categoryIds.map(normalizeId),
     featureIds: raw.featureIds.map(normalizeId),
   };
 }
 
 function toShop(raw: RawShop, baseUrl: string): ShopPublic {
+  const galleryItems = normalizeGalleryItems(raw.galleryItems, baseUrl);
+
   return {
     code: raw.code,
     cityId: normalizeId(raw.cityId),
@@ -222,11 +378,10 @@ function toShop(raw: RawShop, baseUrl: string): ShopPublic {
     latitude: normalizeNullableScalar(raw.latitude),
     longitude: normalizeNullableScalar(raw.longitude),
     thumbUrl: resolveMediaUrl(raw.thumbUrl, baseUrl),
-    galleryImages: Array.isArray(raw.galleryImages)
-      ? raw.galleryImages
-          .map((item) => resolveMediaUrl(item, baseUrl))
-          .filter((item): item is string => typeof item === "string")
-      : [],
+    galleryItems:
+      galleryItems.length > 0
+        ? galleryItems
+        : normalizePromotionImages(raw.galleryImages, baseUrl),
     categoryIds: raw.categoryIds.map(normalizeId),
     featureIds: raw.featureIds.map(normalizeId),
   };
@@ -236,6 +391,8 @@ function toPromotion(
   raw: RawPromotion,
   baseUrl: string,
 ): PromotionPublic {
+  const galleryItems = normalizeGalleryItems(raw.galleryItems, baseUrl);
+
   return {
     id: normalizeId(raw.id),
     code: raw.code,
@@ -243,7 +400,10 @@ function toPromotion(
     description: raw.description,
     startDate: raw.startDate,
     endDate: raw.endDate,
-    galleryImages: normalizePromotionImages(raw.galleryImages, baseUrl),
+    galleryItems:
+      galleryItems.length > 0
+        ? galleryItems
+        : normalizePromotionImages(raw.galleryImages, baseUrl),
   };
 }
 

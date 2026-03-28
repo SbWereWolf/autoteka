@@ -35,6 +35,22 @@ type RawShop = RawCityCatalogItem & {
   latitude: string | null;
   longitude: string | null;
   galleryImages: string[];
+  galleryItems: Array<
+    | {
+        id: string;
+        type: "image";
+        src: string;
+        sort: number;
+      }
+    | {
+        id: string;
+        type: "video";
+        src: string;
+        poster: string;
+        mime: string;
+        sort: number;
+      }
+  >;
 };
 
 type RawPromotionImage = {
@@ -51,6 +67,22 @@ type RawPromotion = {
   startDate: string;
   endDate: string;
   galleryImages: RawPromotionImage[];
+  galleryItems: Array<
+    | {
+        id: string;
+        type: "image";
+        src: string;
+        sort: number;
+      }
+    | {
+        id: string;
+        type: "video";
+        src: string;
+        poster: string;
+        mime: string;
+        sort: number;
+      }
+  >;
 };
 
 const cities: RawCity[] = [
@@ -125,6 +157,22 @@ const shops: Record<string, RawShop> = Object.fromEntries(
           item.thumbUrl ?? "",
           "/generated/gen-1x1-x1_25-v2-640x640.png",
         ].filter(Boolean),
+        galleryItems: [
+          {
+            id: `${item.code}-image-1`,
+            type: "image",
+            src: item.thumbUrl ?? "/generated/gen-1x1-x1_0-v1-512x512.png",
+            sort: 10,
+          },
+          {
+            id: `${item.code}-video-1`,
+            type: "video",
+            src: "/generated/shop-gallery-video.mp4",
+            poster: "/generated/shop-gallery-video-poster.webp",
+            mime: "video/mp4",
+            sort: 20,
+          },
+        ],
       },
     ]),
 );
@@ -166,6 +214,22 @@ const promotionsByShop: Record<string, RawPromotion[]> = {
           isPublished: true,
         },
       ],
+      galleryItems: [
+        {
+          id: "promo-1-image-1",
+          type: "image",
+          src: "/generated/promo-summer-1.webp",
+          sort: 1,
+        },
+        {
+          id: "promo-1-video-1",
+          type: "video",
+          src: "/generated/promo-summer-clip.mp4",
+          poster: "/generated/promo-summer-clip-poster.webp",
+          mime: "video/mp4",
+          sort: 2,
+        },
+      ],
     },
     {
       id: "promo-2",
@@ -175,6 +239,7 @@ const promotionsByShop: Record<string, RawPromotion[]> = {
       startDate: "2026-03-05",
       endDate: "2026-03-28",
       galleryImages: [],
+      galleryItems: [],
     },
   ],
   "nizhny-01": [],

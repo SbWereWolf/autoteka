@@ -40,6 +40,30 @@ final class ShopResourceFormDefinitionTest extends TestCase
         self::assertSame('ru', $indexedFields['time_to']->getAttribute('lang'));
     }
 
+    public function test_shop_resource_form_exposes_separate_video_gallery_block(): void
+    {
+        $this->seedShopOptions();
+
+        $resource = app(ShopResource::class);
+        $fields = $this->invokeFormFields($resource);
+        $indexedFields = $this->indexFieldsByColumn($fields);
+
+        self::assertArrayHasKey('gallery_video_entries', $indexedFields);
+
+        $videoFields = $this->indexFieldsByColumn(
+            method_exists($indexedFields['gallery_video_entries'], 'getFields')
+                ? $indexedFields['gallery_video_entries']->getFields()
+                : [],
+        );
+
+        self::assertArrayHasKey('id', $videoFields);
+        self::assertArrayHasKey('file_path', $videoFields);
+        self::assertArrayHasKey('poster_path', $videoFields);
+        self::assertArrayHasKey('mime', $videoFields);
+        self::assertArrayHasKey('sort', $videoFields);
+        self::assertArrayHasKey('is_published', $videoFields);
+    }
+
     /**
      * @return iterable<int, object>
      */

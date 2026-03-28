@@ -6,7 +6,7 @@ afterEach(() => {
 });
 
 describe("HttpApiClient promo contract", () => {
-  it("loads GET /shop/{code}/promotion and keeps galleryImages in the payload", async () => {
+  it("loads GET /shop/{code}/promotion and keeps galleryItems in the payload", async () => {
     const fetchMock = vi
       .spyOn(globalThis, "fetch")
       .mockResolvedValue({
@@ -21,8 +21,13 @@ describe("HttpApiClient promo contract", () => {
             description: "Скидки на расходники и аккумуляторы до конца месяца.",
             startDate: "2026-03-01",
             endDate: "2026-03-31",
-            galleryImages: [
-              "https://cdn.example.test/promo-summer-1.webp",
+            galleryItems: [
+              {
+                id: "promo-1-image-1",
+                type: "image",
+                src: "https://cdn.example.test/promo-summer-1.webp",
+                sort: 1,
+              },
             ],
           },
         ],
@@ -43,19 +48,23 @@ describe("HttpApiClient promo contract", () => {
         }),
       }),
     );
-    expect(promotions).toEqual([
-      {
-        code: "barnaul-01-summer-sale",
-        description: "Скидки на расходники и аккумуляторы до конца месяца.",
-        endDate: "2026-03-31",
-        galleryImages: [
-          "https://cdn.example.test/promo-summer-1.webp",
-        ],
-        id: "promo-1",
-        startDate: "2026-03-01",
-        title: "Летняя распродажа",
-      },
-    ]);
+    expect(promotions).toHaveLength(1);
+    expect(promotions[0]).toMatchObject({
+      code: "barnaul-01-summer-sale",
+      description: "Скидки на расходники и аккумуляторы до конца месяца.",
+      endDate: "2026-03-31",
+      galleryItems: [
+        {
+          id: "promo-1-image-1",
+          type: "image",
+          src: "https://cdn.example.test/promo-summer-1.webp",
+          sort: 1,
+        },
+      ],
+      id: "promo-1",
+      startDate: "2026-03-01",
+      title: "Летняя распродажа",
+    });
   });
 
   it("returns an empty array for a shop with no active promotions", async () => {

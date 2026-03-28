@@ -139,7 +139,9 @@ describe("TC-UI-CLERK-MEDIA-002", () => {
         }
         return (await shopResponse.json()) as {
           thumbUrl?: string | null;
-          galleryImages?: string[];
+          galleryItems?: Array<{
+            src?: string;
+          }>;
         };
       });
 
@@ -156,12 +158,12 @@ describe("TC-UI-CLERK-MEDIA-002", () => {
         expect(uuidExtRegex.test(payload.thumbUrl)).toBe(true);
       }
 
-      if (Array.isArray(payload.galleryImages)) {
-        const firstGallery = payload.galleryImages.find(
-          (url) => typeof url === "string" && url.length > 0,
+      if (Array.isArray(payload.galleryItems)) {
+        const firstGallery = payload.galleryItems.find(
+          (item) => typeof item?.src === "string" && item.src.length > 0,
         );
         if (firstGallery) {
-          expect(uuidExtRegex.test(firstGallery)).toBe(true);
+          expect(uuidExtRegex.test(firstGallery.src as string)).toBe(true);
         }
       }
     } finally {

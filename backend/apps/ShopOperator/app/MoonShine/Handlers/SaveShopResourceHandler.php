@@ -8,6 +8,7 @@ use ShopOperator\Models\City;
 use ShopOperator\Models\Shop;
 use ShopOperator\Models\ShopContact;
 use ShopOperator\Models\ShopGalleryImage;
+use ShopOperator\Models\ShopGalleryVideo;
 use ShopOperator\Models\ShopSchedule;
 use ShopOperator\Support\Media\UploadOriginalNameStore;
 use ShopOperator\Support\Shop\ShopContactUniqueness;
@@ -17,6 +18,7 @@ use Autoteka\SchemaDefinition\SchemaTables\SchemaShopCategory;
 use Autoteka\SchemaDefinition\SchemaTables\SchemaShopContact;
 use Autoteka\SchemaDefinition\SchemaTables\SchemaShopFeature;
 use Autoteka\SchemaDefinition\SchemaTables\SchemaShopGalleryImage;
+use Autoteka\SchemaDefinition\SchemaTables\SchemaShopGalleryVideo;
 use Autoteka\SchemaDefinition\SchemaTables\SchemaShopSchedule;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -63,6 +65,7 @@ final class SaveShopResourceHandler
             $this->syncFeatureLinks($shop, $data['feature_links'] ?? []);
             $this->syncContacts($shop, $data['contact_entries'] ?? []);
             $this->syncGallery($shop, $data['gallery_entries'] ?? [], $uploadOriginalNames);
+            $this->syncGalleryVideos($shop, $data['gallery_video_entries'] ?? [], $uploadOriginalNames);
             $this->syncSchedules($shop, $data['schedule_entries'] ?? []);
 
             return $shop->fresh([
@@ -71,6 +74,7 @@ final class SaveShopResourceHandler
                 'features',
                 'contacts.contactType',
                 'galleryImages',
+                'galleryVideos',
                 'schedules',
             ]) ?? $shop;
         });
@@ -339,6 +343,104 @@ final class SaveShopResourceHandler
         $shop->schedules()->whereNotIn($s->id(), $keptIds)->delete();
     }
 
+    private function syncGalleryVideos(Shop $shop, mixed $rows, UploadOriginalNameStore $uploadOriginalNames): void
+    {
+        $schema = new SchemaShopGalleryVideo();
+        $desired = collect(is_iterable($rows) ? $rows : [])
+            ->map(function (mixed $row) use ($schema, $uploadOriginalNames): ?array {
+                if (! is_array($row)) {
+                    return null;
+                }
+
+                $filePath = trim((string) (
+                    $row[$schema->filePath()]
+                    ?? $row['hidden_' . $schema->filePath()]
+                    ?? ''
+                ));
+                $posterPath = trim((string) (
+                    $row[$schema->posterPath()]
+                    ?? $row['hidden_' . $schema->posterPath()]
+                    ?? ''
+                ));
+
+                if ($filePath === '' && $posterPath === '') {
+                    return null;
+                }
+
+                if ($filePath === '' || $posterPath === '') {
+                    throw ValidationException::withMessages([
+                        'gallery_video_entries' => ['Для каждого видео галереи необходимо загрузить и видеофайл, и poster.'],
+                    ]);
+                }
+
+                if (! array_key_exists($schema->sort(), $row) || trim((string) ($row[$schema->sort()] ?? '')) === '') {
+                    throw ValidationException::withMessages([
+                        'gallery_video_entries' => ['Для каждого видео галереи необходимо явно указать sort.'],
+                    ]);
+                }
+
+                return [
+                    $schema->id() => isset($row[$schema->id()]) ? (int) $row[$schema->id()] : null,
+                    $schema->filePath() => $filePath,
+                    $schema->originalName() => $uploadOriginalNames->pullByPath($filePath)
+                        ?? $this->nullableString($row[$schema->originalName()] ?? null),
+                    $schema->posterPath() => $posterPath,
+                    $schema->posterOriginalName() => $uploadOriginalNames->pullByPath($posterPath)
+                        ?? $this->nullableString($row[$schema->posterOriginalName()] ?? null),
+                    $schema->mime() => $this->resolveVideoMime($row[$schema->mime()] ?? null, $filePath),
+                    $schema->sort() => (int) ($row[$schema->sort()] ?? 0),
+                    $schema->isPublished() => (bool) ($row[$schema->isPublished()] ?? true),
+                ];
+            })
+            ->filter()
+            ->values();
+
+        $existing = $shop->galleryVideos()->get()->keyBy($schema->id());
+        $keptIds = [];
+        $disk = Storage::disk((string) config('autoteka.media.disk'));
+
+        foreach ($desired as $item) {
+            $video = $item[$schema->id()] ? $existing->get($item[$schema->id()]) : null;
+            $oldVideoPath = $video?->file_path;
+            $oldPosterPath = $video?->poster_path;
+
+            if (! $video instanceof ShopGalleryVideo) {
+                $video = new ShopGalleryVideo();
+                $video->setAttribute($schema->shopId(), $shop->getKey());
+            }
+
+            $video->fill([
+                $schema->filePath() => $item[$schema->filePath()],
+                $schema->originalName() => $item[$schema->originalName()] ?? $video->original_name,
+                $schema->posterPath() => $item[$schema->posterPath()],
+                $schema->posterOriginalName() => $item[$schema->posterOriginalName()] ?? $video->poster_original_name,
+                $schema->mime() => $item[$schema->mime()],
+                $schema->sort() => $item[$schema->sort()],
+                $schema->isPublished() => $item[$schema->isPublished()],
+            ]);
+            $video->save();
+
+            if ($oldVideoPath && $oldVideoPath !== $video->file_path) {
+                $disk->delete($oldVideoPath);
+            }
+
+            if ($oldPosterPath && $oldPosterPath !== $video->poster_path) {
+                $disk->delete($oldPosterPath);
+            }
+
+            $keptIds[] = $video->getKey();
+        }
+
+        $toDelete = $shop->galleryVideos()
+            ->when($keptIds !== [], fn ($query) => $query->whereNotIn($schema->id(), $keptIds))
+            ->get();
+
+        foreach ($toDelete as $video) {
+            $disk->delete([$video->file_path, $video->poster_path]);
+            $video->delete();
+        }
+    }
+
     private function nullableString(mixed $value): ?string
     {
         $value = trim((string) $value);
@@ -351,6 +453,26 @@ final class SaveShopResourceHandler
         $value = trim((string) $value);
 
         return $value === '' ? null : (float) $value;
+    }
+
+    private function resolveVideoMime(mixed $value, string $filePath): string
+    {
+        $mime = match (strtolower(pathinfo($filePath, PATHINFO_EXTENSION))) {
+            'webm' => 'video/webm',
+            'mp4' => 'video/mp4',
+            default => throw ValidationException::withMessages([
+                'gallery_video_entries' => ['Неподдерживаемый формат видео. Разрешены только mp4 и webm.'],
+            ]),
+        };
+
+        $provided = trim((string) $value);
+        if ($provided !== '' && $provided !== $mime) {
+            throw ValidationException::withMessages([
+                'gallery_video_entries' => ['Указанный mime видео не соответствует расширению файла.'],
+            ]);
+        }
+
+        return $mime;
     }
 
     private function validateRequiredFields(array $data): void

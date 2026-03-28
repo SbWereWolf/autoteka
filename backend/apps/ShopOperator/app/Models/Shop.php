@@ -12,6 +12,7 @@ use Autoteka\SchemaDefinition\Enums\Columns\ShopColumns;
 use Autoteka\SchemaDefinition\Enums\Columns\ShopContactColumns;
 use Autoteka\SchemaDefinition\Enums\Columns\ShopFeatureColumns;
 use Autoteka\SchemaDefinition\Enums\Columns\ShopGalleryImageColumns;
+use Autoteka\SchemaDefinition\Enums\Columns\ShopGalleryVideoColumns;
 use Autoteka\SchemaDefinition\Enums\Columns\ShopScheduleColumns;
 use Autoteka\SchemaDefinition\Enums\TableName;
 use Autoteka\SchemaDefinition\SchemaTables\SchemaShop;
@@ -19,6 +20,7 @@ use Autoteka\SchemaDefinition\SchemaTables\SchemaShopCategory;
 use Autoteka\SchemaDefinition\SchemaTables\SchemaShopContact;
 use Autoteka\SchemaDefinition\SchemaTables\SchemaShopFeature;
 use Autoteka\SchemaDefinition\SchemaTables\SchemaShopGalleryImage;
+use Autoteka\SchemaDefinition\SchemaTables\SchemaShopGalleryVideo;
 use Autoteka\SchemaDefinition\SchemaTables\SchemaShopSchedule;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -45,11 +47,13 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property array<int, array{feature_id: int, is_published: bool}> $feature_links
  * @property array<int, array{id: int, contact_type_id: int, value: string, sort: int, is_published: bool}> $contact_entries
  * @property array<int, array{id: int, file_path: string, sort: int, is_published: bool}> $gallery_entries
+ * @property array<int, array{id: int, file_path: string, original_name: string|null, poster_path: string, poster_original_name: string|null, mime: string, sort: int, is_published: bool}> $gallery_video_entries
  * @property array<int, array{id: int, weekday: int, time_from: string, time_to: string, sort: int, is_published: bool}> $schedule_entries
  * @property \Illuminate\Database\Eloquent\Collection<int, Category> $categories
  * @property \Illuminate\Database\Eloquent\Collection<int, Feature> $features
  * @property \Illuminate\Database\Eloquent\Collection<int, ShopContact> $contacts
  * @property \Illuminate\Database\Eloquent\Collection<int, ShopGalleryImage> $galleryImages
+ * @property \Illuminate\Database\Eloquent\Collection<int, ShopGalleryVideo> $galleryVideos
  * @property \Illuminate\Database\Eloquent\Collection<int, Promotion> $promotions
  * @property \Illuminate\Database\Eloquent\Collection<int, ShopSchedule> $schedules
  * @property City|null $city
@@ -91,6 +95,7 @@ class Shop extends Model
         'feature_links',
         'contact_entries',
         'gallery_entries',
+        'gallery_video_entries',
         'schedule_entries',
     ];
 
@@ -154,6 +159,13 @@ class Shop extends Model
         $sch = new SchemaShopGalleryImage();
 
         return $this->hasMany(ShopGalleryImage::class, $sch->shopId());
+    }
+
+    public function galleryVideos(): HasMany
+    {
+        $schema = new SchemaShopGalleryVideo();
+
+        return $this->hasMany(ShopGalleryVideo::class, $schema->shopId());
     }
 
     public function schedules(): HasMany
@@ -267,6 +279,35 @@ class Shop extends Model
     {
         $this->virtualInput['gallery_entries'] = $value;
         unset($this->attributes['gallery_entries']);
+    }
+
+    public function getGalleryVideoEntriesAttribute(): array
+    {
+        if (array_key_exists('gallery_video_entries', $this->virtualInput)) {
+            return $this->normalizeVirtualList($this->virtualInput['gallery_video_entries']);
+        }
+
+        return $this->relationLoaded('galleryVideos')
+            ? $this->galleryVideos
+                ->map(fn (ShopGalleryVideo $video): array => [
+                    ShopGalleryVideoColumns::ID->value => $video->getKey(),
+                    ShopGalleryVideoColumns::FILE_PATH->value => $video->file_path,
+                    ShopGalleryVideoColumns::ORIGINAL_NAME->value => $video->original_name,
+                    ShopGalleryVideoColumns::POSTER_PATH->value => $video->poster_path,
+                    ShopGalleryVideoColumns::POSTER_ORIGINAL_NAME->value => $video->poster_original_name,
+                    ShopGalleryVideoColumns::MIME->value => $video->mime,
+                    ShopGalleryVideoColumns::SORT->value => $video->sort,
+                    ShopGalleryVideoColumns::IS_PUBLISHED->value => $video->is_published,
+                ])
+                ->values()
+                ->all()
+            : [];
+    }
+
+    public function setGalleryVideoEntriesAttribute(mixed $value): void
+    {
+        $this->virtualInput['gallery_video_entries'] = $value;
+        unset($this->attributes['gallery_video_entries']);
     }
 
     public function getScheduleEntriesAttribute(): array

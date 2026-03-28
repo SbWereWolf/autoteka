@@ -110,7 +110,7 @@
 
         <div v-if="shop" class="shop-hero-gallery">
           <GalleryCarousel
-            :items="galleryImages"
+            :items="galleryItems"
             empty-title=""
             empty-text="Для этого магазина изображения ещё не загружены"
             test-id="shop-gallery"
@@ -268,6 +268,7 @@ import ShopMetaBadges from "../components/ShopMetaBadges.vue";
 import ShopPromotionCard from "../components/ShopPromotionCard.vue";
 import { uiConfig } from "../config/ui";
 import { state } from "../state";
+import type { GalleryItem } from "../types";
 import { mapIdsToTitles } from "../utils/mapCodesToNames";
 import { openYandexNavigatorMapSearch } from "../utils/yandexAddressOpen";
 import ErrorStatePanel from "../components/ErrorStatePanel.vue";
@@ -305,11 +306,11 @@ const categoryNames = computed(() =>
   mapIdsToTitles(shop.value?.categoryIds ?? [], categoryMap.value),
 );
 
-const galleryImages = computed<string[]>(() => {
+const galleryItems = computed<GalleryItem[]>(() => {
   const current = shop.value;
   if (!current) return [];
-  return Array.isArray(current.galleryImages)
-    ? current.galleryImages.filter(Boolean)
+  return Array.isArray(current.galleryItems)
+    ? current.galleryItems.filter((item) => item.src.trim() !== "")
     : [];
 });
 
