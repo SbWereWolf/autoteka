@@ -27,7 +27,8 @@
 
 ### Контент-администратор
 
-Работает с back office:
+Работает с back office (его работа описана в 
+[CLERK_MANUAL](docs/manual/CLERK_MANUAL.md)):
 
 - города;
 - категории;
@@ -45,139 +46,53 @@
 - генерацией и валидацией данных и медиа;
 - автодеплоем, watchdog, metrics и техобслуживанием.
 
-## 2. Front office после редизайна магазинов
 
-Публичный frontend больше не содержит runtime theme editor и не
-поддерживает переключение тем. Визуальная часть каталога и карточки
-магазина управляется только кодом и контентом.
 
-Что должен проверить администратор после изменения данных:
+---
 
-- в каталоге виден новый прозрачный top bar и логотип;
-- плитки магазинов показывают изображение без заголовка;
-- overlay-меню открывается и позволяет менять город и категории;
-- карточка магазина показывает слоган, описание, галерею, фишки и
-  контакты;
-- если у магазина заполнен `schedule_note`, текст отображается
-  поверх галереи;
-- ссылка сайта, если она есть, отображается последней в списке
-  контактов.
+## 3. Учётные записи администраторов MoonShine
 
-## 3. Back office MoonShine
+Раздел относится к встроенным сущностям MoonShine: **пользователи** и
+**роли**. В меню они находятся в системной группе (название
+зависит от перевода MoonShine, при английской локали — например
+**Admins**, **Roles**).
 
-### 3.1. Вход
+### 3.1. Список администраторов
 
-По умолчанию:
+На странице списка доступны:
 
-- URL в local dev/runtime: `http://127.0.0.1:8081/admin/login`
-- URL в production: `/admin/login`
-- login: `admin@example.com`
-- password: `admin12345`
+- **Фильтры:** по роли и по E-mail.
+- **Выбор колонок** таблицы (column selection).
+- Колонки включают **Обновлён** (дата и время обновления записи).
 
-Учетная запись initial admin создаётся сидером `AdminUserSeeder`, но
-сидер должен запускаться только если команда
-`php artisan autoteka:is-there-an-admin <email>` показывает, что такой
-учётки ещё нет. Для production нужно задавать:
+### 3.2. Создание нового администратора (пошагово)
 
-- `MOONSHINE_ADMIN_NAME`
-- `MOONSHINE_ADMIN_EMAIL`
-- `MOONSHINE_ADMIN_PASSWORD`
+1. Откройте ресурс пользователей MoonShine в меню.
+2. Нажмите действие **создания** новой записи (кнопка с иконкой «плюс»
+   или подпись вроде **Add** / **Create** при английской локали).
+3. Вкладка **основной информации** (название вкладки зависит от перевода):
+  - **Роль** — выберите существующую роль (**обязательное поле**).
+    При необходимости можно создать роль из связанного интерфейса
+    (**creatable**).
+  - **Имя** — например: `Иван Оператор` (**обязательно**).
+  - **Email** — например: `operator@example.com` (**обязательно**,
+    уникальный).
+  - **Аватар** — по желанию (форматы: jpeg, jpg, png, gif).
+4. Вкладка **пароля**:
+  - При **создании** пользователя пароль **обязателен**; укажите пароль
+    и **повтор** в двух полях (требования — как у
+    `Password::defaults()` в Laravel).
+5. Сохраните форму.
 
-### 3.2. Какие сущности доступны в админке
+**Ожидаемый результат:** новая запись появляется в списке; вход возможен
+с указанным email и паролем (если политика MoonShine это допускает).
 
-В MoonShine зарегистрированы:
+### 3.3. Роли
 
-- `MoonShineUser`
-- `MoonShineUserRole`
-- `City`
-- `Category`
-- `Feature`
-- `ContactType`
-- `Shop`
-- `Promotion`
+Ресурс ролей использует **модальные окна** для создания и редактирования.
+Имя роли **обязательно**, минимальная длина **5 символов**.
 
-### 3.3. Что редактируется в back office
-
-#### Город
-
-- код города;
-- отображаемое название;
-- порядок сортировки;
-- активность в пользовательском выборе.
-
-#### Категория и фишка
-
-- идентификатор;
-- название;
-- порядок сортировки;
-- активность.
-
-#### Тип контакта
-
-- идентификатор;
-- название;
-- порядок сортировки;
-- активность.
-
-#### Магазин
-
-- код и название;
-- слоган;
-- город;
-- описание;
-- широта и долгота;
-- текст режима работы для overlay поверх галереи;
-- сайт;
-- категории;
-- фишки;
-- контакты;
-- галерея;
-- изображения preview.
-
-На странице просмотра магазина в админке:
-
-- используется стандартный route вида
-  `/admin/resource/shop-resource/detail-page/{id}`;
-- сверху слева есть кнопка `Редактировать`;
-- рядом с ней есть кнопка `Создать рекламную акцию`;
-- под основной карточкой магазина показывается отдельный блок
-  `Акции магазина`.
-
-При сохранении магазина backend:
-
-- генерирует код, если он не задан;
-- сохраняет `site_url` без принудительного добавления протокола;
-- сохраняет порядок контактов по `sort`;
-- допускает несколько контактов одного типа;
-- физически удаляет удалённые repeatable-элементы.
-
-### 3.4. Что проверять после правок в back office
-
-- магазин открывается во front office;
-- карточка попадает в каталог нужного города;
-- страница просмотра магазина в back office открывается по
-  `detail-page`, а не по кастомному slug;
-- кнопка `Создать рекламную акцию` на странице магазина создаёт
-  черновик и переводит на страницу редактирования акции;
-- блок `Акции магазина` показывает только актуальные для админки
-  акции и позволяет открыть просмотр/редактирование стандартными
-  MoonShine-кнопками;
-- контакты корректно отображаются;
-- сайт отображается последним контактом, если он задан;
-- слоган и `schedule_note` видны там, где ожидаются;
-- preview и gallery-картинки доступны;
-- `siteUrl` не искажается backend-нормализацией.
-
-Если картинка в браузере пустая, а запрос к `/storage/*` возвращает
-`200 text/html`, проблема не в данных магазина, а в серверной раздаче
-public media.
-
-## 4. Служебные скрипты frontend
-
-Основные команды из `frontend/package.json`:
-
-- Команды генерации/материализации мок-медиа удалены из актуального
-  контура.
+---
 
 ## 5. Служебные команды backend
 
@@ -195,13 +110,6 @@ public media.
 Перед любым `php artisan migrate` сначала обязателен backup текущей
 SQLite БД в `backend/database/backup/` с именем формата
 `YYYYMMDD-HHMMSS.database.sqlite`.
-
-Специальная команда:
-
-- `php artisan autoteka:media:fix-shops-paths`
-
-Переносит медиа в `shops/thumbs/` и `shops/gallery/`, обновляет пути в
-БД. Используйте при путях `generated/*` или `shops/*/generated/*`.
 
 ## 6. Важные настройки окружения
 
@@ -223,9 +131,6 @@ deploy создаст его из `frontend/example.env`.
 - `DB_*`
 - `MOONSHINE_ADMIN_*`
 
-Если `backend/.env` отсутствует, контейнер `php` может создать его из
-`backend/example.env`.
-
 ### 6.3. Серверные env-файлы
 
 - `OPTIONS_FILE` — путь к options.env (обычно `/etc/autoteka/options.env`).
@@ -238,8 +143,8 @@ deploy создаст его из `frontend/example.env`.
 - Файл по пути `TELEGRAM_ENV_FILE` — Telegram-уведомления watchdog (см.
   [DEPLOY](../../infrastructure/DEPLOY.md)). Создаётся install.sh из
   `telegram.example.env` по пути из .env, значения заполняются из
-  `$INFRA_ROOT/.env`. Опционально: при отсутствии `TELEGRAM_ENV_FILE` watchdog
-  и watch-changes работают без уведомлений.
+  `$INFRA_ROOT/.env`. Опционально: при отсутствии `TELEGRAM_ENV_FILE` 
+  watchdog и watch-changes работают без уведомлений.
 
 **Шаблоны в репозитории:**
 
@@ -254,7 +159,7 @@ deploy создаст его из `frontend/example.env`.
 
 ### 6.4. Production: где лежат БД, медиа и vendor админки
 
-На сервере контейнеры **монтируют с хоста** (не в отдельных named volumes):
+На сервере контейнеры **монтируют с хоста**:
 
 - `$AUTOTEKA_ROOT/backend/database` — SQLite;
 - `$AUTOTEKA_ROOT/backend/storage` — загрузки и файловое хранилище Laravel;
@@ -338,73 +243,6 @@ autoteka diagnose
   [DEPLOY §5](../../infrastructure/DEPLOY.md#5-настройки-окружения);
 - что именно делает `install.sh` —
   [DEPLOY §3](../../infrastructure/DEPLOY.md#3-что-делает-installsh).
-
-### 7.3. Как запустить local dev / debug
-
-Базовый dev-runtime с `php` target = `dev`:
-
-```powershell
-docker compose -f $env:INFRA_ROOT\runtime\docker-compose.dev.yml -f $env:INFRA_ROOT\runtime\docker-compose.dev.target-dev.yml up --build -d
-```
-
-Локальный smoke runtime с `php` target = `prod`:
-
-```powershell
-docker compose -f $env:INFRA_ROOT\runtime\docker-compose.dev.yml -f $env:INFRA_ROOT\runtime\docker-compose.dev.target-prod.yml up --build -d
-```
-
-Файл `docker-compose.dev.target-prod.yml` задаёт те же переменные окружения
-`services.php.environment`, что и серверный `docker-compose.prod.yml` (FPM, OpCache,
-`LARAVEL_OPTIMIZE`), чтобы локальная проверка совпадала с prod по PHP.
-
-Какие каталоги в dev идут с хоста, а какие в named volumes — таблица в
-[DEPLOY § Runtime](../../infrastructure/DEPLOY.md#dev-что-на-хосте-что-в-named-volume).
-
-Остановить dev/debug-контур:
-
-```powershell
-docker compose -f $env:INFRA_ROOT\runtime\docker-compose.dev.yml -f $env:INFRA_ROOT\runtime\docker-compose.dev.target-dev.yml down
-```
-
-Переcобрать контейнеры:
-
-```powershell
-docker compose -f $env:INFRA_ROOT\runtime\docker-compose.dev.yml -f $env:INFRA_ROOT\runtime\docker-compose.dev.target-dev.yml build
-```
-
-Открыть shell в backend-контейнере:
-
-```powershell
-docker exec autoteka-dev-php sh
-```
-
-По умолчанию приложение доступно по адресу `http://127.0.0.1:8081`.
-Адрес и порты управляются через
-`$INFRA_ROOT/dev.env` и локальный `$INFRA_ROOT/.env`.
-
-Подробности по локальным runtime-командам и env:
-
-- [README: Dev runtime с выбором php target](../../README.md#dev-runtime-с-выбором-php-target-override);
-- [DEPLOY](../../infrastructure/DEPLOY.md).
-
-### 7.4. Режимы frontend в dev/debug
-
-#### `FRONTEND_MODE=source`
-
-Используйте для обычной разработки UI:
-
-- работает Vite dev server;
-- изменения в исходниках отражаются сразу;
-- доступен hot reload.
-
-#### `FRONTEND_MODE=bundle-watch`
-
-Используйте, когда нужна отладка собранного frontend:
-
-- работает `vite build --watch`;
-- nginx отдаёт `frontend/dist`;
-- при `VITE_BUILD_SOURCEMAP=true` доступен mapping bundle на
-  исходники.
 
 ### 7.5. Как чинить и диагностировать контейнерный контур
 

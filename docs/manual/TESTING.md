@@ -235,6 +235,56 @@ Docker DEV вариант:
 чтобы тесты проверяли реальный UI/runtime, а не случайную фазу
 cold-start dev web/frontend после `docker compose`.
 
+
+
+### 7.3. Как запустить local dev / debug
+
+Базовый dev-runtime с `php` target = `dev`:
+
+```powershell
+docker compose -f $env:INFRA_ROOT\runtime\docker-compose.dev.yml -f $env:INFRA_ROOT\runtime\docker-compose.dev.target-dev.yml up --build -d
+```
+
+Локальный smoke runtime с `php` target = `prod`:
+
+```powershell
+docker compose -f $env:INFRA_ROOT\runtime\docker-compose.dev.yml -f $env:INFRA_ROOT\runtime\docker-compose.dev.target-prod.yml up --build -d
+```
+
+Файл `docker-compose.dev.target-prod.yml` задаёт те же переменные окружения
+`services.php.environment`, что и серверный `docker-compose.prod.yml` (FPM, OpCache,
+`LARAVEL_OPTIMIZE`), чтобы локальная проверка совпадала с prod по PHP.
+
+Какие каталоги в dev идут с хоста, а какие в named volumes — таблица в
+[DEPLOY § Runtime](../../infrastructure/DEPLOY.md#dev-что-на-хосте-что-в-named-volume).
+
+Остановить dev/debug-контур:
+
+```powershell
+docker compose -f $env:INFRA_ROOT\runtime\docker-compose.dev.yml -f $env:INFRA_ROOT\runtime\docker-compose.dev.target-dev.yml down
+```
+
+Переcобрать контейнеры:
+
+```powershell
+docker compose -f $env:INFRA_ROOT\runtime\docker-compose.dev.yml -f $env:INFRA_ROOT\runtime\docker-compose.dev.target-dev.yml build
+```
+
+Открыть shell в backend-контейнере:
+
+```powershell
+docker exec autoteka-dev-php sh
+```
+
+По умолчанию приложение доступно по адресу `http://127.0.0.1:8081`.
+Адрес и порты управляются через
+`$INFRA_ROOT/dev.env` и локальный `$INFRA_ROOT/.env`.
+
+Подробности по локальным runtime-командам и env:
+
+- [README: Dev runtime с выбором php target](../../README.md#dev-runtime-с-выбором-php-target-override);
+- [DEPLOY](../../infrastructure/DEPLOY.md).
+
 ## 6. Что покрыто тест-кейсами сейчас (high-level)
 
 - `system-tests/cases`:

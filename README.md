@@ -253,9 +253,19 @@ PLAYWRIGHT_BASE_URL=http://127.0.0.1 npm --prefix frontend run test:e2e
 
 ## Локальное ручное тестирование
 
-### Запустить фронт энд
+### Тестирование front office
 
+Настроить вызовы из клиентского модуля в серверное приложение API
 в файле [frontend/.env](frontend/.env) записать адрес API
+
+Запустить API
+
+```shell
+cd ./backend/apps/ShopAPI
+php artisan serve --host=127.0.0.1 --port=8081
+```
+
+Запустить front office
 
 ```shell
 VITE_API_BASE_URL=http://127.0.0.1:8081/api/v1
@@ -266,20 +276,26 @@ cd ./frontend/
 npm run dev
 ```
 
-### Если нужен бэк энд для Админки
+### Тестирование back office
+
+Запустить серверное приложение админки
 
 ```shell
 cd ./backend/apps/ShopOperator
-php artisan serve --host=127.0.0.1 --port=8081
+php artisan serve --host=127.0.0.1 --port=8082
 ```
 
 Перейти в админку
 
 ```shell
-http://127.0.0.1:8081/admin/
+http://127.0.0.1:8082/admin/
 ```
 
-Реквизиты доступа
+Возможно будет перенаправление на страницу входа.
+Реквизиты доступа по умолчанию можно найти в
+[ShopOperator](backend/apps/ShopOperator/.env)
+
+Обычно это такие значения:
 
 ```
 admin@example.com
@@ -287,11 +303,4 @@ admin@example.com
 
 ```
 admin12345
-```
-
-### Если надо бэк энд для API
-
-```shell
-cd ./backend/apps/ShopAPI
-php artisan serve --host=127.0.0.1 --port=8081
 ```

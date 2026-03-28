@@ -10,8 +10,6 @@ Frontend реализован на Vue 3 + Vite и отвечает за front o
 - offline UI mock-тесты и online e2e для живого контура.
 - promo-first загрузку карточки магазина и promo-секцию.
 
-Система тем и runtime theme editor из публичного интерфейса удалены.
-
 ## Быстрый запуск
 
 ```bash
@@ -97,3 +95,23 @@ GET /api/v1/shop/{code}/promotion
 - `../docs/manual/USER_MANUAL.md` — пользовательские сценарии.
 - `../docs/manual/ADMIN_MANUAL.md` — администрирование магазина.
 - `../docs/foundations/IMPLEMENTATION.md` — техническая реализация.
+
+
+
+### Режимы frontend в dev/debug
+
+#### `FRONTEND_MODE=source`
+
+Используйте для обычной разработки UI:
+
+- работает Vite dev server;
+- изменения в исходниках отражаются сразу;
+- доступен hot reload.
+
+#### `FRONTEND_MODE=bundle-watch`
+
+Используйте, когда нужна отладка собранного frontend:
+
+- работает `vite build --watch`;
+- nginx отдаёт `frontend/dist`;
+- при `VITE_BUILD_SOURCEMAP=true` доступен mapping bundle на исходники.
