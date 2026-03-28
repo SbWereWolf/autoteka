@@ -133,6 +133,45 @@ now_epoch() { date +%s; }
 now_iso() { date -Is; }
 uptime_s() { awk '{print int($1)}' /proc/uptime 2>/dev/null || echo 0; }
 load_1m() { awk '{print $1}' /proc/loadavg 2>/dev/null || echo 0; }
+cpu_cores_numbers() {
+  local cores
+
+  cores="$(
+    getconf _NPROCESSORS_ONLN 2>/dev/null \
+      || nproc 2>/dev/null \
+      || echo 1
+  )"
+
+  case "$cores" in
+    ''|*[!0-9]*|0)
+      echo 1
+      ;;
+    *)
+      echo "$cores"
+      ;;
+  esac
+}
+
+load_1m_pct() {
+  local load
+  local cores
+
+  load="$(load_1m)"
+  cores="$(cpu_cores_numbers)"
+
+  awk -v load="$load" -v cores="$cores" '
+    BEGIN {
+      if (cores <= 0) {
+        cores = 1
+      }
+      pct = (load * 100) / cores
+      if (pct == int(pct)) {
+        printf "%.0f\n", pct
+      } else {
+        printf "%d\n", int(pct) + 1
+      }
+    }'
+}
 ram_used_pct() {
   awk '
     /^MemTotal:/ {t=$2}
@@ -525,7 +564,7 @@ if [ "$UP" -lt "$BOOT_GRACE" ]; then
   exit 0
 fi
 
-LOAD="$(load_1m)"
+LOAD="$(load_1m_pct)"
 RAM="$(ram_used_pct)"
 HOST_REASON=""
 

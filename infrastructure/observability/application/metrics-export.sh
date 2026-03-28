@@ -3,7 +3,7 @@ set -euo pipefail
 
 # Convert $LOG_DIR/server-metrics.log -> $INFRA_ROOT/observability/application/metrics/data.json
 # Input format (single line):
-#   2026-03-04T03:10:00+03:00 load=0.25 ram=32 health=healthy
+#   2026-03-04T03:10:00+03:00 load=63 ram=32 health=healthy
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/../../init-roots.sh"
