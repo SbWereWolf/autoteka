@@ -166,6 +166,57 @@ final class PromotionAdminHttpFlowTest extends TestCase
         $response->assertDontSee('name="shop_id"', false);
     }
 
+    public function test_promotion_edit_form_renders_existing_gallery_image_and_video_rows(): void
+    {
+        $this->actingAs($this->createAdminUser(), 'moonshine');
+        $shop = $this->createShop('promo-media-shop', 'Promo Media Shop');
+
+        $promotionId = DB::table('promotion')->insertGetId([
+            'shop_id' => $shop->getKey(),
+            'code' => 'promo-media-shop-existing-media',
+            'title' => 'Existing Media Promotion',
+            'description' => 'Promotion with existing media rows',
+            'start_date' => '2026-04-10',
+            'end_date' => '2026-04-20',
+            'is_published' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        DB::table('promotion_gallery_image')->insert([
+            'promotion_id' => $promotionId,
+            'file_path' => 'promotion/gallery/existing-image.webp',
+            'original_name' => 'existing-image.webp',
+            'sort' => 1,
+            'is_published' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        DB::table('promotion_gallery_video')->insert([
+            'promotion_id' => $promotionId,
+            'file_path' => 'promotion/gallery-video/existing-video.webm',
+            'original_name' => 'existing-video.webm',
+            'poster_path' => 'promotion/gallery-video-poster/existing-video.webp',
+            'poster_original_name' => 'existing-video.webp',
+            'mime' => 'video/webm',
+            'sort' => 2,
+            'is_published' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $response = $this->get(route('moonshine.crud.edit', [
+            'resourceUri' => 'promotion-resource',
+            'resourceItem' => $promotionId,
+        ]));
+
+        $response->assertOk();
+        $response->assertSee('promotion/gallery/existing-image.webp', false);
+        $response->assertSee('promotion/gallery-video/existing-video.webm', false);
+        $response->assertSee('promotion/gallery-video-poster/existing-video.webp', false);
+    }
+
     public function test_promotion_detail_page_renders_edit_button_before_detail_content(): void
     {
         $this->withoutMiddleware(VerifyCsrfToken::class);

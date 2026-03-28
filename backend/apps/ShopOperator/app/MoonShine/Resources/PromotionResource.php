@@ -7,6 +7,7 @@ namespace ShopOperator\MoonShine\Resources;
 use Autoteka\SchemaDefinition\SchemaTables\SchemaPromotion;
 use Autoteka\SchemaDefinition\SchemaTables\SchemaPromotionGalleryVideo;
 use Autoteka\SchemaDefinition\SchemaTables\SchemaPromotionImage;
+use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Js;
@@ -105,6 +106,11 @@ class PromotionResource extends ModelResource
     public function hasValidCreateShopContext(): bool
     {
         return false;
+    }
+
+    protected function modifyItemQueryBuilder(Builder $builder): Builder
+    {
+        return $builder->with($this->with);
     }
 
     protected function indexFields(): iterable
