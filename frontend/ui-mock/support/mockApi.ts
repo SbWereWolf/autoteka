@@ -1,5 +1,8 @@
 import type { Page, Route } from "@playwright/test";
 
+const TRANSPARENT_PNG_BASE64 =
+  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR4nGNgYAAAAAMAASsJTYQAAAAASUVORK5CYII=";
+
 type RawCity = {
   code: string;
   title: string;
@@ -293,6 +296,25 @@ export async function installApiMocks(
   page: Page,
   scenario: ErrorScenario = {},
 ) {
+  await page.route("**/generated/**", async (route) => {
+    const url = new URL(route.request().url());
+    const pathname = url.pathname.toLowerCase();
+
+    if (pathname.endsWith(".mp4")) {
+      return route.fulfill({
+        status: 204,
+        contentType: "video/mp4",
+        body: "",
+      });
+    }
+
+    return route.fulfill({
+      status: 200,
+      contentType: "image/png",
+      body: Buffer.from(TRANSPARENT_PNG_BASE64, "base64"),
+    });
+  });
+
   await page.route("**/api/v1/**", async (route) => {
     const request = route.request();
     const url = new URL(request.url());
