@@ -22,6 +22,8 @@ describe("TC-DEPLOY-025", () => {
     expect(content).toMatch(/nproc/);
     expect(content).toMatch(/load_1m_pct\(\)/);
     expect(content).toMatch(/LOAD="\$\(load_1m_pct\)"/);
+    expect(content).toMatch(/-v load_value="\$load_value"/);
+    expect(content).not.toMatch(/-v load="\$load"/);
     expect(content).toMatch(/printf "%d\\n", int\(pct\) \+ 1/);
   });
 

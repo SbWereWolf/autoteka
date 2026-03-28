@@ -153,18 +153,18 @@ cpu_cores_numbers() {
 }
 
 load_1m_pct() {
-  local load
+  local load_value
   local cores
 
-  load="$(load_1m)"
+  load_value="$(load_1m)"
   cores="$(cpu_cores_numbers)"
 
-  awk -v load="$load" -v cores="$cores" '
+  awk -v load_value="$load_value" -v cores="$cores" '
     BEGIN {
       if (cores <= 0) {
         cores = 1
       }
-      pct = (load * 100) / cores
+      pct = (load_value * 100) / cores
       if (pct == int(pct)) {
         printf "%.0f\n", pct
       } else {
