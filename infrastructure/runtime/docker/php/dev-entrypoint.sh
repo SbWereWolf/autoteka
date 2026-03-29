@@ -30,15 +30,9 @@ ln -sfn ../../../storage/app/public apps/ShopAPI/public/storage
 ln -sfn ../../../storage/app/public apps/ShopOperator/public/storage
 
 (cd apps/ShopAPI && php artisan package:discover --ansi >/dev/null 2>&1 || true)
-if ! grep -qE '^APP_KEY=base64:' apps/ShopAPI/.env; then
-  (cd apps/ShopAPI && php artisan key:generate --force --ansi || true)
-fi
 (cd apps/ShopAPI && php artisan optimize:clear --ansi >/dev/null 2>&1 || true)
 
 (cd apps/ShopOperator && php artisan package:discover --ansi >/dev/null 2>&1 || true)
 (cd apps/ShopOperator && php artisan optimize:clear --ansi >/dev/null 2>&1 || true)
-if ! grep -qE '^APP_KEY=base64:' apps/ShopOperator/.env; then
-  (cd apps/ShopOperator && php artisan key:generate --force --ansi || true)
-fi
 
 exec "$@"

@@ -116,6 +116,38 @@ Telegram: `$LOG_DIR/telegram.log`.
 при первом запуске. Подробности —
 [ADMIN_MANUAL §6.2](../docs/manual/ADMIN_MANUAL.md#62-backend).
 
+`APP_KEY` для `backend/apps/ShopAPI/.env` и
+`backend/apps/ShopOperator/.env` создаётся только в
+`prepare_laravel_runtime` из [`lib/laravel-runtime.sh`](lib/laravel-runtime.sh).
+Docker php entrypoint и deploy orchestration не должны писать этот ключ
+повторно.
+
+Если ключ модуля нужно регенерировать вручную, сначала загрузите
+рабочее окружение Compose:
+
+```bash
+set -a
+source /etc/autoteka/options.env
+set +a
+```
+
+Потом выполните регенерацию только для нужного модуля.
+
+`ShopOperator`:
+
+```bash
+docker compose -f "$INFRA_ROOT/runtime/docker-compose.yml" -f "$INFRA_ROOT/runtime/docker-compose.prod.yml" exec php sh -lc 'cd /var/www/backend/apps/ShopOperator && php artisan key:generate --force && php artisan optimize:clear'
+```
+
+`ShopAPI`:
+
+```bash
+docker compose -f "$INFRA_ROOT/runtime/docker-compose.yml" -f "$INFRA_ROOT/runtime/docker-compose.prod.yml" exec php sh -lc 'cd /var/www/backend/apps/ShopAPI && php artisan key:generate --force && php artisan optimize:clear'
+```
+
+Регенерация `APP_KEY` инвалидирует существующие cookies и сессии этого
+Laravel-модуля. Для админки после регенерации нужен новый вход.
+
 ### 6.1. Systemd и timers
 
 После install.sh создаются systemd-юниты: `autoteka.service`,

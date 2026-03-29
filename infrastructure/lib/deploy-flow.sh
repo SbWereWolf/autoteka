@@ -98,9 +98,6 @@ if [ -z "${AUTOTEKA_LIB_DEPLOY_FLOW_SH:-}" ]; then
       autoteka_deploy_flow_set_stage "artisan_check"
       api_artisan_in_php '--version >/dev/null'
       admin_artisan_in_php '--version >/dev/null'
-
-      autoteka_deploy_flow_set_stage "artisan_keygen"
-      ensure_app_key
     fi
 
     autoteka_deploy_flow_set_stage "artisan_migrate"

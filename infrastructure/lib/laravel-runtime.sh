@@ -67,23 +67,6 @@ if [ -z "${AUTOTEKA_LIB_LARAVEL_RUNTIME_SH:-}" ]; then
     '
   }
 
-  ensure_app_key() {
-    autoteka_runtime_compose exec -T php sh -lc '
-      set -eu
-      cd /var/www/backend
-      cp -n apps/ShopAPI/example.env apps/ShopAPI/.env
-      cp -n apps/ShopOperator/example.env apps/ShopOperator/.env
-      if ! grep -qE "^APP_KEY=base64:" apps/ShopAPI/.env; then
-          (cd apps/ShopAPI && php artisan key:generate --force --ansi)
-          cd /var/www/backend
-      fi
-      if ! grep -qE "^APP_KEY=base64:" apps/ShopOperator/.env; then
-          (cd apps/ShopOperator && php artisan key:generate --force --ansi)
-          cd /var/www/backend
-      fi
-    '
-  }
-
   prepare_laravel_runtime() {
     autoteka_runtime_compose exec -T php sh -lc '
       set -eu
