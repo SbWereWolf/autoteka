@@ -54,6 +54,18 @@ test("TC-UI-CLERK-MEDIA-004: promotion card consumes mixed galleryItems and rend
   );
 
   await firstCard.locator('[data-testid="gallery-next"]').click();
+  await expect(firstCard.getByTestId("gallery-audio-toggle")).toBeVisible();
+  await expect(firstCard.getByTestId("gallery-audio-toggle")).toHaveAttribute(
+    "aria-pressed",
+    "false",
+  );
+  await expect
+    .poll(async () =>
+      firstCard
+        .locator("video")
+        .evaluate((element) => (element as HTMLVideoElement).muted),
+    )
+    .toBe(true);
   await expect
     .poll(async () =>
       page.evaluate(() => {

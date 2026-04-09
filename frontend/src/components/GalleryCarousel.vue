@@ -40,18 +40,19 @@
             img-class="h-full w-full object-contain"
           />
 
-          <video
-            v-else
-            :ref="(element) => bindVideoRef(itemIndex, element)"
-            class="h-full w-full object-contain"
-            :src="item.src"
-            :poster="item.poster"
-            :autoplay="itemIndex === index"
-            :muted="true"
-            :loop="true"
-            playsinline
-            preload="metadata"
-          />
+          <div v-else class="shop-gallery-video-shell">
+            <video
+              :ref="(element) => bindVideoRef(itemIndex, element)"
+              class="h-full w-full object-contain"
+              :src="item.src"
+              :poster="item.poster"
+              :autoplay="itemIndex === index"
+              :muted="isGalleryVideoMuted"
+              :loop="true"
+              playsinline
+              preload="metadata"
+            />
+          </div>
         </div>
       </div>
     </div>
@@ -77,15 +78,33 @@
       ›
     </button>
 
-    <div v-if="items.length > 1" class="shop-gallery-dots">
-      <span
-        v-for="(_, dotIndex) in items"
-        :key="`gallery-dot-${dotIndex}`"
-        class="shop-gallery-dot"
-        :class="{
-          'shop-gallery-dot--active': dotIndex === index,
-        }"
-      />
+    <div v-if="items.length > 1" class="shop-gallery-footer">
+      <div class="shop-gallery-dots-shell">
+        <button
+          v-if="activeItem?.type === 'video'"
+          class="shop-gallery-audio-toggle"
+          data-testid="gallery-audio-toggle"
+          type="button"
+          :aria-label="
+            isGalleryVideoMuted ? 'Включить звук' : 'Выключить звук'
+          "
+          :aria-pressed="(!isGalleryVideoMuted).toString()"
+          @click="toggleAudio"
+        >
+          {{ isGalleryVideoMuted ? "Вкл. звук" : "Выкл. звук" }}
+        </button>
+
+        <div class="shop-gallery-dots">
+          <span
+            v-for="(_, dotIndex) in items"
+            :key="`gallery-dot-${dotIndex}`"
+            class="shop-gallery-dot"
+            :class="{
+              'shop-gallery-dot--active': dotIndex === index,
+            }"
+          />
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -95,6 +114,7 @@ import { computed, onBeforeUnmount, ref, watch, watchPostEffect } from "vue";
 import type { GalleryItem } from "../types";
 import UiImage from "./UiImage.vue";
 import { uiConfig } from "../config/ui";
+import { useGalleryVideoAudioState } from "../composables/useGalleryVideoAudioState";
 
 const props = withDefaults(
   defineProps<{
@@ -112,6 +132,7 @@ const props = withDefaults(
 
 const index = ref(0);
 const videoRefs = ref<Array<HTMLVideoElement | null>>([]);
+const { isGalleryVideoMuted } = useGalleryVideoAudioState();
 
 function clamp() {
   if (props.items.length === 0) {
@@ -142,6 +163,8 @@ const trackStyle = computed(() => ({
   transitionDuration: `${uiConfig.gallery.transitionMs}ms`,
 }));
 
+const activeItem = computed(() => props.items[index.value]);
+
 function bindVideoRef(index: number, element: Element | null) {
   videoRefs.value[index] =
     element instanceof HTMLVideoElement ? element : null;
@@ -154,6 +177,7 @@ function syncActiveVideo() {
     }
 
     if (slideIndex === index.value) {
+      video.muted = isGalleryVideoMuted.value;
       const playPromise = video.play();
       if (playPromise instanceof Promise) {
         playPromise.catch(() => {});
@@ -164,6 +188,21 @@ function syncActiveVideo() {
     video.pause();
     video.currentTime = 0;
   });
+}
+
+function toggleAudio() {
+  isGalleryVideoMuted.value = !isGalleryVideoMuted.value;
+
+  const activeVideo = videoRefs.value[index.value];
+  if (!activeVideo) {
+    return;
+  }
+
+  activeVideo.muted = isGalleryVideoMuted.value;
+  const playPromise = activeVideo.play();
+  if (playPromise instanceof Promise) {
+    playPromise.catch(() => {});
+  }
 }
 
 watch(

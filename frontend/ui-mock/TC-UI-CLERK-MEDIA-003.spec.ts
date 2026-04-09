@@ -54,6 +54,18 @@ test("TC-UI-CLERK-MEDIA-003: shop page consumes mixed galleryItems and renders v
   );
 
   await gallery.locator('[data-testid="gallery-next"]').click();
+  await expect(gallery.getByTestId("gallery-audio-toggle")).toBeVisible();
+  await expect(gallery.getByTestId("gallery-audio-toggle")).toHaveAttribute(
+    "aria-pressed",
+    "false",
+  );
+  await expect
+    .poll(async () =>
+      gallery
+        .locator("video")
+        .evaluate((element) => (element as HTMLVideoElement).muted),
+    )
+    .toBe(true);
   await expect
     .poll(async () =>
       page.evaluate(() => {
