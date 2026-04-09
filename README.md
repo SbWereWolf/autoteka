@@ -88,32 +88,6 @@ PROD среда это демонстрационный сервер на Ubuntu
 
 ## Локальный запуск
 
-### Front office
-
-```bash
-cd frontend
-npm i
-cp example.env .env
-npm run dev
-```
-
-Переменная окружения:
-
-- `VITE_API_BASE_URL` — базовый URL backend API. Для same-origin схемы
-  используйте `/api/v1`.
-
-Дополнительные команды:
-
-```bash
-cd frontend
-npm run build
-npm run preview
-npm run test
-npm run test:api:online
-npm run test:ui:mock   # offline UI на mock-данных
-npm run test:e2e       # online e2e (нужен backend)
-```
-
 ### Переключение настроек между Windows и nix
 
 В Системе есть платформенно зависимые настройки:
@@ -143,6 +117,32 @@ pwsh ./scripts/swap-env.ps1 load
 
 ```powershell
 pwsh ./scripts/swap-env.ps1 save
+```
+
+### Front office
+
+```bash
+cd frontend
+npm i
+cp example.env .env
+npm run dev
+```
+
+Переменная окружения:
+
+- `VITE_API_BASE_URL` — базовый URL backend API. Для same-origin схемы
+  используйте `/api/v1`.
+
+Дополнительные команды:
+
+```bash
+cd frontend
+npm run build
+npm run preview
+npm run test
+npm run test:api:online
+npm run test:ui:mock   # offline UI на mock-данных
+npm run test:e2e       # online e2e (нужен backend)
 ```
 
 ### Backend и back office

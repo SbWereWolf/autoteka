@@ -233,7 +233,10 @@ systemctl status server-maintenance.timer
 autoteka diagnose
 ```
 
-(`autoteka diagnose` вызывает `docker compose` с тем же набором `-f`, что и `autoteka up` / deploy: при `DEPLOY_MODE=prod` подключается `docker-compose.prod.yml`. Подробнее — [DEPLOY](../../infrastructure/DEPLOY.md).)
+(`autoteka diagnose` вызывает `docker compose` с тем же набором `-f`, 
+что и `autoteka up` / deploy: при `DEPLOY_MODE=prod` 
+подключается `docker-compose.prod.yml`. 
+Подробнее — [DEPLOY](../../infrastructure/DEPLOY.md).)
 
 Подробности:
 
@@ -297,7 +300,8 @@ autoteka repair-infra
 autoteka health-reset all
 ```
 
-Подробные сценарии диагностики и починки — см. [§12. Пошаговая диагностика](#12-пошаговая-диагностика).
+Подробные сценарии диагностики и починки — см. 
+[§12. Пошаговая диагностика](#12-пошаговая-диагностика).
 
 ### 7.6. Как обслуживать систему
 
