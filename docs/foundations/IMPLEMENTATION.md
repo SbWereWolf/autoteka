@@ -721,6 +721,12 @@ Dev (`$INFRA_ROOT/runtime/docker-compose.dev.yml`):
   `dev`, `prod`).
 - Dev nginx: `$INFRA_ROOT/runtime/docker/dev/nginx/Dockerfile`.
 - Prod nginx: `$INFRA_ROOT/runtime/docker/prod/nginx/Dockerfile`.
+- Nginx template-файлы dev-runtime:
+  - `$INFRA_ROOT/runtime/docker/dev/nginx/sourc.templatee.conf`
+  - `$INFRA_ROOT/runtime/docker/dev/nginx/bundle-watch.template.conf`
+- PHP ini-файлы runtime:
+  - `$INFRA_ROOT/runtime/docker/php/php.dev.ini`
+  - `$INFRA_ROOT/runtime/docker/php/php.prod.template.ini`
 - Entry points PHP:
   - `$INFRA_ROOT/runtime/docker/php/dev-entrypoint.sh`
   - `$INFRA_ROOT/runtime/docker/php/prod-entrypoint.sh`
