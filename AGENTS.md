@@ -384,7 +384,7 @@ Never commit:
 
 - `tasks/*`
 - `inbox/*`
-- *.env
+- `*.env` (exclude files like *.example.env)
 
 ## 5. Multi-agent use
 
