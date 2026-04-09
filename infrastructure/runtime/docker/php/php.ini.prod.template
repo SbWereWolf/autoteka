@@ -1,8 +1,8 @@
 expose_php = Off
 memory_limit = 256M
 max_execution_time = 60
-post_max_size = 32M
-upload_max_filesize = 32M
+post_max_size = 110M
+upload_max_filesize = 100M
 variables_order = EGPCS
 log_errors = On
 error_log = /proc/self/fd/2

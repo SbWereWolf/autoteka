@@ -1,7 +1,7 @@
 memory_limit = 512M
 max_execution_time = 0
-post_max_size = 64M
-upload_max_filesize = 64M
+post_max_size = 110M
+upload_max_filesize = 100M
 variables_order = EGPCS
 log_errors = On
 error_log = /proc/self/fd/2
