@@ -17,35 +17,48 @@
 
 ### scripts/agent/ — WSL-тестирование
 
-- `wsl-preflight.sh` — pre-check перед тестированием на WSL: Docker, curl,
-  Node.js, npm, system-tests/.env, prod.test.env, scripts/.env.
+- `wsl-preflight.sh` — pre-check перед тестированием на WSL: Docker,
+  curl, Node.js, npm, system-tests/.env, prod.test.env, scripts/.env.
 - `wsl-prepare-test-copy.sh` — копирует проект в изолированную папку
-  (`TEST_ROOT`, по умолчанию `/tmp/autoteka-wsl-test`) и создаёт env-файлы
-  с путями под тестовый корень. Запускать из WSL.
+  (`TEST_ROOT`, по умолчанию `/tmp/autoteka-wsl-test`) и создаёт
+  env-файлы с путями под тестовый корень. Запускать из WSL.
 
 ## Локальная конфигурация
 
-1. Шаблон формата — [`example.env`](example.env); рабочий файл — `scripts/.env`
-   (его не коммитим).
-2. Перед запуском репозиторных скриптов и ручных команд с PHP **сверь активные
-   артефакты с сохранённым набором для текущей ОС**:
-   - `pwsh ./scripts/swap-env.ps1 validate` (или `./scripts/swap-env.sh validate`);
-   - при расхождении — `pwsh ./scripts/swap-env.ps1 load` (или `load` в `.sh`),
-     чтобы подтянуть `scripts/.env`, lock-файлы и связанные пути.
-3. Пути к интерпретаторам брать из **уже согласованного** `scripts/.env`, в частности
-   **`SCRIPT_PHP_PATH`** — для `php artisan`, `php artisan test` (например в
+1. Шаблон формата — [`example.env`](example.env); рабочий файл —
+   `scripts/.env` (его не коммитим).
+2. Перед запуском репозиторных скриптов и ручных команд с PHP **сверь
+   активные артефакты с сохранённым набором для текущей ОС**:
+   - `pwsh ./scripts/swap-env.ps1 validate` (или
+     `./scripts/swap-env.sh validate`);
+   - при расхождении — `pwsh ./scripts/swap-env.ps1 load` (или `load` в
+     `.sh`), чтобы подтянуть `scripts/.env`, lock-файлы и связанные
+     пути.
+3. Пути к интерпретаторам брать из **уже согласованного**
+   `scripts/.env`, в частности **`SCRIPT_PHP_PATH`** — для
+   `php artisan`, `php artisan test` (например в
    `backend/apps/ShopOperator`) и для скриптов, которые читают env через
-   [`read-scripts-env.ps1`](read-scripts-env.ps1) (в т.ч. [`scripts/agent/verify.ps1`](agent/verify.ps1)).
+   [`read-scripts-env.ps1`](read-scripts-env.ps1) (в т.ч.
+   [`scripts/agent/verify.ps1`](agent/verify.ps1)).
 
 Поддерживаемые переменные:
 
 - `SCRIPT_BASH_PATH` — путь к интерпретатору `bash`.
-- `SCRIPT_NODE_PATH`, `SCRIPT_NPX_PATH` — пути к `node` и `npx` (для verify,
-  system-tests, playwright).
+- `SCRIPT_NODE_PATH`, `SCRIPT_NPX_PATH` — пути к `node` и `npx` (для
+  verify, system-tests, playwright).
 - `SCRIPT_PHP_PATH` — путь к исполняемому файлу `php` для репозиторных
   PowerShell-скриптов, включая `scripts/agent/verify.ps1`.
-- `AUTOTEKA_ROOT`, `INFRA_ROOT` — корни репозитория и infrastructure (для
-  `swap-env.sh`).
+- `AUTOTEKA_ROOT`, `INFRA_ROOT` — корни репозитория и infrastructure
+  (для `swap-env.sh`).
+
+## Зависимости линтинга
+
+Для XML-линтинга правило `lint/lint-rules.yml` использует `xmllint`. В
+WSL/Debian/Ubuntu этот бинарь предоставляет пакет `libxml2-utils`:
+
+```bash
+sudo apt-get update && sudo apt-get install -y libxml2-utils
+```
 
 ## Работа с platform env
 
@@ -55,22 +68,24 @@
 состояние, когда сохранять его в platform-specific storage и когда
 загружать сохранённый набор обратно в active-пути.
 
-`swap-env.ps1` и `swap-env.sh` нормализуют `AUTOTEKA_ROOT` и `INFRA_ROOT`
-по текущей ОС запуска: на Windows приводит WSL-пути `/mnt/c/...` к
-`C:\...`, а в nix/WSL переводит Windows-пути вида `C:\...` в
-`/mnt/c/...`. Если корневой путь не существует, скрипт завершится с
-кодом `3` и укажет, какой именно корень неверный. Если же не хватает
-отдельного ресурса внутри существующего корня, выводятся `missing-*`.
+`swap-env.ps1` и `swap-env.sh` нормализуют `AUTOTEKA_ROOT` и
+`INFRA_ROOT` по текущей ОС запуска: на Windows приводит WSL-пути
+`/mnt/c/...` к `C:\...`, а в nix/WSL переводит Windows-пути вида
+`C:\...` в `/mnt/c/...`. Если корневой путь не существует, скрипт
+завершится с кодом `3` и укажет, какой именно корень неверный. Если же
+не хватает отдельного ресурса внутри существующего корня, выводятся
+`missing-*`.
 
 ### Команды
 
-- `validate` — сверяет `active` и `current-env`. Это команда по умолчанию.
-- `save` — записывает из `active` в `current-env`,
-  только если замена нужна.
-- `load` — загружает из `current-env` в `active`, 
-  только если замена нужна.
-- `status` — показывает текущую среду, статусы и полные пути по
-  группам папок.
+- `validate` — сверяет `active` и `current-env`. Это команда по
+  умолчанию.
+- `save` — записывает из `active` в `current-env`, только если замена
+  нужна.
+- `load` — загружает из `current-env` в `active`, только если замена
+  нужна.
+- `status` — показывает текущую среду, статусы и полные пути по группам
+  папок.
 - `--help` / `-h` — краткая справка без путей.
 
 По умолчанию любая команда работает как `-t *`.
@@ -105,18 +120,17 @@
 Сопоставление путей:
 
 - `*-env` — active `.env` и `win.env` / `nix.env`
-- `*-lock` — active `package-lock.json` и
-  `package-lock.win.json` / `package-lock.nix.json`
-- `*-node-modules` — active `node_modules` и
-  `node_modules.win` / `node_modules.nix`
+- `*-lock` — active `package-lock.json` и `package-lock.win.json` /
+  `package-lock.nix.json`
+- `*-node-modules` — active `node_modules` и `node_modules.win` /
+  `node_modules.nix`
 
 `validate` сравнивает:
 
 - файлы — по полному совпадению содержимого;
-- каталоги `node_modules` — только по рекурсивному списку
-  относительных директорий без скрытых путей (любой сегмент, начинающийся
-  с `.`), без сравнения списков файлов и без сравнения содержимого
-  файлов.
+- каталоги `node_modules` — только по рекурсивному списку относительных
+  директорий без скрытых путей (любой сегмент, начинающийся с `.`), без
+  сравнения списков файлов и без сравнения содержимого файлов.
 
 Если обязательный источник для текущей среды не найден или не читается,
 `swap-env` завершится с кодом `3`. Если источник найден, но содержимое
@@ -191,16 +205,16 @@ bash ./scripts/swap-env.sh -h
 
 ## Quick verify cache
 
-`scripts/agent/verify.ps1 -TestProfile minimal` использует локальный
-кэш fingerprints для quick-проверок frontend, `ShopAPI` и
-`ShopOperator`.
+`scripts/agent/verify.ps1 -TestProfile minimal` использует локальный кэш
+fingerprints для quick-проверок frontend, `ShopAPI` и `ShopOperator`.
 
 - Кэш хранится в `/.runtime/verify/minimal-src-cache.json`.
 - Для frontend fingerprint считается по `frontend/src`.
 - Для `ShopAPI` fingerprint считается по `backend/apps/ShopAPI/app` и
   `backend/packages/SchemaDefinition/src`.
 - Для `ShopOperator` fingerprint считается по
-  `backend/apps/ShopOperator/app` и `backend/packages/SchemaDefinition/src`.
+  `backend/apps/ShopOperator/app` и
+  `backend/packages/SchemaDefinition/src`.
 - Если fingerprint не изменился с прошлого успешного запуска,
   `verify.ps1` печатает `cache hit: src unchanged` и не запускает
   повторно соответствующий quick-блок.

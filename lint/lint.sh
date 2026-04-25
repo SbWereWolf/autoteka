@@ -15,6 +15,8 @@ USAGE
 }
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+LINT_REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+export LINT_REPO_ROOT
 CONFIG_PATH="$SCRIPT_DIR/lint-rules.yml"
 ENV_PATH="$SCRIPT_DIR/.env"
 
@@ -78,6 +80,7 @@ fi
 read_rules() {
   awk '
     function trim(s){gsub(/^[ \t]+|[ \t]+$/, "", s); return s}
+    function unescape(s){gsub(/\\"/, "\"", s); return s}
     {
       line=$0
       if (match(line, /^  ("[^"]+"|[^[:space:]:][^:]*):[ \t]*$/)) {
@@ -96,6 +99,7 @@ read_rules() {
         sub(/^    format:[ \t]*/, "", cmd)
         cmd=trim(cmd)
         gsub(/^"|"$/, "", cmd)
+        cmd=unescape(cmd)
         if (cmd != "") {
           print current "|format|" cmd
           in_lint=0
@@ -109,6 +113,7 @@ read_rules() {
         sub(/^      -[ \t]*/, "", cmd)
         cmd=trim(cmd)
         gsub(/^"|"$/, "", cmd)
+        cmd=unescape(cmd)
         print current "|format|" cmd
         next
       }
@@ -122,6 +127,7 @@ read_rules() {
         sub(/^      -[ \t]*/, "", cmd)
         cmd=trim(cmd)
         gsub(/^"|"$/, "", cmd)
+        cmd=unescape(cmd)
         print current "|lint|" cmd
         next
       }
@@ -140,8 +146,10 @@ expand_command() {
   local input="$1"
   local output="$input"
   local missing=()
+  local i
 
-  while [[ "$output" =~ \$\{([A-Za-z0-9_]+)\} ]]; do
+  for ((i = 0; i < 10; i++)); do
+    [[ "$output" =~ \$\{([A-Za-z0-9_]+)\} ]] || break
     local var_name="${BASH_REMATCH[1]}"
     local var_val="${!var_name:-}"
 
@@ -155,6 +163,17 @@ expand_command() {
     fi
 
     output="${output//\$\{$var_name\}/$var_val}"
+  done
+
+  while [[ "$output" =~ \$\{([A-Za-z0-9_]+)\} ]]; do
+    local var_name="${BASH_REMATCH[1]}"
+    local seen=0
+    local v
+    for v in "${missing[@]:-}"; do
+      if [[ "$v" == "$var_name" ]]; then seen=1; break; fi
+    done
+    [[ $seen -eq 0 ]] && missing+=("$var_name")
+    output="${output//\$\{$var_name\}/}"
   done
 
   if [[ ${#missing[@]} -gt 0 ]]; then
@@ -199,21 +218,22 @@ get_rule_commands() {
 run_command() {
   local cmd="$1"
   local file="$2"
+  LAST_LINT_COMMAND_FAILED=0
 
   local expanded
   if ! expanded="$(expand_command "$cmd")"; then
     local missing
     missing="${expanded#MISSING|}"
-    log "SKIP (empty env): $cmd | missing: $missing"
-    return 0
+    log "ERROR: missing required env: $missing | command: $cmd"
+    return 3
   fi
 
   local final_cmd="${expanded#OK|}"
   final_cmd="$(echo "$final_cmd" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
 
   if [[ -z "$final_cmd" ]]; then
-    log "SKIP (empty command after env expansion): $cmd"
-    return 0
+    log "ERROR: empty command after env expansion: $cmd"
+    return 3
   fi
 
   if [[ "$MODE" == "DryRun" ]]; then
@@ -222,10 +242,16 @@ run_command() {
   fi
 
   log "Running: $final_cmd \"$file\""
-  bash -lc "$final_cmd \"$file\""
+  if [[ "$cmd" == *'${ESLINT_CONFIG_PATH}'* ]]; then
+    (cd "$(dirname "$file")" && bash -lc "$final_cmd \"$file\"")
+  else
+    bash -lc "$final_cmd \"$file\""
+  fi
   local ec=$?
 
   if [[ $ec -ne 0 ]]; then
+    LAST_LINT_COMMAND_FAILED=1
+
     if [[ "$MODE" == "Strict" ]]; then
       log "ERROR: Command failed ($ec): $final_cmd \"$file\""
       return $ec
@@ -253,12 +279,31 @@ lint_file() {
     return 0
   fi
 
+  local had_failure=0
   while IFS='|' read -r kind cmd; do
     [[ -z "$kind" ]] && continue
-    run_command "$cmd" "$abs" || return $?
+    run_command "$cmd" "$abs"
+    ec=$?
+
+    if [[ $ec -eq 3 ]]; then
+      return 3
+    fi
+
+    if [[ $ec -ne 0 ]]; then
+      return $ec
+    fi
+
+    if [[ "$LAST_LINT_COMMAND_FAILED" == "1" ]]; then
+      had_failure=1
+    fi
   done <<< "$cmds"
 
-  log "OK: $abs"
+  if [[ $had_failure -eq 1 ]]; then
+    log "WARN: completed with issues: $abs"
+  else
+    log "OK: $abs"
+  fi
+
   return 0
 }
 
@@ -282,10 +327,15 @@ process_path() {
 }
 
 for path_item in "${PATHS[@]}"; do
-  if ! process_path "$path_item"; then
-    if [[ "$MODE" == "Strict" ]]; then
-      exit 1
-    fi
+  process_path "$path_item"
+  ec=$?
+
+  if [[ $ec -eq 3 ]]; then
+    exit 3
+  fi
+
+  if [[ $ec -ne 0 && "$MODE" == "Strict" ]]; then
+    exit 1
   fi
 done
 

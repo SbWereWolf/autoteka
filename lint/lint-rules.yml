@@ -10,25 +10,25 @@ rules:
   ".vue":
     format: "${NPX_PATH} ${PRETTIER_PATH} --write"
     lint:
-      - "${NPX_PATH} ${ESLINT_PATH}"
+      - "${NPX_PATH} --prefix \"${LINT_REPO_ROOT}\" ${ESLINT_PATH} --config \"${ESLINT_CONFIG_PATH}\""
 
   ".ts":
     format: "${NPX_PATH} ${PRETTIER_PATH} --write"
     lint:
-      - "${NPX_PATH} ${ESLINT_PATH}"
+      - "${NPX_PATH} --prefix \"${LINT_REPO_ROOT}\" ${ESLINT_PATH} --config \"${ESLINT_CONFIG_PATH}\""
   ".tsx":
     format: "${NPX_PATH} ${PRETTIER_PATH} --write"
     lint:
-      - "${NPX_PATH} ${ESLINT_PATH}"
+      - "${NPX_PATH} --prefix \"${LINT_REPO_ROOT}\" ${ESLINT_PATH} --config \"${ESLINT_CONFIG_PATH}\""
   ".js":
     format: "${NPX_PATH} ${PRETTIER_PATH} --write"
     lint:
-      - "${NPX_PATH} ${ESLINT_PATH}"
+      - "${NPX_PATH} --prefix \"${LINT_REPO_ROOT}\" ${ESLINT_PATH} --config \"${ESLINT_CONFIG_PATH}\""
 
   ".css":
     format: "${NPX_PATH} ${PRETTIER_PATH} --write"
     lint:
-      - "${NPX_PATH} ${STYLELINT_PATH}"
+      - "${NPX_PATH} --prefix \"${LINT_REPO_ROOT}\" ${STYLELINT_PATH} --config \"${STYLELINT_CONFIG_PATH}\""
 
   ".json":
     format: "${NPX_PATH} ${PRETTIER_PATH} --write"
@@ -43,26 +43,32 @@ rules:
       - "${NPX_PATH} markdownlint-cli"
 
   ".yaml":
+    format: "${NPX_PATH} ${PRETTIER_PATH} --write"
     lint:
       - "${YAMLLINT_PATH}"
 
   ".yml":
+    format: "${NPX_PATH} ${PRETTIER_PATH} --write"
     lint:
       - "${YAMLLINT_PATH}"
 
   ".xml":
+    format: "${NPX_PATH} --prefix \"${LINT_REPO_ROOT}\" ${PRETTIER_PATH} --plugin=\"${PRETTIER_XML_PLUGIN_PATH}\" --write"
     lint:
-      - "xmllint --noout"
+      - "${XMLLINT_PATH} --noout"
 
   ".sh":
+    format: "${NPX_PATH} --prefix \"${LINT_REPO_ROOT}\" ${PRETTIER_PATH} --plugin=\"${PRETTIER_SH_PLUGIN_PATH}\" --write"
     lint:
       - "shellcheck"
 
   ".bash":
+    format: "${NPX_PATH} --prefix \"${LINT_REPO_ROOT}\" ${PRETTIER_PATH} --plugin=\"${PRETTIER_SH_PLUGIN_PATH}\" --write"
     lint:
       - "shellcheck"
 
   ".ps1":
+    format: pwsh -NoProfile -Command '& { param([string]$Path) Set-Content -Path $Path -Value (Invoke-Formatter -ScriptDefinition (Get-Content -Raw -Path $Path)) }'
     lint:
       - "pwsh -Command Invoke-ScriptAnalyzer -Path"
 
@@ -71,30 +77,37 @@ rules:
       - "java -jar ${PLANTUML} -checkonly"
 
   ".Dockerfile":
+    format: "${NPX_PATH} --prefix \"${LINT_REPO_ROOT}\" ${PRETTIER_PATH} --plugin=\"${PRETTIER_SH_PLUGIN_PATH}\" --write"
     lint:
       - "${HADOLINT_PATH}"
 
   "Makefile":
+    format: "${MAKEFILE_FORMATTER_PATH} format"
     lint:
       - "checkmake"
       - "make -n"
 
   ".sql":
+    format: "${NPX_PATH} --prefix \"${LINT_REPO_ROOT}\" ${PRETTIER_PATH} --plugin=\"${PRETTIER_SQL_PLUGIN_PATH}\" --parser=sql --language=sqlite --write"
     lint:
       - "${SQLFLUFF_PATH} lint"
 
   ".env":
+    format: "${NPX_PATH} --prefix \"${LINT_REPO_ROOT}\" ${PRETTIER_PATH} --plugin=\"${PRETTIER_SH_PLUGIN_PATH}\" --parser=sh --write"
     lint:
       - "${DOTENV_LINTER_PATH}"
 
   ".html":
+    format: "${NPX_PATH} ${PRETTIER_PATH} --write"
     lint:
       - "${NPX_PATH} htmlhint"
 
   ".htm":
+    format: "${NPX_PATH} ${PRETTIER_PATH} --write"
     lint:
       - "${NPX_PATH} htmlhint"
 
   ".svg":
+    format: "${NPX_PATH} --prefix \"${LINT_REPO_ROOT}\" ${PRETTIER_PATH} --plugin=\"${PRETTIER_XML_PLUGIN_PATH}\" --write"
     lint:
       - "${NPX_PATH} svgo"

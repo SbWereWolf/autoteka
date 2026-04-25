@@ -14,6 +14,7 @@ $ErrorActionPreference = "Stop"
 # --------------------------------------------------
 
 $ScriptDir  = Split-Path -Parent $MyInvocation.MyCommand.Path
+$RepoRoot = Split-Path -Parent $ScriptDir
 $ConfigPath = Join-Path $ScriptDir "lint-rules.yml"
 $EnvPath = Join-Path $ScriptDir ".env"
 
@@ -26,6 +27,8 @@ function Write-Log {
   param([string]$Message)
   Write-Host "[lint] $Message"
 }
+
+Set-Item -Path "Env:LINT_REPO_ROOT" -Value $RepoRoot
 
 # --------------------------------------------------
 # LOAD ENV
@@ -99,26 +102,42 @@ function Expand-EnvVariables {
   param([string]$Command)
 
   $missingVars = New-Object System.Collections.Generic.List[string]
+  $expanded = $Command
 
-  $expanded = [regex]::Replace(
-    $Command,
-    '\$\{([A-Za-z0-9_]+)\}',
-    {
-      param($match)
-
-      $varName = $match.Groups[1].Value
-      $value = [System.Environment]::GetEnvironmentVariable($varName)
-
-      if ([string]::IsNullOrWhiteSpace($value)) {
-        if (-not $missingVars.Contains($varName)) {
-          [void]$missingVars.Add($varName)
-        }
-        return ""
-      }
-
-      return $value
+  for ($i = 0; $i -lt 10; $i++) {
+    if ($expanded -notmatch '\$\{([A-Za-z0-9_]+)\}') {
+      break
     }
-  )
+
+    $expanded = [regex]::Replace(
+      $expanded,
+      '\$\{([A-Za-z0-9_]+)\}',
+      {
+        param($match)
+
+        $varName = $match.Groups[1].Value
+        $value = [System.Environment]::GetEnvironmentVariable($varName)
+
+        if ([string]::IsNullOrWhiteSpace($value)) {
+          if (-not $missingVars.Contains($varName)) {
+            [void]$missingVars.Add($varName)
+          }
+          return ""
+        }
+
+        return $value
+      }
+    )
+  }
+
+  if ($expanded -match '\$\{([A-Za-z0-9_]+)\}') {
+    foreach ($match in [regex]::Matches($expanded, '\$\{([A-Za-z0-9_]+)\}')) {
+      $varName = $match.Groups[1].Value
+      if (-not $missingVars.Contains($varName)) {
+        [void]$missingVars.Add($varName)
+      }
+    }
+  }
 
   [pscustomobject]@{
     Expanded = $expanded
@@ -149,14 +168,14 @@ function Invoke-ExternalCommand {
 
   if ($expansion.MissingVars.Count -gt 0) {
     $missing = ($expansion.MissingVars -join ", ")
-    Write-Log "SKIP (empty env): $CommandLine | missing: $missing"
-    return $false
+    Write-Log "ERROR: missing required env: $missing | command: $CommandLine"
+    exit 3
   }
 
   $Expanded = $expansion.Expanded.Trim()
   if ([string]::IsNullOrWhiteSpace($Expanded)) {
-    Write-Log "SKIP (empty command after env expansion): $CommandLine"
-    return $false
+    Write-Log "ERROR: empty command after env expansion: $CommandLine"
+    exit 3
   }
 
   if ($Mode -eq "DryRun") {
@@ -166,18 +185,32 @@ function Invoke-ExternalCommand {
 
   $FullCommand = "$Expanded `"$File`""
   Write-Log "Running: $FullCommand"
+  $runFromFileDirectory = $CommandLine.Contains('${ESLINT_CONFIG_PATH}')
+  $originalLocation = $null
 
-  if (Test-IsWindowsHost) {
-    $cmdRunner = Get-Command cmd.exe -ErrorAction SilentlyContinue
-    if ($cmdRunner) {
-      & $cmdRunner.Source /c $FullCommand
+  if ($runFromFileDirectory) {
+    $originalLocation = Get-Location
+    Set-Location -LiteralPath (Split-Path -Parent $File)
+  }
+
+  try {
+    if (Test-IsWindowsHost) {
+      $cmdRunner = Get-Command cmd.exe -ErrorAction SilentlyContinue
+      if ($cmdRunner) {
+        & $cmdRunner.Source /c $FullCommand
+      }
+      else {
+        throw "cmd.exe not found on Windows host"
+      }
     }
     else {
-      throw "cmd.exe not found on Windows host"
+      bash -lc "$FullCommand"
     }
   }
-  else {
-    bash -lc "$FullCommand"
+  finally {
+    if ($runFromFileDirectory -and $null -ne $originalLocation) {
+      Set-Location -LiteralPath $originalLocation
+    }
   }
 
   if ($LASTEXITCODE -ne 0) {
