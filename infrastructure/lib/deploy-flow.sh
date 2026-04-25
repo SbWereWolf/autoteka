@@ -22,9 +22,13 @@ if [ -z "${AUTOTEKA_LIB_DEPLOY_FLOW_SH:-}" ]; then
   autoteka_composer_install_backend_apps() {
     local root="${AUTOTEKA_ROOT:?AUTOTEKA_ROOT must be set}"
     local api="$root/backend/apps/ShopAPI"
+    if [ ! -f "$api/composer.json" ] ; then
+      echo "autoteka_composer_install_backend_apps: нет composer.json в $api" >&2
+      return 3
+    fi
     local admin="$root/backend/apps/ShopOperator"
-    if [ ! -f "$api/composer.json" ] || [ ! -f "$admin/composer.json" ]; then
-      echo "autoteka_composer_install_backend_apps: нет composer.json в $api или $admin" >&2
+    if [ ! -f "$admin/composer.json" ]; then
+      echo "autoteka_composer_install_backend_apps: нет composer.json в $admin" >&2
       return 3
     fi
     if ! command -v docker >/dev/null 2>&1; then
