@@ -406,6 +406,96 @@
     }
   }
 
+  .catalog-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 1rem;
+    padding: 2.5rem 2rem;
+  }
+
+  .catalog-state-medallion {
+    width: 6rem;
+    height: 6rem;
+    border-radius: 9999px;
+    background: var(--color-surface-muted);
+    display: grid;
+    place-items: center;
+    color: var(--color-secondary-text);
+  }
+
+  .catalog-state-glyph {
+    display: block;
+  }
+
+  .catalog-state-title {
+    margin: 0;
+    font-size: 1.375rem;
+    font-weight: 700;
+    line-height: 1.2;
+    color: var(--color-ink);
+  }
+
+  .catalog-state-text {
+    margin: 0;
+    max-width: 18.75rem;
+    font-size: 0.9375rem;
+    font-weight: 500;
+    line-height: 1.45;
+    color: var(--color-secondary-text);
+    text-wrap: pretty;
+  }
+
+  .catalog-state-extras {
+    align-self: stretch;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 0.5rem;
+  }
+
+  .catalog-state-cta {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 3.5rem;
+    padding: 0 1.75rem;
+    border: none;
+    border-radius: var(--radius-cta);
+    background: var(--color-brand);
+    color: var(--color-white);
+    font-size: 0.9375rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition:
+      transform 120ms ease,
+      background 120ms ease;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+
+  .catalog-state-cta:active {
+    background: var(--color-brand-pressed);
+    transform: scale(var(--scale-press-button));
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .catalog-state-cta:hover {
+      background: var(--color-brand-hover);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .catalog-state-cta {
+      transition: background 120ms ease;
+    }
+    .catalog-state-cta:active {
+      transform: none;
+    }
+  }
+
   .catalog-shop-tile {
     position: relative;
     width: 100%;

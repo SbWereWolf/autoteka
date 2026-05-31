@@ -7,12 +7,11 @@
       </span>
     </div>
 
-    <CatalogFilterChips />
+    <CatalogFilterChips
+      v-if="viewState === 'results' || viewState === 'loading'"
+    />
 
-    <div
-      v-if="!isLoading && !loadError && sorted.length > 0"
-      class="catalog-grid"
-    >
+    <div v-if="viewState === 'results'" class="catalog-grid">
       <ShopTile
         v-for="(shop, index) in sorted"
         :key="shop.code"
@@ -22,7 +21,7 @@
     </div>
 
     <div
-      v-else-if="isLoading"
+      v-else-if="viewState === 'loading'"
       class="catalog-grid"
       aria-busy="true"
       aria-live="polite"
@@ -36,29 +35,50 @@
       </div>
     </div>
 
-    <div v-else-if="loadError" class="mt-6">
-      <ErrorStatePanel
-        message="Не удалось загрузить каталог. Проверьте соединение и попробуйте снова."
-        @retry="loadCityShops"
-      />
-    </div>
+    <CatalogState
+      v-else-if="viewState === 'error'"
+      icon="globe"
+      title="Не удалось загрузить"
+      text="Что-то пошло не так. Попробуйте ещё раз."
+    >
+      <button
+        type="button"
+        class="catalog-state-cta"
+        @click="loadCityShops"
+      >
+        Повторить
+      </button>
+    </CatalogState>
 
-    <div v-else class="mt-6 text-sm text-slate-500">
-      В этом городе пока нет магазинов.
-    </div>
+    <CatalogState
+      v-else-if="hasActiveFilters"
+      icon="sliders"
+      title="Ничего не найдено"
+      text="Снимите фильтр или измените параметры поиска."
+    >
+      <CatalogFilterChips />
+    </CatalogState>
+
+    <CatalogState
+      v-else
+      icon="sliders"
+      title="Ничего не найдено"
+      text="В этом городе пока нет магазинов."
+    />
 
     <CatalogFeatureStickySelect v-if="!loadError" />
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, watch } from "vue";
 import ShopTile from "../components/ShopTile.vue";
 import CatalogFeatureStickySelect from "../components/CatalogFeatureStickySelect.vue";
 import CatalogFilterChips from "../components/CatalogFilterChips.vue";
-import ErrorStatePanel from "../components/ErrorStatePanel.vue";
+import CatalogState from "../components/CatalogState.vue";
 import { useCatalogCityShops } from "../composables/useCatalogCityShops";
 import { state } from "../state";
+import { useAnnouncer } from "../composables/useAnnouncer";
 
 const { sorted, seedBase, isLoading, loadError, loadCityShops } =
   useCatalogCityShops({
@@ -71,4 +91,25 @@ const currentCityTitle = computed(
   () =>
     state.cities.find((c) => c.code === state.cityCode)?.title ?? "",
 );
+
+const hasActiveFilters = computed(
+  () => state.selectedCategoryIds.length > 0,
+);
+
+type ViewState = "loading" | "results" | "empty" | "error";
+
+const viewState = computed<ViewState>(() => {
+  if (isLoading.value) return "loading";
+  if (loadError.value) return "error";
+  if (sorted.value.length === 0) return "empty";
+  return "results";
+});
+
+const { announce } = useAnnouncer();
+
+watch(viewState, (next, prev) => {
+  if (next === prev) return;
+  if (next === "error") announce("Не удалось загрузить");
+  else if (next === "empty") announce("Ничего не найдено");
+});
 </script>
