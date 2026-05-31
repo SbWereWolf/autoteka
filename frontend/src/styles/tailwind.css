@@ -1,4 +1,39 @@
 @import "tailwindcss";
+
+/*
+ * Design tokens — source of truth: _prototype/ui-kit.jsx (specs.jsx TokensCard +
+ * shared.jsx C palette). Names follow the spec canon (brand, ink, page,
+ * surface-muted, chip-selected-bg, etc.); hover variants from ui-kit.jsx
+ * "HOVER-слой" block.
+ */
+@theme {
+  --color-brand: #d61d00;
+  --color-brand-pressed: #bc1a00;
+  --color-brand-hover: #c91c00;
+  --color-ink: #0f0f10;
+  --color-focus-ink: #0f0f10;
+  --color-secondary-text: #8e8e93;
+  --color-disabled-text: #78787c;
+  --color-disabled-fill: transparent;
+  --color-page: #f6f6f9;
+  --color-page-pressed: #e7e7ec;
+  --color-page-hover: #efeff3;
+  --color-surface-muted: #ededf1;
+  --color-surface-muted-pressed: #dfdfe5;
+  --color-surface-muted-hover: #e6e6eb;
+  --color-chip-selected-bg: #fdece9;
+  --color-chip-selected-pressed-bg: #f7d9d2;
+  --color-chip-selected-hover-bg: #fae3de;
+  --color-white: #ffffff;
+
+  --radius-control: 12px;
+  --radius-cta: 20px;
+
+  --scale-press-button: 0.97;
+  --scale-press-icon: 0.92;
+  --scale-press-row: 0.99;
+}
+
 @config "../../tailwind.config.js";
 
 @layer base {
@@ -27,8 +62,10 @@
   }
 
   :focus-visible {
-    outline: 0.125rem solid var(--focus);
-    outline-offset: 0.125rem;
+    outline: none;
+    box-shadow:
+      0 0 0 2px #ffffff,
+      0 0 0 4px var(--focus);
   }
 }
 
@@ -822,24 +859,6 @@
     transition: color 160ms ease,
     text-decoration-color 160ms ease,
     opacity 160ms ease;
-  }
-
-  @media (hover: hover) and (pointer: fine) {
-    .shop-contact-link:hover {
-      background-color: aqua;
-    }
-  }
-
-  :link {
-    color: #0000EE;
-  }
-
-  :visited {
-    color: #551A8B;
-  }
-
-  :link:active, :visited:active {
-    color: #FF0000;
   }
 
   .shop-contact-text {
