@@ -28,6 +28,11 @@
 
   --radius-control: 12px;
   --radius-cta: 20px;
+  --radius-card: 20px;
+
+  --shadow-card:
+    0 1px 2px rgba(15, 15, 16, 0.025),
+    0 8px 20px -16px rgba(15, 15, 16, 0.12);
 
   --scale-press-button: 0.97;
   --scale-press-icon: 0.92;
@@ -221,46 +226,62 @@
   .catalog-grid-shell {
     position: relative;
     container-type: inline-size;
-    padding-top: 4.5rem;
-    padding-bottom: var(--catalog-grid-bottom-padding);
+    margin-inline: auto;
+    max-width: 80rem;
+    padding: 0.5rem 1rem 2.5rem;
+  }
+
+  .catalog-head {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    padding: 1rem 0 0.75rem;
+  }
+
+  .catalog-title {
+    margin: 0;
+    font-size: 1.375rem;
+    font-weight: 700;
+    line-height: 1.2;
+    color: var(--color-ink);
+  }
+
+  .catalog-city {
+    font-size: 0.875rem;
+    font-weight: 500;
+    line-height: 1.2;
+    color: var(--color-secondary-text);
   }
 
   .catalog-grid {
     display: grid;
-    grid-template-columns: repeat(
-      var(--catalog-grid-columns-mobile),
-      minmax(0, 1fr)
-    );
-    gap: var(--catalog-grid-gap);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
   }
 
-  @media (min-width: 48rem) {
+  @media (min-width: 40rem) {
     .catalog-grid {
-      grid-template-columns: repeat(
-        var(--catalog-grid-columns-3xl),
-        minmax(0, 1fr)
-      );
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 1rem;
     }
   }
 
-  @media (min-width: 80rem) {
+  @media (min-width: 64rem) {
     .catalog-grid {
-      grid-template-columns: repeat(
-        var(--catalog-grid-columns-7xl),
-        minmax(0, 1fr)
-      );
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 1rem;
     }
   }
 
   .catalog-shop-tile {
     position: relative;
     width: 100%;
-    aspect-ratio: 1 / 1;
+    height: 11.125rem;
     overflow: hidden;
-    border: none;
-    border-radius: 1.6rem;
-    background: linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%);
-    box-shadow: none;
+    border: 1px solid var(--color-surface-muted);
+    border-radius: var(--radius-card);
+    background: var(--color-white);
+    box-shadow: var(--shadow-card);
     cursor: pointer;
     transition: transform 180ms ease,
     box-shadow 180ms ease,
