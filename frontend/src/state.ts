@@ -41,8 +41,7 @@ function stableSort<T extends { sort: number }>(items: T[]): T[] {
         : "";
 
   return [...items].sort(
-    (a, b) =>
-      a.sort - b.sort || keyOf(a).localeCompare(keyOf(b), "ru"),
+    (a, b) => a.sort - b.sort || keyOf(a).localeCompare(keyOf(b), "ru"),
   );
 }
 
@@ -115,6 +114,11 @@ export function toggleCategory(categoryId: string) {
     state.selectedCategoryIds.push(categoryId);
   }
 
+  saveLocal(CATEGORIES_KEY, state.selectedCategoryIds);
+}
+
+export function clearCategories() {
+  state.selectedCategoryIds = [];
   saveLocal(CATEGORIES_KEY, state.selectedCategoryIds);
 }
 

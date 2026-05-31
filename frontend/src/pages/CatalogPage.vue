@@ -7,6 +7,8 @@
       </span>
     </div>
 
+    <CatalogFilterChips />
+
     <div
       v-if="!isLoading && !loadError && sorted.length > 0"
       class="catalog-grid"
@@ -53,6 +55,7 @@
 import { computed } from "vue";
 import ShopTile from "../components/ShopTile.vue";
 import CatalogFeatureStickySelect from "../components/CatalogFeatureStickySelect.vue";
+import CatalogFilterChips from "../components/CatalogFilterChips.vue";
 import ErrorStatePanel from "../components/ErrorStatePanel.vue";
 import { useCatalogCityShops } from "../composables/useCatalogCityShops";
 import { state } from "../state";
