@@ -270,9 +270,17 @@ test("UI-MOCK-04: 404 магазин показывает экран ошибк�
   await page.goto("/shop/nonexistent", {
     waitUntil: "domcontentloaded",
   });
+  const state = page.getByTestId("catalog-state");
+  await expect(state).toBeVisible();
+  const title = state.locator(".catalog-state-title");
+  await expect(title).toHaveText("Магазин не найден");
   await expect(
-    page.getByRole("heading", { name: "Магазин не найден" }),
-  ).toBeVisible();
+    title.evaluate((el) => el.tagName.toLowerCase()),
+  ).resolves.toBe("h2");
+  await expect(state.locator(".catalog-state-cta")).toHaveCount(0);
+  await expect(
+    page.getByTestId("shop-load-error-retry"),
+  ).toHaveCount(0);
 });
 
 test("UI-MOCK-05: ошибка контактов не ломает страницу магазина", async ({
@@ -1191,4 +1199,88 @@ test("UI-MOCK-32: кнопка паузы помещается внутри boun
       rects.pause.bottom > rects.navNext.y;
     expect(intersects).toBe(false);
   }
+});
+
+test("UI-MOCK-33: ошибка магазина показывает CatalogState с retry", async ({
+  page,
+}) => {
+  let shopRequestCount = 0;
+  page.on("request", (request) => {
+    if (
+      request.url().endsWith("/api/v1/shop/barnaul-01") &&
+      request.method().toUpperCase() === "GET"
+    ) {
+      shopRequestCount += 1;
+    }
+  });
+
+  await installApiMocks(page, {
+    shopByCode: { "barnaul-01": 500 },
+    promotionsByCode: { "barnaul-01": 500 },
+  });
+  await page.goto("/shop/barnaul-01", {
+    waitUntil: "domcontentloaded",
+  });
+
+  const state = page.getByTestId("catalog-state");
+  await expect(state).toBeVisible();
+  const title = state.locator(".catalog-state-title");
+  await expect(title).toHaveText("Не удалось загрузить магазин");
+  await expect(
+    title.evaluate((el) => el.tagName.toLowerCase()),
+  ).resolves.toBe("h2");
+
+  const retry = page.getByTestId("shop-load-error-retry");
+  await expect(retry).toBeVisible();
+  await expect(retry).toHaveText("Повторить");
+
+  const before = shopRequestCount;
+  await retry.click();
+  await expect
+    .poll(() => shopRequestCount, { timeout: 5000 })
+    .toBeGreaterThan(before);
+});
+
+test("UI-MOCK-34: скелетон магазина использует .catalog-skel", async ({
+  page,
+}) => {
+  await installApiMocks(page, {
+    delaysMs: {
+      shopByCode: { "nizhny-01": 4000 },
+      promotionByCode: { "nizhny-01": 4000 },
+    },
+  });
+  await page.goto("/shop/nizhny-01", {
+    waitUntil: "domcontentloaded",
+  });
+
+  const shopRoot = page.locator(".shop-page-root");
+  await expect(
+    shopRoot.locator(".catalog-skel").first(),
+  ).toBeVisible();
+  await expect(
+    shopRoot.locator(".ui-skeleton"),
+  ).toHaveCount(0);
+});
+
+test("UI-MOCK-35: фейл shop эрорит страницу даже при успешном промо", async ({
+  page,
+}) => {
+  await installApiMocks(page, {
+    shopByCode: { "barnaul-01": 500 },
+  });
+  await page.goto("/shop/barnaul-01", {
+    waitUntil: "domcontentloaded",
+  });
+
+  const state = page.getByTestId("catalog-state");
+  await expect(state).toBeVisible();
+  const title = state.locator(".catalog-state-title");
+  await expect(title).toHaveText("Не удалось загрузить магазин");
+  await expect(
+    title.evaluate((el) => el.tagName.toLowerCase()),
+  ).resolves.toBe("h2");
+  await expect(
+    page.getByTestId("shop-load-error-retry"),
+  ).toBeVisible();
 });

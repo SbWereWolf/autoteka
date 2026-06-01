@@ -38,7 +38,7 @@
       </svg>
     </div>
 
-    <h1 class="catalog-state-title">{{ title }}</h1>
+    <h2 class="catalog-state-title">{{ title }}</h2>
     <p class="catalog-state-text">{{ text }}</p>
 
     <div v-if="hasExtras" class="catalog-state-extras">

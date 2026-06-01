@@ -10,39 +10,50 @@
         <div class="shop-hero-shell">
           <div class="shop-hero-head">
             <div
-              class="shop-loading-back-skeleton ui-skeleton"
+              class="shop-loading-back-skeleton catalog-skel"
               data-testid="shop-loading-back-skeleton"
             />
             <div class="shop-loading-logo-skeleton-shell">
               <div
-                class="shop-loading-logo-skeleton ui-skeleton"
+                class="shop-loading-logo-skeleton catalog-skel"
                 data-testid="shop-loading-logo-skeleton"
               />
             </div>
           </div>
         </div>
         <div class="shop-hero-gallery" aria-hidden="true">
-          <div class="h-full w-full ui-skeleton" />
+          <div class="h-full w-full catalog-skel" />
         </div>
         <div class="space-y-3">
-          <div class="ui-skeleton h-6 w-48 rounded-full" />
-          <div class="ui-skeleton h-4 w-full rounded-full" />
-          <div class="ui-skeleton h-4 w-[80%] rounded-full" />
+          <div class="catalog-skel h-6 w-48 rounded-full" />
+          <div class="catalog-skel h-4 w-full rounded-full" />
+          <div class="catalog-skel h-4 w-[80%] rounded-full" />
         </div>
       </div>
 
       <div v-else-if="notFound" class="mt-8">
-        <ErrorStatePanel
-          message="Магазин не найден. Возможно, ссылка устарела или код магазина неверный."
-          retry-label=""
+        <CatalogState
+          icon="globe"
+          title="Магазин не найден"
+          text="Возможно, ссылка устарела или код магазина неверный."
         />
       </div>
 
       <div v-else-if="loadError" class="mt-8">
-        <ErrorStatePanel
-          message="Не удалось загрузить магазин. Попробуйте ещё раз."
-          @retry="reloadShopPage"
-        />
+        <CatalogState
+          icon="globe"
+          title="Не удалось загрузить магазин"
+          text="Что-то пошло не так. Попробуйте ещё раз."
+        >
+          <button
+            type="button"
+            class="catalog-state-cta"
+            data-testid="shop-load-error-retry"
+            @click="reloadShopPage"
+          >
+            Повторить
+          </button>
+        </CatalogState>
       </div>
 
       <div v-else-if="showShopScaffold" class="space-y-6">
@@ -82,12 +93,12 @@
 
             <template v-else>
               <div
-                class="shop-loading-back-skeleton ui-skeleton"
+                class="shop-loading-back-skeleton catalog-skel"
                 data-testid="shop-loading-back-skeleton"
               />
               <div class="shop-loading-logo-skeleton-shell">
                 <div
-                  class="shop-loading-logo-skeleton ui-skeleton"
+                  class="shop-loading-logo-skeleton catalog-skel"
                   data-testid="shop-loading-logo-skeleton"
                 />
               </div>
@@ -131,7 +142,7 @@
           aria-busy="true"
           aria-live="polite"
         >
-          <div class="h-full w-full ui-skeleton" />
+          <div class="h-full w-full catalog-skel" />
         </div>
 
         <template v-if="shop">
@@ -232,20 +243,20 @@
 
         <template v-else>
           <section class="shop-content-card space-y-3" aria-hidden="true">
-            <div class="ui-skeleton h-8 w-2/3 rounded-full" />
-            <div class="ui-skeleton h-4 w-full rounded-full" />
-            <div class="ui-skeleton h-4 w-[85%] rounded-full" />
+            <div class="catalog-skel h-8 w-2/3 rounded-full" />
+            <div class="catalog-skel h-4 w-full rounded-full" />
+            <div class="catalog-skel h-4 w-[85%] rounded-full" />
           </section>
 
           <section class="shop-content-card space-y-3" aria-hidden="true">
-            <div class="ui-skeleton h-6 w-32 rounded-full" />
-            <div class="ui-skeleton h-4 w-full rounded-full" />
-            <div class="ui-skeleton h-4 w-[75%] rounded-full" />
+            <div class="catalog-skel h-6 w-32 rounded-full" />
+            <div class="catalog-skel h-4 w-full rounded-full" />
+            <div class="catalog-skel h-4 w-[75%] rounded-full" />
           </section>
 
           <section class="shop-content-card space-y-3" aria-hidden="true">
-            <div class="ui-skeleton h-6 w-40 rounded-full" />
-            <div class="ui-skeleton h-4 w-full rounded-full" />
+            <div class="catalog-skel h-6 w-40 rounded-full" />
+            <div class="catalog-skel h-4 w-full rounded-full" />
           </section>
         </template>
       </div>
@@ -271,7 +282,7 @@ import { state } from "../state";
 import type { GalleryItem } from "../types";
 import { mapIdsToTitles } from "../utils/mapCodesToNames";
 import { openYandexNavigatorMapSearch } from "../utils/yandexAddressOpen";
-import ErrorStatePanel from "../components/ErrorStatePanel.vue";
+import CatalogState from "../components/CatalogState.vue";
 import { useShopContactRows } from "../composables/useShopContactRows";
 import { useShopPageLoader } from "../composables/useShopPageLoader";
 
