@@ -100,5 +100,6 @@ watch(viewState, (next, prev) => {
   if (next === "loading") announce("Загрузка каталога");
   else if (next === "error") announce("Не удалось загрузить");
   else if (next === "empty") announce("Ничего не найдено");
+  else if (next === "results") announce("Каталог загружен");
 });
 </script>
