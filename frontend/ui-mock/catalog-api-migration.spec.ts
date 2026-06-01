@@ -15,7 +15,9 @@ async function waitForUiMockFrontend(request: APIRequestContext) {
         return true;
       }
 
-      lastError = new Error(`Unexpected HTTP status: ${response.status()}`);
+      lastError = new Error(
+        `Unexpected HTTP status: ${response.status()}`,
+      );
     } catch (error) {
       lastError = error;
     }
@@ -44,20 +46,20 @@ test("UI-MOCK-01: каталог показывает новый top bar и пл
     page.getByRole("button", { name: "Открыть меню" }),
   ).toBeVisible();
   await expect(page.locator(".catalog-hamburger-line")).toHaveCount(4);
-  await expect(page.getByRole("img", { name: "TOauto.ru" })).toBeVisible();
+  await expect(
+    page.getByRole("img", { name: "TOauto.ru" }),
+  ).toBeVisible();
   await expect(page.locator(".catalog-shop-tile")).toHaveCount(2);
   await expect(page.getByText("CarsHelps")).toHaveCount(0);
-  await expect(page.locator(".catalog-shop-tile").first()).toHaveAttribute(
-    "href",
-    "/shop/barnaul-01",
-  );
+  await expect(
+    page.locator(".catalog-shop-tile").first(),
+  ).toHaveAttribute("href", "/shop/barnaul-01");
   await expect(
     page.locator('.catalog-shop-tile img[alt="CarsHelps"]'),
   ).toHaveCount(1);
-  await expect(page.locator(".catalog-shop-tile").nth(1)).toHaveAttribute(
-    "aria-label",
-    "Orange Parts",
-  );
+  await expect(
+    page.locator(".catalog-shop-tile").nth(1),
+  ).toHaveAttribute("aria-label", "Orange Parts");
 
   const stickyMetrics = await page.evaluate(() => {
     const sticky = document.querySelector(
@@ -79,7 +81,9 @@ test("UI-MOCK-01: каталог показывает новый top bar и пл
     );
   }
 
-  await expect(page.getByTestId("catalog-feature-chevron")).toHaveCount(0);
+  await expect(page.getByTestId("catalog-feature-chevron")).toHaveCount(
+    0,
+  );
   await expect(
     page.locator(
       '[data-testid="catalog-feature-sticky"] .catalog-select-icon',
@@ -149,21 +153,21 @@ test("UI-MOCK-03: страница магазина показывает slogan,
   await expect(page.locator(".shop-back-icon")).toHaveCount(0);
   await expect(page.locator(".shop-back-raster")).toBeVisible();
   await expect(page.locator(".shop-back-button")).toHaveText("");
-  await expect(
-    page.getByTestId("shop-slogan"),
-  ).toBeVisible();
+  await expect(page.getByTestId("shop-slogan")).toBeVisible();
   await expect(page.getByTestId("shop-slogan")).toContainText(
     "Запчасти рядом, когда они нужны",
   );
-  await expect(
-    page.getByTestId("shop-schedule-note"),
-  ).toContainText("Время работы");
-  await expect(
-    page.getByTestId("shop-schedule-note"),
-  ).toContainText("09:00 - 20:00");
+  await expect(page.getByTestId("shop-schedule-note")).toContainText(
+    "Время работы",
+  );
+  await expect(page.getByTestId("shop-schedule-note")).toContainText(
+    "09:00 - 20:00",
+  );
   await expect(page.getByTestId("shop-contacts")).toBeVisible();
   await expect(page.getByText("Контакты:")).toBeVisible();
-  await expect(page.getByTestId("shop-contacts").locator("a")).toHaveCount(5);
+  await expect(
+    page.getByTestId("shop-contacts").locator("a"),
+  ).toHaveCount(5);
   await expect(page.getByTestId("shop-features")).toBeVisible();
   await expect(page.getByText("Отечественные запчасти")).toBeVisible();
   await expect(page.getByText("Корейские запчасти")).toBeVisible();
@@ -188,11 +192,12 @@ test("UI-MOCK-03: страница магазина показывает slogan,
       '[data-testid="shop-gallery"] .shop-gallery-dots',
     ) as HTMLElement | null;
     const gallery = document.querySelector(
-      '.shop-hero-gallery',
+      ".shop-hero-gallery",
     ) as HTMLElement | null;
 
     const sloganRect = slogan?.getBoundingClientRect() ?? null;
-    const descriptionRect = description?.getBoundingClientRect() ?? null;
+    const descriptionRect =
+      description?.getBoundingClientRect() ?? null;
     const noteRect = note?.getBoundingClientRect() ?? null;
     const dotsRect = dots?.getBoundingClientRect() ?? null;
     const galleryRect = gallery?.getBoundingClientRect() ?? null;
@@ -239,7 +244,8 @@ test("UI-MOCK-03: страница магазина показывает slogan,
     heroLayout.galleryRect &&
     heroLayout.descriptionLineHeight
   ) {
-    const noteCenter = heroLayout.noteRect.left + heroLayout.noteRect.width / 2;
+    const noteCenter =
+      heroLayout.noteRect.left + heroLayout.noteRect.width / 2;
     const galleryCenter =
       heroLayout.galleryRect.left + heroLayout.galleryRect.width / 2;
     expect(Math.abs(noteCenter - galleryCenter)).toBeLessThanOrEqual(8);
@@ -250,7 +256,9 @@ test("UI-MOCK-03: страница магазина показывает slogan,
   expect(heroLayout.noteFontWeight).toMatch(/^(600|700|800|900|bold)$/);
   if (heroLayout.noteFontSize && heroLayout.descriptionFontSize) {
     expect(
-      Math.abs(heroLayout.noteFontSize - heroLayout.descriptionFontSize),
+      Math.abs(
+        heroLayout.noteFontSize - heroLayout.descriptionFontSize,
+      ),
     ).toBeLessThanOrEqual(0.5);
   }
 });
@@ -381,8 +389,10 @@ test("UI-MOCK-08: интерактивные элементы visibly реаги
     selector: string,
     options: { first?: boolean } = {},
   ) =>
-    (options.first ? page.locator(selector).first() : page.locator(selector))
-      .evaluate((element) => {
+    (options.first
+      ? page.locator(selector).first()
+      : page.locator(selector)
+    ).evaluate((element) => {
       const style = window.getComputedStyle(element as HTMLElement);
       return {
         transform: style.transform,
@@ -397,8 +407,9 @@ test("UI-MOCK-08: интерактивные элементы visibly реаги
   const brandHover = await snapshot(".catalog-brand-link");
   expect(brandHover).not.toEqual(brandBefore);
 
-  const tileBackgrounds = await page.locator(".catalog-shop-tile").evaluateAll(
-    (elements) =>
+  const tileBackgrounds = await page
+    .locator(".catalog-shop-tile")
+    .evaluateAll((elements) =>
       elements.slice(0, 2).map((element) => {
         const style = window.getComputedStyle(element as HTMLElement);
         return {
@@ -406,7 +417,7 @@ test("UI-MOCK-08: интерактивные элементы visibly реаги
           backgroundColor: style.backgroundColor,
         };
       }),
-  );
+    );
 
   expect(tileBackgrounds).toHaveLength(2);
   expect(tileBackgrounds[0]).toEqual(tileBackgrounds[1]);
@@ -418,7 +429,10 @@ test("UI-MOCK-08: интерактивные элементы visibly реаги
   const tileHover = await snapshot(".catalog-shop-tile", {
     first: true,
   });
-  await page.locator(".catalog-shop-tile").first().dispatchEvent("pointerdown");
+  await page
+    .locator(".catalog-shop-tile")
+    .first()
+    .dispatchEvent("pointerdown");
   const tileActive = await snapshot(".catalog-shop-tile", {
     first: true,
   });
@@ -449,4 +463,90 @@ test("UI-MOCK-08: интерактивные элементы visibly реаги
     first: true,
   });
   expect(contactHover).not.toEqual(contactBefore);
+});
+
+test("UI-MOCK-09: каталог показывает скелетон при загрузке и аннонс", async ({
+  page,
+}) => {
+  await installApiMocks(page, {
+    delaysMs: { cityCatalogByCode: { barnaul: 1500 } },
+  });
+  await page.goto("/", { waitUntil: "domcontentloaded" });
+
+  const skeleton = page.getByTestId("catalog-skeleton");
+  await expect(skeleton).toBeVisible();
+  await expect(skeleton).toHaveAttribute("aria-hidden", "true");
+  await expect(page.locator(".catalog-skeleton-tile")).toHaveCount(6);
+
+  const live = page.locator('[role="status"]');
+  await expect(live).toHaveText("Загрузка каталога");
+
+  await expect(page.locator("a.catalog-shop-tile")).toHaveCount(2);
+  await expect(skeleton).toHaveCount(0);
+  await expect(live).toHaveText("Каталог загружен");
+});
+
+test("UI-MOCK-10: пустой каталог в городе без магазинов", async ({
+  page,
+}) => {
+  await installApiMocks(page);
+  await page.goto("/", { waitUntil: "domcontentloaded" });
+  await expect(page.locator("a.catalog-shop-tile")).toHaveCount(2);
+
+  await page.getByRole("button", { name: "Открыть меню" }).click();
+  await page.getByTestId("menu-city-select").selectOption("kemerovo");
+
+  const state = page.getByTestId("catalog-state");
+  await expect(state).toBeVisible();
+  await expect(state.locator(".catalog-state-title")).toHaveText(
+    "Ничего не найдено",
+  );
+  await expect(state.locator(".catalog-state-text")).toHaveText(
+    "В этом городе пока нет магазинов.",
+  );
+  await expect(
+    state.locator(".catalog-state-medallion path"),
+  ).toHaveCount(1);
+
+  await expect(page.locator('[role="status"]')).toHaveText(
+    "Ничего не найдено",
+  );
+});
+
+test("UI-MOCK-11: ошибка загрузки каталога и повтор", async ({
+  page,
+}) => {
+  let cityRequestCount = 0;
+  page.on("request", (request) => {
+    if (request.url().endsWith("/api/v1/city/barnaul")) {
+      cityRequestCount += 1;
+    }
+  });
+
+  await installApiMocks(page, {
+    cityCatalogByCode: { barnaul: 500 },
+  });
+  await page.goto("/", { waitUntil: "domcontentloaded" });
+
+  const state = page.getByTestId("catalog-state");
+  await expect(state).toBeVisible();
+  await expect(state.locator(".catalog-state-title")).toHaveText(
+    "Не удалось загрузить",
+  );
+  await expect(state.locator(".catalog-state-text")).toHaveText(
+    "Что-то пошло не так. Попробуйте ещё раз.",
+  );
+  await expect(
+    state.locator(".catalog-state-medallion path"),
+  ).toHaveCount(3);
+
+  await expect(page.locator('[role="status"]')).toHaveText(
+    "Не удалось загрузить",
+  );
+
+  const before = cityRequestCount;
+  await page.locator(".catalog-state-cta").click();
+  await expect
+    .poll(() => cityRequestCount, { timeout: 5000 })
+    .toBeGreaterThan(before);
 });

@@ -91,6 +91,7 @@ type RawPromotion = {
 const cities: RawCity[] = [
   { code: "barnaul", title: "Барнаул", sort: 1 },
   { code: "nizhny", title: "Нижний Новгород", sort: 2 },
+  { code: "kemerovo", title: "Кемерово", sort: 3 },
 ];
 
 const categories: RawCategory[] = [
@@ -150,8 +151,7 @@ const shops: Record<string, RawShop> = Object.fromEntries(
           index === 0
             ? "27 лет помогаем автовладельцам находить нужные запчасти."
             : `Описание магазина ${item.title} по новому макету.`,
-        scheduleNote:
-          index === 0 ? "Время работы\n09:00 - 20:00" : "",
+        scheduleNote: index === 0 ? "Время работы\n09:00 - 20:00" : "",
         siteUrl:
           index === 0 ? "carshelps.ru" : "https://orange.example",
         latitude: "53.3474",
@@ -164,7 +164,8 @@ const shops: Record<string, RawShop> = Object.fromEntries(
           {
             id: `${item.code}-image-1`,
             type: "image",
-            src: item.thumbUrl ?? "/generated/gen-1x1-x1_0-v1-512x512.png",
+            src:
+              item.thumbUrl ?? "/generated/gen-1x1-x1_0-v1-512x512.png",
             sort: 10,
           },
           {
@@ -202,7 +203,8 @@ const promotionsByShop: Record<string, RawPromotion[]> = {
       id: "promo-1",
       code: "barnaul-01-summer-sale",
       title: "Летняя распродажа",
-      description: "Скидки на расходники и аккумуляторы до конца месяца.",
+      description:
+        "Скидки на расходники и аккумуляторы до конца месяца.",
       startDate: "2026-03-01",
       endDate: "2026-03-31",
       galleryImages: [
@@ -266,6 +268,7 @@ type ErrorScenario = {
   promotionsByCode?: Record<string, 404 | 422 | 500>;
   contactsByCode?: Record<string, 404 | 422 | 500>;
   delaysMs?: {
+    cityCatalogByCode?: Record<string, number>;
     promotionByCode?: Record<string, number>;
     shopByCode?: Record<string, number>;
   };
@@ -352,6 +355,11 @@ export async function installApiMocks(
         return notFound(route, "City Not Found");
       }
 
+      const delayMs = scenario.delaysMs?.cityCatalogByCode?.[cityCode];
+      if (typeof delayMs === "number" && delayMs > 0) {
+        await new Promise((resolve) => setTimeout(resolve, delayMs));
+      }
+
       return json(route, {
         city,
         items: shopsByCity[cityCode] ?? [],
@@ -434,8 +442,7 @@ export async function installApiMocks(
         return notFound(route, "Shop Not Found");
       }
 
-      const requestedTypes =
-        (request.postDataJSON() as string[]) ?? [];
+      const requestedTypes = (request.postDataJSON() as string[]) ?? [];
       const available = contactsByShop[shopCode] ?? {};
       const response: Record<string, string[]> = {};
 
