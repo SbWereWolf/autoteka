@@ -53,14 +53,14 @@
       text="В этом городе пока нет магазинов."
     />
 
-    <CatalogFeatureStickySelect v-if="!loadError" />
+    <CatalogSortBar v-if="!loadError" />
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed, watch } from "vue";
 import ShopTile from "../components/ShopTile.vue";
-import CatalogFeatureStickySelect from "../components/CatalogFeatureStickySelect.vue";
+import CatalogSortBar from "../components/CatalogSortBar.vue";
 import CatalogFilterChips from "../components/CatalogFilterChips.vue";
 import CatalogSkeleton from "../components/CatalogSkeleton.vue";
 import CatalogState from "../components/CatalogState.vue";

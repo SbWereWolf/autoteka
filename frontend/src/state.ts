@@ -8,6 +8,7 @@ const FEATURE_KEY = "autoteka_feature";
 
 type AppState = {
   menuOpen: boolean;
+  offersOpen: boolean;
   cityCode: string;
   selectedCategoryIds: string[];
   selectedFeatureId: string;
@@ -18,6 +19,7 @@ type AppState = {
 
 export const state = reactive<AppState>({
   menuOpen: false,
+  offersOpen: false,
   cityCode: "",
   selectedCategoryIds: [],
   selectedFeatureId: "",

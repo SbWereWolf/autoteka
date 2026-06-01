@@ -4,7 +4,7 @@
     :class="shellClass"
     :style="{ color: 'var(--text)' }"
   >
-    <div :inert="state.menuOpen">
+    <div :inert="state.menuOpen || state.offersOpen">
       <TopBar v-if="isCatalog" />
 
       <main :class="isCatalog ? 'pt-[4.5rem]' : ''">
@@ -13,6 +13,7 @@
     </div>
 
     <HamburgerMenu v-if="isCatalog" />
+    <CatalogSortSheet v-if="isCatalog" />
 
     <span class="sr-only" role="status" aria-live="polite">
       {{ announcerMessage }}
@@ -25,6 +26,7 @@ import { computed } from "vue";
 import { useRoute } from "vue-router";
 import TopBar from "./components/TopBar.vue";
 import HamburgerMenu from "./components/HamburgerMenu.vue";
+import CatalogSortSheet from "./components/CatalogSortSheet.vue";
 import { useAnnouncer } from "./composables/useAnnouncer";
 import { state } from "./state";
 

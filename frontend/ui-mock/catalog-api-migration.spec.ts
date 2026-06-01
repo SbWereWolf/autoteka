@@ -63,68 +63,12 @@ test("UI-MOCK-01: каталог показывает новый top bar и пл
     page.locator(".catalog-shop-tile").nth(1),
   ).toHaveAttribute("aria-label", "Orange Parts");
 
-  const stickyMetrics = await page.evaluate(() => {
-    const sticky = document.querySelector(
-      '[data-testid="catalog-feature-sticky"]',
-    ) as HTMLElement | null;
-    const rect = sticky?.getBoundingClientRect() ?? null;
-    return rect
-      ? {
-          viewportHeight: window.innerHeight,
-          gapBottom: window.innerHeight - rect.bottom,
-        }
-      : null;
-  });
-
-  expect(stickyMetrics).toBeTruthy();
-  if (stickyMetrics) {
-    expect(stickyMetrics.gapBottom).toBeGreaterThanOrEqual(
-      stickyMetrics.viewportHeight * 0.05,
-    );
-  }
-
-  await expect(page.getByTestId("catalog-feature-chevron")).toHaveCount(
-    0,
-  );
-  await expect(
-    page.locator(
-      '[data-testid="catalog-feature-sticky"] .catalog-select-icon',
-    ),
-  ).toHaveCount(1);
-
-  const stickyLayout = await page.evaluate(() => {
-    const sticky = document.querySelector(
-      '[data-testid="catalog-feature-sticky"]',
-    ) as HTMLElement | null;
-    const select = document.querySelector(
-      '[data-testid="catalog-feature-select"]',
-    ) as HTMLElement | null;
-
-    const stickyRect = sticky?.getBoundingClientRect() ?? null;
-    const selectRect = select?.getBoundingClientRect() ?? null;
-
-    if (!stickyRect || !selectRect) {
-      return null;
-    }
-
-    const stickyCenterX = stickyRect.left + stickyRect.width / 2;
-    const stickyCenterY = stickyRect.top + stickyRect.height / 2;
-    const selectCenterX = selectRect.left + selectRect.width / 2;
-    const selectCenterY = selectRect.top + selectRect.height / 2;
-
-    return {
-      widthRatio: selectRect.width / stickyRect.width,
-      centerOffsetX: Math.abs(stickyCenterX - selectCenterX),
-      centerOffsetY: Math.abs(stickyCenterY - selectCenterY),
-    };
-  });
-
-  expect(stickyLayout).toBeTruthy();
-  if (stickyLayout) {
-    expect(stickyLayout.widthRatio).toBeLessThanOrEqual(0.92);
-    expect(stickyLayout.centerOffsetX).toBeLessThanOrEqual(8);
-    expect(stickyLayout.centerOffsetY).toBeLessThanOrEqual(8);
-  }
+  const sortBar = page.getByTestId("catalog-sort-bar");
+  await expect(sortBar).toBeVisible();
+  const sortButton = sortBar.getByRole("button");
+  await expect(sortButton).toContainText("Сначала: ");
+  await expect(sortButton).toHaveAttribute("aria-haspopup", "dialog");
+  await expect(sortButton).toHaveAttribute("aria-expanded", "false");
 });
 
 test("UI-MOCK-02: overlay меняет город и обновляет каталог", async ({
@@ -860,4 +804,147 @@ test("UI-MOCK-20: диктор молчит пока дровер открыт �
     .click();
   await expect(page.getByRole("dialog")).toHaveCount(0);
   await expect(live).toHaveText("Ничего не найдено");
+});
+
+test("UI-MOCK-21: bottom-sheet сортировки — APG-структура и inert фона", async ({
+  page,
+}) => {
+  await installApiMocks(page);
+  await page.goto("/", { waitUntil: "domcontentloaded" });
+  await page
+    .getByTestId("catalog-sort-bar")
+    .getByRole("button")
+    .click();
+
+  const dialog = page.getByRole("dialog", { name: "Сортировка" });
+  await expect(dialog).toBeVisible();
+  await expect(dialog).toHaveAttribute("aria-modal", "true");
+  await expect(dialog).toHaveAttribute("aria-labelledby", "sort-title");
+  await expect(page.locator("#sort-title")).toHaveText("Сортировка");
+
+  const bgInert = await page.evaluate(() => {
+    const main = document.querySelector("main");
+    return Boolean(main?.closest("[inert]"));
+  });
+  expect(bgInert).toBe(true);
+
+  await expect
+    .poll(() =>
+      page.evaluate(() => {
+        const d = document.querySelector('[role="dialog"]');
+        return Boolean(d && d.contains(document.activeElement));
+      }),
+    )
+    .toBe(true);
+});
+
+test("UI-MOCK-22: Esc закрывает шит сортировки и возвращает фокус на триггер", async ({
+  page,
+}) => {
+  await installApiMocks(page);
+  await page.goto("/", { waitUntil: "domcontentloaded" });
+  const trigger = page
+    .getByTestId("catalog-sort-bar")
+    .getByRole("button");
+  await trigger.click();
+  await expect(
+    page.getByRole("dialog", { name: "Сортировка" }),
+  ).toBeVisible();
+
+  await page.keyboard.press("Escape");
+  await expect(
+    page.getByRole("dialog", { name: "Сортировка" }),
+  ).toHaveCount(0);
+
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () =>
+          document.activeElement ===
+          document.querySelector("[data-sort-trigger]"),
+      ),
+    )
+    .toBe(true);
+});
+
+test("UI-MOCK-23: тап по опции меняет фичу, обновляет localStorage и закрывает шит", async ({
+  page,
+}) => {
+  await installApiMocks(page);
+  await page.goto("/", { waitUntil: "domcontentloaded" });
+  await page
+    .getByTestId("catalog-sort-bar")
+    .getByRole("button")
+    .click();
+
+  const dialog = page.getByRole("dialog", { name: "Сортировка" });
+  await expect(dialog).toBeVisible();
+  await dialog.getByRole("radio", { name: "Самовывоз" }).click();
+  await expect(dialog).toHaveCount(0);
+
+  const stored = await page.evaluate(() =>
+    localStorage.getItem("autoteka_feature"),
+  );
+  expect(stored).toBe('"pickup"');
+
+  await expect(
+    page.getByTestId("catalog-sort-bar").getByRole("button"),
+  ).toHaveText("Сначала: Самовывоз");
+});
+
+test("UI-MOCK-24: текущая фича помечена aria-checked в шите", async ({
+  page,
+}) => {
+  await installApiMocks(page);
+  await page.goto("/", { waitUntil: "domcontentloaded" });
+  await page
+    .getByTestId("catalog-sort-bar")
+    .getByRole("button")
+    .click();
+
+  const dialog = page.getByRole("dialog", { name: "Сортировка" });
+  const current = dialog.getByRole("radio", { name: "Акции" });
+  await expect(current).toHaveAttribute("aria-checked", "true");
+  const other = dialog.getByRole("radio", { name: "Самовывоз" });
+  await expect(other).toHaveAttribute("aria-checked", "false");
+});
+
+test("UI-MOCK-25: выбор сортировки объявляется в дикторе", async ({
+  page,
+}) => {
+  await installApiMocks(page);
+  await page.goto("/", { waitUntil: "domcontentloaded" });
+  await page
+    .getByTestId("catalog-sort-bar")
+    .getByRole("button")
+    .click();
+  await page
+    .getByRole("dialog", { name: "Сортировка" })
+    .getByRole("radio", { name: "Самовывоз" })
+    .click();
+  await expect(page.locator('[role="status"]')).toHaveText(
+    "Сортировка: Самовывоз",
+  );
+});
+
+test("UI-MOCK-26: выбранная фича не появляется в ряду чипов", async ({
+  page,
+}) => {
+  await installApiMocks(page);
+  await page.goto("/", { waitUntil: "domcontentloaded" });
+  await expect(
+    page.locator('[data-testid="catalog-filter-row"]'),
+  ).toHaveCount(0);
+
+  await page
+    .getByTestId("catalog-sort-bar")
+    .getByRole("button")
+    .click();
+  await page
+    .getByRole("dialog", { name: "Сортировка" })
+    .getByRole("radio", { name: "Самовывоз" })
+    .click();
+  await expect(
+    page.locator('[data-testid="catalog-filter-row"]'),
+  ).toHaveCount(0);
 });
