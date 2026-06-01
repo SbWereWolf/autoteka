@@ -1,6 +1,7 @@
 <template>
-  <div
+  <section
     class="shop-gallery-shell"
+    aria-label="Фотографии и видео продавца"
     :data-testid="testId"
   >
     <div
@@ -10,20 +11,13 @@
       @pointerup="onUp"
       @pointercancel="onCancel"
     >
-      <div
-        v-if="items.length === 0"
-        class="shop-gallery-empty"
-      >
+      <div v-if="items.length === 0" class="shop-gallery-empty">
         <div class="px-6 text-center text-sm text-slate-500">
           {{ emptyText }}
         </div>
       </div>
 
-      <div
-        v-else
-        class="shop-gallery-track"
-        :style="trackStyle"
-      >
+      <div v-else class="shop-gallery-track" :style="trackStyle">
         <div
           v-for="(item, itemIndex) in items"
           :key="item.id"
@@ -106,15 +100,22 @@
         </div>
       </div>
     </div>
-  </div>
+  </section>
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeUnmount, ref, watch, watchPostEffect } from "vue";
+import {
+  computed,
+  onBeforeUnmount,
+  ref,
+  watch,
+  watchPostEffect,
+} from "vue";
 import type { GalleryItem } from "../types";
 import UiImage from "./UiImage.vue";
 import { uiConfig } from "../config/ui";
 import { useGalleryVideoAudioState } from "../composables/useGalleryVideoAudioState";
+import { useAnnouncer } from "../composables/useAnnouncer";
 
 const props = withDefaults(
   defineProps<{
@@ -133,6 +134,14 @@ const props = withDefaults(
 const index = ref(0);
 const videoRefs = ref<Array<HTMLVideoElement | null>>([]);
 const { isGalleryVideoMuted } = useGalleryVideoAudioState();
+const { announce } = useAnnouncer();
+
+watch(index, (next) => {
+  const item = props.items[next];
+  if (!item) return;
+  const kind = item.type === "video" ? "Видео" : "Фото";
+  announce(`${kind} ${next + 1} из ${props.items.length}`);
+});
 
 function clamp() {
   if (props.items.length === 0) {

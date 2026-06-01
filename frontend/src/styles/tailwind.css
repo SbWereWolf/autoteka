@@ -1059,6 +1059,12 @@
     transition-timing-function: ease;
   }
 
+  @media (prefers-reduced-motion: reduce) {
+    .shop-gallery-track {
+      transition: none !important;
+    }
+  }
+
   .shop-gallery-slide {
     min-width: 100%;
     height: 100%;

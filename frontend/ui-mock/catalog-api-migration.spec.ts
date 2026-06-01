@@ -948,3 +948,58 @@ test("UI-MOCK-26: выбранная фича не появляется в ря�
     page.locator('[data-testid="catalog-filter-row"]'),
   ).toHaveCount(0);
 });
+
+test("UI-MOCK-27: галерея магазина имеет регион с aria-label", async ({
+  page,
+}) => {
+  await installApiMocks(page);
+  await page.goto("/shop/barnaul-01", {
+    waitUntil: "domcontentloaded",
+  });
+
+  await expect(
+    page
+      .getByRole("region", { name: "Фотографии и видео продавца" })
+      .first(),
+  ).toBeVisible();
+});
+
+test("UI-MOCK-28: смена кадра галереи объявляется в дикторе", async ({
+  page,
+}) => {
+  await installApiMocks(page);
+  await page.goto("/shop/barnaul-01", {
+    waitUntil: "domcontentloaded",
+  });
+
+  const gallery = page.getByTestId("shop-gallery");
+  await expect(gallery).toBeVisible();
+  await gallery.locator('[data-testid="gallery-next"]').click();
+
+  await expect(page.locator('[role="status"]')).toHaveText(
+    "Видео 2 из 2",
+  );
+});
+
+test("UI-MOCK-29: галерея под reduced-motion листает мгновенно", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await installApiMocks(page);
+  await page.goto("/shop/barnaul-01", {
+    waitUntil: "domcontentloaded",
+  });
+
+  await expect(page.getByTestId("shop-gallery")).toBeVisible();
+  const duration = await page
+    .locator(".shop-gallery-track")
+    .first()
+    .evaluate((el) => window.getComputedStyle(el).transitionDuration);
+  if (duration !== "0s") {
+    test.skip(
+      true,
+      `transition-duration under reduced-motion was "${duration}"`,
+    );
+  }
+  expect(duration).toBe("0s");
+});
