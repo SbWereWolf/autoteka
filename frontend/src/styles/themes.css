@@ -13,9 +13,6 @@
   --border: rgba(13, 26, 111, 0.35);
   --focus: #0f0f10;
   --content-max-width: 80rem;
-  --catalog-feature-max-width: 24rem;
-  --catalog-feature-min-height: 4.25rem;
-  --catalog-feature-radius: 999px;
   --transform-scale-normal: 1;
   --transform-scale-weak: 1.1;
   --transform-scale-regular: 1.2;
