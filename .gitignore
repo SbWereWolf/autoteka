@@ -52,3 +52,5 @@ node_modules
 /frontend/dev.env
 
 /_prototype/
+
+.claude/
