@@ -879,7 +879,7 @@ test("UI-MOCK-23: тап по опции меняет фичу, обновляе
 
   const dialog = page.getByRole("dialog", { name: "Сортировка" });
   await expect(dialog).toBeVisible();
-  await dialog.getByRole("radio", { name: "Самовывоз" }).click();
+  await dialog.getByRole("button", { name: "Самовывоз" }).click();
   await expect(dialog).toHaveCount(0);
 
   const stored = await page.evaluate(() =>
@@ -892,7 +892,7 @@ test("UI-MOCK-23: тап по опции меняет фичу, обновляе
   ).toHaveText("Сначала: Самовывоз");
 });
 
-test("UI-MOCK-24: текущая фича помечена aria-checked в шите", async ({
+test("UI-MOCK-24: текущая фича помечена aria-current в шите", async ({
   page,
 }) => {
   await installApiMocks(page);
@@ -903,10 +903,10 @@ test("UI-MOCK-24: текущая фича помечена aria-checked в ши�
     .click();
 
   const dialog = page.getByRole("dialog", { name: "Сортировка" });
-  const current = dialog.getByRole("radio", { name: "Акции" });
-  await expect(current).toHaveAttribute("aria-checked", "true");
-  const other = dialog.getByRole("radio", { name: "Самовывоз" });
-  await expect(other).toHaveAttribute("aria-checked", "false");
+  const current = dialog.getByRole("button", { name: "Акции" });
+  await expect(current).toHaveAttribute("aria-current", "true");
+  const other = dialog.getByRole("button", { name: "Самовывоз" });
+  await expect(other).not.toHaveAttribute("aria-current", /.*/);
 });
 
 test("UI-MOCK-25: выбор сортировки объявляется в дикторе", async ({
@@ -920,7 +920,7 @@ test("UI-MOCK-25: выбор сортировки объявляется в ди
     .click();
   await page
     .getByRole("dialog", { name: "Сортировка" })
-    .getByRole("radio", { name: "Самовывоз" })
+    .getByRole("button", { name: "Самовывоз" })
     .click();
   await expect(page.locator('[role="status"]')).toHaveText(
     "Сортировка: Самовывоз",
@@ -942,7 +942,7 @@ test("UI-MOCK-26: выбранная фича не появляется в ря�
     .click();
   await page
     .getByRole("dialog", { name: "Сортировка" })
-    .getByRole("radio", { name: "Самовывоз" })
+    .getByRole("button", { name: "Самовывоз" })
     .click();
   await expect(
     page.locator('[data-testid="catalog-filter-row"]'),

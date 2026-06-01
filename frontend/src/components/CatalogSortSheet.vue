@@ -32,17 +32,20 @@
           <span class="text-2xl leading-none">×</span>
         </button>
       </header>
-      <ul
-        class="catalog-sort-options"
-        role="radiogroup"
-        aria-labelledby="sort-title"
-      >
-        <li v-for="feature in features" :key="feature.id">
+      <ul class="catalog-sort-options" role="list">
+        <li
+          v-for="feature in features"
+          :key="feature.id"
+          role="presentation"
+        >
           <button
             type="button"
             class="catalog-sort-option"
-            role="radio"
-            :aria-checked="feature.id === state.selectedFeatureId"
+            :aria-current="
+              feature.id === state.selectedFeatureId
+                ? 'true'
+                : undefined
+            "
             @click="selectFeature(feature.id, feature.title)"
           >
             <span>{{ feature.title }}</span>
