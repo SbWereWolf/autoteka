@@ -552,3 +552,134 @@ test("UI-MOCK-11: ошибка загрузки каталога и повтор
     .poll(() => cityRequestCount, { timeout: 5000 })
     .toBeGreaterThan(before);
 });
+
+const FOCUSABLE_SELECTOR = [
+  "a[href]",
+  "button:not([disabled])",
+  "input:not([disabled])",
+  "select:not([disabled])",
+  "textarea:not([disabled])",
+  '[tabindex]:not([tabindex="-1"])',
+].join(", ");
+
+test("UI-MOCK-12: дровер фильтров — APG-структура и inert фона", async ({
+  page,
+}) => {
+  await installApiMocks(page);
+  await page.goto("/", { waitUntil: "domcontentloaded" });
+  await page.getByRole("button", { name: "Открыть фильтры" }).click();
+
+  const dialog = page.getByRole("dialog");
+  await expect(dialog).toBeVisible();
+  await expect(dialog).toHaveAttribute("aria-modal", "true");
+  await expect(dialog).toHaveAttribute(
+    "aria-labelledby",
+    "filters-title",
+  );
+  await expect(page.locator("#filters-title")).toHaveText("Фильтры");
+
+  const bgInert = await page.evaluate(() => {
+    const main = document.querySelector("main");
+    return Boolean(main?.closest("[inert]"));
+  });
+  expect(bgInert).toBe(true);
+
+  await expect
+    .poll(() =>
+      page.evaluate(() => {
+        const dialogEl = document.querySelector('[role="dialog"]');
+        return Boolean(
+          dialogEl && dialogEl.contains(document.activeElement),
+        );
+      }),
+    )
+    .toBe(true);
+});
+
+test("UI-MOCK-13: дровер — Tab/Shift+Tab циклит фокус внутри", async ({
+  page,
+}) => {
+  await installApiMocks(page);
+  await page.goto("/", { waitUntil: "domcontentloaded" });
+  await page.getByRole("button", { name: "Открыть фильтры" }).click();
+  await expect(page.getByRole("dialog")).toBeVisible();
+
+  await expect
+    .poll(() =>
+      page.evaluate(() => {
+        const dialog = document.querySelector('[role="dialog"]');
+        return Boolean(
+          dialog && dialog.contains(document.activeElement),
+        );
+      }),
+    )
+    .toBe(true);
+
+  await page.evaluate((sel) => {
+    const dialog = document.querySelector('[role="dialog"]');
+    if (!dialog) return;
+    const nodes = Array.from(dialog.querySelectorAll<HTMLElement>(sel));
+    nodes[nodes.length - 1]?.focus();
+  }, FOCUSABLE_SELECTOR);
+  await page.keyboard.press("Tab");
+  await expect
+    .poll(() =>
+      page.evaluate((sel) => {
+        const dialog = document.querySelector('[role="dialog"]');
+        if (!dialog) return false;
+        const nodes = Array.from(
+          dialog.querySelectorAll<HTMLElement>(sel),
+        );
+        return document.activeElement === nodes[0];
+      }, FOCUSABLE_SELECTOR),
+    )
+    .toBe(true);
+
+  await page.evaluate((sel) => {
+    const dialog = document.querySelector('[role="dialog"]');
+    if (!dialog) return;
+    const nodes = Array.from(dialog.querySelectorAll<HTMLElement>(sel));
+    nodes[0]?.focus();
+  }, FOCUSABLE_SELECTOR);
+  await page.keyboard.press("Shift+Tab");
+  await expect
+    .poll(() =>
+      page.evaluate((sel) => {
+        const dialog = document.querySelector('[role="dialog"]');
+        if (!dialog) return false;
+        const nodes = Array.from(
+          dialog.querySelectorAll<HTMLElement>(sel),
+        );
+        return document.activeElement === nodes[nodes.length - 1];
+      }, FOCUSABLE_SELECTOR),
+    )
+    .toBe(true);
+
+  const inside = await page.evaluate(() => {
+    const dialog = document.querySelector('[role="dialog"]');
+    return Boolean(dialog && dialog.contains(document.activeElement));
+  });
+  expect(inside).toBe(true);
+});
+
+test("UI-MOCK-14: Esc закрывает дровер и возвращает фокус на триггер", async ({
+  page,
+}) => {
+  await installApiMocks(page);
+  await page.goto("/", { waitUntil: "domcontentloaded" });
+  await page.locator("[data-menu-button]").click();
+  await expect(page.getByRole("dialog")).toBeVisible();
+
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () =>
+          document.activeElement ===
+          document.querySelector("[data-menu-button]"),
+      ),
+    )
+    .toBe(true);
+});

@@ -9,6 +9,7 @@
     />
 
     <aside
+      ref="dialogRef"
       class="catalog-menu-panel"
       role="dialog"
       aria-modal="true"
@@ -19,7 +20,6 @@
       <div class="catalog-menu-header">
         <h2 id="filters-title" class="catalog-menu-title">Фильтры</h2>
         <button
-          ref="closeBtnEl"
           class="catalog-close-button ui-bounce"
           aria-label="Закрыть"
           type="button"
@@ -55,20 +55,13 @@
 </template>
 
 <script setup lang="ts">
-import {
-  computed,
-  nextTick,
-  onBeforeUnmount,
-  onMounted,
-  ref,
-  watch,
-} from "vue";
+import { computed, ref, watch } from "vue";
 import { state } from "../state";
 import CitySelect from "./CitySelect.vue";
 import CategoryChips from "./CategoryChips.vue";
+import { useFocusTrap } from "../composables/useFocusTrap";
 
-const closeBtnEl = ref<HTMLButtonElement | null>(null);
-let prevFocused: HTMLElement | null = null;
+const dialogRef = ref<HTMLElement | null>(null);
 
 const overlayStyle = computed(() => ({
   background:
@@ -80,42 +73,16 @@ function closeMenu() {
   state.menuOpen = false;
 }
 
-function focusMenuButton() {
-  document.querySelector<HTMLElement>("[data-menu-button]")?.focus();
-}
+const open = computed(() => state.menuOpen);
 
-watch(
-  () => state.menuOpen,
-  async (open) => {
-    if (open) {
-      prevFocused = document.activeElement as HTMLElement | null;
-      document.body.style.overflow = "hidden";
-      await nextTick();
-      closeBtnEl.value?.focus();
-      return;
-    }
-
-    document.body.style.overflow = "";
-    if (prevFocused && prevFocused.isConnected) {
-      prevFocused.focus();
-      return;
-    }
-    focusMenuButton();
-  },
-);
-
-function onKeydown(event: KeyboardEvent) {
-  if (!state.menuOpen) return;
-  if (event.key !== "Escape") return;
-  event.preventDefault();
-  closeMenu();
-}
-
-onMounted(() => {
-  document.addEventListener("keydown", onKeydown);
+useFocusTrap({
+  open,
+  dialogRef,
+  onClose: closeMenu,
+  fallbackSelector: "[data-menu-button]",
 });
 
-onBeforeUnmount(() => {
-  document.removeEventListener("keydown", onKeydown);
+watch(open, (isOpen) => {
+  document.body.style.overflow = isOpen ? "hidden" : "";
 });
 </script>

@@ -4,12 +4,15 @@
     :class="shellClass"
     :style="{ color: 'var(--text)' }"
   >
-    <TopBar v-if="isCatalog" />
-    <HamburgerMenu v-if="isCatalog" />
+    <div :inert="state.menuOpen">
+      <TopBar v-if="isCatalog" />
 
-    <main :class="isCatalog ? 'pt-[4.5rem]' : ''">
-      <router-view />
-    </main>
+      <main :class="isCatalog ? 'pt-[4.5rem]' : ''">
+        <router-view />
+      </main>
+    </div>
+
+    <HamburgerMenu v-if="isCatalog" />
 
     <span class="sr-only" role="status" aria-live="polite">
       {{ announcerMessage }}
@@ -23,6 +26,7 @@ import { useRoute } from "vue-router";
 import TopBar from "./components/TopBar.vue";
 import HamburgerMenu from "./components/HamburgerMenu.vue";
 import { useAnnouncer } from "./composables/useAnnouncer";
+import { state } from "./state";
 
 const route = useRoute();
 const { message: announcerMessage } = useAnnouncer();
