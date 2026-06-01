@@ -20,20 +20,7 @@
       />
     </div>
 
-    <div
-      v-else-if="viewState === 'loading'"
-      class="catalog-grid"
-      aria-busy="true"
-      aria-live="polite"
-    >
-      <div
-        v-for="i in 8"
-        :key="`catalog-skeleton-${i}`"
-        class="catalog-shop-tile"
-      >
-        <div class="absolute inset-0 ui-skeleton" aria-hidden="true" />
-      </div>
-    </div>
+    <CatalogSkeleton v-else-if="viewState === 'loading'" />
 
     <CatalogState
       v-else-if="viewState === 'error'"
@@ -75,6 +62,7 @@ import { computed, watch } from "vue";
 import ShopTile from "../components/ShopTile.vue";
 import CatalogFeatureStickySelect from "../components/CatalogFeatureStickySelect.vue";
 import CatalogFilterChips from "../components/CatalogFilterChips.vue";
+import CatalogSkeleton from "../components/CatalogSkeleton.vue";
 import CatalogState from "../components/CatalogState.vue";
 import { useCatalogCityShops } from "../composables/useCatalogCityShops";
 import { state } from "../state";
@@ -109,7 +97,8 @@ const { announce } = useAnnouncer();
 
 watch(viewState, (next, prev) => {
   if (next === prev) return;
-  if (next === "error") announce("Не удалось загрузить");
+  if (next === "loading") announce("Загрузка каталога");
+  else if (next === "error") announce("Не удалось загрузить");
   else if (next === "empty") announce("Ничего не найдено");
 });
 </script>
