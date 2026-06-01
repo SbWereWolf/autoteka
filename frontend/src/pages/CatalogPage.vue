@@ -95,11 +95,27 @@ const viewState = computed<ViewState>(() => {
 
 const { announce } = useAnnouncer();
 
+const VIEW_STATE_MESSAGES: Record<ViewState, string> = {
+  loading: "Загрузка каталога",
+  results: "Каталог загружен",
+  empty: "Ничего не найдено",
+  error: "Не удалось загрузить",
+};
+
+function announceViewState(value: ViewState) {
+  announce(VIEW_STATE_MESSAGES[value]);
+}
+
 watch(viewState, (next, prev) => {
   if (next === prev) return;
-  if (next === "loading") announce("Загрузка каталога");
-  else if (next === "error") announce("Не удалось загрузить");
-  else if (next === "empty") announce("Ничего не найдено");
-  else if (next === "results") announce("Каталог загружен");
+  if (state.menuOpen) return;
+  announceViewState(next);
 });
+
+watch(
+  () => state.menuOpen,
+  (open, wasOpen) => {
+    if (wasOpen && !open) announceViewState(viewState.value);
+  },
+);
 </script>

@@ -497,6 +497,11 @@ test("UI-MOCK-10: пустой каталог в городе без магаз�
 
   await page.getByRole("button", { name: "Открыть фильтры" }).click();
   await page.getByTestId("menu-city-select").selectOption("kemerovo");
+  await page
+    .locator(".catalog-menu-panel")
+    .getByRole("button", { name: "Закрыть" })
+    .click();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
 
   const state = page.getByTestId("catalog-state");
   await expect(state).toBeVisible();
@@ -682,4 +687,177 @@ test("UI-MOCK-14: Esc закрывает дровер и возвращает ф
       ),
     )
     .toBe(true);
+});
+
+test("UI-MOCK-15: тоггл категории в дровере добавляет чип в ряд фильтров", async ({
+  page,
+}) => {
+  await installApiMocks(page);
+  await page.goto("/", { waitUntil: "domcontentloaded" });
+  await page.getByRole("button", { name: "Открыть фильтры" }).click();
+  await expect(page.getByRole("dialog")).toBeVisible();
+
+  await page
+    .locator(".catalog-menu-panel")
+    .getByRole("button", { name: "Корейские запчасти" })
+    .click();
+
+  const chipRow = page.locator('[data-testid="catalog-filter-row"]');
+  await expect(chipRow).toBeVisible();
+  await expect(
+    chipRow.getByRole("button", {
+      name: "Удалить фильтр: Корейские запчасти",
+    }),
+  ).toBeVisible();
+});
+
+test("UI-MOCK-16: удаление чипа снимает категорию", async ({
+  page,
+}) => {
+  await installApiMocks(page);
+  await page.goto("/", { waitUntil: "domcontentloaded" });
+  await page.getByRole("button", { name: "Открыть фильтры" }).click();
+  const menuPanel = page.locator(".catalog-menu-panel");
+  await menuPanel
+    .getByRole("button", { name: "Корейские запчасти" })
+    .click();
+  await menuPanel.getByRole("button", { name: "Закрыть" }).click();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+
+  const chipRow = page.locator('[data-testid="catalog-filter-row"]');
+  const chipBtn = chipRow.getByRole("button", {
+    name: "Удалить фильтр: Корейские запчасти",
+  });
+  await expect(chipBtn).toBeVisible();
+  await chipBtn.click();
+  await expect(chipRow).toHaveCount(0);
+
+  const stored = await page.evaluate(() =>
+    localStorage.getItem("autoteka_categories"),
+  );
+  expect(stored).toBe("[]");
+});
+
+test("UI-MOCK-17: кнопка Очистить все убирает все чипы и категории", async ({
+  page,
+}) => {
+  await installApiMocks(page);
+  await page.goto("/", { waitUntil: "domcontentloaded" });
+  await page.getByRole("button", { name: "Открыть фильтры" }).click();
+  const menuPanel = page.locator(".catalog-menu-panel");
+  await menuPanel
+    .getByRole("button", { name: "Корейские запчасти" })
+    .click();
+  await menuPanel
+    .getByRole("button", { name: "Японские запчасти" })
+    .click();
+  await menuPanel.getByRole("button", { name: "Закрыть" }).click();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+
+  const chipRow = page.locator('[data-testid="catalog-filter-row"]');
+  await expect(chipRow).toBeVisible();
+  await chipRow
+    .getByRole("button", { name: "Очистить все фильтры" })
+    .click();
+  await expect(chipRow).toHaveCount(0);
+
+  const stored = await page.evaluate(() =>
+    localStorage.getItem("autoteka_categories"),
+  );
+  expect(stored).toBe("[]");
+});
+
+test("UI-MOCK-18: пустой результат с фильтрами показывает чипы внутри состояния", async ({
+  page,
+}) => {
+  await installApiMocks(page);
+  await page.goto("/", { waitUntil: "domcontentloaded" });
+  await page.getByRole("button", { name: "Открыть фильтры" }).click();
+  const menuPanel = page.locator(".catalog-menu-panel");
+  await menuPanel
+    .getByRole("button", { name: "Корейские запчасти" })
+    .click();
+  await page.getByTestId("menu-city-select").selectOption("kemerovo");
+  await menuPanel.getByRole("button", { name: "Закрыть" }).click();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+
+  const state = page.getByTestId("catalog-state");
+  await expect(state).toBeVisible();
+  await expect(state.locator(".catalog-state-title")).toHaveText(
+    "Ничего не найдено",
+  );
+  await expect(state.locator(".catalog-state-text")).toHaveText(
+    "Снимите фильтр или измените параметры поиска.",
+  );
+
+  const chipRow = state.locator('[data-testid="catalog-filter-row"]');
+  await expect(chipRow).toBeVisible();
+  await expect(
+    chipRow.getByRole("button", {
+      name: "Удалить фильтр: Корейские запчасти",
+    }),
+  ).toBeVisible();
+});
+
+test("UI-MOCK-19: чипы объявляют снятие и очистку через диктор", async ({
+  page,
+}) => {
+  await installApiMocks(page);
+  await page.goto("/", { waitUntil: "domcontentloaded" });
+  const menuPanel = page.locator(".catalog-menu-panel");
+  await page.getByRole("button", { name: "Открыть фильтры" }).click();
+  await menuPanel
+    .getByRole("button", { name: "Корейские запчасти" })
+    .click();
+  await menuPanel.getByRole("button", { name: "Закрыть" }).click();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+
+  const chipRow = page.locator('[data-testid="catalog-filter-row"]');
+  const live = page.locator('[role="status"]');
+  await chipRow
+    .getByRole("button", {
+      name: "Удалить фильтр: Корейские запчасти",
+    })
+    .click();
+  await expect(live).toHaveText("Фильтр снят: Корейские запчасти");
+
+  await page.getByRole("button", { name: "Открыть фильтры" }).click();
+  await menuPanel
+    .getByRole("button", { name: "Корейские запчасти" })
+    .click();
+  await menuPanel
+    .getByRole("button", { name: "Японские запчасти" })
+    .click();
+  await menuPanel.getByRole("button", { name: "Закрыть" }).click();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+
+  await chipRow
+    .getByRole("button", { name: "Очистить все фильтры" })
+    .click();
+  await expect(live).toHaveText("Фильтры очищены");
+});
+
+test("UI-MOCK-20: диктор молчит пока дровер открыт и объявляет на закрытии", async ({
+  page,
+}) => {
+  await installApiMocks(page);
+  await page.goto("/", { waitUntil: "domcontentloaded" });
+  await expect(page.locator("a.catalog-shop-tile")).toHaveCount(2);
+  const live = page.locator('[role="status"]');
+  await expect(live).toHaveText("Каталог загружен");
+
+  await page.getByRole("button", { name: "Открыть фильтры" }).click();
+  await expect(page.getByRole("dialog")).toBeVisible();
+
+  await page.getByTestId("menu-city-select").selectOption("kemerovo");
+  await expect(page.getByTestId("catalog-state")).toBeVisible();
+  // viewState changed behind the open drawer — announcer must stay silent
+  await expect(live).toHaveText("Каталог загружен");
+
+  await page
+    .locator(".catalog-menu-panel")
+    .getByRole("button", { name: "Закрыть" })
+    .click();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(live).toHaveText("Ничего не найдено");
 });
