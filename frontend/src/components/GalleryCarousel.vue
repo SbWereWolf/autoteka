@@ -1,5 +1,6 @@
 <template>
   <section
+    ref="sectionRef"
     class="shop-gallery-shell"
     aria-label="Фотографии и видео продавца"
     :data-testid="testId"
@@ -40,7 +41,7 @@
               class="h-full w-full object-contain"
               :src="item.src"
               :poster="item.poster"
-              :autoplay="itemIndex === index"
+              :autoplay="itemIndex === index && !reducedMotion"
               :muted="isGalleryVideoMuted"
               :loop="true"
               playsinline
@@ -100,6 +101,39 @@
         </div>
       </div>
     </div>
+
+    <button
+      v-if="activeItem?.type === 'video'"
+      class="shop-gallery-pause-toggle"
+      data-testid="gallery-pause-toggle"
+      type="button"
+      :aria-label="userPaused ? 'Воспроизвести' : 'Пауза'"
+      @click="togglePause"
+    >
+      <svg
+        v-if="userPaused"
+        width="18"
+        height="18"
+        viewBox="0 0 24 24"
+        fill="currentColor"
+        aria-hidden="true"
+        focusable="false"
+      >
+        <path d="M8 5v14l11-7z" />
+      </svg>
+      <svg
+        v-else
+        width="18"
+        height="18"
+        viewBox="0 0 24 24"
+        fill="currentColor"
+        aria-hidden="true"
+        focusable="false"
+      >
+        <rect x="6" y="5" width="4" height="14" rx="1" />
+        <rect x="14" y="5" width="4" height="14" rx="1" />
+      </svg>
+    </button>
   </section>
 </template>
 
@@ -107,6 +141,7 @@
 import {
   computed,
   onBeforeUnmount,
+  onMounted,
   ref,
   watch,
   watchPostEffect,
@@ -131,17 +166,51 @@ const props = withDefaults(
   },
 );
 
+const sectionRef = ref<HTMLElement | null>(null);
 const index = ref(0);
 const videoRefs = ref<Array<HTMLVideoElement | null>>([]);
 const { isGalleryVideoMuted } = useGalleryVideoAudioState();
 const { announce } = useAnnouncer();
 
+const reducedMotion = ref(false);
+let reducedMotionMq: MediaQueryList | null = null;
+function syncReducedMotion(event?: MediaQueryListEvent) {
+  if (event) {
+    reducedMotion.value = event.matches;
+  } else if (reducedMotionMq) {
+    reducedMotion.value = reducedMotionMq.matches;
+  }
+}
+
+if (
+  typeof window !== "undefined" &&
+  typeof window.matchMedia === "function"
+) {
+  reducedMotionMq = window.matchMedia(
+    "(prefers-reduced-motion: reduce)",
+  );
+  reducedMotion.value = reducedMotionMq.matches;
+  reducedMotionMq.addEventListener("change", syncReducedMotion);
+}
+
+const userPaused = ref(reducedMotion.value);
+const ioPaused = ref(false);
+
+watch(reducedMotion, (next) => {
+  userPaused.value = next;
+});
+
 watch(index, (next) => {
+  userPaused.value = reducedMotion.value;
   const item = props.items[next];
   if (!item) return;
   const kind = item.type === "video" ? "Видео" : "Фото";
   announce(`${kind} ${next + 1} из ${props.items.length}`);
 });
+
+function togglePause() {
+  userPaused.value = !userPaused.value;
+}
 
 function clamp() {
   if (props.items.length === 0) {
@@ -174,6 +243,11 @@ const trackStyle = computed(() => ({
 
 const activeItem = computed(() => props.items[index.value]);
 
+const shouldPlay = computed(() => {
+  if (activeItem.value?.type !== "video") return false;
+  return !userPaused.value && !ioPaused.value;
+});
+
 function bindVideoRef(index: number, element: Element | null) {
   videoRefs.value[index] =
     element instanceof HTMLVideoElement ? element : null;
@@ -187,9 +261,13 @@ function syncActiveVideo() {
 
     if (slideIndex === index.value) {
       video.muted = isGalleryVideoMuted.value;
-      const playPromise = video.play();
-      if (playPromise instanceof Promise) {
-        playPromise.catch(() => {});
+      if (shouldPlay.value) {
+        const playPromise = video.play();
+        if (playPromise instanceof Promise) {
+          playPromise.catch(() => {});
+        }
+      } else {
+        video.pause();
       }
       return;
     }
@@ -227,6 +305,21 @@ watchPostEffect(() => {
   syncActiveVideo();
 });
 
+let intersectionObserver: IntersectionObserver | null = null;
+onMounted(() => {
+  if (typeof IntersectionObserver === "undefined") return;
+  if (!sectionRef.value) return;
+  intersectionObserver = new IntersectionObserver(
+    (entries) => {
+      const entry = entries[0];
+      if (!entry) return;
+      ioPaused.value = entry.intersectionRatio < 0.5;
+    },
+    { threshold: [0, 0.5, 1] },
+  );
+  intersectionObserver.observe(sectionRef.value);
+});
+
 onBeforeUnmount(() => {
   videoRefs.value.forEach((video) => {
     if (!video) {
@@ -236,6 +329,8 @@ onBeforeUnmount(() => {
     video.pause();
     video.currentTime = 0;
   });
+  reducedMotionMq?.removeEventListener("change", syncReducedMotion);
+  intersectionObserver?.disconnect();
 });
 
 let startX = 0;

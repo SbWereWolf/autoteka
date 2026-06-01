@@ -1179,6 +1179,48 @@
     background: rgba(30, 41, 59, 0.92);
   }
 
+  .shop-gallery-pause-toggle {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    z-index: 3;
+    width: 2.75rem;
+    height: 2.75rem;
+    border: none;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--color-ink) 72%, transparent);
+    color: var(--color-white);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition:
+      transform 160ms ease,
+      background-color 160ms ease;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .shop-gallery-pause-toggle:hover {
+      background: color-mix(in srgb, var(--color-ink) 86%, transparent);
+    }
+  }
+
+  .shop-gallery-pause-toggle:active {
+    background: color-mix(in srgb, var(--color-ink) 92%, transparent);
+    transform: scale(var(--scale-press-icon));
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .shop-gallery-pause-toggle {
+      transition: background-color 160ms ease;
+    }
+    .shop-gallery-pause-toggle:active {
+      transform: none;
+    }
+  }
+
   .shop-gallery-nav--left {
     left: 1rem;
   }

@@ -1003,3 +1003,192 @@ test("UI-MOCK-29: галерея под reduced-motion листает мгнов
   }
   expect(duration).toBe("0s");
 });
+
+test("UI-MOCK-30: кнопка паузы на видео-слайде вызывает pause и play", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    const calls = { play: 0, pause: 0 };
+    (
+      window as typeof window & {
+        __galleryVideoCalls?: typeof calls;
+      }
+    ).__galleryVideoCalls = calls;
+    const prototype =
+      HTMLMediaElement.prototype as typeof HTMLMediaElement.prototype & {
+        play: () => Promise<void>;
+        pause: () => void;
+      };
+    prototype.play = () => {
+      const s = (
+        window as typeof window & {
+          __galleryVideoCalls?: typeof calls;
+        }
+      ).__galleryVideoCalls;
+      if (s) s.play += 1;
+      return Promise.resolve();
+    };
+    prototype.pause = () => {
+      const s = (
+        window as typeof window & {
+          __galleryVideoCalls?: typeof calls;
+        }
+      ).__galleryVideoCalls;
+      if (s) s.pause += 1;
+    };
+  });
+
+  await installApiMocks(page);
+  await page.goto("/shop/barnaul-01", {
+    waitUntil: "domcontentloaded",
+  });
+
+  const gallery = page.getByTestId("shop-gallery");
+  await gallery.locator('[data-testid="gallery-next"]').click();
+
+  const pauseToggle = gallery.getByTestId("gallery-pause-toggle");
+  await expect(pauseToggle).toBeVisible();
+  await expect(pauseToggle).toHaveAttribute("aria-label", "Пауза");
+
+  await page.evaluate(() => {
+    const s = (
+      window as typeof window & {
+        __galleryVideoCalls?: { play: number; pause: number };
+      }
+    ).__galleryVideoCalls;
+    if (s) {
+      s.play = 0;
+      s.pause = 0;
+    }
+  });
+
+  await pauseToggle.click();
+  await expect(pauseToggle).toHaveAttribute(
+    "aria-label",
+    "Воспроизвести",
+  );
+  await expect
+    .poll(() =>
+      page.evaluate(() => {
+        const s = (
+          window as typeof window & {
+            __galleryVideoCalls?: { play: number; pause: number };
+          }
+        ).__galleryVideoCalls;
+        return s?.pause ?? 0;
+      }),
+    )
+    .toBeGreaterThanOrEqual(1);
+
+  await pauseToggle.click();
+  await expect(pauseToggle).toHaveAttribute("aria-label", "Пауза");
+  await expect
+    .poll(() =>
+      page.evaluate(() => {
+        const s = (
+          window as typeof window & {
+            __galleryVideoCalls?: { play: number; pause: number };
+          }
+        ).__galleryVideoCalls;
+        return s?.play ?? 0;
+      }),
+    )
+    .toBeGreaterThanOrEqual(1);
+});
+
+test("UI-MOCK-31: reduced-motion отменяет автоплей активного видео", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await installApiMocks(page);
+  await page.goto("/shop/barnaul-01", {
+    waitUntil: "domcontentloaded",
+  });
+
+  const gallery = page.getByTestId("shop-gallery");
+  await gallery.locator('[data-testid="gallery-next"]').click();
+
+  const pauseToggle = gallery.getByTestId("gallery-pause-toggle");
+  await expect(pauseToggle).toBeVisible();
+  await expect(pauseToggle).toHaveAttribute(
+    "aria-label",
+    "Воспроизвести",
+  );
+  await expect
+    .poll(async () =>
+      gallery
+        .locator("video")
+        .evaluate((el) => (el as HTMLVideoElement).paused),
+    )
+    .toBe(true);
+});
+
+test("UI-MOCK-32: кнопка паузы помещается внутри bounding-box галереи", async ({
+  page,
+}) => {
+  await installApiMocks(page);
+  await page.goto("/shop/barnaul-01", {
+    waitUntil: "domcontentloaded",
+  });
+
+  const gallery = page.getByTestId("shop-gallery");
+  await gallery.locator('[data-testid="gallery-next"]').click();
+
+  const pauseToggle = gallery.getByTestId("gallery-pause-toggle");
+  await expect(pauseToggle).toBeVisible();
+
+  const rects = await gallery.evaluate((el) => {
+    const shell = el.getBoundingClientRect();
+    const pause = (
+      el.querySelector(
+        '[data-testid="gallery-pause-toggle"]',
+      ) as HTMLElement | null
+    )?.getBoundingClientRect();
+    const navNext = (
+      el.querySelector(
+        '[data-testid="gallery-next"]',
+      ) as HTMLElement | null
+    )?.getBoundingClientRect();
+    return {
+      shell: {
+        x: shell.x,
+        y: shell.y,
+        right: shell.right,
+        bottom: shell.bottom,
+      },
+      pause: pause
+        ? {
+            x: pause.x,
+            y: pause.y,
+            right: pause.right,
+            bottom: pause.bottom,
+          }
+        : null,
+      navNext: navNext
+        ? {
+            x: navNext.x,
+            y: navNext.y,
+            right: navNext.right,
+            bottom: navNext.bottom,
+          }
+        : null,
+    };
+  });
+
+  expect(rects.pause).not.toBeNull();
+  if (rects.pause) {
+    expect(rects.pause.x).toBeGreaterThanOrEqual(rects.shell.x);
+    expect(rects.pause.y).toBeGreaterThanOrEqual(rects.shell.y);
+    expect(rects.pause.right).toBeLessThanOrEqual(rects.shell.right);
+    expect(rects.pause.bottom).toBeLessThanOrEqual(rects.shell.bottom);
+  }
+
+  if (rects.pause && rects.navNext) {
+    const intersects =
+      rects.pause.x < rects.navNext.right &&
+      rects.pause.right > rects.navNext.x &&
+      rects.pause.y < rects.navNext.bottom &&
+      rects.pause.bottom > rects.navNext.y;
+    expect(intersects).toBe(false);
+  }
+});
