@@ -43,9 +43,11 @@ test("UI-MOCK-01: каталог показывает новый top bar и пл
   await page.goto("/", { waitUntil: "domcontentloaded" });
 
   await expect(
-    page.getByRole("button", { name: "Открыть меню" }),
+    page.getByRole("button", { name: "Открыть фильтры" }),
   ).toBeVisible();
-  await expect(page.locator(".catalog-hamburger-line")).toHaveCount(4);
+  await expect(
+    page.locator("button[data-menu-button] svg"),
+  ).toHaveCount(1);
   await expect(
     page.getByRole("img", { name: "TOauto.ru" }),
   ).toBeVisible();
@@ -131,7 +133,7 @@ test("UI-MOCK-02: overlay меняет город и обновляет ката
   await installApiMocks(page);
   await page.goto("/", { waitUntil: "domcontentloaded" });
 
-  await page.getByRole("button", { name: "Открыть меню" }).click();
+  await page.getByRole("button", { name: "Открыть фильтры" }).click();
   await expect(
     page.locator(".catalog-menu-panel .catalog-brand-logo"),
   ).toHaveCount(0);
@@ -493,7 +495,7 @@ test("UI-MOCK-10: пустой каталог в городе без магаз�
   await page.goto("/", { waitUntil: "domcontentloaded" });
   await expect(page.locator("a.catalog-shop-tile")).toHaveCount(2);
 
-  await page.getByRole("button", { name: "Открыть меню" }).click();
+  await page.getByRole("button", { name: "Открыть фильтры" }).click();
   await page.getByTestId("menu-city-select").selectOption("kemerovo");
 
   const state = page.getByTestId("catalog-state");

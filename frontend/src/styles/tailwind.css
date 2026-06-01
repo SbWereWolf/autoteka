@@ -188,14 +188,6 @@
     transform: scale(var(--transform-scale-strong));
   }
 
-  .catalog-hamburger-line {
-    display: block;
-    width: 1.6rem;
-    height: 0.125rem;
-    border-radius: 999px;
-    background: #0f172a;
-  }
-
   .catalog-brand-link {
     display: inline-flex;
     align-items: center;
