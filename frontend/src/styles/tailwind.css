@@ -746,26 +746,50 @@
 
   .catalog-menu-panel {
     position: absolute;
-    inset: 1rem auto 1rem 1rem;
-    width: min(20rem, calc(100% - 2rem));
+    top: 0;
+    left: 0;
+    height: 100dvh;
+    width: min(341px, 88vw);
+    display: flex;
+    flex-direction: column;
     padding: 1rem 1rem 1.4rem;
-    border-radius: 2rem;
     background: #ffffff;
     box-shadow: none;
     border: 0.0625rem solid rgba(203, 213, 225, 0.45);
   }
 
   .catalog-menu-header {
+    flex: 0 0 auto;
     display: flex;
     align-items: center;
-    justify-content: flex-start;
+    justify-content: space-between;
     gap: 1rem;
     margin-bottom: 0.8rem;
   }
 
+  .catalog-menu-title {
+    margin: 0;
+    font-size: 1.125rem;
+    font-weight: 700;
+    line-height: 1.2;
+    color: var(--color-ink);
+  }
+
   .catalog-menu-content {
+    flex: 1 1 auto;
     display: grid;
     gap: 1.25rem;
+    overflow-y: auto;
+  }
+
+  .catalog-menu-content > section + section {
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--color-surface-muted);
+  }
+
+  .catalog-menu-footer {
+    flex: 0 0 auto;
+    padding-top: 0.75rem;
   }
 
   .catalog-menu-label {

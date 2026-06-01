@@ -12,10 +12,12 @@
       class="catalog-menu-panel"
       role="dialog"
       aria-modal="true"
-      aria-label="Меню и фильтры"
+      aria-labelledby="filters-title"
+      tabindex="-1"
       @click.stop
     >
       <div class="catalog-menu-header">
+        <h2 id="filters-title" class="catalog-menu-title">Фильтры</h2>
         <button
           ref="closeBtnEl"
           class="catalog-close-button ui-bounce"
@@ -29,18 +31,24 @@
 
       <div class="catalog-menu-content">
         <section class="space-y-3">
-          <h2 class="catalog-menu-label">Город</h2>
-          <CitySelect
-            aria-label="Город"
-            test-id="menu-city-select"
-            @changed="closeMenu"
-          />
+          <h3 class="catalog-menu-label">Город</h3>
+          <CitySelect aria-label="Город" test-id="menu-city-select" />
         </section>
 
         <section class="space-y-3">
-          <h2 class="catalog-menu-label">Категории</h2>
+          <h3 class="catalog-menu-label">Категории</h3>
           <CategoryChips />
         </section>
+      </div>
+
+      <div class="catalog-menu-footer">
+        <button
+          type="button"
+          class="catalog-state-cta w-full"
+          @click="closeMenu"
+        >
+          Найти
+        </button>
       </div>
     </aside>
   </div>
@@ -73,9 +81,7 @@ function closeMenu() {
 }
 
 function focusMenuButton() {
-  document
-    .querySelector<HTMLElement>("[data-menu-button]")
-    ?.focus();
+  document.querySelector<HTMLElement>("[data-menu-button]")?.focus();
 }
 
 watch(
