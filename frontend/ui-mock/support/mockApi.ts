@@ -28,6 +28,8 @@ type RawCityCatalogItem = {
   thumbUrl?: string;
   categoryIds: string[];
   featureIds: string[];
+  hasPromo?: boolean;
+  fastDelivery?: boolean;
 };
 
 type RawShop = RawCityCatalogItem & {
@@ -115,6 +117,8 @@ const shopsByCity: Record<string, RawCityCatalogItem[]> = {
       thumbUrl: "/generated/gen-1x1-x1_0-v1-512x512.png",
       categoryIds: ["domestic", "korean"],
       featureIds: ["promo"],
+      hasPromo: false,
+      fastDelivery: false,
     },
     {
       code: "barnaul-02",
@@ -122,6 +126,17 @@ const shopsByCity: Record<string, RawCityCatalogItem[]> = {
       title: "Orange Parts",
       categoryIds: ["japanese"],
       featureIds: ["pickup"],
+      hasPromo: true,
+      fastDelivery: false,
+    },
+    {
+      code: "barnaul-03",
+      cityId: "barnaul",
+      title: "Zenith Parts",
+      categoryIds: ["domestic"],
+      featureIds: ["pickup"],
+      hasPromo: false,
+      fastDelivery: true,
     },
   ],
   nizhny: [
@@ -132,6 +147,8 @@ const shopsByCity: Record<string, RawCityCatalogItem[]> = {
       thumbUrl: "/generated/gen-1x1-x1_25-v1-640x640.png",
       categoryIds: ["european"],
       featureIds: ["promo"],
+      hasPromo: true,
+      fastDelivery: true,
     },
   ],
 };

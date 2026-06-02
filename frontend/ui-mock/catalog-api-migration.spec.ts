@@ -51,7 +51,7 @@ test("UI-MOCK-01: каталог показывает новый top bar и пл
   await expect(
     page.getByRole("img", { name: "TOauto.ru" }),
   ).toBeVisible();
-  await expect(page.locator(".catalog-shop-tile")).toHaveCount(2);
+  await expect(page.locator(".catalog-shop-tile")).toHaveCount(3);
   await expect(page.getByText("CarsHelps")).toHaveCount(0);
   await expect(
     page.locator(".catalog-shop-tile").first(),
@@ -62,6 +62,9 @@ test("UI-MOCK-01: каталог показывает новый top bar и пл
   await expect(
     page.locator(".catalog-shop-tile").nth(1),
   ).toHaveAttribute("aria-label", "Orange Parts");
+  await expect(
+    page.locator(".catalog-shop-tile").nth(2),
+  ).toHaveAttribute("aria-label", "Zenith Parts");
 
   const sortBar = page.getByTestId("catalog-sort-bar");
   await expect(sortBar).toBeVisible();
@@ -443,7 +446,7 @@ test("UI-MOCK-09: каталог показывает скелетон при з
   const live = page.locator('[role="status"]');
   await expect(live).toHaveText("Загрузка каталога");
 
-  await expect(page.locator("a.catalog-shop-tile")).toHaveCount(2);
+  await expect(page.locator("a.catalog-shop-tile")).toHaveCount(3);
   await expect(skeleton).toHaveCount(0);
   await expect(live).toHaveText("Каталог загружен");
 });
@@ -453,7 +456,7 @@ test("UI-MOCK-10: пустой каталог в городе без магаз�
 }) => {
   await installApiMocks(page);
   await page.goto("/", { waitUntil: "domcontentloaded" });
-  await expect(page.locator("a.catalog-shop-tile")).toHaveCount(2);
+  await expect(page.locator("a.catalog-shop-tile")).toHaveCount(3);
 
   await page.getByRole("button", { name: "Открыть фильтры" }).click();
   await page.getByTestId("menu-city-select").selectOption("kemerovo");
@@ -802,7 +805,7 @@ test("UI-MOCK-20: диктор молчит пока дровер открыт �
 }) => {
   await installApiMocks(page);
   await page.goto("/", { waitUntil: "domcontentloaded" });
-  await expect(page.locator("a.catalog-shop-tile")).toHaveCount(2);
+  await expect(page.locator("a.catalog-shop-tile")).toHaveCount(3);
   const live = page.locator('[role="status"]');
   await expect(live).toHaveText("Каталог загружен");
 
@@ -1710,5 +1713,57 @@ test.describe("UI-MOCK-52: сорт-дропдаун — выбор меняет
       localStorage.getItem("autoteka_sort_mode"),
     );
     expect(stored).toBe('"name-asc"');
+  });
+});
+
+test.describe("UI-MOCK-53: promo-first — магазин с акцией становится первым", () => {
+  test.use({ viewport: { width: 1280, height: 800 } });
+
+  test("UI-MOCK-53", async ({ page }) => {
+    await page.addInitScript(() =>
+      window.localStorage.setItem(
+        "autoteka_sort_mode",
+        JSON.stringify("promo-first"),
+      ),
+    );
+    await installApiMocks(page);
+    await page.goto("/", { waitUntil: "domcontentloaded" });
+    await expect(page.locator(".catalog-shop-tile")).toHaveCount(3);
+
+    await expect(
+      page.locator(".catalog-shop-tile").first(),
+    ).toHaveAttribute("href", "/shop/barnaul-02");
+    await expect(
+      page.locator(".catalog-shop-tile").nth(1),
+    ).toHaveAttribute("href", "/shop/barnaul-01");
+    await expect(
+      page.locator(".catalog-shop-tile").nth(2),
+    ).toHaveAttribute("href", "/shop/barnaul-03");
+  });
+});
+
+test.describe("UI-MOCK-54: fast-delivery-first — магазин с доставкой первый", () => {
+  test.use({ viewport: { width: 1280, height: 800 } });
+
+  test("UI-MOCK-54", async ({ page }) => {
+    await page.addInitScript(() =>
+      window.localStorage.setItem(
+        "autoteka_sort_mode",
+        JSON.stringify("fast-delivery-first"),
+      ),
+    );
+    await installApiMocks(page);
+    await page.goto("/", { waitUntil: "domcontentloaded" });
+    await expect(page.locator(".catalog-shop-tile")).toHaveCount(3);
+
+    await expect(
+      page.locator(".catalog-shop-tile").first(),
+    ).toHaveAttribute("href", "/shop/barnaul-03");
+    await expect(
+      page.locator(".catalog-shop-tile").nth(1),
+    ).toHaveAttribute("href", "/shop/barnaul-01");
+    await expect(
+      page.locator(".catalog-shop-tile").nth(2),
+    ).toHaveAttribute("href", "/shop/barnaul-02");
   });
 });

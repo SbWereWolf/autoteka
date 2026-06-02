@@ -89,6 +89,8 @@ type RawCityCatalogItem = {
   thumbUrl?: string | null;
   categoryIds: Array<number | string>;
   featureIds: Array<number | string>;
+  hasPromo?: boolean;
+  fastDelivery?: boolean;
 };
 
 type OrderedGalleryImageItem = GalleryImageItem & {
@@ -359,6 +361,8 @@ function toShopSummary(
     galleryItems: [],
     categoryIds: raw.categoryIds.map(normalizeId),
     featureIds: raw.featureIds.map(normalizeId),
+    hasPromo: raw.hasPromo === true,
+    fastDelivery: raw.fastDelivery === true,
   };
 }
 
