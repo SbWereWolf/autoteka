@@ -1767,3 +1767,73 @@ test.describe("UI-MOCK-54: fast-delivery-first — магазин с доста�
     ).toHaveAttribute("href", "/shop/barnaul-02");
   });
 });
+
+test.describe("UI-MOCK-55: ShopPage @1280 — 2 кол. + sticky aside + breadcrumb", () => {
+  test.use({ viewport: { width: 1280, height: 800 } });
+
+  test("UI-MOCK-55", async ({ page }) => {
+    await installApiMocks(page);
+    await page.goto("/shop/barnaul-01", {
+      waitUntil: "domcontentloaded",
+    });
+
+    const layout = page.getByTestId("shop-desktop-layout");
+    await expect(layout).toBeVisible();
+
+    await expect(page.getByTestId("shop-breadcrumb")).toBeVisible();
+    await expect(page.getByTestId("shop-breadcrumb")).toContainText(
+      "Каталог",
+    );
+
+    const aside = page.getByTestId("shop-info-aside");
+    await expect(aside).toBeVisible();
+    const asidePos = await aside.evaluate(
+      (el) => getComputedStyle(el as HTMLElement).position,
+    );
+    expect(asidePos).toBe("sticky");
+
+    const rects = await page.evaluate(() => {
+      const lay = document.querySelector(
+        '[data-testid="shop-desktop-layout"]',
+      ) as HTMLElement | null;
+      const left = lay?.querySelector(
+        ".shop-layout-left",
+      ) as HTMLElement | null;
+      const right = lay?.querySelector(
+        ".shop-layout-right",
+      ) as HTMLElement | null;
+      return {
+        layout: lay?.getBoundingClientRect() ?? null,
+        left: left?.getBoundingClientRect() ?? null,
+        right: right?.getBoundingClientRect() ?? null,
+      };
+    });
+    expect(rects.layout).toBeTruthy();
+    expect(rects.left).toBeTruthy();
+    expect(rects.right).toBeTruthy();
+    if (rects.layout && rects.left && rects.right) {
+      expect(rects.layout.width).toBeLessThanOrEqual(1120 + 1);
+      expect(rects.right.left).toBeGreaterThanOrEqual(rects.left.right);
+    }
+
+    await expect(
+      page.getByTestId("shop-promo-section"),
+    ).toBeVisible();
+    await expect(page.locator('[role="dialog"]')).toHaveCount(0);
+  });
+});
+
+test("UI-MOCK-56: ShopPage <64rem — одноколоночная (моб. регресс)", async ({
+  page,
+}) => {
+  await installApiMocks(page);
+  await page.goto("/shop/barnaul-01", {
+    waitUntil: "domcontentloaded",
+  });
+
+  await expect(
+    page.getByTestId("shop-desktop-layout"),
+  ).toHaveCount(0);
+  await expect(page.getByTestId("shop-breadcrumb")).toHaveCount(0);
+  await expect(page.locator(".shop-back-button")).toBeVisible();
+});

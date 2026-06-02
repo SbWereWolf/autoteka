@@ -1093,6 +1093,143 @@
     container-type: inline-size;
   }
 
+  .shop-desktop-shell {
+    max-width: 70rem;
+    margin-inline: auto;
+    padding: 1.5rem 2rem 3rem;
+    box-sizing: border-box;
+  }
+
+  .shop-desktop-state {
+    max-width: 70rem;
+    margin-inline: auto;
+    padding: 2rem;
+  }
+
+  .shop-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 62fr) minmax(0, 38fr);
+    grid-template-areas:
+      "breadcrumb breadcrumb"
+      "left right";
+    column-gap: 2rem;
+    row-gap: 1rem;
+    align-items: start;
+  }
+
+  .shop-layout > .shop-breadcrumb {
+    grid-area: breadcrumb;
+  }
+
+  .shop-layout-left {
+    grid-area: left;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .shop-layout-right {
+    grid-area: right;
+    position: sticky;
+    top: 5.5rem;
+    align-self: start;
+    min-width: 0;
+  }
+
+  .shop-breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+    font-size: 0.8125rem;
+    color: var(--color-secondary-text);
+    padding: 0.125rem 0;
+  }
+
+  .shop-breadcrumb-link {
+    color: var(--color-secondary-text);
+    text-decoration: none;
+    border-radius: 0.375rem;
+  }
+
+  .shop-breadcrumb-link:focus-visible {
+    outline: none;
+    box-shadow:
+      0 0 0 2px var(--color-white),
+      0 0 0 4px var(--color-ink);
+  }
+
+  .shop-breadcrumb-sep {
+    color: var(--color-secondary-text);
+    opacity: 0.6;
+  }
+
+  .shop-breadcrumb-current {
+    color: var(--color-ink);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .shop-breadcrumb-link:hover {
+      color: var(--color-ink);
+    }
+  }
+
+  .shop-info-card {
+    background: var(--color-white);
+    border: 0.0625rem solid var(--color-surface-muted);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-sidebar);
+    padding: 1.5rem;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 1.125rem;
+  }
+
+  .shop-info-name {
+    margin: 0;
+    font-weight: 700;
+    font-size: 1.625rem;
+    line-height: 1.1;
+    color: var(--color-ink);
+  }
+
+  .shop-info-block {
+    display: flex;
+    flex-direction: column;
+    gap: 0.625rem;
+  }
+
+  .shop-info-label {
+    margin: 0;
+    font-weight: 700;
+    font-size: 0.8125rem;
+    letter-spacing: 0.03em;
+    color: var(--color-secondary-text);
+    text-transform: uppercase;
+  }
+
+  .shop-info-desc,
+  .shop-info-line {
+    margin: 0;
+    font-size: 0.9375rem;
+    line-height: 1.5;
+    color: var(--color-ink);
+    white-space: pre-line;
+  }
+
+  .shop-info-line--muted {
+    color: var(--color-secondary-text);
+    font-size: 0.8125rem;
+  }
+
+  .shop-desktop-gallery-skel {
+    aspect-ratio: 4 / 3;
+    width: 100%;
+    border-radius: 1.125rem;
+  }
+
   .shop-hero-shell {
     display: grid;
     gap: 0;
