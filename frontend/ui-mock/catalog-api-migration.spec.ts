@@ -1302,6 +1302,15 @@ async function gridColumnCount(page: import("@playwright/test").Page) {
   });
 }
 
+async function expectGridColumns(
+  page: import("@playwright/test").Page,
+  expected: number,
+) {
+  await expect
+    .poll(() => gridColumnCount(page), { timeout: 5000 })
+    .toBe(expected);
+}
+
 test.describe("UI-MOCK-36: грид каталога на мобиле — 2 колонки", () => {
   test.use({
     viewport: { width: 390, height: 844 },
@@ -1315,7 +1324,7 @@ test.describe("UI-MOCK-36: грид каталога на мобиле — 2 к�
     await expect(
       page.locator(".catalog-shop-tile").first(),
     ).toBeVisible();
-    expect(await gridColumnCount(page)).toBe(2);
+    await expectGridColumns(page, 2);
   });
 });
 
@@ -1328,7 +1337,7 @@ test.describe("UI-MOCK-37: грид каталога @1280 — 4 колонки"
     await expect(
       page.locator(".catalog-shop-tile").first(),
     ).toBeVisible();
-    expect(await gridColumnCount(page)).toBe(4);
+    await expectGridColumns(page, 4);
   });
 });
 
@@ -1342,7 +1351,7 @@ test.describe("UI-MOCK-38: грид каталога @1920 — контейне�
       page.locator(".catalog-shop-tile").first(),
     ).toBeVisible();
 
-    expect(await gridColumnCount(page)).toBe(4);
+    await expectGridColumns(page, 4);
 
     const layout = await page.evaluate(() => {
       const shell = document.querySelector(
