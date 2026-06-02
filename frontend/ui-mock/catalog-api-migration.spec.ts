@@ -1837,3 +1837,116 @@ test("UI-MOCK-56: ShopPage <64rem — одноколоночная (моб. ре
   await expect(page.getByTestId("shop-breadcrumb")).toHaveCount(0);
   await expect(page.locator(".shop-back-button")).toBeVisible();
 });
+
+test.describe("UI-MOCK-57: галерея @1280 — миниатюры, стрелки, клавиатура, видео-бейдж", () => {
+  test.use({ viewport: { width: 1280, height: 800 } });
+
+  test("UI-MOCK-57", async ({ page }) => {
+    await installApiMocks(page);
+    await page.goto("/shop/barnaul-01", {
+      waitUntil: "domcontentloaded",
+    });
+
+    const gallery = page.getByTestId("shop-gallery");
+    await expect(gallery).toBeVisible();
+
+    const thumbs = gallery.getByTestId("gallery-thumbs");
+    await expect(thumbs).toBeVisible();
+    const counter = gallery.getByTestId("gallery-counter");
+    await expect(counter).toContainText("1 / 2");
+    const prev = gallery.getByTestId("gallery-prev");
+    const next = gallery.getByTestId("gallery-next");
+    await expect(prev).toBeVisible();
+    await expect(next).toBeVisible();
+
+    const prevBox = await prev.boundingBox();
+    const nextBox = await next.boundingBox();
+    expect(prevBox?.width ?? 0).toBeGreaterThanOrEqual(44);
+    expect(prevBox?.height ?? 0).toBeGreaterThanOrEqual(44);
+    expect(nextBox?.width ?? 0).toBeGreaterThanOrEqual(44);
+    expect(nextBox?.height ?? 0).toBeGreaterThanOrEqual(44);
+
+    const thumb0 = gallery.getByTestId("gallery-thumb-0");
+    const thumb1 = gallery.getByTestId("gallery-thumb-1");
+    await expect(thumb0).toHaveAttribute("aria-current", "true");
+    await expect(thumb1).not.toHaveAttribute("aria-current", /.*/);
+
+    await expect(
+      thumb1.locator(".shop-gallery-thumb-vbadge"),
+    ).toBeVisible();
+
+    await thumb1.click();
+    await expect(thumb1).toHaveAttribute("aria-current", "true");
+    await expect(counter).toContainText("2 / 2");
+
+    await prev.click();
+    await expect(thumb0).toHaveAttribute("aria-current", "true");
+    await expect(counter).toContainText("1 / 2");
+
+    await thumb0.focus();
+    await page.keyboard.press("ArrowRight");
+    await expect(thumb1).toHaveAttribute("aria-current", "true");
+    await page.keyboard.press("ArrowLeft");
+    await expect(thumb0).toHaveAttribute("aria-current", "true");
+  });
+});
+
+test.describe("UI-MOCK-58: выбранная миниатюра — кольцо ВНУТРИ бокса (inset)", () => {
+  test.use({ viewport: { width: 1280, height: 800 } });
+
+  test("UI-MOCK-58", async ({ page }) => {
+    await installApiMocks(page);
+    await page.goto("/shop/barnaul-01", {
+      waitUntil: "domcontentloaded",
+    });
+
+    const gallery = page.getByTestId("shop-gallery");
+    const thumb0 = gallery.getByTestId("gallery-thumb-0");
+    const thumb1 = gallery.getByTestId("gallery-thumb-1");
+    await expect(thumb0).toBeVisible();
+
+    const box0 = await thumb0.boundingBox();
+    const box1 = await thumb1.boundingBox();
+    expect(box0?.width).toBe(box1?.width);
+    expect(box0?.height).toBe(box1?.height);
+
+    const shadowSelected = await thumb0.evaluate((el) =>
+      getComputedStyle(el as HTMLElement, "::after").boxShadow,
+    );
+    const shadowUnselected = await thumb1.evaluate((el) =>
+      getComputedStyle(el as HTMLElement, "::after").boxShadow,
+    );
+    expect(shadowSelected).toContain("inset");
+    expect(shadowUnselected).toContain("inset");
+    expect(shadowSelected).not.toBe(shadowUnselected);
+
+    const thumbsBox = await gallery
+      .getByTestId("gallery-thumbs")
+      .boundingBox();
+    expect(box0?.x ?? -1).toBeGreaterThanOrEqual(thumbsBox?.x ?? 0);
+    expect((box0?.x ?? 0) + (box0?.width ?? 0)).toBeLessThanOrEqual(
+      (thumbsBox?.x ?? 0) + (thumbsBox?.width ?? 0),
+    );
+  });
+});
+
+test("UI-MOCK-59: галерея <64rem — свайп-карусель (моб. регресс)", async ({
+  page,
+}) => {
+  await installApiMocks(page);
+  await page.goto("/shop/barnaul-01", {
+    waitUntil: "domcontentloaded",
+  });
+
+  const gallery = page.getByTestId("shop-gallery");
+  await expect(gallery).toBeVisible();
+  await expect(
+    gallery.locator(".shop-gallery-track"),
+  ).toBeVisible();
+  await expect(
+    gallery.getByTestId("gallery-thumbs"),
+  ).toHaveCount(0);
+  await expect(
+    gallery.getByTestId("gallery-counter"),
+  ).toHaveCount(0);
+});

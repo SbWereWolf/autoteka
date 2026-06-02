@@ -2,138 +2,279 @@
   <section
     ref="sectionRef"
     class="shop-gallery-shell"
+    :class="{ 'shop-gallery-shell--desktop': isDesktop }"
     aria-label="Фотографии и видео продавца"
     :data-testid="testId"
+    @keydown.left.exact.prevent="prev"
+    @keydown.right.exact.prevent="next"
   >
-    <div
-      class="shop-gallery-frame"
-      @pointerdown="onDown"
-      @pointermove="onMove"
-      @pointerup="onUp"
-      @pointercancel="onCancel"
-    >
-      <div v-if="items.length === 0" class="shop-gallery-empty">
-        <div class="px-6 text-center text-sm text-slate-500">
-          {{ emptyText }}
+    <template v-if="!isDesktop">
+      <div
+        class="shop-gallery-frame"
+        @pointerdown="onDown"
+        @pointermove="onMove"
+        @pointerup="onUp"
+        @pointercancel="onCancel"
+      >
+        <div v-if="items.length === 0" class="shop-gallery-empty">
+          <div class="px-6 text-center text-sm text-slate-500">
+            {{ emptyText }}
+          </div>
+        </div>
+
+        <div v-else class="shop-gallery-track" :style="trackStyle">
+          <div
+            v-for="(item, itemIndex) in items"
+            :key="item.id"
+            class="shop-gallery-slide"
+          >
+            <UiImage
+              v-if="item.type === 'image'"
+              class="h-full w-full"
+              :src="item.src"
+              alt=""
+              :loading="itemIndex === 0 ? 'eager' : 'lazy'"
+              decoding="async"
+              spinner
+              img-class="h-full w-full object-contain"
+            />
+
+            <div v-else class="shop-gallery-video-shell">
+              <video
+                :ref="(element) => bindVideoRef(itemIndex, element)"
+                class="h-full w-full object-contain"
+                :src="item.src"
+                :poster="item.poster"
+                :autoplay="itemIndex === index && !reducedMotion"
+                :muted="isGalleryVideoMuted"
+                :loop="true"
+                playsinline
+                preload="metadata"
+              />
+            </div>
+          </div>
         </div>
       </div>
 
-      <div v-else class="shop-gallery-track" :style="trackStyle">
-        <div
-          v-for="(item, itemIndex) in items"
-          :key="item.id"
-          class="shop-gallery-slide"
-        >
-          <UiImage
-            v-if="item.type === 'image'"
-            class="h-full w-full"
-            :src="item.src"
-            alt=""
-            :loading="itemIndex === 0 ? 'eager' : 'lazy'"
-            decoding="async"
-            spinner
-            img-class="h-full w-full object-contain"
-          />
+      <button
+        v-if="items.length > 1"
+        class="shop-gallery-nav shop-gallery-nav--left"
+        data-testid="gallery-prev"
+        type="button"
+        aria-label="Предыдущий кадр"
+        @click="prev"
+      >
+        ‹
+      </button>
+      <button
+        v-if="items.length > 1"
+        class="shop-gallery-nav shop-gallery-nav--right"
+        data-testid="gallery-next"
+        type="button"
+        aria-label="Следующий кадр"
+        @click="next"
+      >
+        ›
+      </button>
 
-          <div v-else class="shop-gallery-video-shell">
-            <video
-              :ref="(element) => bindVideoRef(itemIndex, element)"
-              class="h-full w-full object-contain"
-              :src="item.src"
-              :poster="item.poster"
-              :autoplay="itemIndex === index && !reducedMotion"
-              :muted="isGalleryVideoMuted"
-              :loop="true"
-              playsinline
-              preload="metadata"
+      <div v-if="items.length > 1" class="shop-gallery-footer">
+        <div class="shop-gallery-dots-shell">
+          <button
+            v-if="activeItem?.type === 'video'"
+            class="shop-gallery-audio-toggle"
+            data-testid="gallery-audio-toggle"
+            type="button"
+            :aria-label="
+              isGalleryVideoMuted ? 'Включить звук' : 'Выключить звук'
+            "
+            :aria-pressed="(!isGalleryVideoMuted).toString()"
+            @click="toggleAudio"
+          >
+            {{ isGalleryVideoMuted ? "Вкл. звук" : "Выкл. звук" }}
+          </button>
+
+          <div class="shop-gallery-dots">
+            <span
+              v-for="(_, dotIndex) in items"
+              :key="`gallery-dot-${dotIndex}`"
+              class="shop-gallery-dot"
+              :class="{
+                'shop-gallery-dot--active': dotIndex === index,
+              }"
             />
           </div>
         </div>
       </div>
-    </div>
 
-    <button
-      v-if="items.length > 1"
-      class="shop-gallery-nav shop-gallery-nav--left"
-      data-testid="gallery-prev"
-      type="button"
-      aria-label="Предыдущий кадр"
-      @click="prev"
-    >
-      ‹
-    </button>
-    <button
-      v-if="items.length > 1"
-      class="shop-gallery-nav shop-gallery-nav--right"
-      data-testid="gallery-next"
-      type="button"
-      aria-label="Следующий кадр"
-      @click="next"
-    >
-      ›
-    </button>
-
-    <div v-if="items.length > 1" class="shop-gallery-footer">
-      <div class="shop-gallery-dots-shell">
-        <button
-          v-if="activeItem?.type === 'video'"
-          class="shop-gallery-audio-toggle"
-          data-testid="gallery-audio-toggle"
-          type="button"
-          :aria-label="
-            isGalleryVideoMuted ? 'Включить звук' : 'Выключить звук'
-          "
-          :aria-pressed="(!isGalleryVideoMuted).toString()"
-          @click="toggleAudio"
+      <button
+        v-if="activeItem?.type === 'video'"
+        class="shop-gallery-pause-toggle"
+        data-testid="gallery-pause-toggle"
+        type="button"
+        :aria-label="userPaused ? 'Воспроизвести' : 'Пауза'"
+        @click="togglePause"
+      >
+        <svg
+          v-if="userPaused"
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+          aria-hidden="true"
+          focusable="false"
         >
-          {{ isGalleryVideoMuted ? "Вкл. звук" : "Выкл. звук" }}
-        </button>
+          <path d="M8 5v14l11-7z" />
+        </svg>
+        <svg
+          v-else
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+          aria-hidden="true"
+          focusable="false"
+        >
+          <rect x="6" y="5" width="4" height="14" rx="1" />
+          <rect x="14" y="5" width="4" height="14" rx="1" />
+        </svg>
+      </button>
+    </template>
 
-        <div class="shop-gallery-dots">
-          <span
-            v-for="(_, dotIndex) in items"
-            :key="`gallery-dot-${dotIndex}`"
-            class="shop-gallery-dot"
-            :class="{
-              'shop-gallery-dot--active': dotIndex === index,
-            }"
-          />
+    <template v-else>
+      <div v-if="items.length === 0" class="shop-gallery-stage">
+        <div class="shop-gallery-empty px-6 text-center text-sm text-slate-500">
+          {{ emptyText }}
         </div>
       </div>
-    </div>
 
-    <button
-      v-if="activeItem?.type === 'video'"
-      class="shop-gallery-pause-toggle"
-      data-testid="gallery-pause-toggle"
-      type="button"
-      :aria-label="userPaused ? 'Воспроизвести' : 'Пауза'"
-      @click="togglePause"
-    >
-      <svg
-        v-if="userPaused"
-        width="18"
-        height="18"
-        viewBox="0 0 24 24"
-        fill="currentColor"
-        aria-hidden="true"
-        focusable="false"
+      <div v-else class="shop-gallery-stage">
+        <UiImage
+          v-if="activeItem?.type === 'image'"
+          class="shop-gallery-stage-media"
+          :src="activeItem.src"
+          alt=""
+          loading="eager"
+          decoding="async"
+          spinner
+          img-class="h-full w-full object-contain"
+        />
+
+        <video
+          v-else-if="activeItem?.type === 'video'"
+          :key="`stage-video-${activeItem.id}`"
+          ref="stageVideoRef"
+          class="shop-gallery-stage-media shop-gallery-stage-media--video"
+          :src="activeItem.src"
+          :poster="activeItem.poster"
+          controls
+          playsinline
+          preload="none"
+          :aria-label="`Видео ${index + 1} из ${items.length}`"
+        />
+
+        <span
+          v-if="items.length > 1"
+          class="shop-gallery-counter"
+          data-testid="gallery-counter"
+          aria-hidden="true"
+        >
+          {{ index + 1 }} / {{ items.length }}
+        </span>
+
+        <button
+          v-if="items.length > 1"
+          class="shop-gallery-stage-arrow shop-gallery-stage-arrow--left"
+          data-testid="gallery-prev"
+          type="button"
+          aria-label="Предыдущий кадр"
+          :disabled="index === 0"
+          @click="prev"
+        >
+          <svg
+            width="22"
+            height="22"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+            focusable="false"
+          >
+            <path d="M15 6 L9 12 L15 18" />
+          </svg>
+        </button>
+        <button
+          v-if="items.length > 1"
+          class="shop-gallery-stage-arrow shop-gallery-stage-arrow--right"
+          data-testid="gallery-next"
+          type="button"
+          aria-label="Следующий кадр"
+          :disabled="index === items.length - 1"
+          @click="next"
+        >
+          <svg
+            width="22"
+            height="22"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+            focusable="false"
+          >
+            <path d="M9 6 L15 12 L9 18" />
+          </svg>
+        </button>
+      </div>
+
+      <ul
+        v-if="items.length > 1"
+        class="shop-gallery-thumbs"
+        aria-label="Миниатюры"
+        data-testid="gallery-thumbs"
       >
-        <path d="M8 5v14l11-7z" />
-      </svg>
-      <svg
-        v-else
-        width="18"
-        height="18"
-        viewBox="0 0 24 24"
-        fill="currentColor"
-        aria-hidden="true"
-        focusable="false"
-      >
-        <rect x="6" y="5" width="4" height="14" rx="1" />
-        <rect x="14" y="5" width="4" height="14" rx="1" />
-      </svg>
-    </button>
+        <li
+          v-for="(item, itemIndex) in items"
+          :key="`thumb-${item.id}`"
+        >
+          <button
+            type="button"
+            class="shop-gallery-thumb"
+            :aria-current="itemIndex === index ? 'true' : undefined"
+            :aria-label="`${item.type === 'video' ? 'Видео' : 'Фото'} ${itemIndex + 1} из ${items.length}`"
+            :data-testid="`gallery-thumb-${itemIndex}`"
+            @click="goTo(itemIndex)"
+          >
+            <img
+              :src="item.type === 'video' ? item.poster : item.src"
+              alt=""
+            />
+            <span
+              v-if="item.type === 'video'"
+              class="shop-gallery-thumb-vbadge"
+              aria-hidden="true"
+            >
+              <span class="shop-gallery-thumb-vchip">
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  aria-hidden="true"
+                  focusable="false"
+                >
+                  <path d="M8 5v14l11-7z" />
+                </svg>
+              </span>
+            </span>
+          </button>
+        </li>
+      </ul>
+    </template>
   </section>
 </template>
 
@@ -151,6 +292,7 @@ import UiImage from "./UiImage.vue";
 import { uiConfig } from "../config/ui";
 import { useGalleryVideoAudioState } from "../composables/useGalleryVideoAudioState";
 import { useAnnouncer } from "../composables/useAnnouncer";
+import { useIsDesktop } from "../composables/useIsDesktop";
 
 const props = withDefaults(
   defineProps<{
@@ -167,10 +309,12 @@ const props = withDefaults(
 );
 
 const sectionRef = ref<HTMLElement | null>(null);
+const stageVideoRef = ref<HTMLVideoElement | null>(null);
 const index = ref(0);
 const videoRefs = ref<Array<HTMLVideoElement | null>>([]);
 const { isGalleryVideoMuted } = useGalleryVideoAudioState();
 const { announce } = useAnnouncer();
+const { isDesktop } = useIsDesktop();
 
 const reducedMotion = ref(false);
 let reducedMotionMq: MediaQueryList | null = null;
@@ -227,12 +371,19 @@ function clamp() {
 }
 
 function prev() {
+  if (props.items.length <= 1) return;
   index.value -= 1;
   clamp();
 }
 
 function next() {
+  if (props.items.length <= 1) return;
   index.value += 1;
+  clamp();
+}
+
+function goTo(target: number) {
+  index.value = target;
   clamp();
 }
 
@@ -244,6 +395,7 @@ const trackStyle = computed(() => ({
 const activeItem = computed(() => props.items[index.value]);
 
 const shouldPlay = computed(() => {
+  if (isDesktop.value) return false;
   if (activeItem.value?.type !== "video") return false;
   return !userPaused.value && !ioPaused.value;
 });
