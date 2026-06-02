@@ -5,7 +5,7 @@
       class="catalog-sort-bar-button"
       data-sort-trigger
       aria-haspopup="dialog"
-      :aria-expanded="state.offersOpen"
+      :aria-expanded="state.sortOpen"
       @click="openSheet"
     >
       Сначала: {{ currentTitle }}
@@ -24,6 +24,6 @@ const currentTitle = computed(
 );
 
 function openSheet() {
-  state.offersOpen = true;
+  state.sortOpen = true;
 }
 </script>

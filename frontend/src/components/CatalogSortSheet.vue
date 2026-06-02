@@ -1,5 +1,5 @@
 <template>
-  <div v-if="state.offersOpen" class="fixed inset-0 z-[60]">
+  <div v-if="state.sortOpen" class="fixed inset-0 z-[60]">
     <button
       class="catalog-sort-sheet-overlay-button"
       aria-label="Закрыть"
@@ -74,12 +74,12 @@ import { useAnnouncer } from "../composables/useAnnouncer";
 
 const dialogRef = ref<HTMLElement | null>(null);
 const features = computed(() => state.features);
-const open = computed(() => state.offersOpen);
+const open = computed(() => state.sortOpen);
 
 const { announce } = useAnnouncer();
 
 function closeSheet() {
-  state.offersOpen = false;
+  state.sortOpen = false;
 }
 
 function selectFeature(id: string, title: string) {

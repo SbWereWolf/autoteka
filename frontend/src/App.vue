@@ -4,7 +4,7 @@
     :class="shellClass"
     :style="{ color: 'var(--text)' }"
   >
-    <div :inert="(state.menuOpen && !isDesktop) || state.offersOpen">
+    <div :inert="(state.menuOpen && !isDesktop) || state.sortOpen">
       <TopBar v-if="isCatalog" />
 
       <main :class="isCatalog ? 'pt-[4.5rem]' : ''">
