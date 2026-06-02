@@ -33,11 +33,7 @@
         </button>
       </header>
       <ul class="catalog-sort-options" role="list">
-        <li
-          v-for="feature in features"
-          :key="feature.id"
-          role="presentation"
-        >
+        <li v-for="feature in features" :key="feature.id">
           <button
             type="button"
             class="catalog-sort-option"
