@@ -1,5 +1,13 @@
 @import "tailwindcss";
 
+@custom-variant hover {
+  &:hover {
+    @media (hover: hover) and (pointer: fine) {
+      @slot;
+    }
+  }
+}
+
 /*
  * Design tokens — source of truth: _prototype/ui-kit.jsx (specs.jsx TokensCard +
  * shared.jsx C palette). Names follow the spec canon (brand, ink, page,
@@ -72,6 +80,10 @@
     box-shadow:
       0 0 0 2px #ffffff,
       0 0 0 4px var(--focus);
+  }
+
+  button:not(:disabled) {
+    cursor: pointer;
   }
 }
 
@@ -1295,6 +1307,12 @@
     transition: color 160ms ease,
     text-decoration-color 160ms ease,
     opacity 160ms ease;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .shop-contact-link:hover {
+      opacity: 0.78;
+    }
   }
 
   .shop-contact-text {

@@ -356,8 +356,11 @@ test("UI-MOCK-08: интерактивные элементы visibly реаги
       };
     });
 
+  const TRANSITION_SETTLE_MS = 250;
+
   const brandBefore = await snapshot(".catalog-brand-link");
   await page.locator(".catalog-brand-link").hover();
+  await page.waitForTimeout(TRANSITION_SETTLE_MS);
   const brandHover = await snapshot(".catalog-brand-link");
   expect(brandHover).not.toEqual(brandBefore);
 
@@ -380,6 +383,7 @@ test("UI-MOCK-08: интерактивные элементы visibly реаги
     first: true,
   });
   await page.locator(".catalog-shop-tile").first().hover();
+  await page.waitForTimeout(TRANSITION_SETTLE_MS);
   const tileHover = await snapshot(".catalog-shop-tile", {
     first: true,
   });
@@ -387,6 +391,7 @@ test("UI-MOCK-08: интерактивные элементы visibly реаги
     .locator(".catalog-shop-tile")
     .first()
     .dispatchEvent("pointerdown");
+  await page.waitForTimeout(TRANSITION_SETTLE_MS);
   const tileActive = await snapshot(".catalog-shop-tile", {
     first: true,
   });
@@ -400,9 +405,11 @@ test("UI-MOCK-08: интерактивные элементы visibly реаги
 
   const backBefore = await snapshot(".shop-back-button");
   await page.locator(".shop-back-button").hover();
+  await page.waitForTimeout(TRANSITION_SETTLE_MS);
   const backHover = await snapshot(".shop-back-button");
   await page.locator(".shop-back-button").click({ trial: true });
   await page.locator(".shop-back-button").dispatchEvent("pointerdown");
+  await page.waitForTimeout(TRANSITION_SETTLE_MS);
   const backActive = await snapshot(".shop-back-button");
   await page.locator(".shop-back-button").dispatchEvent("pointerup");
 
@@ -413,6 +420,7 @@ test("UI-MOCK-08: интерактивные элементы visibly реаги
     first: true,
   });
   await page.locator(".shop-contact-link").first().hover();
+  await page.waitForTimeout(TRANSITION_SETTLE_MS);
   const contactHover = await snapshot(".shop-contact-link", {
     first: true,
   });
@@ -1362,5 +1370,81 @@ test.describe("UI-MOCK-38: грид каталога @1920 — контейне�
       expect(Math.abs(leftMargin - rightMargin)).toBeLessThanOrEqual(1);
     }
     expect(layout.scrollWidth).toBeLessThanOrEqual(layout.viewportWidth);
+  });
+});
+
+test.describe("UI-MOCK-39: hover-guard — desktop матчит и применяет стиль", () => {
+  test.use({
+    viewport: { width: 1280, height: 800 },
+    hasTouch: false,
+    isMobile: false,
+  });
+
+  test("UI-MOCK-39", async ({ page }) => {
+    await installApiMocks(page);
+    await page.goto("/", { waitUntil: "domcontentloaded" });
+    await expect(
+      page.locator(".catalog-shop-tile").first(),
+    ).toBeVisible();
+
+    const matches = await page.evaluate(
+      () =>
+        window.matchMedia("(hover: hover) and (pointer: fine)").matches,
+    );
+    expect(matches).toBe(true);
+
+    const before = await page
+      .locator(".catalog-shop-tile")
+      .first()
+      .evaluate(
+        (el) => getComputedStyle(el as HTMLElement).transform,
+      );
+    await page.locator(".catalog-shop-tile").first().hover();
+    await page.waitForTimeout(250);
+    const after = await page
+      .locator(".catalog-shop-tile")
+      .first()
+      .evaluate(
+        (el) => getComputedStyle(el as HTMLElement).transform,
+      );
+    expect(after).not.toBe(before);
+  });
+});
+
+test.describe("UI-MOCK-40: hover-guard — touch не матчит, стиль НЕ применяется", () => {
+  test.use({
+    viewport: { width: 390, height: 844 },
+    hasTouch: true,
+    isMobile: true,
+  });
+
+  test("UI-MOCK-40", async ({ page }) => {
+    await installApiMocks(page);
+    await page.goto("/", { waitUntil: "domcontentloaded" });
+    await expect(
+      page.locator(".catalog-shop-tile").first(),
+    ).toBeVisible();
+
+    const matches = await page.evaluate(
+      () =>
+        window.matchMedia("(hover: hover) and (pointer: fine)").matches,
+    );
+    expect(matches).toBe(false);
+
+    const before = await page
+      .locator(".catalog-shop-tile")
+      .first()
+      .evaluate(
+        (el) => getComputedStyle(el as HTMLElement).transform,
+      );
+    await page.locator(".catalog-shop-tile").first().hover();
+    await page.waitForTimeout(250);
+    const after = await page
+      .locator(".catalog-shop-tile")
+      .first()
+      .evaluate(
+        (el) => getComputedStyle(el as HTMLElement).transform,
+      );
+    expect(after).toBe(before);
   });
 });
