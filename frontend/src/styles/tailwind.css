@@ -167,6 +167,18 @@
     min-height: 3.6rem;
   }
 
+  .catalog-topbar-city {
+    display: none;
+  }
+
+  @media (min-width: 64rem) {
+    .catalog-topbar-city {
+      display: inline-flex;
+      margin-left: 1.25rem;
+      min-width: 12rem;
+    }
+  }
+
   .catalog-icon-button {
     display: inline-flex;
     flex-direction: column;

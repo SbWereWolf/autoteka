@@ -47,7 +47,7 @@
         </div>
 
         <div class="catalog-menu-content">
-          <section class="space-y-3">
+          <section v-if="!isDesktop" class="space-y-3">
             <h3 class="catalog-menu-label">Город</h3>
             <CitySelect aria-label="Город" test-id="menu-city-select" />
           </section>

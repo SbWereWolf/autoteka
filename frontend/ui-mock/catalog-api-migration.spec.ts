@@ -1509,12 +1509,14 @@ test.describe("UI-MOCK-46: sidebar постоянный — без оверле�
     );
     expect(bodyOverflow).not.toBe("hidden");
 
-    await page
-      .locator(".catalog-menu-panel--sidebar select")
-      .focus();
-    const sidebarTabCount = await page
+    await expect(
+      sidebar.locator('[data-testid="menu-city-select"]'),
+    ).toHaveCount(0);
+
+    await sidebar.locator("button").first().focus();
+    const sidebarTabCount = await sidebar
       .locator(
-        '.catalog-menu-panel--sidebar button:not([disabled]), .catalog-menu-panel--sidebar select, .catalog-menu-panel--sidebar [tabindex]:not([tabindex="-1"])',
+        'button:not([disabled]), select, [tabindex]:not([tabindex="-1"])',
       )
       .count();
     for (let i = 0; i < sidebarTabCount; i += 1) {
@@ -1598,4 +1600,32 @@ test("UI-MOCK-48: мобильный drawer — оверлей + focus-trap (р�
 
   await page.keyboard.press("Escape");
   await expect(drawer).toBeHidden();
+});
+
+test.describe("UI-MOCK-49: город в шапке на десктопе, не в sidebar", () => {
+  test.use({ viewport: { width: 1280, height: 800 } });
+
+  test("UI-MOCK-49", async ({ page }) => {
+    await installApiMocks(page);
+    await page.goto("/", { waitUntil: "domcontentloaded" });
+    await expect(
+      page.locator(".catalog-shop-tile").first(),
+    ).toBeVisible();
+
+    const headerCity = page.getByTestId("topbar-city-select");
+    await expect(headerCity).toBeVisible();
+    await expect(headerCity).toHaveValue("barnaul");
+
+    const sidebar = page.locator(".catalog-menu-panel--sidebar");
+    await expect(sidebar).toBeVisible();
+    await expect(
+      sidebar.getByText("Город", { exact: false }),
+    ).toHaveCount(0);
+    await expect(
+      sidebar.locator('[data-testid="menu-city-select"]'),
+    ).toHaveCount(0);
+
+    await headerCity.selectOption("nizhny");
+    await expect(page.locator(".catalog-shop-tile")).toHaveCount(1);
+  });
 });
