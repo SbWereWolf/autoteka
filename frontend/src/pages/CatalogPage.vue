@@ -1,57 +1,61 @@
 <template>
   <div class="catalog-grid-shell" data-testid="catalog-grid-shell">
-    <div class="catalog-head">
-      <h1 class="catalog-title">Каталог</h1>
-      <span v-if="currentCityTitle" class="catalog-city">
-        · {{ currentCityTitle }}
-      </span>
-    </div>
+    <div id="catalog-sidebar-slot" class="catalog-sidebar-slot" />
 
-    <CatalogFilterChips
-      v-if="viewState === 'results' || viewState === 'loading'"
-    />
+    <div class="catalog-main">
+      <div class="catalog-head">
+        <h1 class="catalog-title">Каталог</h1>
+        <span v-if="currentCityTitle" class="catalog-city">
+          · {{ currentCityTitle }}
+        </span>
+      </div>
 
-    <div v-if="viewState === 'results'" class="catalog-grid">
-      <ShopTile
-        v-for="(shop, index) in sorted"
-        :key="shop.code"
-        :shop="shop"
-        :seed="index + seedBase"
+      <CatalogFilterChips
+        v-if="viewState === 'results' || viewState === 'loading'"
+      />
+
+      <div v-if="viewState === 'results'" class="catalog-grid">
+        <ShopTile
+          v-for="(shop, index) in sorted"
+          :key="shop.code"
+          :shop="shop"
+          :seed="index + seedBase"
+        />
+      </div>
+
+      <CatalogSkeleton v-else-if="viewState === 'loading'" />
+
+      <CatalogState
+        v-else-if="viewState === 'error'"
+        icon="globe"
+        title="Не удалось загрузить"
+        text="Что-то пошло не так. Попробуйте ещё раз."
+      >
+        <button
+          type="button"
+          class="catalog-state-cta"
+          @click="loadCityShops"
+        >
+          Повторить
+        </button>
+      </CatalogState>
+
+      <CatalogState
+        v-else-if="hasActiveFilters"
+        icon="sliders"
+        title="Ничего не найдено"
+        text="Снимите фильтр или измените параметры поиска."
+      >
+        <CatalogFilterChips />
+      </CatalogState>
+
+      <CatalogState
+        v-else
+        icon="sliders"
+        title="Ничего не найдено"
+        text="В этом городе пока нет магазинов."
       />
     </div>
-
-    <CatalogSkeleton v-else-if="viewState === 'loading'" />
-
-    <CatalogState
-      v-else-if="viewState === 'error'"
-      icon="globe"
-      title="Не удалось загрузить"
-      text="Что-то пошло не так. Попробуйте ещё раз."
-    >
-      <button
-        type="button"
-        class="catalog-state-cta"
-        @click="loadCityShops"
-      >
-        Повторить
-      </button>
-    </CatalogState>
-
-    <CatalogState
-      v-else-if="hasActiveFilters"
-      icon="sliders"
-      title="Ничего не найдено"
-      text="Снимите фильтр или измените параметры поиска."
-    >
-      <CatalogFilterChips />
-    </CatalogState>
-
-    <CatalogState
-      v-else
-      icon="sliders"
-      title="Ничего не найдено"
-      text="В этом городе пока нет магазинов."
-    />
 
     <CatalogSortBar v-if="!loadError" />
   </div>

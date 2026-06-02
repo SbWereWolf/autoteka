@@ -4,7 +4,7 @@
     :class="shellClass"
     :style="{ color: 'var(--text)' }"
   >
-    <div :inert="state.menuOpen || state.offersOpen">
+    <div :inert="(state.menuOpen && !isDesktop) || state.offersOpen">
       <TopBar v-if="isCatalog" />
 
       <main :class="isCatalog ? 'pt-[4.5rem]' : ''">
@@ -28,7 +28,10 @@ import TopBar from "./components/TopBar.vue";
 import HamburgerMenu from "./components/HamburgerMenu.vue";
 import CatalogSortSheet from "./components/CatalogSortSheet.vue";
 import { useAnnouncer } from "./composables/useAnnouncer";
+import { useIsDesktop } from "./composables/useIsDesktop";
 import { state } from "./state";
+
+const { isDesktop } = useIsDesktop();
 
 const route = useRoute();
 const { message: announcerMessage } = useAnnouncer();
