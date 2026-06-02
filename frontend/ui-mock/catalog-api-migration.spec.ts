@@ -1551,6 +1551,11 @@ test.describe("UI-MOCK-47: sidebar — live-фильтрация без кноп
       .getByRole("button", { name: "Японские запчасти" })
       .click();
 
+    // sortShopsByRules не фильтрует, а только переупорядочивает:
+    // .catalog-shop-tile count не меняется при любой селекции
+    // категорий/фич в моке. Поэтому "live"-эффект ловим через
+    // появление чипа в catalog-filter-row — это и есть мгновенный
+    // отклик, доступный наблюдению в текущей mock-датасете.
     const filterRow = page.locator(
       '[data-testid="catalog-filter-row"]',
     );
