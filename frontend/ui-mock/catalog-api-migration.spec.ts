@@ -1950,3 +1950,82 @@ test("UI-MOCK-59: галерея <64rem — свайп-карусель (моб.
     gallery.getByTestId("gallery-counter"),
   ).toHaveCount(0);
 });
+
+test.describe("UI-MOCK-60: ShopPage @1280 skeleton — 2-кол. раскладка", () => {
+  test.use({ viewport: { width: 1280, height: 800 } });
+
+  test("UI-MOCK-60", async ({ page }) => {
+    await installApiMocks(page, {
+      delaysMs: {
+        shopByCode: { "nizhny-01": 4000 },
+        promotionByCode: { "nizhny-01": 4000 },
+      },
+    });
+    await page.goto("/shop/nizhny-01", {
+      waitUntil: "domcontentloaded",
+    });
+
+    const skeleton = page.getByTestId("shop-desktop-skeleton");
+    await expect(skeleton).toBeVisible();
+
+    const rects = await skeleton.evaluate((el) => {
+      const root = el as HTMLElement;
+      const left = root.querySelector(
+        ".shop-layout-left",
+      ) as HTMLElement | null;
+      const right = root.querySelector(
+        ".shop-layout-right",
+      ) as HTMLElement | null;
+      return {
+        root: root.getBoundingClientRect(),
+        left: left?.getBoundingClientRect() ?? null,
+        right: right?.getBoundingClientRect() ?? null,
+      };
+    });
+
+    expect(rects.left).toBeTruthy();
+    expect(rects.right).toBeTruthy();
+    if (rects.left && rects.right) {
+      expect(rects.right.left).toBeGreaterThanOrEqual(rects.left.right);
+    }
+    expect(rects.root.width).toBeLessThanOrEqual(1120 + 1);
+  });
+});
+
+test.describe("UI-MOCK-61: ShopPage @1280 ошибка — центр в контейнере ≤1120", () => {
+  test.use({ viewport: { width: 1280, height: 800 } });
+
+  test("UI-MOCK-61", async ({ page }) => {
+    await installApiMocks(page);
+    await page.goto("/shop/nonexistent", {
+      waitUntil: "domcontentloaded",
+    });
+
+    const state = page.getByTestId("catalog-state");
+    await expect(state).toBeVisible();
+
+    const layout = await page.evaluate(() => {
+      const container = document.querySelector(
+        ".shop-desktop-state",
+      ) as HTMLElement | null;
+      const stateEl = document.querySelector(
+        '[data-testid="catalog-state"]',
+      ) as HTMLElement | null;
+      const viewportWidth = document.documentElement.clientWidth;
+      return {
+        containerRect: container?.getBoundingClientRect() ?? null,
+        stateRect: stateEl?.getBoundingClientRect() ?? null,
+        viewportWidth,
+      };
+    });
+
+    expect(layout.containerRect).toBeTruthy();
+    if (layout.containerRect) {
+      expect(layout.containerRect.width).toBeLessThanOrEqual(1120 + 1);
+      const leftMargin = layout.containerRect.left;
+      const rightMargin =
+        layout.viewportWidth - layout.containerRect.right;
+      expect(Math.abs(leftMargin - rightMargin)).toBeLessThanOrEqual(1);
+    }
+  });
+});
