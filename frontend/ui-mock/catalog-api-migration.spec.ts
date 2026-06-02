@@ -1284,3 +1284,83 @@ test("UI-MOCK-35: фейл shop эрорит страницу даже при у
     page.getByTestId("shop-load-error-retry"),
   ).toBeVisible();
 });
+
+async function gridColumnCount(page: import("@playwright/test").Page) {
+  return page.locator(".catalog-grid").evaluate((element) => {
+    const cols = window
+      .getComputedStyle(element as HTMLElement)
+      .gridTemplateColumns.trim();
+    return cols ? cols.split(/\s+/).length : 0;
+  });
+}
+
+test.describe("UI-MOCK-36: грид каталога на мобиле — 2 колонки", () => {
+  test.use({
+    viewport: { width: 390, height: 844 },
+    hasTouch: true,
+    isMobile: true,
+  });
+
+  test("UI-MOCK-36", async ({ page }) => {
+    await installApiMocks(page);
+    await page.goto("/", { waitUntil: "domcontentloaded" });
+    await expect(
+      page.locator(".catalog-shop-tile").first(),
+    ).toBeVisible();
+    expect(await gridColumnCount(page)).toBe(2);
+  });
+});
+
+test.describe("UI-MOCK-37: грид каталога @1280 — 4 колонки", () => {
+  test.use({ viewport: { width: 1280, height: 800 } });
+
+  test("UI-MOCK-37", async ({ page }) => {
+    await installApiMocks(page);
+    await page.goto("/", { waitUntil: "domcontentloaded" });
+    await expect(
+      page.locator(".catalog-shop-tile").first(),
+    ).toBeVisible();
+    expect(await gridColumnCount(page)).toBe(4);
+  });
+});
+
+test.describe("UI-MOCK-38: грид каталога @1920 — контейнер max-w + поля равны", () => {
+  test.use({ viewport: { width: 1920, height: 1080 } });
+
+  test("UI-MOCK-38", async ({ page }) => {
+    await installApiMocks(page);
+    await page.goto("/", { waitUntil: "domcontentloaded" });
+    await expect(
+      page.locator(".catalog-shop-tile").first(),
+    ).toBeVisible();
+
+    expect(await gridColumnCount(page)).toBe(4);
+
+    const layout = await page.evaluate(() => {
+      const shell = document.querySelector(
+        '[data-testid="catalog-grid-shell"]',
+      ) as HTMLElement | null;
+      const shellRect = shell?.getBoundingClientRect() ?? null;
+      const viewportWidth = document.documentElement.clientWidth;
+      const scrollWidth = document.documentElement.scrollWidth;
+      return {
+        shellRect,
+        viewportWidth,
+        scrollWidth,
+        remPx: parseFloat(
+          getComputedStyle(document.documentElement).fontSize,
+        ),
+      };
+    });
+
+    expect(layout.shellRect).toBeTruthy();
+    if (layout.shellRect) {
+      const maxPx = 80 * layout.remPx;
+      expect(layout.shellRect.width).toBeLessThanOrEqual(maxPx + 1);
+      const leftMargin = layout.shellRect.left;
+      const rightMargin = layout.viewportWidth - layout.shellRect.right;
+      expect(Math.abs(leftMargin - rightMargin)).toBeLessThanOrEqual(1);
+    }
+    expect(layout.scrollWidth).toBeLessThanOrEqual(layout.viewportWidth);
+  });
+});
