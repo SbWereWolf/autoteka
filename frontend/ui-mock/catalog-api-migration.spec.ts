@@ -1328,7 +1328,7 @@ test.describe("UI-MOCK-36: грид каталога на мобиле — 2 к�
   });
 });
 
-test.describe("UI-MOCK-37: грид каталога @1280 — 4 колонки", () => {
+test.describe("UI-MOCK-37: грид каталога @1280 — 3 кол. рядом с sidebar", () => {
   test.use({ viewport: { width: 1280, height: 800 } });
 
   test("UI-MOCK-37", async ({ page }) => {
@@ -1337,11 +1337,14 @@ test.describe("UI-MOCK-37: грид каталога @1280 — 4 колонки"
     await expect(
       page.locator(".catalog-shop-tile").first(),
     ).toBeVisible();
-    await expectGridColumns(page, 4);
+    await expectGridColumns(page, 3);
+    await expect(
+      page.locator(".catalog-menu-panel--sidebar"),
+    ).toBeVisible();
   });
 });
 
-test.describe("UI-MOCK-38: грид каталога @1920 — контейнер max-w + поля равны", () => {
+test.describe("UI-MOCK-38: грид каталога @1920 — 4 кол., shell ≤ 1600", () => {
   test.use({ viewport: { width: 1920, height: 1080 } });
 
   test("UI-MOCK-38", async ({ page }) => {
@@ -1352,6 +1355,9 @@ test.describe("UI-MOCK-38: грид каталога @1920 — контейне�
     ).toBeVisible();
 
     await expectGridColumns(page, 4);
+    await expect(
+      page.locator(".catalog-menu-panel--sidebar"),
+    ).toBeVisible();
 
     const layout = await page.evaluate(() => {
       const shell = document.querySelector(
@@ -1372,7 +1378,7 @@ test.describe("UI-MOCK-38: грид каталога @1920 — контейне�
 
     expect(layout.shellRect).toBeTruthy();
     if (layout.shellRect) {
-      const maxPx = 80 * layout.remPx;
+      const maxPx = 100 * layout.remPx;
       expect(layout.shellRect.width).toBeLessThanOrEqual(maxPx + 1);
       const leftMargin = layout.shellRect.left;
       const rightMargin = layout.viewportWidth - layout.shellRect.right;
@@ -1475,4 +1481,263 @@ test("UI-MOCK-41: sort-sheet — каждый <li> имеет роль listitem"
   const itemCount = await items.count();
   expect(itemCount).toBeGreaterThan(0);
   expect(await sheet.getByRole("listitem").count()).toBe(itemCount);
+});
+
+test.describe("UI-MOCK-42: промо-модалка центрирована на десктопе", () => {
+  test.use({ viewport: { width: 1280, height: 800 } });
+
+  test("UI-MOCK-42", async ({ page }) => {
+    await installApiMocks(page);
+    await page.goto("/", { waitUntil: "domcontentloaded" });
+    await expect(
+      page.locator(".catalog-shop-tile").first(),
+    ).toBeVisible();
+
+    await page.locator("[data-sort-trigger]").click();
+    const sheet = page.locator(
+      '[role="dialog"][aria-labelledby="sort-title"]',
+    );
+    await expect(sheet).toBeVisible();
+
+    const backdrop = page.locator(".catalog-sort-sheet-overlay-button");
+    await expect(backdrop).toBeVisible();
+    const backdropBg = await backdrop.evaluate(
+      (el) => getComputedStyle(el as HTMLElement).backgroundColor,
+    );
+    expect(backdropBg).toBe("rgba(0, 0, 0, 0.5)");
+
+    const layout = await page.evaluate(() => {
+      const dialog = document.querySelector(
+        '[role="dialog"][aria-labelledby="sort-title"]',
+      ) as HTMLElement | null;
+      const rect = dialog?.getBoundingClientRect() ?? null;
+      return {
+        rect,
+        viewportWidth: document.documentElement.clientWidth,
+        viewportHeight: document.documentElement.clientHeight,
+      };
+    });
+    expect(layout.rect).toBeTruthy();
+    if (layout.rect) {
+      const dialogCx = layout.rect.left + layout.rect.width / 2;
+      const dialogCy = layout.rect.top + layout.rect.height / 2;
+      expect(
+        Math.abs(dialogCx - layout.viewportWidth / 2),
+      ).toBeLessThanOrEqual(2);
+      expect(
+        Math.abs(dialogCy - layout.viewportHeight / 2),
+      ).toBeLessThanOrEqual(2);
+      expect(layout.rect.width).toBeLessThanOrEqual(640);
+    }
+  });
+});
+
+test.describe("UI-MOCK-43: промо-модалка — все три способа закрытия", () => {
+  test.use({ viewport: { width: 1280, height: 800 } });
+
+  test("UI-MOCK-43", async ({ page }) => {
+    await installApiMocks(page);
+    await page.goto("/", { waitUntil: "domcontentloaded" });
+    await expect(
+      page.locator(".catalog-shop-tile").first(),
+    ).toBeVisible();
+
+    const trigger = page.locator("[data-sort-trigger]");
+    const sheet = page.locator(
+      '[role="dialog"][aria-labelledby="sort-title"]',
+    );
+    const closeBtn = sheet.locator(".catalog-close-button");
+
+    await trigger.click();
+    await expect(sheet).toBeVisible();
+    const closeBox = await closeBtn.boundingBox();
+    expect(closeBox?.width ?? 0).toBeGreaterThanOrEqual(44);
+    expect(closeBox?.height ?? 0).toBeGreaterThanOrEqual(44);
+
+    await closeBtn.click();
+    await expect(sheet).toBeHidden();
+    await expect(trigger).toBeFocused();
+
+    await trigger.click();
+    await expect(sheet).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(sheet).toBeHidden();
+    await expect(trigger).toBeFocused();
+
+    await trigger.click();
+    await expect(sheet).toBeVisible();
+    await page
+      .locator(".catalog-sort-sheet-overlay-button")
+      .click({ position: { x: 20, y: 20 } });
+    await expect(sheet).toBeHidden();
+  });
+});
+
+test.describe("UI-MOCK-44: промо-модалка — focus-trap внутри диалога", () => {
+  test.use({ viewport: { width: 1280, height: 800 } });
+
+  test("UI-MOCK-44", async ({ page }) => {
+    await installApiMocks(page);
+    await page.goto("/", { waitUntil: "domcontentloaded" });
+    await expect(
+      page.locator(".catalog-shop-tile").first(),
+    ).toBeVisible();
+
+    await page.locator("[data-sort-trigger]").click();
+    const sheet = page.locator(
+      '[role="dialog"][aria-labelledby="sort-title"]',
+    );
+    await expect(sheet).toBeVisible();
+
+    const focusables = await sheet
+      .locator(
+        'button:not([disabled]), [tabindex]:not([tabindex="-1"]), a[href]',
+      )
+      .count();
+    expect(focusables).toBeGreaterThan(0);
+
+    for (let i = 0; i < focusables + 2; i += 1) {
+      await page.keyboard.press("Tab");
+      const isInside = await sheet.evaluate((el) =>
+        el.contains(document.activeElement),
+      );
+      expect(isInside).toBe(true);
+    }
+  });
+});
+
+test.describe("UI-MOCK-45: промо-модалка под reduced-motion — только fade", () => {
+  test.use({ viewport: { width: 1280, height: 800 } });
+
+  test("UI-MOCK-45", async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await installApiMocks(page);
+    await page.goto("/", { waitUntil: "domcontentloaded" });
+    await expect(
+      page.locator(".catalog-shop-tile").first(),
+    ).toBeVisible();
+
+    await page.locator("[data-sort-trigger]").click();
+    const sheet = page.locator(
+      '[role="dialog"][aria-labelledby="sort-title"]',
+    );
+    await expect(sheet).toBeVisible();
+
+    const animationName = await sheet.evaluate(
+      (el) => getComputedStyle(el as HTMLElement).animationName,
+    );
+    expect(animationName).toBe("catalog-sort-modal-fade");
+  });
+});
+
+test.describe("UI-MOCK-46: sidebar постоянный — без оверлея и без trap'а", () => {
+  test.use({ viewport: { width: 1280, height: 800 } });
+
+  test("UI-MOCK-46", async ({ page }) => {
+    await installApiMocks(page);
+    await page.goto("/", { waitUntil: "domcontentloaded" });
+    await expect(
+      page.locator(".catalog-shop-tile").first(),
+    ).toBeVisible();
+
+    const sidebar = page.locator(".catalog-menu-panel--sidebar");
+    await expect(sidebar).toBeVisible();
+
+    const role = await sidebar.getAttribute("role");
+    expect(role).toBeNull();
+
+    await expect(page.locator("[data-menu-button]")).toBeHidden();
+    await expect(
+      page.locator(".catalog-menu-footer"),
+    ).toHaveCount(0);
+
+    const bodyOverflow = await page.evaluate(
+      () => getComputedStyle(document.body).overflow,
+    );
+    expect(bodyOverflow).not.toBe("hidden");
+
+    await page
+      .locator(".catalog-menu-panel--sidebar select")
+      .focus();
+    const sidebarTabCount = await page
+      .locator(
+        '.catalog-menu-panel--sidebar button:not([disabled]), .catalog-menu-panel--sidebar select, .catalog-menu-panel--sidebar [tabindex]:not([tabindex="-1"])',
+      )
+      .count();
+    for (let i = 0; i < sidebarTabCount; i += 1) {
+      await page.keyboard.press("Tab");
+    }
+    const activeInsideSidebar = await sidebar.evaluate((el) =>
+      el.contains(document.activeElement),
+    );
+    expect(activeInsideSidebar).toBe(false);
+  });
+});
+
+test.describe("UI-MOCK-47: sidebar — live-фильтрация без кнопки Применить", () => {
+  test.use({ viewport: { width: 1280, height: 800 } });
+
+  test("UI-MOCK-47", async ({ page }) => {
+    await installApiMocks(page);
+    await page.goto("/", { waitUntil: "domcontentloaded" });
+    await expect(
+      page.locator(".catalog-shop-tile").first(),
+    ).toBeVisible();
+
+    const sidebar = page.locator(".catalog-menu-panel--sidebar");
+    await expect(sidebar).toBeVisible();
+    await expect(
+      sidebar.getByRole("button", { name: "Найти" }),
+    ).toHaveCount(0);
+
+    await expect(
+      page.locator('[data-testid="catalog-filter-row"]'),
+    ).toHaveCount(0);
+
+    await sidebar
+      .getByRole("button", { name: "Японские запчасти" })
+      .click();
+
+    const filterRow = page.locator(
+      '[data-testid="catalog-filter-row"]',
+    );
+    await expect(filterRow).toBeVisible();
+    await expect(
+      filterRow.getByText("Японские запчасти"),
+    ).toBeVisible();
+  });
+});
+
+test("UI-MOCK-48: мобильный drawer — оверлей + focus-trap (регресс)", async ({
+  page,
+}) => {
+  await installApiMocks(page);
+  await page.goto("/", { waitUntil: "domcontentloaded" });
+  await expect(
+    page.locator(".catalog-shop-tile").first(),
+  ).toBeVisible();
+
+  await page.getByRole("button", { name: "Открыть фильтры" }).click();
+  const drawer = page.getByRole("dialog", { name: "Фильтры" });
+  await expect(drawer).toBeVisible();
+  await expect(drawer).toHaveAttribute("aria-modal", "true");
+  await expect(
+    page.locator(".catalog-menu-panel--sidebar"),
+  ).toHaveCount(0);
+
+  const drawerTabCount = await drawer
+    .locator(
+      'button:not([disabled]), select, [tabindex]:not([tabindex="-1"]), a[href]',
+    )
+    .count();
+  for (let i = 0; i < drawerTabCount + 2; i += 1) {
+    await page.keyboard.press("Tab");
+    const isInside = await drawer.evaluate((el) =>
+      el.contains(document.activeElement),
+    );
+    expect(isInside).toBe(true);
+  }
+
+  await page.keyboard.press("Escape");
+  await expect(drawer).toBeHidden();
 });
