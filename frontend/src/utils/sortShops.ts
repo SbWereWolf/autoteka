@@ -1,12 +1,12 @@
 import type { Shop } from "../types";
+import type { SortMode } from "../state";
 
 export function sortShopsByRules(params: {
   shops: Shop[];
   selectedCategoryIds: string[];
-  selectedFeatureId: string | null;
+  sortMode: SortMode;
 }): Shop[] {
-  const { shops, selectedCategoryIds, selectedFeatureId } =
-    params;
+  const { shops, selectedCategoryIds, sortMode } = params;
 
   const hasAnySelectedCategory = (shop: Shop) => {
     if (selectedCategoryIds.length === 0) return false;
@@ -15,33 +15,34 @@ export function sortShopsByRules(params: {
     );
   };
 
-  const hasSelectedFeature = (shop: Shop) => {
-    if (!selectedFeatureId) return false;
-    return shop.featureIds.includes(selectedFeatureId);
+  const categoryBucket = (shop: Shop) =>
+    hasAnySelectedCategory(shop) ? 0 : 1;
+
+  const modeBucket = (shop: Shop): number => {
+    if (sortMode === "promo-first") return shop.hasPromo ? 0 : 1;
+    if (sortMode === "fast-delivery-first")
+      return shop.fastDelivery ? 0 : 1;
+    return 0;
   };
 
-  const A: Shop[] = [];
-  const B: Shop[] = [];
+  const indexed = shops.map((shop, index) => ({ shop, index }));
 
-  for (const s of shops) {
-    (hasAnySelectedCategory(s) ? A : B).push(s);
-  }
+  indexed.sort((a, b) => {
+    const aCat = categoryBucket(a.shop);
+    const bCat = categoryBucket(b.shop);
+    if (aCat !== bCat) return aCat - bCat;
 
-  const splitByFeature = (arr: Shop[]) => {
-    const withF: Shop[] = [];
-    const withoutF: Shop[] = [];
-    for (const s of arr) {
-      (hasSelectedFeature(s) ? withF : withoutF).push(s);
+    const aMode = modeBucket(a.shop);
+    const bMode = modeBucket(b.shop);
+    if (aMode !== bMode) return aMode - bMode;
+
+    if (sortMode === "name-asc") {
+      const cmp = a.shop.title.localeCompare(b.shop.title, "ru");
+      if (cmp !== 0) return cmp;
     }
-    return { withF, withoutF };
-  };
 
-  const { withF: A1, withoutF: A2 } = splitByFeature(A);
-  const { withF: B1, withoutF: B2 } = splitByFeature(B);
+    return a.index - b.index;
+  });
 
-  // a) has category + has feature
-  // b) has category + no feature
-  // c) no category + has feature
-  // d) no category + no feature
-  return [...A1, ...A2, ...B1, ...B2];
+  return indexed.map((entry) => entry.shop);
 }

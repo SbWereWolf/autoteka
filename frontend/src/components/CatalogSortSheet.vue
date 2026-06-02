@@ -33,20 +33,18 @@
         </button>
       </header>
       <ul class="catalog-sort-options" role="list">
-        <li v-for="feature in features" :key="feature.id">
+        <li v-for="mode in modes" :key="mode">
           <button
             type="button"
             class="catalog-sort-option"
             :aria-current="
-              feature.id === state.selectedFeatureId
-                ? 'true'
-                : undefined
+              mode === state.sortMode ? 'true' : undefined
             "
-            @click="selectFeature(feature.id, feature.title)"
+            @click="selectMode(mode)"
           >
-            <span>{{ feature.title }}</span>
+            <span>{{ labels[mode] }}</span>
             <svg
-              v-if="feature.id === state.selectedFeatureId"
+              v-if="mode === state.sortMode"
               class="catalog-sort-option-check"
               width="18"
               height="18"
@@ -68,12 +66,19 @@
 
 <script setup lang="ts">
 import { computed, ref } from "vue";
-import { setFeature, state } from "../state";
+import {
+  setSortMode,
+  state,
+  SORT_MODES,
+  SORT_MODE_LABELS,
+  type SortMode,
+} from "../state";
 import { useFocusTrap } from "../composables/useFocusTrap";
 import { useAnnouncer } from "../composables/useAnnouncer";
 
 const dialogRef = ref<HTMLElement | null>(null);
-const features = computed(() => state.features);
+const modes = SORT_MODES;
+const labels = SORT_MODE_LABELS;
 const open = computed(() => state.sortOpen);
 
 const { announce } = useAnnouncer();
@@ -82,9 +87,9 @@ function closeSheet() {
   state.sortOpen = false;
 }
 
-function selectFeature(id: string, title: string) {
-  setFeature(id);
-  announce(`Сортировка: ${title}`);
+function selectMode(mode: SortMode) {
+  setSortMode(mode);
+  announce(`Сортировка: ${SORT_MODE_LABELS[mode]}`);
   closeSheet();
 }
 

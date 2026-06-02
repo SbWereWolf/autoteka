@@ -10,11 +10,12 @@ import { apiClient } from "../api/HttpApiClient";
 import { ApiError } from "../api/ApiClient";
 import { sortShopsByRules } from "../utils/sortShops";
 import type { Shop } from "../types";
+import type { SortMode } from "../state";
 
 export type CatalogCityShopsSources = {
   cityCode: MaybeRefOrGetter<string>;
   selectedCategoryIds: MaybeRefOrGetter<string[]>;
-  selectedFeatureId: MaybeRefOrGetter<string>;
+  sortMode: MaybeRefOrGetter<SortMode>;
 };
 
 export function useCatalogCityShops(sources: CatalogCityShopsSources) {
@@ -46,7 +47,7 @@ export function useCatalogCityShops(sources: CatalogCityShopsSources) {
     sortShopsByRules({
       shops: cityShops.value,
       selectedCategoryIds: toValue(sources.selectedCategoryIds),
-      selectedFeatureId: toValue(sources.selectedFeatureId),
+      sortMode: toValue(sources.sortMode),
     }),
   );
 

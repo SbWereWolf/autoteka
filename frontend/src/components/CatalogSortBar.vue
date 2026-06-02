@@ -8,20 +8,16 @@
       :aria-expanded="state.sortOpen"
       @click="openSheet"
     >
-      Сначала: {{ currentTitle }}
+      Сортировка: {{ currentLabel }}
     </button>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed } from "vue";
-import { state } from "../state";
+import { state, SORT_MODE_LABELS } from "../state";
 
-const currentTitle = computed(
-  () =>
-    state.features.find((f) => f.id === state.selectedFeatureId)
-      ?.title ?? "",
-);
+const currentLabel = computed(() => SORT_MODE_LABELS[state.sortMode]);
 
 function openSheet() {
   state.sortOpen = true;

@@ -48,6 +48,8 @@ export type ShopPublic = {
   galleryItems: GalleryItem[];
   categoryIds: string[];
   featureIds: string[];
+  hasPromo?: boolean;
+  fastDelivery?: boolean;
 };
 
 export type PromotionPublic = {

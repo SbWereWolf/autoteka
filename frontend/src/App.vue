@@ -13,7 +13,7 @@
     </div>
 
     <HamburgerMenu v-if="isCatalog" />
-    <CatalogSortSheet v-if="isCatalog" />
+    <CatalogSortSheet v-if="isCatalog && !isDesktop" />
 
     <span class="sr-only" role="status" aria-live="polite">
       {{ announcerMessage }}

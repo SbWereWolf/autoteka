@@ -4,14 +4,34 @@ import { loadLocal, saveLocal } from "./utils/storage";
 
 const CITY_KEY = "autoteka_city";
 const CATEGORIES_KEY = "autoteka_categories";
-const FEATURE_KEY = "autoteka_feature";
+const SORT_MODE_KEY = "autoteka_sort_mode";
+
+export type SortMode =
+  | "default"
+  | "promo-first"
+  | "fast-delivery-first"
+  | "name-asc";
+
+export const SORT_MODES: SortMode[] = [
+  "default",
+  "promo-first",
+  "fast-delivery-first",
+  "name-asc",
+];
+
+export const SORT_MODE_LABELS: Record<SortMode, string> = {
+  default: "По умолчанию",
+  "promo-first": "Сначала с акциями",
+  "fast-delivery-first": "Сначала с быстрой доставкой",
+  "name-asc": "По названию А–Я",
+};
 
 type AppState = {
   menuOpen: boolean;
   sortOpen: boolean;
   cityCode: string;
   selectedCategoryIds: string[];
-  selectedFeatureId: string;
+  sortMode: SortMode;
   cities: City[];
   categories: Category[];
   features: Feature[];
@@ -22,7 +42,7 @@ export const state = reactive<AppState>({
   sortOpen: false,
   cityCode: "",
   selectedCategoryIds: [],
-  selectedFeatureId: "",
+  sortMode: "default",
   cities: [],
   categories: [],
   features: [],
@@ -60,6 +80,12 @@ function sanitizeFromSet(
     .filter((value, index, arr) => arr.indexOf(value) === index);
 }
 
+function sanitizeSortMode(value: unknown): SortMode {
+  return SORT_MODES.includes(value as SortMode)
+    ? (value as SortMode)
+    : "default";
+}
+
 export function initState(params: {
   cities: City[];
   categories: Category[];
@@ -73,12 +99,8 @@ export function initState(params: {
   const categorySet = new Set(
     state.categories.map((category) => category.id),
   );
-  const featureSet = new Set(
-    state.features.map((feature) => feature.id),
-  );
 
   const fallbackCityCode = state.cities[0]?.code ?? "";
-  const fallbackFeatureId = state.features[0]?.id ?? "";
 
   const rawCityCode = loadLocal<string>(CITY_KEY, fallbackCityCode);
   state.cityCode = citySet.has(rawCityCode)
@@ -93,14 +115,9 @@ export function initState(params: {
   );
   saveLocal(CATEGORIES_KEY, state.selectedCategoryIds);
 
-  const rawFeatureId = loadLocal<string>(
-    FEATURE_KEY,
-    fallbackFeatureId,
-  );
-  state.selectedFeatureId = featureSet.has(rawFeatureId)
-    ? rawFeatureId
-    : fallbackFeatureId;
-  saveLocal(FEATURE_KEY, state.selectedFeatureId);
+  const rawSortMode = loadLocal<unknown>(SORT_MODE_KEY, "default");
+  state.sortMode = sanitizeSortMode(rawSortMode);
+  saveLocal(SORT_MODE_KEY, state.sortMode);
 }
 
 export function toggleCategory(categoryId: string) {
@@ -134,12 +151,10 @@ export function setCity(cityCode: string) {
   saveLocal(CITY_KEY, cityCode);
 }
 
-export function setFeature(featureId: string) {
-  const allowed = new Set(state.features.map((item) => item.id));
-  if (!allowed.has(featureId)) {
+export function setSortMode(mode: SortMode) {
+  if (!SORT_MODES.includes(mode)) {
     return;
   }
-
-  state.selectedFeatureId = featureId;
-  saveLocal(FEATURE_KEY, featureId);
+  state.sortMode = mode;
+  saveLocal(SORT_MODE_KEY, mode);
 }

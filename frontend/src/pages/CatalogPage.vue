@@ -10,8 +10,16 @@
         </span>
       </div>
 
+      <CatalogToolbar
+        v-if="isDesktop && viewState === 'results'"
+        :count="sorted.length"
+      />
+
       <CatalogFilterChips
-        v-if="viewState === 'results' || viewState === 'loading'"
+        v-if="
+          !isDesktop &&
+          (viewState === 'results' || viewState === 'loading')
+        "
       />
 
       <div v-if="viewState === 'results'" class="catalog-grid">
@@ -57,7 +65,7 @@
       />
     </div>
 
-    <CatalogSortBar v-if="!loadError" />
+    <CatalogSortBar v-if="!loadError && !isDesktop" />
   </div>
 </template>
 
@@ -65,18 +73,22 @@
 import { computed, watch } from "vue";
 import ShopTile from "../components/ShopTile.vue";
 import CatalogSortBar from "../components/CatalogSortBar.vue";
+import CatalogToolbar from "../components/CatalogToolbar.vue";
 import CatalogFilterChips from "../components/CatalogFilterChips.vue";
 import CatalogSkeleton from "../components/CatalogSkeleton.vue";
 import CatalogState from "../components/CatalogState.vue";
 import { useCatalogCityShops } from "../composables/useCatalogCityShops";
 import { state } from "../state";
 import { useAnnouncer } from "../composables/useAnnouncer";
+import { useIsDesktop } from "../composables/useIsDesktop";
+
+const { isDesktop } = useIsDesktop();
 
 const { sorted, seedBase, isLoading, loadError, loadCityShops } =
   useCatalogCityShops({
     cityCode: () => state.cityCode,
     selectedCategoryIds: () => state.selectedCategoryIds,
-    selectedFeatureId: () => state.selectedFeatureId,
+    sortMode: () => state.sortMode,
   });
 
 const currentCityTitle = computed(

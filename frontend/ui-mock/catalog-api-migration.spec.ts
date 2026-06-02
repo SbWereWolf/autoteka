@@ -66,7 +66,7 @@ test("UI-MOCK-01: каталог показывает новый top bar и пл
   const sortBar = page.getByTestId("catalog-sort-bar");
   await expect(sortBar).toBeVisible();
   const sortButton = sortBar.getByRole("button");
-  await expect(sortButton).toContainText("Сначала: ");
+  await expect(sortButton).toContainText("Сортировка: ");
   await expect(sortButton).toHaveAttribute("aria-haspopup", "dialog");
   await expect(sortButton).toHaveAttribute("aria-expanded", "false");
 });
@@ -883,7 +883,7 @@ test("UI-MOCK-22: Esc закрывает шит сортировки и возв
     .toBe(true);
 });
 
-test("UI-MOCK-23: тап по опции меняет фичу, обновляет localStorage и закрывает шит", async ({
+test("UI-MOCK-23: тап по опции меняет sortMode, обновляет localStorage и закрывает шит", async ({
   page,
 }) => {
   await installApiMocks(page);
@@ -895,20 +895,22 @@ test("UI-MOCK-23: тап по опции меняет фичу, обновляе
 
   const dialog = page.getByRole("dialog", { name: "Сортировка" });
   await expect(dialog).toBeVisible();
-  await dialog.getByRole("button", { name: "Самовывоз" }).click();
+  await dialog
+    .getByRole("button", { name: "Сначала с акциями" })
+    .click();
   await expect(dialog).toHaveCount(0);
 
   const stored = await page.evaluate(() =>
-    localStorage.getItem("autoteka_feature"),
+    localStorage.getItem("autoteka_sort_mode"),
   );
-  expect(stored).toBe('"pickup"');
+  expect(stored).toBe('"promo-first"');
 
   await expect(
     page.getByTestId("catalog-sort-bar").getByRole("button"),
-  ).toHaveText("Сначала: Самовывоз");
+  ).toHaveText("Сортировка: Сначала с акциями");
 });
 
-test("UI-MOCK-24: текущая фича помечена aria-current в шите", async ({
+test("UI-MOCK-24: текущий режим помечен aria-current в шите", async ({
   page,
 }) => {
   await installApiMocks(page);
@@ -919,9 +921,9 @@ test("UI-MOCK-24: текущая фича помечена aria-current в ши�
     .click();
 
   const dialog = page.getByRole("dialog", { name: "Сортировка" });
-  const current = dialog.getByRole("button", { name: "Акции" });
+  const current = dialog.getByRole("button", { name: "По умолчанию" });
   await expect(current).toHaveAttribute("aria-current", "true");
-  const other = dialog.getByRole("button", { name: "Самовывоз" });
+  const other = dialog.getByRole("button", { name: "По названию А–Я" });
   await expect(other).not.toHaveAttribute("aria-current", /.*/);
 });
 
@@ -936,14 +938,14 @@ test("UI-MOCK-25: выбор сортировки объявляется в ди
     .click();
   await page
     .getByRole("dialog", { name: "Сортировка" })
-    .getByRole("button", { name: "Самовывоз" })
+    .getByRole("button", { name: "По названию А–Я" })
     .click();
   await expect(page.locator('[role="status"]')).toHaveText(
-    "Сортировка: Самовывоз",
+    "Сортировка: По названию А–Я",
   );
 });
 
-test("UI-MOCK-26: выбранная фича не появляется в ряду чипов", async ({
+test("UI-MOCK-26: выбранный режим не появляется в ряду чипов", async ({
   page,
 }) => {
   await installApiMocks(page);
@@ -958,7 +960,7 @@ test("UI-MOCK-26: выбранная фича не появляется в ря�
     .click();
   await page
     .getByRole("dialog", { name: "Сортировка" })
-    .getByRole("button", { name: "Самовывоз" })
+    .getByRole("button", { name: "Сначала с акциями" })
     .click();
   await expect(
     page.locator('[data-testid="catalog-filter-row"]'),
@@ -1627,5 +1629,86 @@ test.describe("UI-MOCK-49: город в шапке на десктопе, не 
 
     await headerCity.selectOption("nizhny");
     await expect(page.locator(".catalog-shop-tile")).toHaveCount(1);
+  });
+});
+
+test.describe("UI-MOCK-50: десктоп-тулбар — счётчик + чипы + сорт-дропдаун", () => {
+  test.use({ viewport: { width: 1280, height: 800 } });
+
+  test("UI-MOCK-50", async ({ page }) => {
+    await installApiMocks(page);
+    await page.goto("/", { waitUntil: "domcontentloaded" });
+    await expect(
+      page.locator(".catalog-shop-tile").first(),
+    ).toBeVisible();
+
+    const toolbar = page.getByTestId("catalog-toolbar");
+    await expect(toolbar).toBeVisible();
+
+    await expect(toolbar.locator(".catalog-toolbar-count")).toHaveText(
+      /\d+\s+магазин/,
+    );
+
+    await expect(
+      page.getByTestId("catalog-sort-bar"),
+    ).toBeHidden();
+
+    const trigger = toolbar.locator("[data-sort-dropdown-trigger]");
+    await expect(trigger).toBeVisible();
+    await expect(trigger).toContainText("Сортировка:");
+    await expect(trigger).toContainText("По умолчанию");
+  });
+});
+
+test.describe("UI-MOCK-51: сорт-дропдаун — Esc и клик-вне закрывают", () => {
+  test.use({ viewport: { width: 1280, height: 800 } });
+
+  test("UI-MOCK-51", async ({ page }) => {
+    await installApiMocks(page);
+    await page.goto("/", { waitUntil: "domcontentloaded" });
+    await expect(
+      page.locator(".catalog-shop-tile").first(),
+    ).toBeVisible();
+
+    const trigger = page.locator("[data-sort-dropdown-trigger]");
+    const panel = page.getByRole("menu", { name: "Сортировка" });
+
+    await trigger.click();
+    await expect(panel).toBeVisible();
+    await expect(trigger).toHaveAttribute("aria-expanded", "true");
+    await page.keyboard.press("Escape");
+    await expect(panel).toHaveCount(0);
+    await expect(trigger).toBeFocused();
+
+    await trigger.click();
+    await expect(panel).toBeVisible();
+    await page.locator("h1.catalog-title").click();
+    await expect(panel).toHaveCount(0);
+  });
+});
+
+test.describe("UI-MOCK-52: сорт-дропдаун — выбор меняет sortMode и подпись", () => {
+  test.use({ viewport: { width: 1280, height: 800 } });
+
+  test("UI-MOCK-52", async ({ page }) => {
+    await installApiMocks(page);
+    await page.goto("/", { waitUntil: "domcontentloaded" });
+    await expect(
+      page.locator(".catalog-shop-tile").first(),
+    ).toBeVisible();
+
+    const trigger = page.locator("[data-sort-dropdown-trigger]");
+    await trigger.click();
+    const panel = page.getByRole("menu", { name: "Сортировка" });
+    await panel
+      .getByRole("menuitemradio", { name: "По названию А–Я" })
+      .click();
+    await expect(panel).toHaveCount(0);
+    await expect(trigger).toContainText("По названию А–Я");
+
+    const stored = await page.evaluate(() =>
+      localStorage.getItem("autoteka_sort_mode"),
+    );
+    expect(stored).toBe('"name-asc"');
   });
 });

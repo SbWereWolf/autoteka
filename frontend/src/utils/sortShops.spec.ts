@@ -32,7 +32,7 @@ describe("sortShopsByRules", () => {
     const result = sortShopsByRules({
       shops,
       selectedCategoryIds: ["A"],
-      selectedFeatureId: "F",
+      sortMode: "default",
     });
 
     expect(result.map((shop) => shop.code)).toEqual([
