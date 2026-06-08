@@ -35,6 +35,12 @@ export default defineConfig(({ mode, command }) => {
       port: frontendPort,
       strictPort: true,
       allowedHosts,
+      proxy: {
+        "/api": {
+          target: "http://127.0.0.1:8081",
+          changeOrigin: true,
+        },
+      },
       hmr:
         hmrHost || hmrPort || hmrProtocol
           ? {
