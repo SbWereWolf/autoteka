@@ -92,6 +92,7 @@ const cities: RawCity[] = [
   { code: "barnaul", title: "Барнаул", sort: 1 },
   { code: "nizhny", title: "Нижний Новгород", sort: 2 },
   { code: "kemerovo", title: "Кемерово", sort: 3 },
+  { code: "mediatest", title: "Медиа-тест", sort: 4 },
 ];
 
 const categories: RawCategory[] = [
@@ -142,9 +143,19 @@ const shopsByCity: Record<string, RawCityCatalogItem[]> = {
       featureIds: [1, 2],
     },
   ],
+  mediatest: [
+    {
+      code: "mediatest-404",
+      cityId: "mediatest",
+      title: "Broken Logo Shop",
+      thumbUrl: "/generated/missing-logo.png",
+      categoryIds: ["domestic"],
+      featureIds: [],
+    },
+  ],
 };
 
-const shops: Record<string, RawShop> = Object.fromEntries(
+const catalogShops: Record<string, RawShop> = Object.fromEntries(
   Object.values(shopsByCity)
     .flat()
     .map((item, index) => [
@@ -188,6 +199,25 @@ const shops: Record<string, RawShop> = Object.fromEntries(
       },
     ]),
 );
+
+const shops: Record<string, RawShop> = {
+  ...catalogShops,
+  "mediatest-empty": {
+    code: "mediatest-empty",
+    cityId: "mediatest",
+    title: "Empty Gallery Shop",
+    slogan: "",
+    description: "Магазин без загруженной галереи.",
+    scheduleNote: "",
+    siteUrl: "",
+    latitude: null,
+    longitude: null,
+    categoryIds: [],
+    featureIds: [],
+    galleryImages: [],
+    galleryItems: [],
+  },
+};
 
 const contactsByShop: Record<string, Record<string, string[]>> = {
   "barnaul-01": {
@@ -310,6 +340,13 @@ export async function installApiMocks(
   await page.route("**/generated/**", async (route) => {
     const url = new URL(route.request().url());
     const pathname = url.pathname.toLowerCase();
+
+    if (pathname.includes("missing-")) {
+      return route.fulfill({
+        status: 404,
+        body: "",
+      });
+    }
 
     if (pathname.endsWith(".mp4")) {
       return route.fulfill({

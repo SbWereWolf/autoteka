@@ -275,11 +275,13 @@
                 </button>
 
                 <div class="shop-logo-shell">
-                  <img
+                  <UiImage
                     v-if="shop.thumbUrl"
-                    class="shop-logo-image"
+                    class="h-full w-full"
+                    img-class="shop-logo-image"
                     :src="shop.thumbUrl"
                     :alt="`Логотип ${shop.title}`"
+                    error-text="Нет логотипа"
                   />
                   <div
                     v-else
@@ -474,6 +476,7 @@
 import { computed } from "vue";
 import { RouterLink, useRoute, useRouter } from "vue-router";
 import GalleryCarousel from "../components/GalleryCarousel.vue";
+import UiImage from "../components/UiImage.vue";
 import OverscrollOpenLink from "../components/OverscrollOpenLink.vue";
 import ShopMetaBadges from "../components/ShopMetaBadges.vue";
 import ShopPromotionCard from "../components/ShopPromotionCard.vue";

@@ -39,7 +39,7 @@
       :style="errorStyle"
       aria-hidden="true"
     >
-      Нет изображения
+      {{ errorText }}
     </div>
   </div>
 </template>
@@ -59,13 +59,15 @@ const props = withDefaults(
     decoding?: "async" | "auto" | "sync";
     imgClass?: string;
     spinner?: boolean;
+    errorText?: string;
   }>(),
   {
     alt: "",
     loading: "lazy",
     decoding: "async",
     imgClass: "w-full h-full object-contain",
-    spinner: false
+    spinner: false,
+    errorText: "Нет изображения"
   }
 );
 

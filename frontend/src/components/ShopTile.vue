@@ -4,13 +4,15 @@
     :to="{ name: 'shop', params: { code: shop.code } }"
     :aria-label="shop.thumbUrl ? undefined : shop.title"
   >
-    <img
+    <UiImage
       v-if="shop.thumbUrl"
-      class="catalog-shop-tile-media"
+      class="h-full w-full"
+      img-class="catalog-shop-tile-media"
       :src="shop.thumbUrl"
       :alt="shop.title"
       loading="lazy"
       decoding="async"
+      error-text="Нет логотипа"
     />
 
     <div
@@ -25,6 +27,7 @@
 
 <script setup lang="ts">
 import { RouterLink } from "vue-router";
+import UiImage from "./UiImage.vue";
 
 defineProps<{
   shop: {
