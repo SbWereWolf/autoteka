@@ -6,6 +6,8 @@
     <button
       v-for="c in categories"
       :key="c.id"
+      type="button"
+      :aria-pressed="state.selectedCategoryIds.includes(c.id)"
       class="ui-transition ui-interactive ui-bounce rounded-2xl min-h-12 text-sm"
       :style="chipStyle(c)"
       @click="toggleCategory(c.id)"
