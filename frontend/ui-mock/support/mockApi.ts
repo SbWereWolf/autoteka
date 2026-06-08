@@ -16,7 +16,7 @@ type RawCategory = {
 };
 
 type RawFeature = {
-  id: string;
+  id: number;
   title: string;
   sort: number;
 };
@@ -27,9 +27,7 @@ type RawCityCatalogItem = {
   title: string;
   thumbUrl?: string;
   categoryIds: string[];
-  featureIds: string[];
-  hasPromo?: boolean;
-  fastDelivery?: boolean;
+  featureIds: number[];
 };
 
 type RawShop = RawCityCatalogItem & {
@@ -104,8 +102,9 @@ const categories: RawCategory[] = [
 ];
 
 const features: RawFeature[] = [
-  { id: "promo", title: "Акции", sort: 1 },
-  { id: "pickup", title: "Самовывоз", sort: 2 },
+  { id: 1, title: "Самая быстрая доставка", sort: 1 },
+  { id: 2, title: "Акции", sort: 2 },
+  { id: 3, title: "Круглосуточно", sort: 3 },
 ];
 
 const shopsByCity: Record<string, RawCityCatalogItem[]> = {
@@ -116,27 +115,21 @@ const shopsByCity: Record<string, RawCityCatalogItem[]> = {
       title: "CarsHelps",
       thumbUrl: "/generated/gen-1x1-x1_0-v1-512x512.png",
       categoryIds: ["domestic", "korean"],
-      featureIds: ["promo"],
-      hasPromo: false,
-      fastDelivery: false,
+      featureIds: [],
     },
     {
       code: "barnaul-02",
       cityId: "barnaul",
       title: "Orange Parts",
       categoryIds: ["japanese"],
-      featureIds: ["pickup"],
-      hasPromo: true,
-      fastDelivery: false,
+      featureIds: [2],
     },
     {
       code: "barnaul-03",
       cityId: "barnaul",
       title: "Zenith Parts",
       categoryIds: ["domestic"],
-      featureIds: ["pickup"],
-      hasPromo: false,
-      fastDelivery: true,
+      featureIds: [1],
     },
   ],
   nizhny: [
@@ -146,9 +139,7 @@ const shopsByCity: Record<string, RawCityCatalogItem[]> = {
       title: "Dark Green Motors",
       thumbUrl: "/generated/gen-1x1-x1_25-v1-640x640.png",
       categoryIds: ["european"],
-      featureIds: ["promo"],
-      hasPromo: true,
-      fastDelivery: true,
+      featureIds: [1, 2],
     },
   ],
 };

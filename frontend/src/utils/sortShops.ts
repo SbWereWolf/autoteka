@@ -1,5 +1,6 @@
 import type { Shop } from "../types";
 import type { SortMode } from "../state";
+import { FEATURE } from "../constants/features";
 
 export function sortShopsByRules(params: {
   shops: Shop[];
@@ -19,9 +20,12 @@ export function sortShopsByRules(params: {
     hasAnySelectedCategory(shop) ? 0 : 1;
 
   const modeBucket = (shop: Shop): number => {
-    if (sortMode === "promo-first") return shop.hasPromo ? 0 : 1;
+    if (sortMode === "promo-first")
+      return shop.featureIds.includes(String(FEATURE.PROMO)) ? 0 : 1;
     if (sortMode === "fast-delivery-first")
-      return shop.fastDelivery ? 0 : 1;
+      return shop.featureIds.includes(String(FEATURE.FAST_DELIVERY))
+        ? 0
+        : 1;
     return 0;
   };
 
