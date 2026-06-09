@@ -45,12 +45,13 @@ for (const { name, viewport } of VIEWPORTS) {
   });
 }
 
-// 2. Логотип ShopPage с 404 → fallback «Нет логотипа», высота зарезервирована.
-//    Только 390×844: десктоп-лейаут логотип не рендерит (by design).
-test.describe("MEDIA-DEGRADE: 404-логотип ShopPage @390", () => {
+// 2. 404-картинка hero-галереи ShopPage → плейсхолдер «Нет изображения»,
+//    высота зарезервирована. Только 390×844 (мобильный hero; логотип на
+//    мобиле больше не рендерится — деградацию ловим на медиа hero-галереи).
+test.describe("MEDIA-DEGRADE: 404-медиа hero-галереи @390", () => {
   test.use({ viewport: { width: 390, height: 844 } });
 
-  test("логотип с 404-thumbUrl показывает «Нет логотипа»", async ({
+  test("404-картинка hero-галереи показывает «Нет изображения»", async ({
     page,
   }) => {
     await installApiMocks(page);
@@ -58,10 +59,12 @@ test.describe("MEDIA-DEGRADE: 404-логотип ShopPage @390", () => {
       waitUntil: "domcontentloaded",
     });
 
-    const logo = page.locator(".shop-logo-shell");
-    await expect(logo).toBeVisible();
-    await expect(logo.getByText("Нет логотипа")).toBeVisible();
-    await expectHeightReserved(logo);
+    const gallery = page.getByTestId("shop-gallery");
+    await expect(gallery).toBeVisible();
+    await expect(
+      gallery.getByText("Нет изображения").first(),
+    ).toBeVisible();
+    await expectHeightReserved(gallery);
   });
 });
 

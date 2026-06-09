@@ -1267,120 +1267,96 @@
     border-radius: 1.125rem;
   }
 
-  .shop-hero-shell {
-    display: grid;
-    gap: 0;
+  /* Mobile shop hero — canon shop-card.jsx (full-bleed square + overlap sheet). */
+  .shop-mobile-shell {
+    width: 100%;
+    padding-bottom: 1rem;
   }
 
-  .shop-hero-head {
-    display: grid;
-    grid-template-columns: 2.5rem minmax(0, 1fr);
-    align-items: end;
-    gap: 0.35rem;
-    min-height: 0;
+  .shop-hero {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    overflow: hidden;
+    background: var(--color-surface-muted);
+  }
+
+  .shop-hero .shop-gallery-shell {
+    height: 100%;
+    border-radius: 0;
+  }
+
+  .shop-hero-scrim {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 2;
+    height: 8.75rem;
+    pointer-events: none;
+    background: linear-gradient(
+      180deg,
+      rgba(0, 0, 0, 0.4),
+      rgba(0, 0, 0, 0)
+    );
   }
 
   .shop-back-button {
+    position: absolute;
+    top: calc(env(safe-area-inset-top) + 0.5rem);
+    left: 0.5rem;
+    z-index: 3;
     display: inline-flex;
     align-items: center;
-    justify-content: flex-start;
-    width: fit-content;
-    height: 100%;
-    border: none;
-    border-radius: 0;
-    background: transparent;
-    color: #49506a;
+    justify-content: center;
+    width: 2.75rem;
+    height: 2.75rem;
     padding: 0;
-    font-size: 1.9rem;
-    font-weight: 400;
-    line-height: 1;
+    border: none;
+    border-radius: var(--radius-control);
+    background: rgba(0, 0, 0, 0.4);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+    color: #ffffff;
     cursor: pointer;
-    box-shadow: none;
-    transition: transform 160ms ease,
-    opacity 160ms ease,
-    filter 160ms ease;
+    transition:
+      transform 100ms ease,
+      background 120ms ease;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
   }
 
   @media (hover: hover) and (pointer: fine) {
     .shop-back-button:hover {
-      transform: scale(var(--transform-scale-regular));
+      background: rgba(0, 0, 0, 0.48);
     }
   }
 
   .shop-back-button:active {
-    transform: scale(var(--transform-scale-strong));
-  }
-
-  .shop-back-raster {
-    display: block;
-    width: 2.1rem;
-    height: 2.1rem;
-    object-fit: contain;
+    background: rgba(0, 0, 0, 0.55);
+    transform: scale(var(--scale-press-icon));
   }
 
   .shop-loading-back-skeleton {
-    width: 2.1rem;
-    height: 2.1rem;
-    justify-self: start;
-    align-self: end;
-    border-radius: 999px;
+    position: absolute;
+    top: calc(env(safe-area-inset-top) + 0.5rem);
+    left: 0.5rem;
+    z-index: 3;
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: var(--radius-control);
   }
 
-  .shop-loading-logo-skeleton-shell {
-    display: flex;
-    align-items: flex-end;
-    justify-content: flex-end;
-    justify-self: end;
-    width: min(10rem, 100%);
-    height: 100%;
-    min-height: 0;
-  }
-
-  .shop-loading-logo-skeleton {
-    width: 100%;
-    height: clamp(2.75rem, 8vw, 4.25rem);
-    border-radius: 1.25rem;
-  }
-
-  .shop-logo-shell {
-    display: flex;
-    align-items: flex-end;
-    justify-content: flex-end;
-    justify-self: end;
-    height: clamp(2.75rem, 8vw, 4.25rem);
-    width: min(10rem, 100%);
-    min-height: 0;
-    border-radius: 0;
-    background: transparent;
-    overflow: hidden;
-  }
-
-  .shop-logo-image {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    object-position: right center;
-  }
-
-  .shop-logo-placeholder {
-    display: grid;
-    place-items: center;
-    width: 100%;
-    height: 100%;
-    border-radius: 1.25rem;
-    background: #f8fafc;
-    color: #94a3b8;
-    font-size: 0.75rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-  }
-
-  .shop-hero-gallery {
+  .shop-sheet {
     position: relative;
-    min-height: 0;
-    --shop-unit: calc(100cqw / 9);
-    height: calc(var(--shop-unit) * 13);
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    margin-top: -1.25rem;
+    padding: 1.5rem 1rem;
+    border-radius: 1.25rem 1.25rem 0 0;
+    background: var(--color-white);
   }
 
   .shop-promo-stack {
@@ -1636,6 +1612,7 @@
     position: relative;
     width: 100%;
     height: 100%;
+    background: var(--color-ink);
   }
 
   .shop-gallery-empty {
@@ -2012,19 +1989,4 @@
     height: clamp(6rem, 14vw, 11rem);
   }
 
-  @media (min-width: 48rem) {
-    .shop-hero-gallery {
-      --shop-unit: calc(100cqw / 14);
-    }
-
-    .shop-hero-head {
-      align-items: flex-end;
-    }
-  }
-
-  @media (min-width: 80rem) {
-    .shop-hero-gallery {
-      --shop-unit: calc(100cqw / 18);
-    }
-  }
 }

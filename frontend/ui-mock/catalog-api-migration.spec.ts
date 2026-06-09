@@ -106,8 +106,8 @@ test("UI-MOCK-03: страница магазина показывает slogan,
   });
 
   await expect(page.locator(".shop-back-button")).toBeVisible();
-  await expect(page.locator(".shop-back-icon")).toHaveCount(0);
-  await expect(page.locator(".shop-back-raster")).toBeVisible();
+  await expect(page.locator(".shop-back-raster")).toHaveCount(0);
+  await expect(page.locator(".shop-back-button svg")).toBeVisible();
   await expect(page.locator(".shop-back-button")).toHaveText("");
   await expect(page.getByTestId("shop-slogan")).toBeVisible();
   await expect(page.getByTestId("shop-slogan")).toContainText(
@@ -154,43 +154,23 @@ test("UI-MOCK-03A: loading skeleton шапки магазина не накла�
     waitUntil: "domcontentloaded",
   });
 
+  // Новый hero-скелетон: квадратный медиа-скелетон + оверлей-форма
+  // кнопки Назад. Лого на мобиле удалён → лого-скелетона нет.
   await expect(
     page.getByTestId("shop-loading-back-skeleton"),
   ).toBeVisible();
   await expect(
     page.getByTestId("shop-loading-logo-skeleton"),
-  ).toBeVisible();
+  ).toHaveCount(0);
 
-  const loadingLayout = await page.evaluate(() => {
-    const back = document.querySelector(
-      '[data-testid="shop-loading-back-skeleton"]',
-    ) as HTMLElement | null;
-    const logo = document.querySelector(
-      '[data-testid="shop-loading-logo-skeleton"]',
-    ) as HTMLElement | null;
-
-    const backRect = back?.getBoundingClientRect() ?? null;
-    const logoRect = logo?.getBoundingClientRect() ?? null;
-
-    if (!backRect || !logoRect) {
-      return null;
-    }
-
-    return {
-      overlapX:
-        Math.min(backRect.right, logoRect.right) -
-        Math.max(backRect.left, logoRect.left),
-      gapX: logoRect.left - backRect.right,
-    };
-  });
-
-  expect(loadingLayout).toBeTruthy();
-  if (loadingLayout) {
-    expect(loadingLayout.overlapX).toBeLessThanOrEqual(0);
-    expect(loadingLayout.gapX).toBeGreaterThanOrEqual(0);
+  const backRect = await page
+    .getByTestId("shop-loading-back-skeleton")
+    .boundingBox();
+  expect(backRect).toBeTruthy();
+  if (backRect) {
+    expect(backRect.width).toBeGreaterThan(0);
+    expect(backRect.height).toBeGreaterThan(0);
   }
-
-  await expect(page.locator(".shop-back-button")).toBeVisible();
 });
 
 test("UI-MOCK-04: 404 магазин показывает экран ошибки", async ({

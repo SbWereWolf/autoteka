@@ -36,7 +36,7 @@
               :loading="itemIndex === 0 ? 'eager' : 'lazy'"
               decoding="async"
               spinner
-              img-class="h-full w-full object-contain"
+              img-class="h-full w-full object-cover"
             />
 
             <div v-else class="shop-gallery-video-shell">
