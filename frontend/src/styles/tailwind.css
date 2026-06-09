@@ -15,6 +15,10 @@
  * "HOVER-слой" block.
  */
 @theme {
+  --font-sans:
+    "Manrope Variable", -apple-system, BlinkMacSystemFont, "Segoe UI",
+    Roboto, Helvetica, Arial, sans-serif;
+
   --color-brand: #d61d00;
   --color-brand-pressed: #bc1a00;
   --color-brand-hover: #c91c00;
@@ -70,7 +74,8 @@
 
   body {
     margin: 0;
-    font-family: "Trebuchet MS", "Segoe UI", Arial, sans-serif;
+    font-family: var(--font-sans);
+    font-weight: 500;
     background: #ffffff;
     overflow-x: auto;
   }
