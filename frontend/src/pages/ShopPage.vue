@@ -327,14 +327,6 @@
               empty-text="Для этого магазина изображения ещё не загружены"
               test-id="shop-gallery"
             />
-
-            <div
-              v-if="shop.scheduleNote"
-              class="shop-schedule-note"
-              data-testid="shop-schedule-note"
-            >
-              {{ shop.scheduleNote }}
-            </div>
           </div>
 
           <div
@@ -351,19 +343,37 @@
               class="shop-content-card"
               data-testid="shop-text-section"
             >
-              <h1
-                v-if="shop.slogan"
-                class="shop-slogan"
-                data-testid="shop-slogan"
-              >
-                {{ shop.slogan }}
-              </h1>
-              <p
-                class="shop-description"
-                data-testid="shop-description"
-              >
-                {{ shop.description }}
-              </p>
+              <div class="flex flex-col gap-3">
+                <h1 class="shop-name" data-testid="shop-name">
+                  {{ shop.title }}
+                </h1>
+
+                <ul
+                  v-if="shopBadges.length"
+                  class="shop-meta-list"
+                  aria-label="Категории и особенности магазина"
+                  data-testid="shop-features"
+                >
+                  <li
+                    v-for="badge in shopBadges"
+                    :key="badge"
+                    class="shop-meta-item"
+                  >
+                    {{ badge }}
+                  </li>
+                </ul>
+
+                <p
+                  v-if="shop.slogan"
+                  class="shop-body-line"
+                  data-testid="shop-slogan"
+                >
+                  {{ shop.slogan }}
+                </p>
+                <p class="shop-body-line" data-testid="shop-description">
+                  {{ shop.description }}
+                </p>
+              </div>
             </section>
 
             <section
@@ -430,13 +440,25 @@
             </section>
 
             <section
+              v-if="shop.scheduleNote"
               class="shop-content-card"
-              data-testid="shop-features"
+              data-testid="shop-schedule-note"
             >
-              <ShopMetaBadges
-                :categories="categoryNames"
-                :features="featureNames"
-              />
+              <div class="shop-schedule-row">
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  aria-hidden="true"
+                  focusable="false"
+                >
+                  <path
+                    d="M12 2C17.5228 2 22 6.47715 22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2ZM12 5C11.4477 5 11 5.44772 11 6V12C11 12.3788 11.214 12.7251 11.5527 12.8945L15.5527 14.8945C16.0467 15.1415 16.6475 14.9412 16.8945 14.4473C17.1415 13.9533 16.9412 13.3525 16.4473 13.1055L13 11.3818V6C13 5.44772 12.5523 5 12 5Z"
+                  />
+                </svg>
+                <span>{{ shop.scheduleNote }}</span>
+              </div>
             </section>
 
             <div class="shop-overscroll-spacer" aria-hidden="true" />
@@ -521,6 +543,10 @@ const featureNames = computed(() =>
 const categoryNames = computed(() =>
   mapIdsToTitles(shop.value?.categoryIds ?? [], categoryMap.value),
 );
+const shopBadges = computed(() => [
+  ...categoryNames.value,
+  ...featureNames.value,
+]);
 
 const galleryItems = computed<GalleryItem[]>(() => {
   const current = shop.value;

@@ -134,89 +134,9 @@ test("UI-MOCK-03: страница магазина показывает slogan,
     page.getByTestId("shop-gallery").locator(".shop-gallery-dot"),
   ).toHaveCount(2);
 
-  const heroLayout = await page.evaluate(() => {
-    const slogan = document.querySelector(
-      '[data-testid="shop-slogan"]',
-    ) as HTMLElement | null;
-    const description = document.querySelector(
-      '[data-testid="shop-description"]',
-    ) as HTMLElement | null;
-    const note = document.querySelector(
-      '[data-testid="shop-schedule-note"]',
-    ) as HTMLElement | null;
-    const dots = document.querySelector(
-      '[data-testid="shop-gallery"] .shop-gallery-dots',
-    ) as HTMLElement | null;
-    const gallery = document.querySelector(
-      ".shop-hero-gallery",
-    ) as HTMLElement | null;
-
-    const sloganRect = slogan?.getBoundingClientRect() ?? null;
-    const descriptionRect =
-      description?.getBoundingClientRect() ?? null;
-    const noteRect = note?.getBoundingClientRect() ?? null;
-    const dotsRect = dots?.getBoundingClientRect() ?? null;
-    const galleryRect = gallery?.getBoundingClientRect() ?? null;
-    const descriptionStyle = description
-      ? window.getComputedStyle(description)
-      : null;
-    const noteStyle = note ? window.getComputedStyle(note) : null;
-
-    return {
-      sloganRect,
-      descriptionRect,
-      noteRect,
-      dotsRect,
-      galleryRect,
-      descriptionLineHeight: descriptionStyle
-        ? Number.parseFloat(descriptionStyle.lineHeight)
-        : null,
-      descriptionFontSize: descriptionStyle
-        ? Number.parseFloat(descriptionStyle.fontSize)
-        : null,
-      noteFontSize: noteStyle
-        ? Number.parseFloat(noteStyle.fontSize)
-        : null,
-      noteFontWeight: noteStyle?.fontWeight ?? null,
-    };
-  });
-
-  expect(heroLayout.descriptionRect).toBeTruthy();
-  expect(heroLayout.sloganRect).toBeTruthy();
-  expect(heroLayout.noteRect).toBeTruthy();
-  expect(heroLayout.dotsRect).toBeTruthy();
-  if (
-    heroLayout.sloganRect &&
-    heroLayout.descriptionRect &&
-    heroLayout.descriptionLineHeight
-  ) {
-    expect(
-      heroLayout.descriptionRect.top - heroLayout.sloganRect.bottom,
-    ).toBeGreaterThanOrEqual(heroLayout.descriptionLineHeight - 1);
-  }
-  if (
-    heroLayout.noteRect &&
-    heroLayout.dotsRect &&
-    heroLayout.galleryRect &&
-    heroLayout.descriptionLineHeight
-  ) {
-    const noteCenter =
-      heroLayout.noteRect.left + heroLayout.noteRect.width / 2;
-    const galleryCenter =
-      heroLayout.galleryRect.left + heroLayout.galleryRect.width / 2;
-    expect(Math.abs(noteCenter - galleryCenter)).toBeLessThanOrEqual(8);
-    expect(
-      heroLayout.dotsRect.top - heroLayout.noteRect.bottom,
-    ).toBeGreaterThanOrEqual(heroLayout.descriptionLineHeight - 1);
-  }
-  expect(heroLayout.noteFontWeight).toMatch(/^(600|700|800|900|bold)$/);
-  if (heroLayout.noteFontSize && heroLayout.descriptionFontSize) {
-    expect(
-      Math.abs(
-        heroLayout.noteFontSize - heroLayout.descriptionFontSize,
-      ),
-    ).toBeLessThanOrEqual(0.5);
-  }
+  // Канон ShopMain: единственный h1 страницы = имя магазина.
+  await expect(page.getByTestId("shop-name")).toHaveText("CarsHelps");
+  await expect(page.getByTestId("shop-description")).toBeVisible();
 });
 
 test("UI-MOCK-03A: loading skeleton шапки магазина не накладывается", async ({
