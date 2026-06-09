@@ -2,26 +2,29 @@
   <RouterLink
     class="catalog-shop-tile ui-bounce"
     :to="{ name: 'shop', params: { code: shop.code } }"
-    :aria-label="shop.thumbUrl ? undefined : shop.title"
   >
-    <UiImage
-      v-if="shop.thumbUrl"
-      class="h-full w-full"
-      img-class="catalog-shop-tile-media"
-      :src="shop.thumbUrl"
-      :alt="shop.title"
-      loading="lazy"
-      decoding="async"
-      error-text="Нет логотипа"
-    />
+    <div class="catalog-shop-tile-logo">
+      <UiImage
+        v-if="shop.thumbUrl"
+        class="h-full w-full"
+        img-class="catalog-shop-tile-media"
+        :src="shop.thumbUrl"
+        alt=""
+        loading="lazy"
+        decoding="async"
+        error-text="Нет логотипа"
+      />
 
-    <div
-      v-else
-      class="catalog-shop-tile-placeholder"
-      aria-hidden="true"
-    >
-      <span>Нет логотипа</span>
+      <span
+        v-else
+        class="catalog-shop-tile-placeholder"
+        aria-hidden="true"
+      >
+        Нет логотипа
+      </span>
     </div>
+
+    <span class="catalog-shop-tile-title">{{ shop.title }}</span>
   </RouterLink>
 </template>
 

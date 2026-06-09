@@ -164,7 +164,10 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    min-height: 3.6rem;
+    height: 3.25rem;
+    padding: 0.25rem 0.75rem 0.25rem 0.25rem;
+    border-bottom: 1px solid var(--color-page);
+    background: transparent;
   }
 
   .catalog-topbar-city {
@@ -181,39 +184,31 @@
 
   .catalog-icon-button {
     display: inline-flex;
-    flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 0.22rem;
-    width: 2.9rem;
-    height: 2.9rem;
-    border: 0.0625rem solid rgba(148, 163, 184, 0.22);
-    border-radius: 0.9rem;
-    background: rgba(255, 255, 255, 0.92);
-    box-shadow: none;
-    color: var(--text);
+    width: 2.75rem;
+    height: 2.75rem;
+    border: none;
+    border-radius: var(--radius-control);
+    background: transparent;
+    color: var(--color-ink);
     cursor: pointer;
-    backdrop-filter: blur(0.2rem);
-    transition: transform 160ms ease,
-    background-color 160ms ease,
-    border-color 160ms ease,
-    box-shadow 160ms ease,
-    opacity 160ms ease;
+    transition:
+      transform 120ms ease,
+      background 120ms ease;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
   }
 
   @media (hover: hover) and (pointer: fine) {
     .catalog-icon-button:hover {
-      background: rgba(255, 255, 255, 0.98);
-      border-color: rgba(100, 116, 139, 0.38);
-      box-shadow: 0 0.55rem 1.3rem rgba(148, 163, 184, 0.18);
-      transform: scale(var(--transform-scale-regular));
+      background: var(--color-surface-muted-hover);
     }
   }
 
   .catalog-icon-button:active {
-    background: rgba(241, 245, 249, 0.98);
-    border-color: rgba(71, 85, 105, 0.34);
-    transform: scale(var(--transform-scale-strong));
+    background: var(--color-surface-muted-pressed);
+    transform: scale(var(--scale-press-icon));
   }
 
   .catalog-brand-link {
@@ -240,7 +235,7 @@
 
   .catalog-brand-logo {
     display: block;
-    height: 2.95rem;
+    height: 1.1875rem;
     width: auto;
   }
 
@@ -249,7 +244,7 @@
     container-type: inline-size;
     margin-inline: auto;
     max-width: 80rem;
-    padding: 0.5rem 1rem calc(6rem + env(safe-area-inset-bottom));
+    padding: 0.5rem 0.75rem calc(6rem + env(safe-area-inset-bottom));
   }
 
   .catalog-sidebar-slot {
@@ -287,17 +282,27 @@
 
   .catalog-title {
     margin: 0;
-    font-size: 1.375rem;
+    font-size: 1.0625rem;
     font-weight: 700;
     line-height: 1.2;
     color: var(--color-ink);
   }
 
   .catalog-city {
-    font-size: 0.875rem;
+    font-size: 0.8125rem;
     font-weight: 500;
     line-height: 1.2;
     color: var(--color-secondary-text);
+  }
+
+  @media (min-width: 64rem) {
+    .catalog-title {
+      font-size: 1.375rem;
+    }
+
+    .catalog-city {
+      font-size: 0.875rem;
+    }
   }
 
   .catalog-filter-row {
@@ -551,14 +556,19 @@
 
   .catalog-shop-tile {
     position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
     width: 100%;
-    height: 11.125rem;
-    overflow: hidden;
+    padding: 1.625rem 0.875rem 1rem;
     border: 1px solid var(--color-surface-muted);
     border-radius: var(--radius-card);
     background: var(--color-white);
     box-shadow: var(--shadow-card);
     cursor: pointer;
+    text-decoration: none;
     transition: transform 180ms ease,
     box-shadow 180ms ease,
     filter 180ms ease,
@@ -573,28 +583,50 @@
   }
 
   .catalog-shop-tile:active {
-    transform: scale(var(--transform-scale-regular));
+    background: var(--color-page);
+    transform: scale(var(--scale-press-button));
+  }
+
+  .catalog-shop-tile-logo {
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 3.625rem;
   }
 
   .catalog-shop-tile-media {
     display: block;
-    width: 100%;
-    height: 100%;
+    max-width: 100%;
+    max-height: 100%;
     object-fit: contain;
     object-position: center;
   }
 
   .catalog-shop-tile-placeholder {
-    position: absolute;
-    inset: 0;
     display: grid;
     place-items: center;
-    background: inherit;
-    color: #94a3b8;
+    width: 100%;
+    height: 100%;
+    color: var(--color-secondary-text);
     font-size: 0.875rem;
     font-weight: 700;
+    text-align: center;
     text-transform: uppercase;
     letter-spacing: 0.08em;
+  }
+
+  .catalog-shop-tile-title {
+    width: 100%;
+    overflow: hidden;
+    color: var(--color-ink);
+    font-size: 0.8125rem;
+    font-weight: 700;
+    line-height: 1.2;
+    text-align: center;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .catalog-skeleton-tile {

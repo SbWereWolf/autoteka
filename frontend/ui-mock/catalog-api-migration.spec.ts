@@ -36,7 +36,7 @@ test.beforeEach(async ({ request }) => {
   }
 });
 
-test("UI-MOCK-01: каталог показывает новый top bar и плитки без названий", async ({
+test("UI-MOCK-01: каталог показывает новый top bar и плитки с названиями", async ({
   page,
 }) => {
   await installApiMocks(page);
@@ -52,19 +52,26 @@ test("UI-MOCK-01: каталог показывает новый top bar и пл
     page.getByRole("img", { name: "TOauto.ru" }),
   ).toBeVisible();
   await expect(page.locator(".catalog-shop-tile")).toHaveCount(3);
-  await expect(page.getByText("CarsHelps")).toHaveCount(0);
+  // Канон: название магазина — видимый текст внутри ссылки;
+  // имя ссылки = название; лого декоративно (alt="").
   await expect(
     page.locator(".catalog-shop-tile").first(),
   ).toHaveAttribute("href", "/shop/barnaul-01");
   await expect(
-    page.locator('.catalog-shop-tile img[alt="CarsHelps"]'),
+    page.locator(".catalog-shop-tile").first().getByText("CarsHelps"),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: "CarsHelps" }),
+  ).toBeVisible();
+  await expect(
+    page.locator('.catalog-shop-tile img[alt=""]'),
   ).toHaveCount(1);
   await expect(
-    page.locator(".catalog-shop-tile").nth(1),
-  ).toHaveAttribute("aria-label", "Orange Parts");
+    page.getByRole("link", { name: "Orange Parts" }),
+  ).toBeVisible();
   await expect(
-    page.locator(".catalog-shop-tile").nth(2),
-  ).toHaveAttribute("aria-label", "Zenith Parts");
+    page.getByRole("link", { name: "Zenith Parts" }),
+  ).toBeVisible();
 
   const sortBar = page.getByTestId("catalog-sort-bar");
   await expect(sortBar).toBeVisible();
