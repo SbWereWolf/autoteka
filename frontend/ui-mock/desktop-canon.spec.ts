@@ -34,3 +34,35 @@ test.describe("DK-1: стрелки десктоп-галереи = ix-onimg @12
     expect(shadow).not.toBe("none");
   });
 });
+
+test.describe("DK-6: токен-ниты каталога", () => {
+  test("h1 «Каталог» = 24px @1280", async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await installApiMocks(page);
+    await page.goto("/", { waitUntil: "domcontentloaded" });
+
+    const fs = await page
+      .locator(".catalog-title")
+      .evaluate((el) => getComputedStyle(el).fontSize);
+    expect(fs).toBe("24px");
+  });
+
+  test("сетка 3 колонки @1280, 4 колонки @1440", async ({ page }) => {
+    await installApiMocks(page);
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.goto("/", { waitUntil: "domcontentloaded" });
+
+    const grid = page.locator(".catalog-grid");
+    await grid.waitFor();
+    const cols1280 = await grid.evaluate(
+      (el) => getComputedStyle(el).gridTemplateColumns.split(" ").length,
+    );
+    expect(cols1280).toBe(3);
+
+    await page.setViewportSize({ width: 1440, height: 900 });
+    const cols1440 = await grid.evaluate(
+      (el) => getComputedStyle(el).gridTemplateColumns.split(" ").length,
+    );
+    expect(cols1440).toBe(4);
+  });
+});

@@ -301,8 +301,9 @@
   }
 
   @media (min-width: 64rem) {
+    /* Канон dk-h1 (_prototype/desktop-kit.jsx): 24px в контент-колонке. */
     .catalog-title {
-      font-size: 1.375rem;
+      font-size: 1.5rem;
     }
 
     .catalog-city {
@@ -477,6 +478,9 @@
     }
   }
 
+  /* 90rem = 1440px = канон-брейк 3↔4 колонки (_prototype/desktop-kit.jsx
+     @container 1440). Идиома @media оставлена намеренно — поведение
+     идентично, конверсия в @container = риск без выгоды. */
   @media (min-width: 90rem) {
     .catalog-grid {
       grid-template-columns: repeat(4, minmax(0, 1fr));
