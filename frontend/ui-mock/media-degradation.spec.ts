@@ -45,6 +45,35 @@ for (const { name, viewport } of VIEWPORTS) {
   });
 }
 
+// 1b. Тайл каталога БЕЗ thumbUrl (поле отсутствует) → v-else ветка ShopTile:
+//     <span class="catalog-shop-tile-placeholder">Нет логотипа</span>.
+//     barnaul-02 в фикстуре не имеет thumbUrl.
+test.describe("MEDIA-DEGRADE: отсутствующий thumbUrl тайла @390", () => {
+  test.use({ viewport: { width: 390, height: 844 } });
+
+  test("тайл без thumbUrl рендерит плейсхолдер «Нет логотипа» (v-else)", async ({
+    page,
+  }) => {
+    await page.addInitScript(() => {
+      window.localStorage.setItem(
+        "autoteka_city",
+        JSON.stringify("barnaul"),
+      );
+    });
+    await installApiMocks(page);
+    await page.goto("/", { waitUntil: "domcontentloaded" });
+
+    const tile = page.locator(
+      'a.catalog-shop-tile[href$="/shop/barnaul-02"]',
+    );
+    await expect(tile).toHaveCount(1);
+
+    const placeholder = tile.locator(".catalog-shop-tile-placeholder");
+    await expect(placeholder).toBeVisible();
+    await expect(placeholder).toHaveText("Нет логотипа");
+  });
+});
+
 // 2. 404-картинка hero-галереи ShopPage → плейсхолдер «Нет изображения»,
 //    высота зарезервирована. Только 390×844 (мобильный hero; логотип на
 //    мобиле больше не рендерится — деградацию ловим на медиа hero-галереи).
