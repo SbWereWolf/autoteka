@@ -75,3 +75,29 @@ test.describe("DRAWER-чип @390", () => {
     expect(radius).toBe("12px");
   });
 });
+
+// Канон-токены дровера (_prototype/screens.jsx): нижний клиренс чипс-зоны
+// 14px + лейбл секции = secondary-text (#8E8E93).
+test.describe("DRAWER-канон-токены @390", () => {
+  test("чипс-клиренс 14px снизу; лейбл = secondary-text", async ({
+    page,
+  }) => {
+    await installApiMocks(page);
+    await page.goto("/", { waitUntil: "domcontentloaded" });
+
+    await page.locator("[data-menu-button]").click();
+    const dialog = page.getByRole("dialog");
+    await expect(dialog).toBeVisible();
+
+    const pb = await dialog
+      .locator(".catalog-menu-chips")
+      .evaluate((el) => getComputedStyle(el).paddingBottom);
+    expect(pb).toBe("14px");
+
+    const color = await dialog
+      .locator(".catalog-menu-label")
+      .first()
+      .evaluate((el) => getComputedStyle(el).color);
+    expect(color).toBe("rgb(142, 142, 147)");
+  });
+});
