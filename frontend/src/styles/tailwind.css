@@ -2547,21 +2547,20 @@
       0 0 0 4px var(--color-ink);
   }
 
-  /* «Время работы» (канон): зелёная точка-пульс + текст 15/500/1.4 ink. */
+  /* «Время работы» (канон ClockIcon, _prototype/shared.jsx): глиф часов
+     18px secondary-text в одной колонке с контакт-иконками + текст 15/500/1.4
+     ink; выравнивание по первой строке многострочного scheduleNote. */
   .shop-schedule-row {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 0.5rem;
   }
 
-  .shop-schedule-dot {
+  .shop-schedule-clock {
     flex: 0 0 auto;
-    width: 0.625rem;
-    height: 0.625rem;
-    margin-left: 0.1875rem;
-    border-radius: 50%;
-    background: rgb(52, 199, 89);
-    box-shadow: 0 0 0 4px rgba(52, 199, 89, 0.18);
+    color: var(--color-secondary-text);
+    /* центрирование 18px-глифа по line-box первой строки (21px): (21−18)/2 */
+    margin-top: 0.09375rem;
   }
 
   .shop-schedule-text {

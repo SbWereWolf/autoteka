@@ -175,7 +175,19 @@
               >
                 <h2 class="shop-info-label">Время работы</h2>
                 <div class="shop-schedule-row">
-                  <span class="shop-schedule-dot" aria-hidden="true" />
+                  <svg
+                    class="shop-schedule-clock"
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                    aria-hidden="true"
+                    focusable="false"
+                  >
+                    <path
+                      d="M12 2C17.5228 2 22 6.47715 22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2ZM12 5C11.4477 5 11 5.44772 11 6V12C11 12.3788 11.214 12.7251 11.5527 12.8945L15.5527 14.8945C16.0467 15.1415 16.6475 14.9412 16.8945 14.4473C17.1415 13.9533 16.9412 13.3525 16.4473 13.1055L13 11.3818V6C13 5.44772 12.5523 5 12 5Z"
+                    />
+                  </svg>
                   <span class="shop-schedule-text">{{
                     shop.scheduleNote
                   }}</span>
@@ -388,10 +400,19 @@
               >
                 <h2 class="shop-section-label">Время работы</h2>
                 <div class="shop-schedule-row">
-                  <span
-                    class="shop-schedule-dot"
+                  <svg
+                    class="shop-schedule-clock"
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
                     aria-hidden="true"
-                  />
+                    focusable="false"
+                  >
+                    <path
+                      d="M12 2C17.5228 2 22 6.47715 22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2ZM12 5C11.4477 5 11 5.44772 11 6V12C11 12.3788 11.214 12.7251 11.5527 12.8945L15.5527 14.8945C16.0467 15.1415 16.6475 14.9412 16.8945 14.4473C17.1415 13.9533 16.9412 13.3525 16.4473 13.1055L13 11.3818V6C13 5.44772 12.5523 5 12 5Z"
+                    />
+                  </svg>
                   <span class="shop-schedule-text">{{
                     shop.scheduleNote
                   }}</span>

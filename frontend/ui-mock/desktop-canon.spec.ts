@@ -148,8 +148,8 @@ test.describe("DK-2: правая панель магазина = канон ds-
     const card = page.getByTestId("shop-info-aside");
     await expect(card).toBeVisible();
 
-    // «Время работы» — зелёная точка-пульс (как мобильная карточка).
-    await expect(card.locator(".shop-schedule-dot")).toBeVisible();
+    // «Время работы» — глиф часов (канон ClockIcon).
+    await expect(card.locator(".shop-schedule-clock")).toBeVisible();
 
     // Контакт-строка без underline.
     const deco = await card
