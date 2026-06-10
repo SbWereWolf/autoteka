@@ -38,6 +38,7 @@
   --color-chip-selected-hover-bg: #fae3de;
   --color-white: #ffffff;
   --color-skeleton-shimmer: rgba(255, 255, 255, 0.65);
+  --color-overlay: rgb(15 15 16 / 0.25);
 
   --radius-control: 12px;
   --radius-cta: 20px;
@@ -750,8 +751,7 @@
 
   @media (hover: hover) and (pointer: fine) {
     .catalog-shop-tile:hover {
-      transform: scale(var(--transform-scale-weak));
-      box-shadow: 0 1rem 1.8rem rgba(15, 23, 42, 0.08);
+      box-shadow: 0 1rem 1.8rem rgba(15, 15, 16, 0.08);
     }
   }
 
@@ -917,6 +917,11 @@
 
   .catalog-select-control::-ms-expand {
     display: none;
+  }
+
+  /* Затемнение под мобильной шторкой меню — канон как у шторки «Акции». */
+  .catalog-menu-overlay {
+    background: var(--color-overlay);
   }
 
   .catalog-menu-panel {
@@ -1124,6 +1129,9 @@
       align-items: center;
       justify-content: space-between;
       gap: 1rem;
+      /* Держим высоту ряда чипов (60px) + margin-bottom filter-row (12px),
+         чтобы тулбар не прыгал при появлении/снятии фильтров. */
+      min-height: 4.5rem;
     }
 
     .catalog-toolbar-left {
@@ -1468,7 +1476,7 @@
     inset: 0;
     width: 100%;
     height: 100%;
-    background: rgba(15, 15, 16, 0.25);
+    background: var(--color-overlay);
     border: none;
     padding: 0;
     cursor: pointer;
@@ -2384,7 +2392,7 @@
   @media (hover: hover) and (pointer: fine) {
     .shop-gallery-audio-toggle:hover {
       background: rgba(15, 23, 42, 0.86);
-      transform: translate(-50%, -50%) scale(var(--transform-scale-regular));
+      transform: translate(-50%, -50%);
     }
   }
 
@@ -2639,16 +2647,13 @@
 
   @media (hover: hover) and (pointer: fine) {
     .catalog-close-button:hover {
-      background: #f8fafc;
-      border-color: rgba(148, 163, 184, 0.8);
-      box-shadow: 0 0.55rem 1.2rem rgba(148, 163, 184, 0.16);
-      transform: scale(var(--transform-scale-regular));
+      background: var(--color-page-hover);
     }
   }
 
   .catalog-close-button:active {
-    background: #eef2f7;
-    transform: scale(var(--transform-scale-strong));
+    background: var(--color-surface-muted-hover);
+    transform: scale(var(--transform-scale-regular));
   }
 
   /* Mobile action bar — canon footer (_prototype/shop-card.jsx + OffersBar). */

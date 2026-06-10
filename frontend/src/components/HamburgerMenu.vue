@@ -10,8 +10,7 @@
     >
       <button
         v-if="!isDesktop && state.menuOpen"
-        class="absolute inset-0 h-full w-full"
-        :style="overlayStyle"
+        class="catalog-menu-overlay absolute inset-0 h-full w-full"
         aria-label="Закрыть меню"
         type="button"
         @click="closeMenu"
@@ -87,12 +86,6 @@ import { useIsDesktop } from "../composables/useIsDesktop";
 
 const dialogRef = ref<HTMLElement | null>(null);
 const { isDesktop } = useIsDesktop();
-
-const overlayStyle = computed(() => ({
-  background:
-    "linear-gradient(180deg, oklch(1 0 0 / 0.82), oklch(1 0 0 / 0.72))",
-  border: "none",
-}));
 
 const wrapperClass = computed(() =>
   isDesktop.value

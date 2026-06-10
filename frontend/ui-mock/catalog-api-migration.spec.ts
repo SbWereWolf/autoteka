@@ -1300,21 +1300,22 @@ test.describe("UI-MOCK-39: hover-guard — desktop матчит и примен�
     );
     expect(matches).toBe(true);
 
-    const before = await page
-      .locator(".catalog-shop-tile")
-      .first()
-      .evaluate(
-        (el) => getComputedStyle(el as HTMLElement).transform,
-      );
-    await page.locator(".catalog-shop-tile").first().hover();
+    const tile = page.locator(".catalog-shop-tile").first();
+    const read = () =>
+      tile.evaluate((el) => {
+        const cs = getComputedStyle(el as HTMLElement);
+        return { transform: cs.transform, boxShadow: cs.boxShadow };
+      });
+
+    const before = await read();
+    await tile.hover();
     await page.waitForTimeout(250);
-    const after = await page
-      .locator(".catalog-shop-tile")
-      .first()
-      .evaluate(
-        (el) => getComputedStyle(el as HTMLElement).transform,
-      );
-    expect(after).not.toBe(before);
+    const after = await read();
+
+    // Канон отклика: hover применяет стиль (тень), но НЕ растит карточку —
+    // трансформ остаётся единичным до и после наведения.
+    expect(after.boxShadow).not.toBe(before.boxShadow);
+    expect(after.transform).toBe(before.transform);
   });
 });
 
