@@ -801,6 +801,20 @@
     gap: 1.125rem;
   }
 
+  /* Десктоп-sidebar под канон .dk-side (_prototype/desktop-kit.jsx):
+     заголовок 17px, label «Категории» 13/700 gray. Только модификатор
+     --sidebar (десктоп) — мобильный drawer не затронут. */
+  .catalog-menu-panel--sidebar .catalog-menu-title {
+    font-size: 1.0625rem;
+  }
+
+  .catalog-menu-panel--sidebar .catalog-menu-label {
+    color: var(--color-secondary-text);
+    font-size: 0.8125rem;
+    font-weight: 700;
+    letter-spacing: 0.05px;
+  }
+
   @media (min-width: 64rem) {
     [data-menu-button] {
       display: none;

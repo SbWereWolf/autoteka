@@ -66,3 +66,32 @@ test.describe("DK-6: токен-ниты каталога", () => {
     expect(cols1440).toBe(4);
   });
 });
+
+test.describe("DK-4: sidebar-карточка каталога @1280", () => {
+  test.use({ viewport: { width: 1280, height: 800 } });
+
+  test("карточка видима, slot sticky, заголовок 17px, чип togglable", async ({
+    page,
+  }) => {
+    await installApiMocks(page);
+    await page.goto("/", { waitUntil: "domcontentloaded" });
+
+    const panel = page.locator(".catalog-menu-panel--sidebar");
+    await expect(panel).toBeVisible();
+
+    const slotPos = await page
+      .locator(".catalog-sidebar-slot")
+      .evaluate((el) => getComputedStyle(el).position);
+    expect(slotPos).toBe("sticky");
+
+    const titleFs = await panel
+      .locator(".catalog-menu-title")
+      .evaluate((el) => getComputedStyle(el).fontSize);
+    expect(titleFs).toBe("17px");
+
+    const chip = panel.locator(".catalog-menu-chip").first();
+    await expect(chip).toHaveAttribute("aria-pressed", "false");
+    await chip.click();
+    await expect(chip).toHaveAttribute("aria-pressed", "true");
+  });
+});
