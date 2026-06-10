@@ -18,7 +18,7 @@
       <h2 class="shop-promo-title">
         {{ promotion.title }}
       </h2>
-      <p class="shop-description">
+      <p class="shop-promo-text">
         {{ promotion.description }}
       </p>
     </div>

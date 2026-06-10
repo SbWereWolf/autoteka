@@ -1417,8 +1417,14 @@
     line-height: 1.15;
   }
 
-  .shop-promo-copy .shop-description {
-    margin-top: 0.5rem;
+  /* Тело акции — канон-токен (PromoBlock, _prototype/shop-card.jsx):
+     15px / ink / line-height 1.4. Отступы держит grid-gap .shop-promo-copy. */
+  .shop-promo-text {
+    margin: 0;
+    font-size: 0.9375rem;
+    font-weight: 500;
+    line-height: 1.4;
+    color: var(--color-ink);
   }
 
   .shop-gallery-shell {
@@ -1880,13 +1886,6 @@
     font-size: 1.6rem;
     font-weight: 700;
     line-height: 1.1;
-  }
-
-  .shop-description {
-    margin: 1.5rem 0 0;
-    color: #475569;
-    font-size: 1rem;
-    line-height: 1.5;
   }
 
   .shop-contacts-title {
