@@ -65,3 +65,34 @@ test("CARD-HERO-01: слайды object-cover; верхний share присут
     .getByRole("button", { name: "Поделиться" });
   await expect(heroShare).toBeVisible();
 });
+
+// Back-кнопка hero: focus-visible кольцо (.ix-onimg-рецепт) не срезается
+// overflow:hidden у .shop-hero — инсет 8px ≥ ширины кольца 4px.
+test("CARD-BACK-RING: focus-кольцо back не срезано @390", async ({
+  page,
+}) => {
+  await installApiMocks(page);
+  await page.goto("/shop/barnaul-01", {
+    waitUntil: "domcontentloaded",
+  });
+
+  const back = page.locator(".shop-back-button");
+  await expect(back).toBeVisible();
+
+  const shadow = await back.evaluate((el) => {
+    (el as HTMLElement).focus();
+    return getComputedStyle(el).boxShadow;
+  });
+  expect(shadow).not.toBe("none");
+
+  // Кольцо 4px должно помещаться внутри clip-области .shop-hero.
+  const RING = 4;
+  const btn = await back.boundingBox();
+  const hero = await page.locator(".shop-hero").boundingBox();
+  expect(btn).toBeTruthy();
+  expect(hero).toBeTruthy();
+  if (btn && hero) {
+    expect(btn.x - hero.x).toBeGreaterThanOrEqual(RING);
+    expect(btn.y - hero.y).toBeGreaterThanOrEqual(RING);
+  }
+});
