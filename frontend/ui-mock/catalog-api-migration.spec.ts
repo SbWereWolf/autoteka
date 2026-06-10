@@ -120,14 +120,16 @@ test("UI-MOCK-03: страница магазина показывает slogan,
     "09:00 - 20:00",
   );
   await expect(page.getByTestId("shop-contacts")).toBeVisible();
-  await expect(page.getByText("Контакты:")).toBeVisible();
+  await expect(
+    page.getByText("Контакты", { exact: true }),
+  ).toBeVisible();
+  // Канон контент-секции: phone×2 + address×1 (tg/wa и сайт ушли в бар).
   await expect(
     page.getByTestId("shop-contacts").locator("a"),
-  ).toHaveCount(5);
+  ).toHaveCount(3);
   await expect(page.getByTestId("shop-features")).toBeVisible();
   await expect(page.getByText("Отечественные запчасти")).toBeVisible();
   await expect(page.getByText("Корейские запчасти")).toBeVisible();
-  await expect(page.getByText("carshelps.ru")).toBeVisible();
   await expect(page.getByText("Перейти на сайт")).toHaveCount(0);
   await expect(page.getByText("Возможности")).toHaveCount(0);
   await expect(
@@ -326,15 +328,18 @@ test("UI-MOCK-08: интерактивные элементы visibly реаги
   expect(backHover).not.toEqual(backBefore);
   expect(backActive).not.toEqual(backBefore);
 
-  const contactBefore = await snapshot(".shop-contact-link", {
-    first: true,
-  });
-  await page.locator(".shop-contact-link").first().hover();
+  // Канон-контакты — статичные строки (без hover-affordance);
+  // интерактив hero проверяем на верхней кнопке «Поделиться».
+  const shareBefore = await snapshot(".shop-share-button");
+  await page.locator(".shop-share-button").hover();
   await page.waitForTimeout(TRANSITION_SETTLE_MS);
-  const contactHover = await snapshot(".shop-contact-link", {
-    first: true,
-  });
-  expect(contactHover).not.toEqual(contactBefore);
+  const shareHover = await snapshot(".shop-share-button");
+  await page.locator(".shop-share-button").dispatchEvent("pointerdown");
+  await page.waitForTimeout(TRANSITION_SETTLE_MS);
+  const shareActive = await snapshot(".shop-share-button");
+  await page.locator(".shop-share-button").dispatchEvent("pointerup");
+  expect(shareHover).not.toEqual(shareBefore);
+  expect(shareActive).not.toEqual(shareBefore);
 });
 
 test("UI-MOCK-09: каталог показывает скелетон при загрузке и аннонс", async ({

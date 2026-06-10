@@ -42,7 +42,7 @@
             <div v-else class="shop-gallery-video-shell">
               <video
                 :ref="(element) => bindVideoRef(itemIndex, element)"
-                class="h-full w-full object-contain"
+                class="h-full w-full object-cover"
                 :src="item.src"
                 :poster="item.poster"
                 :autoplay="itemIndex === index && !reducedMotion"
@@ -64,7 +64,20 @@
         aria-label="Предыдущий кадр"
         @click="prev"
       >
-        ‹
+        <svg
+          width="22"
+          height="22"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+          focusable="false"
+        >
+          <path d="M15 6 L9 12 L15 18" />
+        </svg>
       </button>
       <button
         v-if="items.length > 1"
@@ -74,7 +87,20 @@
         aria-label="Следующий кадр"
         @click="next"
       >
-        ›
+        <svg
+          width="22"
+          height="22"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+          focusable="false"
+        >
+          <path d="M9 6 L15 12 L9 18" />
+        </svg>
       </button>
 
       <div v-if="items.length > 1" class="shop-gallery-footer">
