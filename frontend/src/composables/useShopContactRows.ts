@@ -13,6 +13,13 @@ export const SHOP_ACCEPTABLE_CONTACT_TYPES = [
 export type ShopAcceptableContactType =
   (typeof SHOP_ACCEPTABLE_CONTACT_TYPES)[number];
 
+export type PrimaryContactActions = {
+  phoneHref?: string;
+  telegramHref?: string;
+  whatsappHref?: string;
+  addressText?: string;
+};
+
 export type ContactRow =
   | {
       key: string;
@@ -98,5 +105,43 @@ export function useShopContactRows(contacts: Ref<ContactsResponse>) {
     return rows;
   });
 
-  return { contactRows };
+  const primaryContactActions = computed((): PrimaryContactActions => {
+    const result: PrimaryContactActions = {};
+
+    const firstOf = (type: string) =>
+      (contacts.value[type] ?? []).find((value) => value.trim() !== "");
+
+    const phone = firstOf("phone");
+    if (phone) {
+      const href = hrefFor("phone", phone);
+      if (href) {
+        result.phoneHref = href;
+      }
+    }
+
+    const telegram = firstOf("telegram");
+    if (telegram) {
+      const href = hrefFor("telegram", telegram);
+      if (href) {
+        result.telegramHref = href;
+      }
+    }
+
+    const whatsapp = firstOf("whatsapp");
+    if (whatsapp) {
+      const href = hrefFor("whatsapp", whatsapp);
+      if (href) {
+        result.whatsappHref = href;
+      }
+    }
+
+    const address = firstOf("address");
+    if (address) {
+      result.addressText = address;
+    }
+
+    return result;
+  });
+
+  return { contactRows, primaryContactActions };
 }

@@ -1989,4 +1989,123 @@
     height: clamp(6rem, 14vw, 11rem);
   }
 
+  /* Mobile action bar — canon footer (_prototype/shop-card.jsx + OffersBar). */
+  .shop-actionbar-spacer {
+    height: calc(72px + env(safe-area-inset-bottom));
+  }
+
+  .shop-actionbar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 40;
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    height: calc(72px + env(safe-area-inset-bottom));
+    padding: 0 0.75rem;
+    padding-bottom: env(safe-area-inset-bottom);
+    box-sizing: border-box;
+    background: var(--color-white);
+    border-top: 1px solid var(--color-surface-muted);
+    box-shadow: 0 -2px 14px rgba(15, 15, 16, 0.035);
+  }
+
+  .shop-actionbar-route {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.375rem;
+    width: 113px;
+    height: 44px;
+    padding: 0;
+    border: none;
+    border-radius: var(--radius-control);
+    background: var(--color-brand);
+    color: var(--color-white);
+    font-size: 0.875rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition:
+      transform 120ms ease,
+      background 120ms ease;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+
+  .shop-actionbar-route:active {
+    background: var(--color-brand-pressed);
+    transform: scale(var(--scale-press-button));
+  }
+
+  .shop-actionbar-route:focus-visible {
+    outline: none;
+    box-shadow:
+      0 0 0 2px var(--color-white),
+      0 0 0 4px var(--color-ink);
+  }
+
+  .shop-actionbar-icons {
+    flex: 1;
+    display: flex;
+    gap: 0.375rem;
+  }
+
+  .shop-actionbar-icon {
+    flex: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2.75rem;
+    height: 2.75rem;
+    padding: 0;
+    border: none;
+    border-radius: var(--radius-control);
+    background: var(--color-surface-muted);
+    color: var(--color-ink);
+    text-decoration: none;
+    cursor: pointer;
+    transition:
+      transform 100ms ease,
+      background 120ms ease;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+
+  .shop-actionbar-icon:active {
+    background: var(--color-surface-muted-pressed);
+    transform: scale(var(--scale-press-icon));
+  }
+
+  .shop-actionbar-icon:focus-visible {
+    outline: none;
+    box-shadow:
+      0 0 0 2px var(--color-white),
+      0 0 0 4px var(--color-ink);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .shop-actionbar-route:hover {
+      background: var(--color-brand-hover);
+    }
+
+    .shop-actionbar-icon:hover {
+      background: var(--color-surface-muted-hover);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .shop-actionbar-route,
+    .shop-actionbar-icon {
+      transition: background 120ms ease;
+    }
+
+    .shop-actionbar-route:active,
+    .shop-actionbar-icon:active {
+      transform: none;
+    }
+  }
+
 }
