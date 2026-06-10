@@ -1985,10 +1985,6 @@
     transform: scale(var(--transform-scale-strong));
   }
 
-  .shop-overscroll-spacer {
-    height: clamp(6rem, 14vw, 11rem);
-  }
-
   /* Mobile action bar — canon footer (_prototype/shop-card.jsx + OffersBar). */
   .shop-actionbar-spacer {
     height: calc(72px + env(safe-area-inset-bottom));

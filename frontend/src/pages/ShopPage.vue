@@ -435,7 +435,6 @@
             </section>
           </div>
 
-          <div class="shop-overscroll-spacer" aria-hidden="true" />
           <div
             v-if="shop"
             class="shop-actionbar-spacer"
