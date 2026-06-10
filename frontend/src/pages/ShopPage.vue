@@ -160,11 +160,20 @@
                 {{ shop.title }}
               </h1>
 
-              <ShopMetaBadges
-                v-if="featureNames.length || categoryNames.length"
-                :categories="categoryNames"
-                :features="featureNames"
-              />
+              <ul
+                v-if="shopBadges.length"
+                class="shop-meta-list"
+                aria-label="Категории и особенности магазина"
+                data-testid="shop-features"
+              >
+                <li
+                  v-for="badge in shopBadges"
+                  :key="badge"
+                  class="shop-meta-item"
+                >
+                  {{ badge }}
+                </li>
+              </ul>
 
               <hr class="shop-info-hr" />
 
@@ -208,11 +217,8 @@
                 </p>
                 <ul class="shop-contact-rows">
                   <li v-for="row in mobileContactRows" :key="row.key">
-                    <a
+                    <span
                       class="shop-contact-row"
-                      :href="row.href"
-                      :target="row.external ? '_blank' : undefined"
-                      :rel="row.external ? 'noreferrer' : undefined"
                       :data-testid="`shop-contact-${row.kind}`"
                     >
                       <svg
@@ -229,7 +235,7 @@
                       <span class="shop-contact-row-text">{{
                         row.text
                       }}</span>
-                    </a>
+                    </span>
                   </li>
                 </ul>
               </section>
@@ -337,7 +343,7 @@
                   </ul>
 
                   <p
-                    v-if="shop.slogan"
+                    v-if="showSlogan"
                     class="shop-body-line"
                     data-testid="shop-slogan"
                   >
@@ -367,11 +373,8 @@
 
                 <ul class="shop-contact-rows">
                   <li v-for="row in mobileContactRows" :key="row.key">
-                    <a
+                    <span
                       class="shop-contact-row"
-                      :href="row.href"
-                      :target="row.external ? '_blank' : undefined"
-                      :rel="row.external ? 'noreferrer' : undefined"
                       :data-testid="`shop-contact-${row.kind}`"
                     >
                       <svg
@@ -388,7 +391,7 @@
                       <span class="shop-contact-row-text">{{
                         row.text
                       }}</span>
-                    </a>
+                    </span>
                   </li>
                 </ul>
               </section>
@@ -478,7 +481,6 @@
 import { computed } from "vue";
 import { RouterLink, useRoute, useRouter } from "vue-router";
 import GalleryCarousel from "../components/GalleryCarousel.vue";
-import ShopMetaBadges from "../components/ShopMetaBadges.vue";
 import ShopPromotionCard from "../components/ShopPromotionCard.vue";
 import ShopContactActions from "../components/ShopContactActions.vue";
 import { state } from "../state";
@@ -526,6 +528,16 @@ const shopBadges = computed(() => [
   ...categoryNames.value,
   ...featureNames.value,
 ]);
+
+// Слоган скрываем, если он дублирует название магазина.
+const showSlogan = computed(() => {
+  const slogan = (shop.value?.slogan ?? "").trim();
+  const title = (shop.value?.title ?? "").trim();
+  return (
+    slogan.length > 0 &&
+    slogan.toLowerCase() !== title.toLowerCase()
+  );
+});
 
 const galleryItems = computed<GalleryItem[]>(() => {
   const current = shop.value;

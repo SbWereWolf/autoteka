@@ -217,6 +217,22 @@ const shops: Record<string, RawShop> = {
     galleryImages: [],
     galleryItems: [],
   },
+  // slogan === title — слоган должен скрываться (дедуп).
+  "mediatest-slogan": {
+    code: "mediatest-slogan",
+    cityId: "mediatest",
+    title: "Slogan Echo",
+    slogan: "Slogan Echo",
+    description: "Магазин, где слоган дублирует название.",
+    scheduleNote: "",
+    siteUrl: "",
+    latitude: null,
+    longitude: null,
+    categoryIds: [],
+    featureIds: [],
+    galleryImages: [],
+    galleryItems: [],
+  },
 };
 
 const contactsByShop: Record<string, Record<string, string[]>> = {

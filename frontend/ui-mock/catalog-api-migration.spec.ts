@@ -123,9 +123,13 @@ test("UI-MOCK-03: страница магазина показывает slogan,
   await expect(
     page.getByText("Контакты", { exact: true }),
   ).toBeVisible();
-  // Канон контент-секции: phone×2 + address×1 (tg/wa и сайт ушли в бар).
+  // Канон контент-секции: phone×2 + address×1 текстом (без ссылок —
+  // ссылки в action-баре).
   await expect(
     page.getByTestId("shop-contacts").locator("a"),
+  ).toHaveCount(0);
+  await expect(
+    page.getByTestId("shop-contacts").locator(".shop-contact-row"),
   ).toHaveCount(3);
   await expect(page.getByTestId("shop-features")).toBeVisible();
   await expect(page.getByText("Отечественные запчасти")).toBeVisible();

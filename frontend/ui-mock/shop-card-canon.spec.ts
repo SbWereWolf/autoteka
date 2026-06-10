@@ -15,25 +15,47 @@ test("CARD-CONTACTS-01: контент-секция = phone/address, без tg/w
   const contacts = page.getByTestId("shop-contacts");
   await expect(contacts).toBeVisible();
 
-  // Телефон и адрес присутствуют (навигационные ссылки сохранены).
-  await expect(contacts.locator('a[href^="tel:"]')).toHaveCount(2);
+  // Телефон и адрес присутствуют как текст (ссылки — в action-баре).
+  await expect(
+    contacts.getByTestId("shop-contact-phone"),
+  ).toHaveCount(2);
   await expect(
     contacts.getByTestId("shop-contact-address"),
   ).toHaveCount(1);
 
-  // Telegram/WhatsApp и кнопка навигатора убраны из контент-секции.
-  await expect(contacts.locator('a[href*="t.me"]')).toHaveCount(0);
-  await expect(contacts.locator('a[href*="wa.me"]')).toHaveCount(0);
+  // Контент-строки — не ссылки (нет <a>).
+  await expect(contacts.locator("a")).toHaveCount(0);
+
+  // Telegram/WhatsApp и кнопка навигатора в контент-секции отсутствуют.
+  await expect(
+    contacts.getByTestId("shop-contact-telegram"),
+  ).toHaveCount(0);
+  await expect(
+    contacts.getByTestId("shop-contact-whatsapp"),
+  ).toHaveCount(0);
   await expect(
     page.getByTestId("shop-contact-open-navi"),
   ).toHaveCount(0);
 
-  // Ссылки контактов без подчёркивания.
+  // Контакт-строки без подчёркивания.
   const decoration = await contacts
     .locator(".shop-contact-row")
     .first()
     .evaluate((el) => getComputedStyle(el).textDecorationLine);
   expect(decoration).toBe("none");
+});
+
+test("CARD-SLOGAN-DEDUP: слоган скрыт при совпадении с названием @390", async ({
+  page,
+}) => {
+  // mediatest-slogan: slogan === title → shop-slogan не рендерится.
+  await installApiMocks(page);
+  await page.goto("/shop/mediatest-slogan", {
+    waitUntil: "domcontentloaded",
+  });
+
+  await expect(page.getByTestId("shop-name")).toHaveText("Slogan Echo");
+  await expect(page.getByTestId("shop-slogan")).toHaveCount(0);
 });
 
 test("CARD-HERO-01: слайды object-cover; верхний share присутствует", async ({
