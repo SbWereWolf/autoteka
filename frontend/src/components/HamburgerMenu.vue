@@ -47,14 +47,19 @@
         </div>
 
         <div class="catalog-menu-content">
-          <section v-if="!isDesktop" class="space-y-3">
+          <section
+            v-if="!isDesktop"
+            class="catalog-menu-group catalog-menu-group--city"
+          >
             <h3 class="catalog-menu-label">Город</h3>
             <CitySelect aria-label="Город" test-id="menu-city-select" />
           </section>
 
-          <section class="space-y-3">
+          <section class="catalog-menu-group catalog-menu-group--categories">
             <h3 class="catalog-menu-label">Категории</h3>
-            <CategoryChips />
+            <div class="catalog-menu-chips">
+              <CategoryChips />
+            </div>
           </section>
         </div>
 

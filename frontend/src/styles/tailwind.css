@@ -799,14 +799,34 @@
 
   .catalog-menu-content {
     flex: 1 1 auto;
-    display: grid;
-    gap: 1.25rem;
+    display: flex;
+    flex-direction: column;
     overflow-y: auto;
   }
 
-  .catalog-menu-content > section + section {
-    padding-top: 1.25rem;
-    border-top: 1px solid var(--color-surface-muted);
+  .catalog-menu-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  /* Мобильный дровер — ритм верхней группы по канону
+     (_prototype/screens.jsx:161-199): низ блока «Город» 14px, низ подписи
+     «Категории» 8px, верх чипов 6px; без border-top между секциями.
+     Десктоп-сайдбар (.catalog-menu-panel--sidebar) не затрагивается. */
+  .catalog-menu-panel:not(.catalog-menu-panel--sidebar)
+    .catalog-menu-group--city {
+    margin-bottom: 0.875rem;
+  }
+
+  .catalog-menu-panel:not(.catalog-menu-panel--sidebar)
+    .catalog-menu-group--categories {
+    gap: 0.5rem;
+  }
+
+  .catalog-menu-panel:not(.catalog-menu-panel--sidebar)
+    .catalog-menu-chips {
+    padding-top: 0.375rem;
   }
 
   .catalog-menu-footer {
