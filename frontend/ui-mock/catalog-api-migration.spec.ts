@@ -175,6 +175,54 @@ test("UI-MOCK-03A: loading skeleton шапки магазина не накла�
   }
 });
 
+// CLS-lockstep: канон-стратегия (shop-card.jsx) — hero и первый контент-блок
+// держат геометрию между skeleton- и loaded-рендером (промо collapse — снизу).
+test("UI-MOCK-03B: hero и первый блок без CLS skeleton↔loaded @390", async ({
+  page,
+}) => {
+  await installApiMocks(page, {
+    delaysMs: {
+      shopByCode: { "barnaul-01": 1200 },
+      promotionByCode: { "barnaul-01": 1200 },
+    },
+  });
+  await page.goto("/shop/barnaul-01", {
+    waitUntil: "domcontentloaded",
+  });
+
+  // --- skeleton-рендер (shop ещё грузится) ---
+  await expect(
+    page.getByTestId("shop-loading-back-skeleton"),
+  ).toBeVisible();
+  const heroSkel = await page.locator(".shop-hero").boundingBox();
+  const sheetSkel = await page.locator(".shop-sheet").boundingBox();
+  expect(heroSkel).toBeTruthy();
+  expect(sheetSkel).toBeTruthy();
+
+  // --- loaded-рендер ---
+  await expect(page.getByTestId("shop-name")).toBeVisible();
+  const heroLoaded = await page.locator(".shop-hero").boundingBox();
+  const sheetLoaded = await page.locator(".shop-sheet").boundingBox();
+  expect(heroLoaded).toBeTruthy();
+  expect(sheetLoaded).toBeTruthy();
+
+  // hero-зона не сдвигается и не меняет размер.
+  if (heroSkel && heroLoaded) {
+    expect(Math.abs(heroLoaded.x - heroSkel.x)).toBeLessThanOrEqual(1);
+    expect(Math.abs(heroLoaded.y - heroSkel.y)).toBeLessThanOrEqual(1);
+    expect(
+      Math.abs(heroLoaded.width - heroSkel.width),
+    ).toBeLessThanOrEqual(1);
+    expect(
+      Math.abs(heroLoaded.height - heroSkel.height),
+    ).toBeLessThanOrEqual(1);
+  }
+  // верх первого контент-блока (sheet) не сдвигается.
+  if (sheetSkel && sheetLoaded) {
+    expect(Math.abs(sheetLoaded.y - sheetSkel.y)).toBeLessThanOrEqual(1);
+  }
+});
+
 test("UI-MOCK-04: 404 магазин показывает экран ошибки", async ({
   page,
 }) => {
