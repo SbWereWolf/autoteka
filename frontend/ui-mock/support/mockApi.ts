@@ -239,6 +239,7 @@ const contactsByShop: Record<string, Record<string, string[]>> = {
   "barnaul-01": {
     phone: ["+7 (3852) 000-001", "+7 (3852) 000-002"],
     address: ["Барнаул, Павловский тракт, 41"],
+    email: ["info@carshelps.ru"],
     whatsapp: ["https://wa.me/73852000001"],
   },
   "barnaul-02": {

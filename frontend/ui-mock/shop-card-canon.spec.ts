@@ -45,6 +45,29 @@ test("CARD-CONTACTS-01: контент-секция = phone/address, без tg/w
   expect(decoration).toBe("none");
 });
 
+test("CARD-CONTACTS-MAIL-GLYPH: email-строка = канон-глиф mail @390", async ({
+  page,
+}) => {
+  // barnaul-01: добавлен email-контакт → строка shop-contact-email
+  // рисует канон-глиф Claude Design (d начинается с «M20 4C21.1»).
+  await installApiMocks(page);
+  await page.goto("/shop/barnaul-01", {
+    waitUntil: "domcontentloaded",
+  });
+
+  const email = page
+    .getByTestId("shop-contacts")
+    .getByTestId("shop-contact-email");
+  await expect(email).toHaveCount(1);
+
+  const d = await email
+    .locator("path")
+    .first()
+    .getAttribute("d");
+  expect(d).not.toBeNull();
+  expect(d?.startsWith("M20 4C21.1")).toBe(true);
+});
+
 test("CARD-SLOGAN-DEDUP: слоган скрыт при совпадении с названием @390", async ({
   page,
 }) => {
