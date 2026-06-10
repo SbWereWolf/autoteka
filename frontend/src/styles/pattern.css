@@ -2,6 +2,9 @@
   position: relative;
   min-height: 100vh;
   background: var(--color-page);
+  /* Создаёт stacking context, чтобы fixed ::before (z-index:-1) рисовался
+     над фоном шелла, а не позади него (паттерн был невидим). */
+  isolation: isolate;
 }
 
 .app-catalog-shell::before {
