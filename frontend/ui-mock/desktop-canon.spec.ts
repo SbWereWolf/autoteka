@@ -95,3 +95,41 @@ test.describe("DK-4: sidebar-карточка каталога @1280", () => {
     await expect(chip).toHaveAttribute("aria-pressed", "true");
   });
 });
+
+test.describe("DK-5: DesktopState каталога @1280", () => {
+  test.use({ viewport: { width: 1280, height: 800 } });
+
+  test("пустое состояние центрировано, min-height 420", async ({
+    page,
+  }) => {
+    // kemerovo — город без магазинов в фикстуре → пустой каталог.
+    await page.addInitScript(() => {
+      window.localStorage.setItem(
+        "autoteka_city",
+        JSON.stringify("kemerovo"),
+      );
+    });
+    await installApiMocks(page);
+    await page.goto("/", { waitUntil: "domcontentloaded" });
+
+    const state = page.getByTestId("catalog-state");
+    await expect(state).toBeVisible();
+
+    const css = await state.evaluate((el) => {
+      const cs = getComputedStyle(el);
+      return { minHeight: cs.minHeight, justify: cs.justifyContent };
+    });
+    expect(css.minHeight).toBe("420px");
+    expect(css.justify).toBe("center");
+
+    // Канон-медальон 88px.
+    const med = await state
+      .locator(".catalog-state-medallion")
+      .boundingBox();
+    expect(med).toBeTruthy();
+    if (med) {
+      expect(Math.round(med.width)).toBe(88);
+      expect(Math.round(med.height)).toBe(88);
+    }
+  });
+});

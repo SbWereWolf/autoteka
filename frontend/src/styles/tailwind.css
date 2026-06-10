@@ -496,6 +496,15 @@
     padding: 2.5rem 2rem;
   }
 
+  /* Десктоп: канон DesktopState (_prototype/desktop-catalog.jsx dkStateWrap +
+     DkMedallion 88) — медальон 88, центрирование, min-height 420. */
+  @media (min-width: 64rem) {
+    .catalog-state {
+      min-height: 26.25rem;
+      justify-content: center;
+    }
+  }
+
   .catalog-state-medallion {
     width: 6rem;
     height: 6rem;
@@ -504,6 +513,15 @@
     display: grid;
     place-items: center;
     color: var(--color-secondary-text);
+  }
+
+  /* Десктоп: канон-медальон 88px (DkMedallion). Правило после базового —
+     одинаковая специфичность, побеждает порядок. */
+  @media (min-width: 64rem) {
+    .catalog-state-medallion {
+      width: 5.5rem;
+      height: 5.5rem;
+    }
   }
 
   .catalog-state-glyph {
