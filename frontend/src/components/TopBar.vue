@@ -35,19 +35,14 @@
       />
     </RouterLink>
 
-    <CitySelect
-      v-if="isDesktop"
-      class="catalog-topbar-city"
-      aria-label="Город"
-      test-id="topbar-city-select"
-    />
+    <CityPill v-if="isDesktop" class="catalog-topbar-city" />
   </header>
 </template>
 
 <script setup lang="ts">
 import { RouterLink } from "vue-router";
 import { state } from "../state";
-import CitySelect from "./CitySelect.vue";
+import CityPill from "./CityPill.vue";
 import { useIsDesktop } from "../composables/useIsDesktop";
 
 const { isDesktop } = useIsDesktop();

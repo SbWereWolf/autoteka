@@ -64,6 +64,18 @@ test("D2: clear-all — круглый таргет ≥44px с aria-label", asyn
     .locator(".catalog-filter-chip-btn")
     .first();
   await expect(chip).toHaveAttribute("aria-label", /Удалить фильтр:/);
+
+  // focus-visible кольцо у чипа и clear-all (канон .ix-chip/.fclear).
+  const chipShadow = await chip.evaluate((el) => {
+    (el as HTMLElement).focus();
+    return getComputedStyle(el).boxShadow;
+  });
+  expect(chipShadow).not.toBe("none");
+  const clearShadow = await clear.evaluate((el) => {
+    (el as HTMLElement).focus();
+    return getComputedStyle(el).boxShadow;
+  });
+  expect(clearShadow).not.toBe("none");
 });
 
 test("D3: каталог-шелл изолирован, паттерн-правило присутствует", async ({

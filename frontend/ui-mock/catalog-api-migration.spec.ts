@@ -1456,9 +1456,9 @@ test.describe("UI-MOCK-49: город в шапке на десктопе, не 
       page.locator(".catalog-shop-tile").first(),
     ).toBeVisible();
 
-    const headerCity = page.getByTestId("topbar-city-select");
+    const headerCity = page.getByTestId("topbar-city-pill");
     await expect(headerCity).toBeVisible();
-    await expect(headerCity).toHaveValue("barnaul");
+    await expect(headerCity).toContainText("Барнаул");
 
     const sidebar = page.locator(".catalog-menu-panel--sidebar");
     await expect(sidebar).toBeVisible();
@@ -1469,7 +1469,10 @@ test.describe("UI-MOCK-49: город в шапке на десктопе, не 
       sidebar.locator('[data-testid="menu-city-select"]'),
     ).toHaveCount(0);
 
-    await headerCity.selectOption("nizhny");
+    await headerCity.click();
+    await page
+      .getByRole("menuitemradio", { name: "Нижний Новгород" })
+      .click();
     await expect(page.locator(".catalog-shop-tile")).toHaveCount(1);
   });
 });

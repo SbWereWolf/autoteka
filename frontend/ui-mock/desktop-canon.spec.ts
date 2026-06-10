@@ -177,3 +177,66 @@ test.describe("DK-2: правая панель магазина = канон ds-
     ).toBeVisible();
   });
 });
+
+test.describe("DK-3: десктоп-шапка dk-header @1280", () => {
+  test.use({ viewport: { width: 1280, height: 800 } });
+
+  test("шапка sticky 64 на каталоге и магазине", async ({ page }) => {
+    await installApiMocks(page);
+
+    await page.goto("/", { waitUntil: "domcontentloaded" });
+    const cat = await page
+      .locator(".catalog-topbar")
+      .evaluate((el) => {
+        const cs = getComputedStyle(el);
+        return { pos: cs.position, h: cs.height };
+      });
+    expect(cat.pos).toBe("sticky");
+    expect(cat.h).toBe("64px");
+
+    await page.goto("/shop/barnaul-01", {
+      waitUntil: "domcontentloaded",
+    });
+    const header = page.locator(".catalog-topbar");
+    await expect(header).toBeVisible();
+    const sh = await header.evaluate((el) => {
+      const cs = getComputedStyle(el);
+      return { pos: cs.position, h: cs.height };
+    });
+    expect(sh.pos).toBe("sticky");
+    expect(sh.h).toBe("64px");
+  });
+
+  test("город-pill: поповер открывается, Esc закрывает с возвратом фокуса", async ({
+    page,
+  }) => {
+    await installApiMocks(page);
+    await page.goto("/", { waitUntil: "domcontentloaded" });
+
+    const pill = page.getByTestId("topbar-city-pill");
+    await pill.click();
+    const menu = page.getByRole("menu", { name: "Выбор города" });
+    await expect(menu).toBeVisible();
+
+    await page.keyboard.press("Escape");
+    await expect(menu).toHaveCount(0);
+    await expect
+      .poll(() =>
+        page.evaluate(
+          () => document.activeElement?.getAttribute("data-testid"),
+        ),
+      )
+      .toBe("topbar-city-pill");
+  });
+
+  test("выбор города в pill меняет выдачу", async ({ page }) => {
+    await installApiMocks(page);
+    await page.goto("/", { waitUntil: "domcontentloaded" });
+
+    await page.getByTestId("topbar-city-pill").click();
+    await page
+      .getByRole("menuitemradio", { name: "Нижний Новгород" })
+      .click();
+    await expect(page.locator(".catalog-shop-tile")).toHaveCount(1);
+  });
+});

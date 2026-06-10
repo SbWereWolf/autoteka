@@ -179,11 +179,136 @@
     display: none;
   }
 
+  /* Десктоп-шапка — канон dk-header (_prototype/desktop-kit.jsx):
+     sticky 64, band ≤1600 (центр, как у шелла), логотип + город-pill слева.
+     Мобильная шапка (база .catalog-topbar) не затронута. */
   @media (min-width: 64rem) {
+    .catalog-topbar {
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      height: 4rem;
+      max-width: 100rem;
+      margin: 0 auto;
+      padding: 0 2rem;
+      justify-content: flex-start;
+      gap: 1.25rem;
+      background: var(--color-white);
+      border-bottom: 1px solid var(--color-surface-muted);
+    }
+
     .catalog-topbar-city {
       display: inline-flex;
-      margin-left: 1.25rem;
-      min-width: 12rem;
+    }
+  }
+
+  /* Город-pill (канон dk-pill) — десктоп-шапка, поповер выбора города. */
+  .catalog-city-pill-root {
+    position: relative;
+    flex: 0 0 auto;
+  }
+
+  .catalog-city-pill {
+    height: 2.75rem;
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0 0.875rem;
+    border-radius: var(--radius-control);
+    border: 1px solid var(--color-surface-muted);
+    background: var(--color-white);
+    color: var(--color-ink);
+    font-weight: 700;
+    font-size: 0.875rem;
+    white-space: nowrap;
+    cursor: pointer;
+    transition:
+      background 120ms ease,
+      border-color 120ms ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .catalog-city-pill-pin {
+    color: var(--color-secondary-text);
+  }
+
+  .catalog-city-pill-chevron {
+    color: var(--color-secondary-text);
+    transition: transform 160ms ease;
+  }
+
+  .catalog-city-pill[aria-expanded="true"] {
+    border-color: var(--color-ink);
+  }
+
+  .catalog-city-pill[aria-expanded="true"] .catalog-city-pill-chevron {
+    transform: rotate(180deg);
+  }
+
+  .catalog-city-pill:focus-visible {
+    outline: none;
+    box-shadow:
+      0 0 0 2px var(--color-white),
+      0 0 0 4px var(--color-ink);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .catalog-city-pill:hover {
+      background: var(--color-page);
+      border-color: var(--color-surface-muted-hover);
+    }
+  }
+
+  .catalog-city-pill-panel {
+    position: absolute;
+    top: calc(100% + 0.5rem);
+    left: 0;
+    min-width: 13.75rem;
+    box-sizing: border-box;
+    background: var(--color-white);
+    border: 1px solid var(--color-surface-muted);
+    border-radius: 0.875rem;
+    box-shadow: var(--shadow-sidebar);
+    padding: 0.375rem;
+    z-index: 60;
+    max-height: 21rem;
+    overflow-y: auto;
+  }
+
+  .catalog-city-pill-option {
+    width: 100%;
+    min-height: 2.75rem;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0 0.75rem;
+    border: none;
+    border-radius: 0.625rem;
+    background: transparent;
+    color: var(--color-ink);
+    font-weight: 600;
+    font-size: 0.875rem;
+    text-align: left;
+    cursor: pointer;
+    transition: background 120ms ease;
+  }
+
+  .catalog-city-pill-option[aria-checked="true"] {
+    color: var(--color-brand);
+    font-weight: 700;
+  }
+
+  .catalog-city-pill-option:focus-visible {
+    outline: none;
+    box-shadow: inset 0 0 0 2px var(--color-ink);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .catalog-city-pill-option:hover {
+      background: var(--color-page);
     }
   }
 

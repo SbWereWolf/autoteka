@@ -5,7 +5,7 @@
     :style="{ color: 'var(--text)' }"
   >
     <div :inert="(state.menuOpen && !isDesktop) || state.offersOpen">
-      <TopBar v-if="isCatalog" />
+      <TopBar v-if="isCatalog || (isShop && isDesktop)" />
 
       <main>
         <router-view />
