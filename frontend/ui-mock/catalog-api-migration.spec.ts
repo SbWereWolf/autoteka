@@ -73,12 +73,12 @@ test("UI-MOCK-01: каталог показывает новый top bar и пл
     page.getByRole("link", { name: "Zenith Parts" }),
   ).toBeVisible();
 
-  const sortBar = page.getByTestId("catalog-sort-bar");
-  await expect(sortBar).toBeVisible();
-  const sortButton = sortBar.getByRole("button");
-  await expect(sortButton).toContainText("Сортировка: ");
-  await expect(sortButton).toHaveAttribute("aria-haspopup", "dialog");
-  await expect(sortButton).toHaveAttribute("aria-expanded", "false");
+  const offersBar = page.getByTestId("catalog-offers-bar");
+  await expect(offersBar).toBeVisible();
+  const offersButton = offersBar.getByRole("button");
+  await expect(offersButton).toHaveText("Акции");
+  await expect(offersButton).toHaveAttribute("aria-haspopup", "dialog");
+  await expect(offersButton).toHaveAttribute("aria-expanded", "false");
 });
 
 test("UI-MOCK-02: overlay меняет город и обновляет каталог", async ({
@@ -732,21 +732,24 @@ test("UI-MOCK-20: диктор молчит пока дровер открыт �
   await expect(live).toHaveText("Ничего не найдено");
 });
 
-test("UI-MOCK-21: bottom-sheet сортировки — APG-структура и inert фона", async ({
+test("UI-MOCK-21: bottom-sheet акций — APG-структура и inert фона", async ({
   page,
 }) => {
   await installApiMocks(page);
   await page.goto("/", { waitUntil: "domcontentloaded" });
   await page
-    .getByTestId("catalog-sort-bar")
+    .getByTestId("catalog-offers-bar")
     .getByRole("button")
     .click();
 
-  const dialog = page.getByRole("dialog", { name: "Сортировка" });
+  const dialog = page.getByRole("dialog", { name: "Акции" });
   await expect(dialog).toBeVisible();
   await expect(dialog).toHaveAttribute("aria-modal", "true");
-  await expect(dialog).toHaveAttribute("aria-labelledby", "sort-title");
-  await expect(page.locator("#sort-title")).toHaveText("Сортировка");
+  await expect(dialog).toHaveAttribute(
+    "aria-labelledby",
+    "offers-title",
+  );
+  await expect(page.locator("#offers-title")).toHaveText("Акции");
 
   const bgInert = await page.evaluate(() => {
     const main = document.querySelector("main");
@@ -764,22 +767,22 @@ test("UI-MOCK-21: bottom-sheet сортировки — APG-структура �
     .toBe(true);
 });
 
-test("UI-MOCK-22: Esc закрывает шит сортировки и возвращает фокус на триггер", async ({
+test("UI-MOCK-22: Esc закрывает шит акций и возвращает фокус на триггер", async ({
   page,
 }) => {
   await installApiMocks(page);
   await page.goto("/", { waitUntil: "domcontentloaded" });
   const trigger = page
-    .getByTestId("catalog-sort-bar")
+    .getByTestId("catalog-offers-bar")
     .getByRole("button");
   await trigger.click();
   await expect(
-    page.getByRole("dialog", { name: "Сортировка" }),
+    page.getByRole("dialog", { name: "Акции" }),
   ).toBeVisible();
 
   await page.keyboard.press("Escape");
   await expect(
-    page.getByRole("dialog", { name: "Сортировка" }),
+    page.getByRole("dialog", { name: "Акции" }),
   ).toHaveCount(0);
 
   await expect
@@ -787,95 +790,15 @@ test("UI-MOCK-22: Esc закрывает шит сортировки и возв
       page.evaluate(
         () =>
           document.activeElement ===
-          document.querySelector("[data-sort-trigger]"),
+          document.querySelector("[data-offers-trigger]"),
       ),
     )
     .toBe(true);
 });
 
-test("UI-MOCK-23: тап по опции меняет sortMode, обновляет localStorage и закрывает шит", async ({
-  page,
-}) => {
-  await installApiMocks(page);
-  await page.goto("/", { waitUntil: "domcontentloaded" });
-  await page
-    .getByTestId("catalog-sort-bar")
-    .getByRole("button")
-    .click();
-
-  const dialog = page.getByRole("dialog", { name: "Сортировка" });
-  await expect(dialog).toBeVisible();
-  await dialog
-    .getByRole("button", { name: "Сначала с акциями" })
-    .click();
-  await expect(dialog).toHaveCount(0);
-
-  const stored = await page.evaluate(() =>
-    localStorage.getItem("autoteka_sort_mode"),
-  );
-  expect(stored).toBe('"promo-first"');
-
-  await expect(
-    page.getByTestId("catalog-sort-bar").getByRole("button"),
-  ).toHaveText("Сортировка: Сначала с акциями");
-});
-
-test("UI-MOCK-24: текущий режим помечен aria-current в шите", async ({
-  page,
-}) => {
-  await installApiMocks(page);
-  await page.goto("/", { waitUntil: "domcontentloaded" });
-  await page
-    .getByTestId("catalog-sort-bar")
-    .getByRole("button")
-    .click();
-
-  const dialog = page.getByRole("dialog", { name: "Сортировка" });
-  const current = dialog.getByRole("button", { name: "По умолчанию" });
-  await expect(current).toHaveAttribute("aria-current", "true");
-  const other = dialog.getByRole("button", { name: "По названию А–Я" });
-  await expect(other).not.toHaveAttribute("aria-current", /.*/);
-});
-
-test("UI-MOCK-25: выбор сортировки объявляется в дикторе", async ({
-  page,
-}) => {
-  await installApiMocks(page);
-  await page.goto("/", { waitUntil: "domcontentloaded" });
-  await page
-    .getByTestId("catalog-sort-bar")
-    .getByRole("button")
-    .click();
-  await page
-    .getByRole("dialog", { name: "Сортировка" })
-    .getByRole("button", { name: "По названию А–Я" })
-    .click();
-  await expect(page.locator('[role="status"]')).toHaveText(
-    "Сортировка: По названию А–Я",
-  );
-});
-
-test("UI-MOCK-26: выбранный режим не появляется в ряду чипов", async ({
-  page,
-}) => {
-  await installApiMocks(page);
-  await page.goto("/", { waitUntil: "domcontentloaded" });
-  await expect(
-    page.locator('[data-testid="catalog-filter-row"]'),
-  ).toHaveCount(0);
-
-  await page
-    .getByTestId("catalog-sort-bar")
-    .getByRole("button")
-    .click();
-  await page
-    .getByRole("dialog", { name: "Сортировка" })
-    .getByRole("button", { name: "Сначала с акциями" })
-    .click();
-  await expect(
-    page.locator('[data-testid="catalog-filter-row"]'),
-  ).toHaveCount(0);
-});
+// UI-MOCK-23..26 удалены вместе с мобильным sort-UI: канон мобильного
+// каталога не содержит выбора сортировки (бар + шит сортировки сняты).
+// Дефолтный порядок (sortShops) покрыт sortShops.spec.ts и UI-MOCK-53.
 
 test("UI-MOCK-27: галерея магазина имеет регион с aria-label", async ({
   page,
@@ -1376,7 +1299,7 @@ test.describe("UI-MOCK-40: hover-guard — touch не матчит, стиль �
   });
 });
 
-test("UI-MOCK-41: sort-sheet — каждый <li> имеет роль listitem", async ({
+test("UI-MOCK-41: offers-sheet — каждый <li> имеет роль listitem", async ({
   page,
 }) => {
   await installApiMocks(page);
@@ -1385,9 +1308,13 @@ test("UI-MOCK-41: sort-sheet — каждый <li> имеет роль listitem"
     page.locator(".catalog-shop-tile").first(),
   ).toBeVisible();
 
-  await page.locator("[data-sort-trigger]").click();
-  const sheet = page.locator('[role="dialog"][aria-labelledby="sort-title"]');
+  await page.locator("[data-offers-trigger]").click();
+  const sheet = page.locator(
+    '[role="dialog"][aria-labelledby="offers-title"]',
+  );
   await expect(sheet).toBeVisible();
+  // дождаться загрузки строк (скелетон-li помечены aria-hidden)
+  await expect(sheet.locator(".catalog-offer-row").first()).toBeVisible();
 
   const items = sheet.locator("li");
   const itemCount = await items.count();
@@ -1560,7 +1487,7 @@ test.describe("UI-MOCK-50: десктоп-тулбар — счётчик + чи
     );
 
     await expect(
-      page.getByTestId("catalog-sort-bar"),
+      page.getByTestId("catalog-offers-bar"),
     ).toBeHidden();
 
     const trigger = toolbar.locator("[data-sort-dropdown-trigger]");

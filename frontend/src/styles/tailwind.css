@@ -544,6 +544,13 @@
     transform: scale(var(--scale-press-button));
   }
 
+  .catalog-state-cta:focus-visible {
+    outline: none;
+    box-shadow:
+      0 0 0 2px var(--color-white),
+      0 0 0 4px var(--color-ink);
+  }
+
   @media (hover: hover) and (pointer: fine) {
     .catalog-state-cta:hover {
       background: var(--color-brand-hover);
@@ -1218,6 +1225,190 @@
     }
     .catalog-sort-bar-button:active,
     .catalog-sort-option:active {
+      transform: none;
+    }
+  }
+
+  /* Нижний бар «Акции» — канон OffersBar (_prototype/shared.jsx):
+     72h white, border-top, тень; CTA ix-cta 56h full-width. */
+  .catalog-offers-bar {
+    position: fixed;
+    inset-inline: 0;
+    bottom: 0;
+    z-index: 20;
+    padding:
+      0.625rem 0.75rem
+      calc(0.375rem + env(safe-area-inset-bottom));
+    background: var(--color-white);
+    border-top: 1px solid var(--color-surface-muted);
+    box-shadow: 0 -2px 14px rgba(15, 15, 16, 0.035);
+  }
+
+  .catalog-offers-bar-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 3.5rem;
+    padding: 0 1.75rem;
+    border: none;
+    border-radius: var(--radius-cta);
+    background: var(--color-brand);
+    color: var(--color-white);
+    font-size: 0.9375rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition:
+      transform 120ms ease,
+      background 120ms ease;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+
+  .catalog-offers-bar-button:active {
+    background: var(--color-brand-pressed);
+    transform: scale(var(--scale-press-button));
+  }
+
+  .catalog-offers-bar-button:focus-visible {
+    outline: none;
+    box-shadow:
+      0 0 0 2px var(--color-white),
+      0 0 0 4px var(--color-ink);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .catalog-offers-bar-button:hover {
+      background: var(--color-brand-hover);
+    }
+  }
+
+  /* Шит «Акции» — канон bottom-sheet (_prototype/screens.jsx:213-300):
+     radius 24, тень, grabber; строки OfferRow = ix-row (44h/page/ink 14/700). */
+  .catalog-offers-sheet-overlay-button {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(15, 15, 16, 0.25);
+    border: none;
+    padding: 0;
+    cursor: pointer;
+  }
+
+  .catalog-offers-sheet {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--color-white);
+    border-radius: 24px 24px 0 0;
+    box-shadow: 0 -4px 8px rgba(0, 0, 0, 0.05);
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+    outline: none;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .catalog-offers-sheet-handle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 1.5rem;
+    padding-top: 0.25rem;
+  }
+
+  .catalog-offers-sheet-handle-bar {
+    width: 2.25rem;
+    height: 0.25rem;
+    border-radius: 0.25rem;
+    background: rgb(209, 209, 214);
+  }
+
+  .catalog-offers-sheet-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 1rem 0.625rem;
+  }
+
+  .catalog-offers-sheet-title {
+    margin: 0;
+    font-size: 1.125rem;
+    font-weight: 700;
+    line-height: 1.2;
+    color: var(--color-ink);
+  }
+
+  .catalog-offers-list {
+    list-style: none;
+    margin: 0;
+    padding: 0 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .catalog-offer-row {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    min-height: 2.75rem;
+    padding: 0 1rem;
+    border-radius: var(--radius-control);
+    background: var(--color-page);
+    color: var(--color-ink);
+    font-size: 0.875rem;
+    font-weight: 700;
+    text-align: left;
+    text-decoration: none;
+    cursor: pointer;
+    transition:
+      transform 120ms ease,
+      background 120ms ease;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+
+  .catalog-offer-row:active {
+    background: var(--color-page-pressed);
+    transform: scale(var(--scale-press-row));
+  }
+
+  .catalog-offer-row:focus-visible {
+    outline: none;
+    box-shadow:
+      0 0 0 2px var(--color-white),
+      0 0 0 4px var(--color-ink);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .catalog-offer-row:hover {
+      background: var(--color-page-hover);
+    }
+  }
+
+  .catalog-offer-skeleton {
+    height: 2.75rem;
+    border-radius: var(--radius-control);
+  }
+
+  .catalog-offers-empty {
+    margin: 0;
+    padding: 0.5rem 1rem 1rem;
+    color: var(--color-secondary-text);
+    font-size: 0.9375rem;
+    font-weight: 500;
+    line-height: 1.4;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .catalog-offers-bar-button,
+    .catalog-offer-row {
+      transition: background 120ms ease;
+    }
+    .catalog-offers-bar-button:active,
+    .catalog-offer-row:active {
       transform: none;
     }
   }

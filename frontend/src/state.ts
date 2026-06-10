@@ -29,6 +29,7 @@ export const SORT_MODE_LABELS: Record<SortMode, string> = {
 type AppState = {
   menuOpen: boolean;
   sortOpen: boolean;
+  offersOpen: boolean;
   cityCode: string;
   selectedCategoryIds: string[];
   sortMode: SortMode;
@@ -40,6 +41,7 @@ type AppState = {
 export const state = reactive<AppState>({
   menuOpen: false,
   sortOpen: false,
+  offersOpen: false,
   cityCode: "",
   selectedCategoryIds: [],
   sortMode: "default",

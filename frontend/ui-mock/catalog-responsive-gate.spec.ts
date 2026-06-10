@@ -85,7 +85,7 @@ test("RESP-GATE-03: drawer @390, sidebar @1280", async ({ page }) => {
     page.locator(".catalog-shop-tile").first(),
   ).toBeVisible();
 
-  await expect(page.getByTestId("catalog-sort-bar")).toBeVisible();
+  await expect(page.getByTestId("catalog-offers-bar")).toBeVisible();
   await expect(
     page.locator(".catalog-menu-panel--sidebar"),
   ).toHaveCount(0);
@@ -106,5 +106,5 @@ test("RESP-GATE-03: drawer @390, sidebar @1280", async ({ page }) => {
   await expect(
     page.locator(".catalog-menu-panel--sidebar"),
   ).toBeVisible();
-  await expect(page.getByTestId("catalog-sort-bar")).toHaveCount(0);
+  await expect(page.getByTestId("catalog-offers-bar")).toHaveCount(0);
 });

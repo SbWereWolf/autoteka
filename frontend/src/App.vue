@@ -4,7 +4,7 @@
     :class="shellClass"
     :style="{ color: 'var(--text)' }"
   >
-    <div :inert="(state.menuOpen && !isDesktop) || state.sortOpen">
+    <div :inert="(state.menuOpen && !isDesktop) || state.offersOpen">
       <TopBar v-if="isCatalog" />
 
       <main>
@@ -13,7 +13,6 @@
     </div>
 
     <HamburgerMenu v-if="isCatalog" />
-    <CatalogSortSheet v-if="isCatalog && !isDesktop" />
 
     <span class="sr-only" role="status" aria-live="polite">
       {{ announcerMessage }}
@@ -26,7 +25,6 @@ import { computed } from "vue";
 import { useRoute } from "vue-router";
 import TopBar from "./components/TopBar.vue";
 import HamburgerMenu from "./components/HamburgerMenu.vue";
-import CatalogSortSheet from "./components/CatalogSortSheet.vue";
 import { useAnnouncer } from "./composables/useAnnouncer";
 import { useIsDesktop } from "./composables/useIsDesktop";
 import { state } from "./state";

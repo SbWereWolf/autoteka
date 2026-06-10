@@ -285,6 +285,28 @@ const promotionsByShop: Record<string, RawPromotion[]> = {
       galleryItems: [],
     },
   ],
+  "barnaul-02": [
+    {
+      id: "promo-3",
+      code: "barnaul-02-spring",
+      title: "Весеннее ТО со скидкой",
+      description: "Комплексная диагностика подвески и тормозов.",
+      startDate: "2026-04-01",
+      endDate: "2026-04-30",
+      galleryImages: [],
+      galleryItems: [],
+    },
+    {
+      id: "promo-4",
+      code: "barnaul-02-tyres",
+      title: "Шиномонтаж −20%",
+      description: "На сезонную смену резины до конца месяца.",
+      startDate: "2026-04-05",
+      endDate: "2026-04-25",
+      galleryImages: [],
+      galleryItems: [],
+    },
+  ],
   "nizhny-01": [],
 };
 

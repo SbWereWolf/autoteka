@@ -65,14 +65,16 @@
       />
     </div>
 
-    <CatalogSortBar v-if="!loadError && !isDesktop" />
+    <CatalogOffersBar v-if="!loadError && !isDesktop" />
+    <CatalogOffersSheet v-if="!isDesktop" :shops="sorted" />
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed, watch } from "vue";
 import ShopTile from "../components/ShopTile.vue";
-import CatalogSortBar from "../components/CatalogSortBar.vue";
+import CatalogOffersBar from "../components/CatalogOffersBar.vue";
+import CatalogOffersSheet from "../components/CatalogOffersSheet.vue";
 import CatalogToolbar from "../components/CatalogToolbar.vue";
 import CatalogFilterChips from "../components/CatalogFilterChips.vue";
 import CatalogSkeleton from "../components/CatalogSkeleton.vue";
