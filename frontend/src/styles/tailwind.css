@@ -1881,6 +1881,23 @@
     );
   }
 
+  /* Нижний скрим под пагинацией — канон ms-scrim (_prototype/media-slider.jsx):
+     bottom 20px (линия наезда .shop-sheet), height 96px, z ниже точек. */
+  .shop-gallery-scrim-bottom {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 1.25rem;
+    z-index: 1;
+    height: 6rem;
+    pointer-events: none;
+    background: linear-gradient(
+      0deg,
+      rgba(0, 0, 0, 0.4),
+      rgba(0, 0, 0, 0)
+    );
+  }
+
   .shop-back-button {
     position: absolute;
     top: calc(env(safe-area-inset-top) + 0.5rem);
@@ -2314,7 +2331,7 @@
 
   .shop-gallery-footer {
     position: absolute;
-    bottom: 0.9rem;
+    bottom: 2.375rem;
     left: 50%;
     z-index: 2;
     transform: translateX(-50%);

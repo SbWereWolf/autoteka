@@ -264,6 +264,10 @@
                 test-id="shop-gallery"
               />
               <div class="shop-hero-scrim" aria-hidden="true" />
+              <div
+                class="shop-gallery-scrim-bottom"
+                aria-hidden="true"
+              />
               <button
                 class="shop-back-button"
                 aria-label="Назад"

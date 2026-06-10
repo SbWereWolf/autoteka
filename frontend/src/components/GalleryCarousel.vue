@@ -182,7 +182,7 @@
           loading="eager"
           decoding="async"
           spinner
-          img-class="h-full w-full object-contain"
+          img-class="h-full w-full object-cover"
         />
 
         <video
