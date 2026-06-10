@@ -1889,15 +1889,19 @@
     );
   }
 
-  /* Нижний скрим под пагинацией — канон ms-scrim (_prototype/media-slider.jsx):
-     bottom 20px (линия наезда .shop-sheet), height 96px, z ниже точек. */
+  /* Нижний скрим под пагинацией. Заходит под наезд листа (до низа фото):
+     тёмная часть градиента попадает в зону уголков наезда — скругление
+     листа читается и на светлых фото. Белое поле защищено стекингом:
+     .shop-sheet (z-index:1, позже в DOM) перекрывает скрим (z-index:1
+     внутри .shop-hero с z-index:auto). Канон ms-scrim синхронизируется
+     Игорем в Claude Design. */
   .shop-gallery-scrim-bottom {
     position: absolute;
     left: 0;
     right: 0;
-    bottom: 1.25rem;
+    bottom: 0;
     z-index: 1;
-    height: 6rem;
+    height: 7.25rem;
     pointer-events: none;
     background: linear-gradient(
       0deg,
@@ -2361,11 +2365,11 @@
     width: 0.48rem;
     height: 0.48rem;
     border-radius: 999px;
-    background: rgba(71, 85, 105, 0.26);
+    background: rgba(255, 255, 255, 0.4);
   }
 
   .shop-gallery-dot--active {
-    background: #4f5571;
+    background: #fff;
   }
 
   .shop-gallery-audio-toggle {
