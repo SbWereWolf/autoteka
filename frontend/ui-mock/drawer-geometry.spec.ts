@@ -41,3 +41,37 @@ test.describe("DRAWER-геометрия @390", () => {
     }
   });
 });
+
+// Внутренности дровера под канон-чип (_prototype/specs.jsx §3) и
+// ix-cityselect: selected-чип = рамка brand + галочка; CitySelect radius канон.
+test.describe("DRAWER-чип @390", () => {
+  test("selected-чип: рамка brand + видимая галочка; CitySelect radius = 12px", async ({
+    page,
+  }) => {
+    await installApiMocks(page);
+    await page.goto("/", { waitUntil: "domcontentloaded" });
+
+    await page.locator("[data-menu-button]").click();
+    const dialog = page.getByRole("dialog");
+    await expect(dialog).toBeVisible();
+
+    const chip = dialog.locator(".catalog-menu-chip").first();
+    await chip.click();
+    await expect(chip).toHaveAttribute("aria-pressed", "true");
+
+    // Рамка выбранного чипа = brand (#d61d00 → rgb(214, 29, 0)).
+    const borderColor = await chip.evaluate(
+      (el) => getComputedStyle(el).borderTopColor,
+    );
+    expect(borderColor).toBe("rgb(214, 29, 0)");
+
+    // Галочка видна только у выбранного чипа.
+    await expect(chip.locator(".catalog-menu-chip-check")).toBeVisible();
+
+    // CitySelect border-radius = канон 12px.
+    const radius = await dialog
+      .locator('[data-testid="menu-city-select"]')
+      .evaluate((el) => getComputedStyle(el).borderRadius);
+    expect(radius).toBe("12px");
+  });
+});

@@ -11,7 +11,6 @@
         {{ c.title }}
       </option>
     </select>
-    <span class="catalog-select-icon" aria-hidden="true">⌄</span>
   </div>
 </template>
 
