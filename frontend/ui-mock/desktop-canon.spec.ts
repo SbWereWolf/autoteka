@@ -133,3 +133,47 @@ test.describe("DK-5: DesktopState каталога @1280", () => {
     }
   });
 });
+
+test.describe("DK-2: правая панель магазина = канон ds-card @1280", () => {
+  test.use({ viewport: { width: 1280, height: 800 } });
+
+  test("зелёная точка, контакты без underline, ds-actions, нет навигатор-кнопки", async ({
+    page,
+  }) => {
+    await installApiMocks(page);
+    await page.goto("/shop/barnaul-01", {
+      waitUntil: "domcontentloaded",
+    });
+
+    const card = page.getByTestId("shop-info-aside");
+    await expect(card).toBeVisible();
+
+    // «Время работы» — зелёная точка-пульс (как мобильная карточка).
+    await expect(card.locator(".shop-schedule-dot")).toBeVisible();
+
+    // Контакт-строка без underline.
+    const deco = await card
+      .locator(".shop-contact-row")
+      .first()
+      .evaluate((el) => getComputedStyle(el).textDecorationLine);
+    expect(deco).toBe("none");
+
+    // Навигатор-кнопки в десктоп-панели нет.
+    await expect(
+      card.getByTestId("shop-contact-open-navi"),
+    ).toHaveCount(0);
+
+    // ds-actions: CTA «Маршрут» ≥44 таргет + share-кнопка.
+    const route = card.getByTestId("shop-ds-action-route");
+    await expect(route).toBeVisible();
+    const box = await route.boundingBox();
+    expect(box).toBeTruthy();
+    if (box) {
+      expect(box.height).toBeGreaterThanOrEqual(44);
+      expect(box.width).toBeGreaterThanOrEqual(44);
+    }
+    await expect(
+      card.getByTestId("shop-ds-action-share"),
+    ).toBeVisible();
+  });
+});
