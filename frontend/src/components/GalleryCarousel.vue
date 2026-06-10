@@ -17,7 +17,7 @@
         @pointercancel="onCancel"
       >
         <div v-if="items.length === 0" class="shop-gallery-empty">
-          <div class="px-6 text-center text-sm text-slate-500">
+          <div class="px-6 text-center text-sm text-secondary-text">
             {{ emptyText }}
           </div>
         </div>
@@ -168,7 +168,7 @@
 
     <template v-else>
       <div v-if="items.length === 0" class="shop-gallery-stage">
-        <div class="shop-gallery-empty px-6 text-center text-sm text-slate-500">
+        <div class="shop-gallery-empty px-6 text-center text-sm text-secondary-text">
           {{ emptyText }}
         </div>
       </div>
@@ -204,7 +204,7 @@
           data-testid="gallery-counter"
           aria-hidden="true"
         >
-          {{ index + 1 }} / {{ items.length }}
+          {{ index + 1 }}/{{ items.length }}
         </span>
 
         <button

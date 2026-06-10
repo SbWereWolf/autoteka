@@ -1748,7 +1748,7 @@ test.describe("UI-MOCK-57: галерея @1280 — миниатюры, стре
     const thumbs = gallery.getByTestId("gallery-thumbs");
     await expect(thumbs).toBeVisible();
     const counter = gallery.getByTestId("gallery-counter");
-    await expect(counter).toContainText("1 / 2");
+    await expect(counter).toContainText("1/2");
     const prev = gallery.getByTestId("gallery-prev");
     const next = gallery.getByTestId("gallery-next");
     await expect(prev).toBeVisible();
@@ -1772,11 +1772,11 @@ test.describe("UI-MOCK-57: галерея @1280 — миниатюры, стре
 
     await thumb1.click();
     await expect(thumb1).toHaveAttribute("aria-current", "true");
-    await expect(counter).toContainText("2 / 2");
+    await expect(counter).toContainText("2/2");
 
     await prev.click();
     await expect(thumb0).toHaveAttribute("aria-current", "true");
-    await expect(counter).toContainText("1 / 2");
+    await expect(counter).toContainText("1/2");
 
     await thumb0.focus();
     await page.keyboard.press("ArrowRight");

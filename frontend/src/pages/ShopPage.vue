@@ -370,7 +370,7 @@
                 <h2 class="shop-section-label">Контакты</h2>
                 <p
                   v-if="contactsLoadError"
-                  class="mb-3 mt-0 text-xs text-slate-400"
+                  class="mb-3 mt-0 text-xs text-secondary-text"
                 >
                   Часть контактов сейчас недоступна.
                 </p>

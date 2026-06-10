@@ -2376,7 +2376,7 @@
     min-height: 2.5rem;
     border: none;
     border-radius: 999px;
-    background: rgba(15, 23, 42, 0.72);
+    background: rgba(0, 0, 0, 0.4);
     color: #ffffff;
     padding: 0.55rem 0.9rem;
     font-size: 0.875rem;
@@ -2391,14 +2391,14 @@
 
   @media (hover: hover) and (pointer: fine) {
     .shop-gallery-audio-toggle:hover {
-      background: rgba(15, 23, 42, 0.86);
+      background: rgba(0, 0, 0, 0.48);
       transform: translate(-50%, -50%);
     }
   }
 
   .shop-gallery-audio-toggle:active {
-    transform: translate(-50%, -50%) scale(var(--transform-scale-strong));
-    background: rgba(30, 41, 59, 0.92);
+    transform: translate(-50%, -50%) scale(var(--scale-press-icon));
+    background: rgba(0, 0, 0, 0.55);
   }
 
   /* bottom-right: верхний-правый угол отдан канон-кнопке «Поделиться». */
@@ -2411,7 +2411,7 @@
     height: 2.75rem;
     border: none;
     border-radius: 999px;
-    background: color-mix(in srgb, var(--color-ink) 72%, transparent);
+    background: rgba(0, 0, 0, 0.4);
     color: var(--color-white);
     display: inline-flex;
     align-items: center;
@@ -2426,12 +2426,12 @@
 
   @media (hover: hover) and (pointer: fine) {
     .shop-gallery-pause-toggle:hover {
-      background: color-mix(in srgb, var(--color-ink) 86%, transparent);
+      background: rgba(0, 0, 0, 0.48);
     }
   }
 
   .shop-gallery-pause-toggle:active {
-    background: color-mix(in srgb, var(--color-ink) 92%, transparent);
+    background: rgba(0, 0, 0, 0.55);
     transform: scale(var(--scale-press-icon));
   }
 
@@ -2568,14 +2568,6 @@
     line-height: 1.4;
     color: var(--color-ink);
     white-space: pre-line;
-  }
-
-  .shop-slogan {
-    margin: 0;
-    color: #1f2937;
-    font-size: 1.6rem;
-    font-weight: 700;
-    line-height: 1.1;
   }
 
   .shop-contact-list {
