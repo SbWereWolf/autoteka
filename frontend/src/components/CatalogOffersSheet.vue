@@ -58,7 +58,8 @@
               :to="{ name: 'shop', params: { code: offer.shopCode } }"
               @click="closeSheet"
             >
-              {{ offer.label }}
+              <span class="catalog-offer-label">{{ offer.label }}</span>
+              <span class="catalog-offer-shop">{{ offer.shopTitle }}</span>
             </RouterLink>
           </li>
         </ul>

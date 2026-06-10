@@ -32,7 +32,13 @@ test("OFFERS-02: строки шита берутся из промо магаз
   await expect(rows).toHaveCount(2);
 
   const first = rows.first();
-  await expect(first).toHaveText("Весеннее ТО со скидкой");
+  // Двухстрочная строка: заголовок акции + имя магазина из фикстуры.
+  await expect(first.locator(".catalog-offer-label")).toHaveText(
+    "Весеннее ТО со скидкой",
+  );
+  await expect(first.locator(".catalog-offer-shop")).toHaveText(
+    "Orange Parts",
+  );
   await expect(first).toHaveAttribute("href", "/shop/barnaul-02");
 });
 

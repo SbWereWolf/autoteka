@@ -6,6 +6,7 @@ import type { Shop } from "../types";
 export type CatalogOffer = {
   shopCode: string;
   label: string;
+  shopTitle: string;
 };
 
 // Источник шита «Акции»: при первом открытии — параллельные
@@ -40,6 +41,7 @@ export function useCatalogOffers(shops: MaybeRefOrGetter<Shop[]>) {
         collected.push({
           shopCode: promoShops[index].code,
           label: promotion.title,
+          shopTitle: promoShops[index].title,
         });
       }
     });
