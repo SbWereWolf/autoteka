@@ -43,7 +43,6 @@ node_modules
 **/node_modules.nix/
 
 /package-lock.json
-/frontend/package-lock.json
 /system-tests/package-lock.json
 /infrastructure/tests/package-lock.json
 
