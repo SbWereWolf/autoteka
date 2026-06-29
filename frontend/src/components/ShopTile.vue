@@ -6,7 +6,7 @@
     <div class="catalog-shop-tile-logo">
       <UiImage
         v-if="shop.thumbUrl"
-        class="h-full w-full"
+        class="h-full w-full flex items-center justify-center"
         img-class="catalog-shop-tile-media"
         :src="shop.thumbUrl"
         alt=""

@@ -3,7 +3,7 @@ import { installApiMocks } from "./support/mockApi";
 
 // Зона D — мобильный канон-аудит (@390 из конфига).
 
-test("D1: лого тайла заполняет 58px-зону и центрировано", async ({
+test("D1: лого тайла ≤72px, центрировано и не растянуто на зону", async ({
   page,
 }) => {
   await installApiMocks(page);
@@ -19,7 +19,7 @@ test("D1: лого тайла заполняет 58px-зону и центрир
   expect(zoneBox).toBeTruthy();
   expect(mediaBox).toBeTruthy();
   if (zoneBox && mediaBox) {
-    // Containment в 58px-зону (с допуском 1px).
+    // Containment в зону лого (с допуском 1px).
     expect(mediaBox.x).toBeGreaterThanOrEqual(zoneBox.x - 1);
     expect(mediaBox.y).toBeGreaterThanOrEqual(zoneBox.y - 1);
     expect(mediaBox.x + mediaBox.width).toBeLessThanOrEqual(
@@ -28,8 +28,13 @@ test("D1: лого тайла заполняет 58px-зону и центрир
     expect(mediaBox.y + mediaBox.height).toBeLessThanOrEqual(
       zoneBox.y + zoneBox.height + 1,
     );
-    // Заполняет зону по высоте (не усохло до интринсик-размера).
-    expect(mediaBox.height).toBeGreaterThanOrEqual(zoneBox.height - 2);
+    // Канон BrandCard: лого capped ≤72px, не растянуто на высокую flex:1-зону.
+    expect(mediaBox.height).toBeLessThanOrEqual(74);
+    expect(mediaBox.height).toBeLessThanOrEqual(zoneBox.height + 2);
+    // Центрировано по вертикали в зоне (допуск 2px).
+    const mediaCy = mediaBox.y + mediaBox.height / 2;
+    const zoneCy = zoneBox.y + zoneBox.height / 2;
+    expect(Math.abs(mediaCy - zoneCy)).toBeLessThanOrEqual(2);
     // Горизонтально центрировано в зоне (допуск 1px).
     const mediaCx = mediaBox.x + mediaBox.width / 2;
     const zoneCx = zoneBox.x + zoneBox.width / 2;
