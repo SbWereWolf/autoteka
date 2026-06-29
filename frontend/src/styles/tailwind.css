@@ -1002,6 +1002,14 @@
     gap: 0.75rem;
   }
 
+  /* Десктоп-сайдбар: зазор между группами фильтров =
+     канон .dt-sidebar gap 18px (_prototype/filter-sidebar.jsx). */
+  .catalog-menu-panel--sidebar
+    .catalog-menu-group
+    + .catalog-menu-group {
+    margin-top: 1.125rem;
+  }
+
   /* Мобильный дровер — ритм верхней группы по канону
      (_prototype/screens.jsx:161-199): низ блока «Город» 14px, низ подписи
      «Категории» 8px, верх чипов 6px; без border-top между секциями.
