@@ -478,6 +478,10 @@
         </div>
       </template>
     </div>
+    <OverscrollOpenLink
+      v-if="shop && hasSiteUrl"
+      :url="siteUrl"
+    />
   </div>
 </template>
 
@@ -485,6 +489,7 @@
 import { computed } from "vue";
 import { RouterLink, useRoute, useRouter } from "vue-router";
 import GalleryCarousel from "../components/GalleryCarousel.vue";
+import OverscrollOpenLink from "../components/OverscrollOpenLink.vue";
 import ShopPromotionCard from "../components/ShopPromotionCard.vue";
 import ShopContactActions from "../components/ShopContactActions.vue";
 import { state } from "../state";
