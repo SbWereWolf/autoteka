@@ -6,14 +6,12 @@
       </span>
       <CatalogFilterChips class="catalog-toolbar-chips" />
     </div>
-    <CatalogSortDropdown />
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed } from "vue";
 import CatalogFilterChips from "./CatalogFilterChips.vue";
-import CatalogSortDropdown from "./CatalogSortDropdown.vue";
 
 const props = defineProps<{
   count: number;

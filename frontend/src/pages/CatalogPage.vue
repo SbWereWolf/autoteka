@@ -90,7 +90,7 @@ const { sorted, seedBase, isLoading, loadError, loadCityShops } =
   useCatalogCityShops({
     cityCode: () => state.cityCode,
     selectedCategoryIds: () => state.selectedCategoryIds,
-    sortMode: () => state.sortMode,
+    selectedFeatureId: () => state.selectedFeatureId,
   });
 
 const currentCityTitle = computed(

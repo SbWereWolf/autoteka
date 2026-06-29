@@ -849,7 +849,7 @@ test("UI-MOCK-22: Esc закрывает шит акций и возвращае
 
 // UI-MOCK-23..26 удалены вместе с мобильным sort-UI: канон мобильного
 // каталога не содержит выбора сортировки (бар + шит сортировки сняты).
-// Дефолтный порядок (sortShops) покрыт sortShops.spec.ts и UI-MOCK-53.
+// Дефолтный порядок (sortShops) покрыт sortShops.spec.ts.
 
 test("UI-MOCK-27: галерея магазина имеет регион с aria-label", async ({
   page,
@@ -1444,7 +1444,7 @@ test.describe("UI-MOCK-47: sidebar — live-фильтрация без кноп
       .getByRole("button", { name: "Японские запчасти" })
       .click();
 
-    // sortShopsByRules не фильтрует, а только переупорядочивает:
+    // sortShopsBySelectedFeature не фильтрует, а только переупорядочивает:
     // .catalog-shop-tile count не меняется при любой селекции
     // категорий/фич в моке. Поэтому "live"-эффект ловим через
     // появление чипа в catalog-filter-row — это и есть мгновенный
@@ -1544,116 +1544,6 @@ test.describe("UI-MOCK-50: десктоп-тулбар — счётчик + чи
     await expect(
       page.getByTestId("catalog-offers-bar"),
     ).toBeHidden();
-
-    const trigger = toolbar.locator("[data-sort-dropdown-trigger]");
-    await expect(trigger).toBeVisible();
-    await expect(trigger).toContainText("Сортировка:");
-    await expect(trigger).toContainText("По умолчанию");
-  });
-});
-
-test.describe("UI-MOCK-51: сорт-дропдаун — Esc и клик-вне закрывают", () => {
-  test.use({ viewport: { width: 1280, height: 800 } });
-
-  test("UI-MOCK-51", async ({ page }) => {
-    await installApiMocks(page);
-    await page.goto("/", { waitUntil: "domcontentloaded" });
-    await expect(
-      page.locator(".catalog-shop-tile").first(),
-    ).toBeVisible();
-
-    const trigger = page.locator("[data-sort-dropdown-trigger]");
-    const panel = page.getByRole("menu", { name: "Сортировка" });
-
-    await trigger.click();
-    await expect(panel).toBeVisible();
-    await expect(trigger).toHaveAttribute("aria-expanded", "true");
-    await page.keyboard.press("Escape");
-    await expect(panel).toHaveCount(0);
-    await expect(trigger).toBeFocused();
-
-    await trigger.click();
-    await expect(panel).toBeVisible();
-    await page.locator("h1.catalog-title").click();
-    await expect(panel).toHaveCount(0);
-  });
-});
-
-test.describe("UI-MOCK-52: сорт-дропдаун — выбор меняет sortMode и подпись", () => {
-  test.use({ viewport: { width: 1280, height: 800 } });
-
-  test("UI-MOCK-52", async ({ page }) => {
-    await installApiMocks(page);
-    await page.goto("/", { waitUntil: "domcontentloaded" });
-    await expect(
-      page.locator(".catalog-shop-tile").first(),
-    ).toBeVisible();
-
-    const trigger = page.locator("[data-sort-dropdown-trigger]");
-    await trigger.click();
-    const panel = page.getByRole("menu", { name: "Сортировка" });
-    await panel
-      .getByRole("menuitemradio", { name: "По названию А–Я" })
-      .click();
-    await expect(panel).toHaveCount(0);
-    await expect(trigger).toContainText("По названию А–Я");
-
-    const stored = await page.evaluate(() =>
-      localStorage.getItem("autoteka_sort_mode"),
-    );
-    expect(stored).toBe('"name-asc"');
-  });
-});
-
-test.describe("UI-MOCK-53: promo-first — магазин с акцией становится первым", () => {
-  test.use({ viewport: { width: 1280, height: 800 } });
-
-  test("UI-MOCK-53", async ({ page }) => {
-    await page.addInitScript(() =>
-      window.localStorage.setItem(
-        "autoteka_sort_mode",
-        JSON.stringify("promo-first"),
-      ),
-    );
-    await installApiMocks(page);
-    await page.goto("/", { waitUntil: "domcontentloaded" });
-    await expect(page.locator(".catalog-shop-tile")).toHaveCount(3);
-
-    await expect(
-      page.locator(".catalog-shop-tile").first(),
-    ).toHaveAttribute("href", "/shop/barnaul-02");
-    await expect(
-      page.locator(".catalog-shop-tile").nth(1),
-    ).toHaveAttribute("href", "/shop/barnaul-01");
-    await expect(
-      page.locator(".catalog-shop-tile").nth(2),
-    ).toHaveAttribute("href", "/shop/barnaul-03");
-  });
-});
-
-test.describe("UI-MOCK-54: fast-delivery-first — магазин с доставкой первый", () => {
-  test.use({ viewport: { width: 1280, height: 800 } });
-
-  test("UI-MOCK-54", async ({ page }) => {
-    await page.addInitScript(() =>
-      window.localStorage.setItem(
-        "autoteka_sort_mode",
-        JSON.stringify("fast-delivery-first"),
-      ),
-    );
-    await installApiMocks(page);
-    await page.goto("/", { waitUntil: "domcontentloaded" });
-    await expect(page.locator(".catalog-shop-tile")).toHaveCount(3);
-
-    await expect(
-      page.locator(".catalog-shop-tile").first(),
-    ).toHaveAttribute("href", "/shop/barnaul-03");
-    await expect(
-      page.locator(".catalog-shop-tile").nth(1),
-    ).toHaveAttribute("href", "/shop/barnaul-01");
-    await expect(
-      page.locator(".catalog-shop-tile").nth(2),
-    ).toHaveAttribute("href", "/shop/barnaul-02");
   });
 });
 
