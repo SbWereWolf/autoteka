@@ -66,7 +66,7 @@
     </div>
 
     <CatalogOffersBar v-if="!loadError && !isDesktop" />
-    <CatalogOffersSheet v-if="!isDesktop" :shops="sorted" />
+    <CatalogOffersSheet v-if="!isDesktop" />
   </div>
 </template>
 

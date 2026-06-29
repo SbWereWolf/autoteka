@@ -1351,29 +1351,6 @@ test.describe("UI-MOCK-40: hover-guard — touch не матчит, стиль �
   });
 });
 
-test("UI-MOCK-41: offers-sheet — каждый <li> имеет роль listitem", async ({
-  page,
-}) => {
-  await installApiMocks(page);
-  await page.goto("/", { waitUntil: "domcontentloaded" });
-  await expect(
-    page.locator(".catalog-shop-tile").first(),
-  ).toBeVisible();
-
-  await page.locator("[data-offers-trigger]").click();
-  const sheet = page.locator(
-    '[role="dialog"][aria-labelledby="offers-title"]',
-  );
-  await expect(sheet).toBeVisible();
-  // дождаться загрузки строк (скелетон-li помечены aria-hidden)
-  await expect(sheet.locator(".catalog-offer-row").first()).toBeVisible();
-
-  const items = sheet.locator("li");
-  const itemCount = await items.count();
-  expect(itemCount).toBeGreaterThan(0);
-  expect(await sheet.getByRole("listitem").count()).toBe(itemCount);
-});
-
 test.describe("UI-MOCK-46: sidebar постоянный — без оверлея и без trap'а", () => {
   test.use({ viewport: { width: 1280, height: 800 } });
 

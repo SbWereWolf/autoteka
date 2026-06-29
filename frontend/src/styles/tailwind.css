@@ -1529,85 +1529,11 @@
     color: var(--color-ink);
   }
 
-  .catalog-offers-list {
-    list-style: none;
-    margin: 0;
-    padding: 0 1rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-
-  .catalog-offer-row {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    justify-content: center;
-    gap: 2px;
-    width: 100%;
-    min-height: 2.75rem;
-    padding: 0.5rem 1rem;
-    border-radius: var(--radius-control);
-    background: var(--color-page);
-    color: var(--color-ink);
-    font-size: 0.875rem;
-    font-weight: 700;
-    text-align: left;
-    text-decoration: none;
-    cursor: pointer;
-    transition:
-      transform 120ms ease,
-      background 120ms ease;
-    -webkit-tap-highlight-color: transparent;
-    touch-action: manipulation;
-  }
-
-  .catalog-offer-row:active {
-    background: var(--color-page-pressed);
-    transform: scale(var(--scale-press-row));
-  }
-
-  .catalog-offer-row:focus-visible {
-    outline: none;
-    box-shadow:
-      0 0 0 2px var(--color-white),
-      0 0 0 4px var(--color-ink);
-  }
-
-  @media (hover: hover) and (pointer: fine) {
-    .catalog-offer-row:hover {
-      background: var(--color-page-hover);
-    }
-  }
-
-  /* .catalog-offer-label — наследует типографику строки (0.875rem/700, ink). */
-  .catalog-offer-shop {
-    font-size: 0.75rem;
-    font-weight: 500;
-    color: var(--color-secondary-text);
-  }
-
-  .catalog-offer-skeleton {
-    height: 2.75rem;
-    border-radius: var(--radius-control);
-  }
-
-  .catalog-offers-empty {
-    margin: 0;
-    padding: 0.5rem 1rem 1rem;
-    color: var(--color-secondary-text);
-    font-size: 0.9375rem;
-    font-weight: 500;
-    line-height: 1.4;
-  }
-
   @media (prefers-reduced-motion: reduce) {
-    .catalog-offers-bar-button,
-    .catalog-offer-row {
+    .catalog-offers-bar-button {
       transition: background 120ms ease;
     }
-    .catalog-offers-bar-button:active,
-    .catalog-offer-row:active {
+    .catalog-offers-bar-button:active {
       transform: none;
     }
   }
