@@ -5,6 +5,7 @@ import { loadLocal, saveLocal } from "./utils/storage";
 const CITY_KEY = "autoteka_city";
 const CATEGORIES_KEY = "autoteka_categories";
 const SORT_MODE_KEY = "autoteka_sort_mode";
+const FEATURE_KEY = "autoteka_feature";
 
 export type SortMode =
   | "default"
@@ -33,6 +34,7 @@ type AppState = {
   cityCode: string;
   selectedCategoryIds: string[];
   sortMode: SortMode;
+  selectedFeatureId: string | null;
   cities: City[];
   categories: Category[];
   features: Feature[];
@@ -45,6 +47,7 @@ export const state = reactive<AppState>({
   cityCode: "",
   selectedCategoryIds: [],
   sortMode: "default",
+  selectedFeatureId: null,
   cities: [],
   categories: [],
   features: [],
@@ -88,6 +91,14 @@ function sanitizeSortMode(value: unknown): SortMode {
     : "default";
 }
 
+function sanitizeFeatureId(value: unknown): string | null {
+  if (typeof value !== "string" || value.length === 0) {
+    return null;
+  }
+  const allowed = new Set(state.features.map((item) => item.id));
+  return allowed.has(value) ? value : null;
+}
+
 export function initState(params: {
   cities: City[];
   categories: Category[];
@@ -120,6 +131,10 @@ export function initState(params: {
   const rawSortMode = loadLocal<unknown>(SORT_MODE_KEY, "default");
   state.sortMode = sanitizeSortMode(rawSortMode);
   saveLocal(SORT_MODE_KEY, state.sortMode);
+
+  const rawFeatureId = loadLocal<unknown>(FEATURE_KEY, null);
+  state.selectedFeatureId = sanitizeFeatureId(rawFeatureId);
+  saveLocal(FEATURE_KEY, state.selectedFeatureId);
 }
 
 export function toggleCategory(categoryId: string) {
@@ -159,4 +174,18 @@ export function setSortMode(mode: SortMode) {
   }
   state.sortMode = mode;
   saveLocal(SORT_MODE_KEY, mode);
+}
+
+export function setSelectedFeature(featureId: string | null) {
+  if (featureId === null) {
+    state.selectedFeatureId = null;
+    saveLocal(FEATURE_KEY, state.selectedFeatureId);
+    return;
+  }
+  const allowed = new Set(state.features.map((item) => item.id));
+  if (!allowed.has(featureId)) {
+    return;
+  }
+  state.selectedFeatureId = featureId;
+  saveLocal(FEATURE_KEY, featureId);
 }
