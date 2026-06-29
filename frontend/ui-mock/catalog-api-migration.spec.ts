@@ -424,10 +424,7 @@ test("UI-MOCK-10: пустой каталог в городе без магаз�
 
   await page.getByRole("button", { name: "Открыть фильтры" }).click();
   await page.getByTestId("menu-city-select").selectOption("kemerovo");
-  await page
-    .locator(".catalog-menu-panel")
-    .getByRole("button", { name: "Закрыть" })
-    .click();
+  await page.keyboard.press("Escape");
   await expect(page.getByRole("dialog")).toHaveCount(0);
 
   const state = page.getByTestId("catalog-state");
@@ -648,7 +645,7 @@ test("UI-MOCK-16: удаление чипа снимает категорию", 
   await menuPanel
     .getByRole("button", { name: "Корейские запчасти" })
     .click();
-  await menuPanel.getByRole("button", { name: "Закрыть" }).click();
+  await page.keyboard.press("Escape");
   await expect(page.getByRole("dialog")).toHaveCount(0);
 
   const chipRow = page.locator('[data-testid="catalog-filter-row"]');
@@ -678,7 +675,7 @@ test("UI-MOCK-17: кнопка Очистить все убирает все ч�
   await menuPanel
     .getByRole("button", { name: "Японские запчасти" })
     .click();
-  await menuPanel.getByRole("button", { name: "Закрыть" }).click();
+  await page.keyboard.press("Escape");
   await expect(page.getByRole("dialog")).toHaveCount(0);
 
   const chipRow = page.locator('[data-testid="catalog-filter-row"]');
@@ -705,7 +702,7 @@ test("UI-MOCK-18: пустой результат с фильтрами пока
     .getByRole("button", { name: "Корейские запчасти" })
     .click();
   await page.getByTestId("menu-city-select").selectOption("kemerovo");
-  await menuPanel.getByRole("button", { name: "Закрыть" }).click();
+  await page.keyboard.press("Escape");
   await expect(page.getByRole("dialog")).toHaveCount(0);
 
   const state = page.getByTestId("catalog-state");
@@ -736,7 +733,7 @@ test("UI-MOCK-19: чипы объявляют снятие и очистку ч�
   await menuPanel
     .getByRole("button", { name: "Корейские запчасти" })
     .click();
-  await menuPanel.getByRole("button", { name: "Закрыть" }).click();
+  await page.keyboard.press("Escape");
   await expect(page.getByRole("dialog")).toHaveCount(0);
 
   const chipRow = page.locator('[data-testid="catalog-filter-row"]');
@@ -755,7 +752,7 @@ test("UI-MOCK-19: чипы объявляют снятие и очистку ч�
   await menuPanel
     .getByRole("button", { name: "Японские запчасти" })
     .click();
-  await menuPanel.getByRole("button", { name: "Закрыть" }).click();
+  await page.keyboard.press("Escape");
   await expect(page.getByRole("dialog")).toHaveCount(0);
 
   await chipRow
@@ -781,10 +778,7 @@ test("UI-MOCK-20: диктор молчит пока дровер открыт �
   // viewState changed behind the open drawer — announcer must stay silent
   await expect(live).toHaveText("Каталог загружен");
 
-  await page
-    .locator(".catalog-menu-panel")
-    .getByRole("button", { name: "Закрыть" })
-    .click();
+  await page.keyboard.press("Escape");
   await expect(page.getByRole("dialog")).toHaveCount(0);
   await expect(live).toHaveText("Ничего не найдено");
 });

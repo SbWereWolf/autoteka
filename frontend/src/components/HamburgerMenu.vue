@@ -34,15 +34,6 @@
           >
             Фильтры
           </h2>
-          <button
-            v-if="!isDesktop"
-            class="catalog-close-button ui-bounce"
-            aria-label="Закрыть"
-            type="button"
-            @click="closeMenu"
-          >
-            <span class="text-2xl leading-none">×</span>
-          </button>
         </div>
 
         <div class="catalog-menu-content">
