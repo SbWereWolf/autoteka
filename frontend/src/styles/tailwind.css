@@ -932,7 +932,7 @@
     top: 0;
     left: 0;
     height: 100dvh;
-    width: min(341px, 88vw);
+    width: 100%;
     display: flex;
     flex-direction: column;
     padding: 1rem 1rem 1.4rem;

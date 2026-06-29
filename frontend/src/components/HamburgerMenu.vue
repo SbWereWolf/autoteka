@@ -34,6 +34,15 @@
           >
             Фильтры
           </h2>
+          <button
+            v-if="!isDesktop"
+            class="catalog-icon-button"
+            aria-label="Закрыть фильтры"
+            type="button"
+            @click="closeMenu"
+          >
+            <span class="text-2xl leading-none">×</span>
+          </button>
         </div>
 
         <div class="catalog-menu-content">
