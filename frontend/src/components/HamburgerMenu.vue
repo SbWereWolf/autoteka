@@ -36,7 +36,7 @@
           </h2>
           <button
             v-if="!isDesktop"
-            class="catalog-icon-button"
+            class="catalog-close-button ui-bounce"
             aria-label="Закрыть фильтры"
             type="button"
             @click="closeMenu"
