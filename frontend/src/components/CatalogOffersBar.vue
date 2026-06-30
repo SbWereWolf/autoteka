@@ -8,13 +8,21 @@
       :aria-expanded="state.offersOpen"
       @click="openSheet"
     >
-      Акции
+      {{ buttonLabel }}
     </button>
   </div>
 </template>
 
 <script setup lang="ts">
+import { computed } from "vue";
 import { state } from "../state";
+
+const buttonLabel = computed(() =>
+  state.selectedFeatureId
+    ? (state.features.find((f) => f.id === state.selectedFeatureId)?.title ??
+      "Акции")
+    : "Акции",
+);
 
 function openSheet() {
   state.offersOpen = true;
