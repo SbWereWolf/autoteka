@@ -1525,19 +1525,13 @@
     background: rgb(209, 209, 214);
   }
 
-  .catalog-offers-sheet-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 1rem 0.625rem;
-  }
-
-  .catalog-offers-sheet-title {
-    margin: 0;
-    font-size: 1.125rem;
-    font-weight: 700;
-    line-height: 1.2;
-    color: var(--color-ink);
+  /* Шит «Акции» без заголовка/крестика (по запросу Ивана) — отступление
+     от канона screens.jsx (там header h2+✕). Список фишек идёт сразу под
+     handle-bar; padding-top поднимает ритм бывшего header padding-bottom
+     (10px), чтобы чипы не липли к grabber. Scoped — базовый
+     .catalog-menu-chip-list (категории/дровер) не трогаем. */
+  .catalog-offers-sheet .catalog-menu-chip-list {
+    padding-top: 0.625rem;
   }
 
   @media (prefers-reduced-motion: reduce) {

@@ -796,11 +796,7 @@ test("UI-MOCK-21: bottom-sheet акций — APG-структура и inert ф
   const dialog = page.getByRole("dialog", { name: "Акции" });
   await expect(dialog).toBeVisible();
   await expect(dialog).toHaveAttribute("aria-modal", "true");
-  await expect(dialog).toHaveAttribute(
-    "aria-labelledby",
-    "offers-title",
-  );
-  await expect(page.locator("#offers-title")).toHaveText("Акции");
+  await expect(dialog).toHaveAttribute("aria-label", "Акции");
 
   const bgInert = await page.evaluate(() => {
     const main = document.querySelector("main");

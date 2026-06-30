@@ -13,26 +13,13 @@
         class="catalog-offers-sheet"
         role="dialog"
         aria-modal="true"
-        aria-labelledby="offers-title"
+        aria-label="Акции"
         tabindex="-1"
         @click.stop
       >
         <div class="catalog-offers-sheet-handle" aria-hidden="true">
           <div class="catalog-offers-sheet-handle-bar" />
         </div>
-        <header class="catalog-offers-sheet-header">
-          <h2 id="offers-title" class="catalog-offers-sheet-title">
-            Акции
-          </h2>
-          <button
-            class="catalog-close-button ui-bounce"
-            aria-label="Закрыть"
-            type="button"
-            @click="closeSheet"
-          >
-            <span class="text-2xl leading-none">×</span>
-          </button>
-        </header>
 
         <div class="catalog-menu-chip-list">
           <button
