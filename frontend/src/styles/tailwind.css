@@ -1528,10 +1528,13 @@
   /* Шит «Акции» без заголовка/крестика (по запросу Ивана) — отступление
      от канона screens.jsx (там header h2+✕). Список фишек идёт сразу под
      handle-bar; padding-top поднимает ритм бывшего header padding-bottom
-     (10px), чтобы чипы не липли к grabber. Scoped — базовый
-     .catalog-menu-chip-list (категории/дровер) не трогаем. */
+     (10px), чтобы чипы не липли к grabber. padding-inline 1rem = канон
+     списка offers-sheet (padding: 0 16px) — aside без своего inset, так
+     что это ровно 16px от края. Scoped — базовый .catalog-menu-chip-list
+     (категории/дровер) не трогаем. */
   .catalog-offers-sheet .catalog-menu-chip-list {
     padding-top: 0.625rem;
+    padding-inline: 1rem;
   }
 
   @media (prefers-reduced-motion: reduce) {
