@@ -994,6 +994,12 @@
     display: flex;
     flex-direction: column;
     overflow-y: auto;
+    /* Горизонтальный люфт под focus-ring CitySelect: overflow-y:auto
+       промоутит overflow-x в auto и клипал бы 4px-кольцо у края.
+       padding 4px даёт место, отрицательный margin сохраняет ширину
+       layout (panel padding 1rem компенсирует вылет). */
+    padding-inline: 0.25rem;
+    margin-inline: -0.25rem;
   }
 
   .catalog-menu-group {
