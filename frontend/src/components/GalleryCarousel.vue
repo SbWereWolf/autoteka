@@ -346,6 +346,7 @@ import { useAnnouncer } from "../composables/useAnnouncer";
 import { useIsDesktop } from "../composables/useIsDesktop";
 import { useGalleryLightbox } from "../composables/useGalleryLightbox";
 import "photoswipe/style.css";
+import "../styles/lightbox.css";
 
 const props = withDefaults(
   defineProps<{
