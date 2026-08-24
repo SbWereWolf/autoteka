@@ -17,6 +17,13 @@ type UseGalleryLightboxParams = {
   ) => HTMLImageElement | null;
 };
 
+/*
+ * Тип кадра для библиотеки. Всё, что не "image", она считает произвольным
+ * содержимым: не ищет размеры, не рисует плейсхолдер и не даёт зумить
+ * (Content.isZoomable() возвращает isImageContent()).
+ */
+const VIDEO_SLIDE_TYPE = "video";
+
 function prefersReducedMotion(): boolean {
   return (
     typeof window !== "undefined" &&
@@ -64,6 +71,13 @@ function loadSize(src: string): Promise<SlideSize | null> {
   });
 }
 
+function pauseVideoIn(element: Element | undefined): void {
+  const video = element?.querySelector("video");
+  if (video instanceof HTMLVideoElement) {
+    video.pause();
+  }
+}
+
 export function useGalleryLightbox(params: UseGalleryLightboxParams) {
   let lightbox: PhotoSwipeLightbox | null = null;
 
@@ -72,48 +86,42 @@ export function useGalleryLightbox(params: UseGalleryLightboxParams) {
     lightbox = null;
   }
 
-  async function buildSlide(
-    image: GalleryImageItem,
-  ): Promise<SlideData> {
+  async function buildSlide(item: GalleryItem): Promise<SlideData> {
+    if (item.type === "video") {
+      /*
+       * Размеров у видео нет — бэкенд их не отдаёт, и брать их неоткуда.
+       * Библиотека это переживает: при нулевых width/height она берёт
+       * zoom-уровень 1 и растягивает кадр на весь вьюпорт
+       * (slide.js updateContentSize: `… || this.pswp.viewportSize.x`).
+       * Само видео вписывается в кадр через object-fit в lightbox.css.
+       */
+      return { type: VIDEO_SLIDE_TYPE };
+    }
+
     const size =
-      naturalSizeOf(params.resolveImageElement(image)) ??
-      (await loadSize(image.src));
+      naturalSizeOf(params.resolveImageElement(item)) ??
+      (await loadSize(item.src));
 
     if (!size) {
       // Размеры неизвестны — отдаём кадр без них, а не с выдуманными.
-      return { src: image.src };
+      return { src: item.src };
     }
 
     return {
-      src: image.src,
+      src: item.src,
       width: size.width,
       height: size.height,
     };
   }
 
-  /**
-   * Открыть лайтбокс на кадре карусели frameIndex.
-   * На видеокадре не открывается вовсе.
-   */
+  /** Открыть лайтбокс на кадре карусели frameIndex (индекс сквозной). */
   async function openAt(frameIndex: number): Promise<void> {
     const items = params.items();
-    const frame = items[frameIndex];
-    if (!frame || frame.type !== "image") {
+    if (!items[frameIndex]) {
       return;
     }
 
-    const images = items.filter(
-      (item): item is GalleryImageItem => item.type === "image",
-    );
-    // Индекс кадра карусели → индекс внутри списка одних фотографий.
-    const photoIndex = images.findIndex(
-      (image) => image.id === frame.id,
-    );
-    if (photoIndex < 0) {
-      return;
-    }
-
-    const slides = await Promise.all(images.map(buildSlide));
+    const slides = await Promise.all(items.map(buildSlide));
 
     const reducedMotion = prefersReducedMotion();
     const options: PhotoSwipeOptions = {
@@ -128,9 +136,65 @@ export function useGalleryLightbox(params: UseGalleryLightboxParams) {
     // Пересоздаём на каждое открытие: dataSource и prefers-reduced-motion
     // могли измениться с прошлого раза.
     destroyLightbox();
-    lightbox = new PhotoSwipeLightbox(options);
-    lightbox.init();
-    lightbox.loadAndOpen(photoIndex);
+    const instance = new PhotoSwipeLightbox(options);
+    const videos = new Set<HTMLVideoElement>();
+
+    /*
+     * Своё содержимое кадра: гасим штатную сборку элемента и подставляем
+     * собственный узел. Обёртка — div.pswp__content, как делает сама
+     * библиотека для html-кадров: он пропускает клики сквозь себя, а
+     * дочернее видео их получает (photoswipe.css: .pswp__content
+     * pointer-events none, .pswp__content > * — auto), поэтому нативные
+     * контролы работают. DOM строим узлами, а не innerHTML: ссылки
+     * приходят с бэкенда.
+     */
+    instance.on("contentLoad", (event) => {
+      const item = items[event.content.index];
+      if (!item || item.type !== "video") {
+        return;
+      }
+
+      event.preventDefault();
+
+      const holder = document.createElement("div");
+      holder.className = "pswp__content shop-lightbox-video";
+
+      const video = document.createElement("video");
+      video.controls = true;
+      video.playsInline = true;
+      video.preload = "metadata";
+      video.poster = item.poster;
+
+      const source = document.createElement("source");
+      source.src = item.src;
+      source.type = item.mime;
+
+      video.append(source);
+      holder.append(video);
+      videos.add(video);
+
+      event.content.element = holder;
+    });
+
+    // Ушли с кадра — видео на паузу.
+    instance.on("contentDeactivate", (event) => {
+      pauseVideoIn(event.content.element);
+    });
+
+    // Закрыли лайтбокс — останавливаем всё, что успело заиграть.
+    instance.on("close", () => {
+      videos.forEach((video) => {
+        video.pause();
+      });
+    });
+
+    instance.on("destroy", () => {
+      videos.clear();
+    });
+
+    lightbox = instance;
+    instance.init();
+    instance.loadAndOpen(frameIndex);
   }
 
   onBeforeUnmount(destroyLightbox);

@@ -46,11 +46,13 @@
   --lb-counter-blur: 0.5rem; /* tailwind.css:2065-2066 */
 }
 
-/* 2.2 — кнопки библиотеки в виде кнопки поверх фотографии. */
+/*
+ * 2.2 — кнопки библиотеки в виде кнопки поверх фотографии.
+ * display НЕ трогаем: им библиотека прячет кнопку увеличения на кадрах,
+ * которые нельзя зумить (.pswp__button--zoom + .pswp--zoom-allowed).
+ * Глиф центрируется абсолютно, флекс для этого не нужен.
+ */
 .pswp__button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
   width: var(--lb-control-size);
   height: var(--lb-control-size);
   padding: 0;
@@ -169,6 +171,26 @@
   font-variant-numeric: tabular-nums;
   text-shadow: none;
   opacity: 1;
+}
+
+/*
+ * Видеокадр. Размеров у видео нет, поэтому библиотека растягивает holder
+ * на весь вьюпорт — вписываем кадр внутрь него. Фон под видео тот же, что
+ * у подложки, чтобы поля вокруг кадра не читались отдельным прямоугольником.
+ * Нативные контролы не трогаем.
+ */
+.shop-lightbox-video {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--pswp-bg);
+}
+
+.shop-lightbox-video video {
+  max-width: 100%;
+  max-height: 100%;
+  background: var(--pswp-bg);
+  object-fit: contain;
 }
 
 /* 2.5 — собственные анимации библиотеки при reduced-motion. */
