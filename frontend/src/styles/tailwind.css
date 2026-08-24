@@ -62,6 +62,7 @@
 @layer base {
   :root {
     color-scheme: light;
+    --shop-actionbar-h: calc(72px + env(safe-area-inset-bottom));
   }
 
   html {
@@ -2601,7 +2602,7 @@
 
   /* Mobile action bar — canon footer (_prototype/shop-card.jsx + OffersBar). */
   .shop-actionbar-spacer {
-    height: calc(72px + env(safe-area-inset-bottom));
+    height: var(--shop-actionbar-h);
   }
 
   .shop-actionbar {
@@ -2613,7 +2614,7 @@
     display: flex;
     align-items: center;
     gap: 0.375rem;
-    height: calc(72px + env(safe-area-inset-bottom));
+    height: var(--shop-actionbar-h);
     padding: 0 0.75rem;
     padding-bottom: env(safe-area-inset-bottom);
     box-sizing: border-box;
