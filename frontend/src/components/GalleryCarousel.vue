@@ -28,16 +28,33 @@
             :key="item.id"
             class="shop-gallery-slide"
           >
-            <UiImage
+            <button
               v-if="item.type === 'image'"
-              class="h-full w-full"
-              :src="item.src"
-              alt=""
-              :loading="itemIndex === 0 ? 'eager' : 'lazy'"
-              decoding="async"
-              spinner
-              img-class="h-full w-full object-cover"
-            />
+              type="button"
+              class="shop-gallery-photo-button"
+              :tabindex="itemIndex === index ? 0 : -1"
+              :aria-label="`Открыть фото ${itemIndex + 1} из ${items.length} на весь экран`"
+              :data-testid="`gallery-photo-open-${itemIndex}`"
+              @pointerdown="onPhotoPointerDown"
+              @pointerup="
+                (event: PointerEvent) =>
+                  onPhotoPointerUp(event, itemIndex)
+              "
+              @pointercancel="onPhotoPointerCancel"
+              @click="
+                (event: MouseEvent) => onPhotoClick(event, itemIndex)
+              "
+            >
+              <UiImage
+                class="h-full w-full"
+                :src="item.src"
+                alt=""
+                :loading="itemIndex === 0 ? 'eager' : 'lazy'"
+                decoding="async"
+                spinner
+                img-class="h-full w-full object-cover"
+              />
+            </button>
 
             <div v-else class="shop-gallery-video-shell">
               <video
@@ -174,16 +191,24 @@
       </div>
 
       <div v-else class="shop-gallery-stage">
-        <UiImage
+        <button
           v-if="activeItem?.type === 'image'"
-          class="shop-gallery-stage-media"
-          :src="activeItem.src"
-          alt=""
-          loading="eager"
-          decoding="async"
-          spinner
-          img-class="h-full w-full object-cover"
-        />
+          type="button"
+          class="shop-gallery-stage-media shop-gallery-photo-button"
+          :aria-label="`Открыть фото ${index + 1} из ${items.length} на весь экран`"
+          data-testid="gallery-photo-open-stage"
+          @click="openLightboxAt(index)"
+        >
+          <UiImage
+            class="h-full w-full"
+            :src="activeItem.src"
+            alt=""
+            loading="eager"
+            decoding="async"
+            spinner
+            img-class="h-full w-full object-cover"
+          />
+        </button>
 
         <video
           v-else-if="activeItem?.type === 'video'"
@@ -313,12 +338,14 @@ import {
   watch,
   watchPostEffect,
 } from "vue";
-import type { GalleryItem } from "../types";
+import type { GalleryImageItem, GalleryItem } from "../types";
 import UiImage from "./UiImage.vue";
 import { uiConfig } from "../config/ui";
 import { useGalleryVideoAudioState } from "../composables/useGalleryVideoAudioState";
 import { useAnnouncer } from "../composables/useAnnouncer";
 import { useIsDesktop } from "../composables/useIsDesktop";
+import { useGalleryLightbox } from "../composables/useGalleryLightbox";
+import "photoswipe/style.css";
 
 const props = withDefaults(
   defineProps<{
@@ -517,7 +544,13 @@ let dragging = false;
 
 function onDown(event: PointerEvent) {
   if (props.items.length <= 1) return;
-  if ((event.target as HTMLElement).closest("button")) return;
+  // Кадр-фото теперь тоже <button> — он не контрол, тянуть по нему можно.
+  if (
+    (event.target as HTMLElement).closest(
+      "button:not(.shop-gallery-photo-button)",
+    )
+  )
+    return;
   dragging = true;
   startX = event.clientX;
   startY = event.clientY;
@@ -546,5 +579,78 @@ function onUp(event: PointerEvent) {
 
 function onCancel() {
   dragging = false;
+}
+
+// --- Лайтбокс -----------------------------------------------------------
+// natural-размеры берём с уже отрисованных <img> карусели: у GalleryItem
+// полей ширины/высоты нет, бэкенд их не отдаёт. На десктопе подходит и
+// миниатюра — naturalWidth не зависит от отображаемого размера.
+function resolveImageElement(
+  item: GalleryImageItem,
+): HTMLImageElement | null {
+  const root = sectionRef.value;
+  if (!root) {
+    return null;
+  }
+
+  for (const image of root.querySelectorAll("img")) {
+    if (image.getAttribute("src") === item.src) {
+      return image;
+    }
+  }
+
+  return null;
+}
+
+const { openAt } = useGalleryLightbox({
+  items: () => props.items,
+  resolveImageElement,
+});
+
+function openLightboxAt(frameIndex: number) {
+  // Пауза играющему видео — тем же механизмом, что и кнопка паузы.
+  userPaused.value = true;
+  void openAt(frameIndex);
+}
+
+// Тап по фотографии открывает лайтбокс, протягивание — нет.
+// Порог тот же, по которому карусель отличает свайп от «ничего».
+let photoPointerId: number | null = null;
+let photoStartX = 0;
+let photoStartY = 0;
+
+function onPhotoPointerDown(event: PointerEvent) {
+  photoPointerId = event.pointerId;
+  photoStartX = event.clientX;
+  photoStartY = event.clientY;
+}
+
+function onPhotoPointerCancel() {
+  photoPointerId = null;
+}
+
+// Enter/Space (и активация из скринридера) приходят click'ом с detail === 0.
+// Указательный тап уже обработан в pointerup — его click пропускаем.
+function onPhotoClick(event: MouseEvent, frameIndex: number) {
+  if (event.detail !== 0) {
+    return;
+  }
+
+  openLightboxAt(frameIndex);
+}
+
+function onPhotoPointerUp(event: PointerEvent, frameIndex: number) {
+  if (photoPointerId !== event.pointerId) {
+    return;
+  }
+  photoPointerId = null;
+
+  const dx = event.clientX - photoStartX;
+  const dy = event.clientY - photoStartY;
+  if (Math.hypot(dx, dy) >= uiConfig.gallery.swipeThresholdPx) {
+    return;
+  }
+
+  openLightboxAt(frameIndex);
 }
 </script>

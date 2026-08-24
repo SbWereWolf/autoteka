@@ -2237,6 +2237,27 @@
     background: var(--color-ink);
   }
 
+  /* Кадр-фото как кнопка: та же площадь, что у кадра, без своей геометрии. */
+  .shop-gallery-photo-button {
+    display: block;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    text-align: inherit;
+  }
+
+  /* Кольцо — рецепт .ix-onimg (как у back/share/nav), но инсетом:
+     кнопка занимает весь кадр, а .shop-gallery-frame режет overflow. */
+  .shop-gallery-photo-button:focus-visible {
+    outline: none;
+    box-shadow:
+      inset 0 0 0 2px var(--color-white),
+      inset 0 0 0 4px var(--color-ink);
+  }
+
   .shop-gallery-empty {
     display: grid;
     place-items: center;
