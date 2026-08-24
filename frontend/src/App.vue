@@ -17,6 +17,8 @@
     <span class="sr-only" role="status" aria-live="polite">
       {{ announcerMessage }}
     </span>
+
+    <AppToast :message="announcerMessage" />
   </div>
 </template>
 
@@ -25,6 +27,7 @@ import { computed } from "vue";
 import { useRoute } from "vue-router";
 import TopBar from "./components/TopBar.vue";
 import HamburgerMenu from "./components/HamburgerMenu.vue";
+import AppToast from "./components/AppToast.vue";
 import { useAnnouncer } from "./composables/useAnnouncer";
 import { useIsDesktop } from "./composables/useIsDesktop";
 import { state } from "./state";
