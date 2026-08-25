@@ -16,7 +16,7 @@ export default defineConfig({
       process.env.PLAYWRIGHT_UI_MOCK_BASE_URL ??
       "http://127.0.0.1:4173",
     headless: true,
-    viewport: { width: 2048, height: 1280 },
+    viewport: { width: 390, height: 844 },
   },
   webServer: {
     command: "npm run dev -- --host 127.0.0.1 --port 4173",

@@ -1,0 +1,209 @@
+/*
+ * Оформление лайтбокса PhotoSwipe под канон проекта.
+ * Подключается СТРОГО ПОСЛЕ photoswipe/style.css.
+ *
+ * Канон кнопок поверх фотографии (.shop-share-button, .shop-gallery-nav,
+ * .shop-gallery-counter) записан в tailwind.css литералами и токенов в
+ * @theme не имеет. Поэтому значения продублированы здесь именованными
+ * переменными с цитатой источника, а правила ниже пользуются только ими —
+ * голых чисел и хексов в правилах нет. Переменные объявлены на .pswp,
+ * чтобы не засорять глобальный :root.
+ */
+
+.pswp {
+  /* 2.1 — переменные самой библиотеки. */
+  /* 2.4 — подложка: цвет из палитры проекта вместо #000 библиотеки. */
+  --pswp-bg: var(--color-ink);
+  --pswp-icon-color: var(--color-white);
+
+  /* Кнопка поверх фото — канон tailwind.css:1899-1940 / 2270-2311. */
+  --lb-control-size: 2.75rem; /* tailwind.css:1907-1908 */
+  --lb-control-bg: rgba(0, 0, 0, 0.4); /* tailwind.css:1912 */
+  --lb-control-bg-hover: rgba(0, 0, 0, 0.48); /* tailwind.css:1925 */
+  --lb-control-bg-active: rgba(0, 0, 0, 0.55); /* tailwind.css:1930 */
+  --lb-control-blur: 8px; /* tailwind.css:1913-1914 */
+  --lb-control-press-ms: 100ms; /* tailwind.css:1918 */
+  --lb-control-bg-ms: 120ms; /* tailwind.css:1919 */
+
+  /* Глиф — канон стрелки карусели (GalleryCarousel.vue, svg width=22). */
+  --lb-icon-size: 1.375rem;
+
+  /* Кольцо фокуса — канон tailwind.css:1935-1940. */
+  --lb-ring-inner: 2px; /* tailwind.css:1938 */
+  --lb-ring-outer: 4px; /* tailwind.css:1939 */
+
+  /* Отступы от края — канон. */
+  --lb-edge-inset: 0.5rem; /* tailwind.css:1901-1902 */
+  --lb-arrow-inset: 1rem; /* tailwind.css:2421, 2425 */
+
+  /* Счётчик — канон tailwind.css:2054-2070. */
+  --lb-counter-size: 0.8125rem; /* tailwind.css:2069 */
+  --lb-counter-weight: 700; /* tailwind.css:2068 */
+  --lb-counter-height: 1.875rem; /* tailwind.css:2059 */
+  --lb-counter-padding-x: 0.75rem; /* tailwind.css:2060 */
+  --lb-counter-radius: 0.9375rem; /* tailwind.css:2063 */
+  --lb-counter-bg: rgba(0, 0, 0, 0.5); /* tailwind.css:2064 */
+  --lb-counter-blur: 0.5rem; /* tailwind.css:2065-2066 */
+}
+
+/*
+ * 2.2 — кнопки библиотеки в виде кнопки поверх фотографии.
+ * display НЕ трогаем: им библиотека прячет кнопку увеличения на кадрах,
+ * которые нельзя зумить (.pswp__button--zoom + .pswp--zoom-allowed).
+ * Глиф центрируется абсолютно, флекс для этого не нужен.
+ */
+.pswp__button {
+  width: var(--lb-control-size);
+  height: var(--lb-control-size);
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-control);
+  background: var(--lb-control-bg);
+  -webkit-backdrop-filter: blur(var(--lb-control-blur));
+  backdrop-filter: blur(var(--lb-control-blur));
+  color: var(--color-white);
+  opacity: 1;
+  cursor: pointer;
+  transition:
+    transform var(--lb-control-press-ms) ease,
+    background var(--lb-control-bg-ms) ease;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+/* Библиотека гасит фон и переход на всех трёх состояниях — возвращаем. */
+.pswp__button:hover,
+.pswp__button:active,
+.pswp__button:focus {
+  background: var(--lb-control-bg);
+  transition:
+    transform var(--lb-control-press-ms) ease,
+    background var(--lb-control-bg-ms) ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .pswp__button:hover {
+    background: var(--lb-control-bg-hover);
+  }
+}
+
+.pswp__button:active {
+  background: var(--lb-control-bg-active);
+  transform: scale(var(--scale-press-icon));
+}
+
+.pswp__button:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 var(--lb-ring-inner) var(--color-white),
+    0 0 0 var(--lb-ring-outer) var(--color-ink);
+}
+
+/* Глиф по центру кнопки; библиотека позиционирует его смещениями. */
+.pswp__icn {
+  inset: 0;
+  width: var(--lb-icon-size);
+  height: var(--lb-icon-size);
+  margin: auto;
+}
+
+/* Обводка глифа нужна была на прозрачном фоне — на нашем она мусор. */
+.pswp__icn-shadow {
+  display: none;
+}
+
+/* Закрытие — отступ от края как у канон-кнопки, с учётом выреза. */
+.pswp__button--close {
+  margin-top: calc(env(safe-area-inset-top) + var(--lb-edge-inset));
+  margin-right: var(--lb-edge-inset);
+}
+
+/* Стрелки — габарит и вынос от края как у .shop-gallery-nav. */
+.pswp__button--arrow {
+  width: var(--lb-control-size);
+  height: var(--lb-control-size);
+  margin-top: calc(var(--lb-control-size) / -2);
+}
+
+.pswp__button--arrow .pswp__icn {
+  inset: 0;
+  width: var(--lb-icon-size);
+  height: var(--lb-icon-size);
+  margin: auto;
+}
+
+/*
+ * Стрелки несут .pswp__hide-on-close — библиотека затухает ими UI при
+ * открытии/закрытии и перебивает наш переход. Совмещаем оба: затухание
+ * остаётся на её длительности, нажатие и фон — на канон-длительностях.
+ */
+.pswp .pswp__button--arrow.pswp__hide-on-close {
+  transition:
+    opacity var(--pswp-transition-duration) ease,
+    transform var(--lb-control-press-ms) ease,
+    background var(--lb-control-bg-ms) ease;
+}
+
+.pswp__button--arrow--prev {
+  left: var(--lb-arrow-inset);
+}
+
+.pswp__button--arrow--next {
+  right: var(--lb-arrow-inset);
+}
+
+/* 2.3 — счётчик кадров: плашка канон-счётчика карусели. Позиция —
+   библиотечная, канон-угол сюда не переносим. */
+.pswp__counter {
+  margin-top: calc(env(safe-area-inset-top) + var(--lb-edge-inset));
+  margin-inline-start: var(--lb-edge-inset);
+  display: inline-flex;
+  align-items: center;
+  height: var(--lb-counter-height);
+  padding: 0 var(--lb-counter-padding-x);
+  border-radius: var(--lb-counter-radius);
+  background: var(--lb-counter-bg);
+  -webkit-backdrop-filter: blur(var(--lb-counter-blur));
+  backdrop-filter: blur(var(--lb-counter-blur));
+  color: var(--color-white);
+  font-size: var(--lb-counter-size);
+  font-weight: var(--lb-counter-weight);
+  font-variant-numeric: tabular-nums;
+  text-shadow: none;
+  opacity: 1;
+}
+
+/*
+ * Видеокадр. Размеров у видео нет, поэтому библиотека растягивает holder
+ * на весь вьюпорт — вписываем кадр внутрь него. Фон под видео тот же, что
+ * у подложки, чтобы поля вокруг кадра не читались отдельным прямоугольником.
+ * Нативные контролы не трогаем.
+ */
+.shop-lightbox-video {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--pswp-bg);
+}
+
+.shop-lightbox-video video {
+  max-width: 100%;
+  max-height: 100%;
+  background: var(--pswp-bg);
+  object-fit: contain;
+}
+
+/* 2.5 — собственные анимации библиотеки при reduced-motion. */
+@media (prefers-reduced-motion: reduce) {
+  .pswp,
+  .pswp__bg,
+  .pswp__container,
+  .pswp__item,
+  .pswp__zoom-wrap,
+  .pswp__img,
+  .pswp__button,
+  .pswp__top-bar {
+    transition: none !important;
+    animation: none !important;
+  }
+}

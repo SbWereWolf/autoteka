@@ -16,7 +16,7 @@ type RawCategory = {
 };
 
 type RawFeature = {
-  id: string;
+  id: number;
   title: string;
   sort: number;
 };
@@ -27,7 +27,7 @@ type RawCityCatalogItem = {
   title: string;
   thumbUrl?: string;
   categoryIds: string[];
-  featureIds: string[];
+  featureIds: number[];
 };
 
 type RawShop = RawCityCatalogItem & {
@@ -91,6 +91,8 @@ type RawPromotion = {
 const cities: RawCity[] = [
   { code: "barnaul", title: "Барнаул", sort: 1 },
   { code: "nizhny", title: "Нижний Новгород", sort: 2 },
+  { code: "kemerovo", title: "Кемерово", sort: 3 },
+  { code: "mediatest", title: "Медиа-тест", sort: 4 },
 ];
 
 const categories: RawCategory[] = [
@@ -101,8 +103,9 @@ const categories: RawCategory[] = [
 ];
 
 const features: RawFeature[] = [
-  { id: "promo", title: "Акции", sort: 1 },
-  { id: "pickup", title: "Самовывоз", sort: 2 },
+  { id: 1, title: "Самая быстрая доставка", sort: 1 },
+  { id: 2, title: "Акции", sort: 2 },
+  { id: 3, title: "Круглосуточно", sort: 3 },
 ];
 
 const shopsByCity: Record<string, RawCityCatalogItem[]> = {
@@ -113,14 +116,21 @@ const shopsByCity: Record<string, RawCityCatalogItem[]> = {
       title: "CarsHelps",
       thumbUrl: "/generated/gen-1x1-x1_0-v1-512x512.png",
       categoryIds: ["domestic", "korean"],
-      featureIds: ["promo"],
+      featureIds: [],
     },
     {
       code: "barnaul-02",
       cityId: "barnaul",
       title: "Orange Parts",
       categoryIds: ["japanese"],
-      featureIds: ["pickup"],
+      featureIds: [2],
+    },
+    {
+      code: "barnaul-03",
+      cityId: "barnaul",
+      title: "Zenith Parts",
+      categoryIds: ["domestic"],
+      featureIds: [1],
     },
   ],
   nizhny: [
@@ -130,12 +140,22 @@ const shopsByCity: Record<string, RawCityCatalogItem[]> = {
       title: "Dark Green Motors",
       thumbUrl: "/generated/gen-1x1-x1_25-v1-640x640.png",
       categoryIds: ["european"],
-      featureIds: ["promo"],
+      featureIds: [1, 2],
+    },
+  ],
+  mediatest: [
+    {
+      code: "mediatest-404",
+      cityId: "mediatest",
+      title: "Broken Logo Shop",
+      thumbUrl: "/generated/missing-logo.png",
+      categoryIds: ["domestic"],
+      featureIds: [],
     },
   ],
 };
 
-const shops: Record<string, RawShop> = Object.fromEntries(
+const catalogShops: Record<string, RawShop> = Object.fromEntries(
   Object.values(shopsByCity)
     .flat()
     .map((item, index) => [
@@ -150,8 +170,7 @@ const shops: Record<string, RawShop> = Object.fromEntries(
           index === 0
             ? "27 лет помогаем автовладельцам находить нужные запчасти."
             : `Описание магазина ${item.title} по новому макету.`,
-        scheduleNote:
-          index === 0 ? "Время работы\n09:00 - 20:00" : "",
+        scheduleNote: index === 0 ? "Время работы\n09:00 - 20:00" : "",
         siteUrl:
           index === 0 ? "carshelps.ru" : "https://orange.example",
         latitude: "53.3474",
@@ -164,7 +183,8 @@ const shops: Record<string, RawShop> = Object.fromEntries(
           {
             id: `${item.code}-image-1`,
             type: "image",
-            src: item.thumbUrl ?? "/generated/gen-1x1-x1_0-v1-512x512.png",
+            src:
+              item.thumbUrl ?? "/generated/gen-1x1-x1_0-v1-512x512.png",
             sort: 10,
           },
           {
@@ -180,10 +200,46 @@ const shops: Record<string, RawShop> = Object.fromEntries(
     ]),
 );
 
+const shops: Record<string, RawShop> = {
+  ...catalogShops,
+  "mediatest-empty": {
+    code: "mediatest-empty",
+    cityId: "mediatest",
+    title: "Empty Gallery Shop",
+    slogan: "",
+    description: "Магазин без загруженной галереи.",
+    scheduleNote: "",
+    siteUrl: "",
+    latitude: null,
+    longitude: null,
+    categoryIds: [],
+    featureIds: [],
+    galleryImages: [],
+    galleryItems: [],
+  },
+  // slogan === title — слоган должен скрываться (дедуп).
+  "mediatest-slogan": {
+    code: "mediatest-slogan",
+    cityId: "mediatest",
+    title: "Slogan Echo",
+    slogan: "Slogan Echo",
+    description: "Магазин, где слоган дублирует название.",
+    scheduleNote: "",
+    siteUrl: "",
+    latitude: null,
+    longitude: null,
+    categoryIds: [],
+    featureIds: [],
+    galleryImages: [],
+    galleryItems: [],
+  },
+};
+
 const contactsByShop: Record<string, Record<string, string[]>> = {
   "barnaul-01": {
     phone: ["+7 (3852) 000-001", "+7 (3852) 000-002"],
     address: ["Барнаул, Павловский тракт, 41"],
+    email: ["info@carshelps.ru"],
     whatsapp: ["https://wa.me/73852000001"],
   },
   "barnaul-02": {
@@ -202,7 +258,8 @@ const promotionsByShop: Record<string, RawPromotion[]> = {
       id: "promo-1",
       code: "barnaul-01-summer-sale",
       title: "Летняя распродажа",
-      description: "Скидки на расходники и аккумуляторы до конца месяца.",
+      description:
+        "Скидки на расходники и аккумуляторы до конца месяца.",
       startDate: "2026-03-01",
       endDate: "2026-03-31",
       galleryImages: [
@@ -245,6 +302,28 @@ const promotionsByShop: Record<string, RawPromotion[]> = {
       galleryItems: [],
     },
   ],
+  "barnaul-02": [
+    {
+      id: "promo-3",
+      code: "barnaul-02-spring",
+      title: "Весеннее ТО со скидкой",
+      description: "Комплексная диагностика подвески и тормозов.",
+      startDate: "2026-04-01",
+      endDate: "2026-04-30",
+      galleryImages: [],
+      galleryItems: [],
+    },
+    {
+      id: "promo-4",
+      code: "barnaul-02-tyres",
+      title: "Шиномонтаж −20%",
+      description: "На сезонную смену резины до конца месяца.",
+      startDate: "2026-04-05",
+      endDate: "2026-04-25",
+      galleryImages: [],
+      galleryItems: [],
+    },
+  ],
   "nizhny-01": [],
 };
 
@@ -266,6 +345,7 @@ type ErrorScenario = {
   promotionsByCode?: Record<string, 404 | 422 | 500>;
   contactsByCode?: Record<string, 404 | 422 | 500>;
   delaysMs?: {
+    cityCatalogByCode?: Record<string, number>;
     promotionByCode?: Record<string, number>;
     shopByCode?: Record<string, number>;
   };
@@ -299,6 +379,13 @@ export async function installApiMocks(
   await page.route("**/generated/**", async (route) => {
     const url = new URL(route.request().url());
     const pathname = url.pathname.toLowerCase();
+
+    if (pathname.includes("missing-")) {
+      return route.fulfill({
+        status: 404,
+        body: "",
+      });
+    }
 
     if (pathname.endsWith(".mp4")) {
       return route.fulfill({
@@ -350,6 +437,11 @@ export async function installApiMocks(
       const city = cities.find((item) => item.code === cityCode);
       if (!city) {
         return notFound(route, "City Not Found");
+      }
+
+      const delayMs = scenario.delaysMs?.cityCatalogByCode?.[cityCode];
+      if (typeof delayMs === "number" && delayMs > 0) {
+        await new Promise((resolve) => setTimeout(resolve, delayMs));
       }
 
       return json(route, {
@@ -434,8 +526,7 @@ export async function installApiMocks(
         return notFound(route, "Shop Not Found");
       }
 
-      const requestedTypes =
-        (request.postDataJSON() as string[]) ?? [];
+      const requestedTypes = (request.postDataJSON() as string[]) ?? [];
       const available = contactsByShop[shopCode] ?? {};
       const response: Record<string, string[]> = {};
 

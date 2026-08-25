@@ -1,4 +1,6 @@
 import { beforeAll, describe, expect, it } from "vitest";
+import { HttpApiClient } from "../src/api/HttpApiClient";
+import { FEATURE } from "../src/constants/features";
 
 type City = {
   code: string;
@@ -165,6 +167,32 @@ describe("TC-API-INTEGRATION", () => {
       for (const value of values) {
         expect(typeof value).toBe("string");
       }
+    }
+  });
+
+  it("getFeatureList: id строки и покрывают FEATURE-карту", async () => {
+    if (apiUnavailable) return;
+    const client = new HttpApiClient(API_BASE_URL);
+    const features = await client.getFeatureList();
+    expect(features.length).toBeGreaterThan(0);
+    for (const feature of features) {
+      expect(typeof feature.id).toBe("string");
+      expect(feature.id.length).toBeGreaterThan(0);
+    }
+    const ids = new Set(features.map((feature) => feature.id));
+    expect(ids.has(String(FEATURE.PROMO))).toBe(true);
+    expect(ids.has(String(FEATURE.FAST_DELIVERY))).toBe(true);
+    expect(ids.has(String(FEATURE.ALWAYS_OPEN))).toBe(true);
+  });
+
+  it("getCategoryList: id нормализованы в непустые строки", async () => {
+    if (apiUnavailable) return;
+    const client = new HttpApiClient(API_BASE_URL);
+    const categories = await client.getCategoryList();
+    expect(categories.length).toBeGreaterThan(0);
+    for (const category of categories) {
+      expect(typeof category.id).toBe("string");
+      expect(category.id.length).toBeGreaterThan(0);
     }
   });
 });

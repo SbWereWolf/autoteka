@@ -13,6 +13,21 @@ export const SHOP_ACCEPTABLE_CONTACT_TYPES = [
 export type ShopAcceptableContactType =
   (typeof SHOP_ACCEPTABLE_CONTACT_TYPES)[number];
 
+export type MobileContactRow = {
+  key: string;
+  kind: "phone" | "email" | "address";
+  text: string;
+  href: string;
+  external?: boolean;
+};
+
+export type PrimaryContactActions = {
+  phoneHref?: string;
+  telegramHref?: string;
+  whatsappHref?: string;
+  addressText?: string;
+};
+
 export type ContactRow =
   | {
       key: string;
@@ -98,5 +113,83 @@ export function useShopContactRows(contacts: Ref<ContactsResponse>) {
     return rows;
   });
 
-  return { contactRows };
+  const primaryContactActions = computed((): PrimaryContactActions => {
+    const result: PrimaryContactActions = {};
+
+    const firstOf = (type: string) =>
+      (contacts.value[type] ?? []).find((value) => value.trim() !== "");
+
+    const phone = firstOf("phone");
+    if (phone) {
+      const href = hrefFor("phone", phone);
+      if (href) {
+        result.phoneHref = href;
+      }
+    }
+
+    const telegram = firstOf("telegram");
+    if (telegram) {
+      const href = hrefFor("telegram", telegram);
+      if (href) {
+        result.telegramHref = href;
+      }
+    }
+
+    const whatsapp = firstOf("whatsapp");
+    if (whatsapp) {
+      const href = hrefFor("whatsapp", whatsapp);
+      if (href) {
+        result.whatsappHref = href;
+      }
+    }
+
+    const address = firstOf("address");
+    if (address) {
+      result.addressText = address;
+    }
+
+    return result;
+  });
+
+  // Контент-секция карточки на мобиле (канон ShopMain): только
+  // телефон/email/адрес — иконка + текст, без tg/wa и без навигатор-кнопки.
+  // contactRows (десктоп + action-бар) не трогаем.
+  const mobileContactRows = computed((): MobileContactRow[] => {
+    const rows: MobileContactRow[] = [];
+    const data = contacts.value;
+
+    for (const value of data.phone ?? []) {
+      const text = String(value ?? "").trim();
+      if (!text) continue;
+      const href = hrefFor("phone", text);
+      if (href) {
+        rows.push({ key: `phone:${text}`, kind: "phone", text, href });
+      }
+    }
+
+    for (const value of data.email ?? []) {
+      const text = String(value ?? "").trim();
+      if (!text) continue;
+      const href = hrefFor("email", text);
+      if (href) {
+        rows.push({ key: `email:${text}`, kind: "email", text, href });
+      }
+    }
+
+    for (const value of data.address ?? []) {
+      const text = String(value ?? "").trim();
+      if (!text) continue;
+      rows.push({
+        key: `address:${rows.length}:${text}`,
+        kind: "address",
+        text,
+        href: buildYandexMapsWebUrl(text),
+        external: true,
+      });
+    }
+
+    return rows;
+  });
+
+  return { contactRows, primaryContactActions, mobileContactRows };
 }

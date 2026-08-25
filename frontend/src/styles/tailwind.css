@@ -1,9 +1,68 @@
 @import "tailwindcss";
+
+@custom-variant hover {
+  &:hover {
+    @media (hover: hover) and (pointer: fine) {
+      @slot;
+    }
+  }
+}
+
+/*
+ * Design tokens — source of truth: _prototype/ui-kit.jsx (specs.jsx TokensCard +
+ * shared.jsx C palette). Names follow the spec canon (brand, ink, page,
+ * surface-muted, chip-selected-bg, etc.); hover variants from ui-kit.jsx
+ * "HOVER-слой" block.
+ */
+@theme {
+  --font-sans:
+    "Manrope Variable", -apple-system, BlinkMacSystemFont, "Segoe UI",
+    Roboto, Helvetica, Arial, sans-serif;
+
+  --color-brand: #d61d00;
+  --color-brand-pressed: #bc1a00;
+  --color-brand-hover: #c91c00;
+  --color-ink: #0f0f10;
+  --color-focus-ink: #0f0f10;
+  --color-secondary-text: #8e8e93;
+  --color-disabled-text: #78787c;
+  --color-disabled-fill: transparent;
+  --color-page: #f6f6f9;
+  --color-page-pressed: #e7e7ec;
+  --color-page-hover: #efeff3;
+  --color-surface-muted: #ededf1;
+  --color-surface-muted-pressed: #dfdfe5;
+  --color-surface-muted-hover: #e6e6eb;
+  --color-chip-selected-bg: #fdece9;
+  --color-chip-selected-pressed-bg: #f7d9d2;
+  --color-chip-selected-hover-bg: #fae3de;
+  --color-white: #ffffff;
+  --color-skeleton-shimmer: rgba(255, 255, 255, 0.65);
+  --color-overlay: rgb(15 15 16 / 0.25);
+
+  --radius-control: 12px;
+  --radius-cta: 20px;
+  --radius-card: 20px;
+
+  --shadow-card:
+    0 1px 2px rgba(15, 15, 16, 0.025),
+    0 8px 20px -16px rgba(15, 15, 16, 0.12);
+
+  --shadow-sidebar:
+    0 1px 2px rgba(15, 15, 16, 0.025),
+    0 8px 24px -18px rgba(15, 15, 16, 0.14);
+
+  --scale-press-button: 0.97;
+  --scale-press-icon: 0.92;
+  --scale-press-row: 0.99;
+}
+
 @config "../../tailwind.config.js";
 
 @layer base {
   :root {
     color-scheme: light;
+    --shop-actionbar-h: calc(72px + env(safe-area-inset-bottom));
   }
 
   html {
@@ -17,7 +76,8 @@
 
   body {
     margin: 0;
-    font-family: "Trebuchet MS", "Segoe UI", Arial, sans-serif;
+    font-family: var(--font-sans);
+    font-weight: 500;
     background: #ffffff;
     overflow-x: auto;
   }
@@ -27,8 +87,14 @@
   }
 
   :focus-visible {
-    outline: 0.125rem solid var(--focus);
-    outline-offset: 0.125rem;
+    outline: none;
+    box-shadow:
+      0 0 0 2px #ffffff,
+      0 0 0 4px var(--focus);
+  }
+
+  button:not(:disabled) {
+    cursor: pointer;
   }
 }
 
@@ -105,52 +171,176 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    min-height: 3.6rem;
+    height: 3.25rem;
+    padding: 0.25rem 0.75rem 0.25rem 0.25rem;
+    border-bottom: 1px solid var(--color-page);
+    background: transparent;
+  }
+
+  .catalog-topbar-city {
+    display: none;
+  }
+
+  /* Десктоп-шапка — канон dk-header (_prototype/desktop-kit.jsx):
+     sticky 64, band ≤1600 (центр, как у шелла), логотип + город-pill слева.
+     Мобильная шапка (база .catalog-topbar) не затронута. */
+  @media (min-width: 64rem) {
+    .catalog-topbar {
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      height: 4rem;
+      max-width: 100rem;
+      margin: 0 auto;
+      padding: 0 2rem;
+      justify-content: flex-start;
+      gap: 1.25rem;
+      background: var(--color-white);
+      border-bottom: 1px solid var(--color-surface-muted);
+    }
+
+    .catalog-topbar-city {
+      display: inline-flex;
+    }
+  }
+
+  /* Город-pill (канон dk-pill) — десктоп-шапка, поповер выбора города. */
+  .catalog-city-pill-root {
+    position: relative;
+    flex: 0 0 auto;
+  }
+
+  .catalog-city-pill {
+    height: 2.75rem;
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0 0.875rem;
+    border-radius: var(--radius-control);
+    border: 1px solid var(--color-surface-muted);
+    background: var(--color-white);
+    color: var(--color-ink);
+    font-weight: 700;
+    font-size: 0.875rem;
+    white-space: nowrap;
+    cursor: pointer;
+    transition:
+      background 120ms ease,
+      border-color 120ms ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .catalog-city-pill-pin {
+    color: var(--color-secondary-text);
+  }
+
+  .catalog-city-pill-chevron {
+    color: var(--color-secondary-text);
+    transition: transform 160ms ease;
+  }
+
+  .catalog-city-pill[aria-expanded="true"] {
+    border-color: var(--color-ink);
+  }
+
+  .catalog-city-pill[aria-expanded="true"] .catalog-city-pill-chevron {
+    transform: rotate(180deg);
+  }
+
+  .catalog-city-pill:focus-visible {
+    outline: none;
+    box-shadow:
+      0 0 0 2px var(--color-white),
+      0 0 0 4px var(--color-ink);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .catalog-city-pill:hover {
+      background: var(--color-page);
+      border-color: var(--color-surface-muted-hover);
+    }
+  }
+
+  .catalog-city-pill-panel {
+    position: absolute;
+    top: calc(100% + 0.5rem);
+    left: 0;
+    min-width: 13.75rem;
+    box-sizing: border-box;
+    background: var(--color-white);
+    border: 1px solid var(--color-surface-muted);
+    border-radius: 0.875rem;
+    box-shadow: var(--shadow-sidebar);
+    padding: 0.375rem;
+    z-index: 60;
+    max-height: 21rem;
+    overflow-y: auto;
+  }
+
+  .catalog-city-pill-option {
+    width: 100%;
+    min-height: 2.75rem;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0 0.75rem;
+    border: none;
+    border-radius: 0.625rem;
+    background: transparent;
+    color: var(--color-ink);
+    font-weight: 600;
+    font-size: 0.875rem;
+    text-align: left;
+    cursor: pointer;
+    transition: background 120ms ease;
+  }
+
+  .catalog-city-pill-option[aria-checked="true"] {
+    color: var(--color-brand);
+    font-weight: 700;
+  }
+
+  .catalog-city-pill-option:focus-visible {
+    outline: none;
+    box-shadow: inset 0 0 0 2px var(--color-ink);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .catalog-city-pill-option:hover {
+      background: var(--color-page);
+    }
   }
 
   .catalog-icon-button {
     display: inline-flex;
-    flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 0.22rem;
-    width: 2.9rem;
-    height: 2.9rem;
-    border: 0.0625rem solid rgba(148, 163, 184, 0.22);
-    border-radius: 0.9rem;
-    background: rgba(255, 255, 255, 0.92);
-    box-shadow: none;
-    color: var(--text);
+    width: 2.75rem;
+    height: 2.75rem;
+    border: none;
+    border-radius: var(--radius-control);
+    background: transparent;
+    color: var(--color-ink);
     cursor: pointer;
-    backdrop-filter: blur(0.2rem);
-    transition: transform 160ms ease,
-    background-color 160ms ease,
-    border-color 160ms ease,
-    box-shadow 160ms ease,
-    opacity 160ms ease;
+    transition:
+      transform 120ms ease,
+      background 120ms ease;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
   }
 
   @media (hover: hover) and (pointer: fine) {
     .catalog-icon-button:hover {
-      background: rgba(255, 255, 255, 0.98);
-      border-color: rgba(100, 116, 139, 0.38);
-      box-shadow: 0 0.55rem 1.3rem rgba(148, 163, 184, 0.18);
-      transform: scale(var(--transform-scale-regular));
+      background: var(--color-surface-muted-hover);
     }
   }
 
   .catalog-icon-button:active {
-    background: rgba(241, 245, 249, 0.98);
-    border-color: rgba(71, 85, 105, 0.34);
-    transform: scale(var(--transform-scale-strong));
-  }
-
-  .catalog-hamburger-line {
-    display: block;
-    width: 1.6rem;
-    height: 0.125rem;
-    border-radius: 999px;
-    background: #0f172a;
+    background: var(--color-surface-muted-pressed);
+    transform: scale(var(--scale-press-icon));
   }
 
   .catalog-brand-link {
@@ -177,54 +367,384 @@
 
   .catalog-brand-logo {
     display: block;
-    height: 2.95rem;
+    height: 1.1875rem;
     width: auto;
   }
 
   .catalog-grid-shell {
     position: relative;
     container-type: inline-size;
-    padding-top: 4.5rem;
-    padding-bottom: var(--catalog-grid-bottom-padding);
+    margin-inline: auto;
+    max-width: 80rem;
+    padding: 0.5rem 0.75rem calc(6rem + env(safe-area-inset-bottom));
+  }
+
+  .catalog-sidebar-slot {
+    display: none;
+  }
+
+  .catalog-main {
+    min-width: 0;
+  }
+
+  @media (min-width: 64rem) {
+    .catalog-grid-shell {
+      max-width: 100rem;
+      padding: 1.5rem 2rem calc(6rem + env(safe-area-inset-bottom));
+      display: grid;
+      grid-template-columns: 280px minmax(0, 1fr);
+      gap: 2rem;
+      align-items: start;
+    }
+
+    .catalog-sidebar-slot {
+      display: block;
+      position: sticky;
+      top: 5.5rem;
+      align-self: start;
+    }
+  }
+
+  .catalog-head {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    padding: 1rem 0 0.75rem;
+  }
+
+  .catalog-title {
+    margin: 0;
+    font-size: 1.0625rem;
+    font-weight: 700;
+    line-height: 1.2;
+    color: var(--color-ink);
+  }
+
+  .catalog-city {
+    font-size: 0.8125rem;
+    font-weight: 500;
+    line-height: 1.2;
+    color: var(--color-secondary-text);
+  }
+
+  @media (min-width: 64rem) {
+    /* Канон dk-h1 (_prototype/desktop-kit.jsx): 24px в контент-колонке. */
+    .catalog-title {
+      font-size: 1.5rem;
+    }
+
+    .catalog-city {
+      font-size: 0.875rem;
+    }
+  }
+
+  .catalog-filter-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .catalog-filter-chips {
+    display: flex;
+    gap: 0.5rem;
+    flex: 1 1 auto;
+    min-width: 0;
+    margin: 0;
+    padding: 0.5rem 0.75rem;
+    list-style: none;
+    overflow-x: auto;
+    scroll-padding-left: 0.75rem;
+    scroll-padding-right: 2rem;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    -webkit-overflow-scrolling: touch;
+    -webkit-mask-image:
+      linear-gradient(90deg, #000 calc(100% - 1.5rem), transparent);
+    mask-image:
+      linear-gradient(90deg, #000 calc(100% - 1.5rem), transparent);
+  }
+
+  .catalog-filter-chips::-webkit-scrollbar {
+    display: none;
+  }
+
+  .catalog-filter-chip {
+    flex: 0 0 auto;
+    max-width: 22.5rem;
+    transition:
+      opacity 220ms ease,
+      max-width 220ms ease,
+      transform 220ms ease,
+      margin 220ms ease;
+  }
+
+  .catalog-filter-chip--out {
+    opacity: 0;
+    max-width: 0;
+    margin-left: -0.5rem;
+    transform: scale(0.92);
+    pointer-events: none;
+  }
+
+  .catalog-filter-chip-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    height: 2.75rem;
+    padding: 0 0.75rem;
+    border: 1px solid var(--color-brand);
+    border-radius: var(--radius-control);
+    background: var(--color-chip-selected-bg);
+    color: var(--color-brand);
+    font-weight: 700;
+    font-size: 0.875rem;
+    line-height: 1;
+    white-space: nowrap;
+    cursor: pointer;
+    transition:
+      transform 120ms ease,
+      background 120ms ease;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+
+  .catalog-filter-chip-btn:active {
+    background: var(--color-chip-selected-pressed-bg);
+    transform: scale(var(--scale-press-button));
+  }
+
+  .catalog-filter-chip-btn:focus-visible {
+    outline: none;
+    box-shadow:
+      0 0 0 2px var(--color-white),
+      0 0 0 4px var(--color-ink);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .catalog-filter-chip-btn:hover {
+      background: var(--color-chip-selected-hover-bg);
+    }
+  }
+
+  .catalog-filter-chip-x {
+    font-size: 1.0625rem;
+    line-height: 1;
+    font-weight: 600;
+    opacity: 0.9;
+  }
+
+  .catalog-filter-clear {
+    flex: 0 0 auto;
+    width: 2.75rem;
+    height: 2.75rem;
+    margin-right: 0.25rem;
+    padding: 0;
+    border: none;
+    border-radius: 9999px;
+    background: var(--color-surface-muted);
+    color: var(--color-ink);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition:
+      transform 100ms ease,
+      background 120ms ease;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+
+  .catalog-filter-clear:active {
+    background: var(--color-surface-muted-pressed);
+    transform: scale(var(--scale-press-icon));
+  }
+
+  .catalog-filter-clear:focus-visible {
+    outline: none;
+    box-shadow:
+      0 0 0 2px var(--color-white),
+      0 0 0 4px var(--color-ink);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .catalog-filter-clear:hover {
+      background: var(--color-surface-muted-hover);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .catalog-filter-chip,
+    .catalog-filter-chip-btn,
+    .catalog-filter-clear {
+      transition: none;
+    }
+    .catalog-filter-chip-btn:active,
+    .catalog-filter-clear:active {
+      transform: none;
+    }
   }
 
   .catalog-grid {
     display: grid;
-    grid-template-columns: repeat(
-      var(--catalog-grid-columns-mobile),
-      minmax(0, 1fr)
-    );
-    gap: var(--catalog-grid-gap);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
   }
 
-  @media (min-width: 48rem) {
+  @media (min-width: 40rem) {
     .catalog-grid {
-      grid-template-columns: repeat(
-        var(--catalog-grid-columns-3xl),
-        minmax(0, 1fr)
-      );
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 1rem;
     }
   }
 
-  @media (min-width: 80rem) {
+  @media (min-width: 64rem) {
     .catalog-grid {
-      grid-template-columns: repeat(
-        var(--catalog-grid-columns-7xl),
-        minmax(0, 1fr)
-      );
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 1rem;
+    }
+  }
+
+  /* 90rem = 1440px = канон-брейк 3↔4 колонки (_prototype/desktop-kit.jsx
+     @container 1440). Идиома @media оставлена намеренно — поведение
+     идентично, конверсия в @container = риск без выгоды. */
+  @media (min-width: 90rem) {
+    .catalog-grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+
+  .catalog-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 1rem;
+    padding: 2.5rem 2rem;
+  }
+
+  /* Десктоп: канон DesktopState (_prototype/desktop-catalog.jsx dkStateWrap +
+     DkMedallion 88) — медальон 88, центрирование, min-height 420. */
+  @media (min-width: 64rem) {
+    .catalog-state {
+      min-height: 26.25rem;
+      justify-content: center;
+    }
+  }
+
+  .catalog-state-medallion {
+    width: 6rem;
+    height: 6rem;
+    border-radius: 9999px;
+    background: var(--color-surface-muted);
+    display: grid;
+    place-items: center;
+    color: var(--color-secondary-text);
+  }
+
+  /* Десктоп: канон-медальон 88px (DkMedallion). Правило после базового —
+     одинаковая специфичность, побеждает порядок. */
+  @media (min-width: 64rem) {
+    .catalog-state-medallion {
+      width: 5.5rem;
+      height: 5.5rem;
+    }
+  }
+
+  .catalog-state-glyph {
+    display: block;
+  }
+
+  .catalog-state-title {
+    margin: 0;
+    font-size: 1.375rem;
+    font-weight: 700;
+    line-height: 1.2;
+    color: var(--color-ink);
+  }
+
+  .catalog-state-text {
+    margin: 0;
+    max-width: 18.75rem;
+    font-size: 0.9375rem;
+    font-weight: 500;
+    line-height: 1.45;
+    color: var(--color-secondary-text);
+    text-wrap: pretty;
+  }
+
+  .catalog-state-extras {
+    align-self: stretch;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 0.5rem;
+  }
+
+  .catalog-state-cta {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 3.5rem;
+    padding: 0 1.75rem;
+    border: none;
+    border-radius: var(--radius-cta);
+    background: var(--color-brand);
+    color: var(--color-white);
+    font-size: 0.9375rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition:
+      transform 120ms ease,
+      background 120ms ease;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+
+  .catalog-state-cta:active {
+    background: var(--color-brand-pressed);
+    transform: scale(var(--scale-press-button));
+  }
+
+  .catalog-state-cta:focus-visible {
+    outline: none;
+    box-shadow:
+      0 0 0 2px var(--color-white),
+      0 0 0 4px var(--color-ink);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .catalog-state-cta:hover {
+      background: var(--color-brand-hover);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .catalog-state-cta {
+      transition: background 120ms ease;
+    }
+    .catalog-state-cta:active {
+      transform: none;
     }
   }
 
   .catalog-shop-tile {
     position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
     width: 100%;
     aspect-ratio: 1 / 1;
-    overflow: hidden;
-    border: none;
-    border-radius: 1.6rem;
-    background: linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%);
-    box-shadow: none;
+    padding: 1.5rem 1rem 1rem;
+    border: 1px solid var(--color-surface-muted);
+    border-radius: var(--radius-card);
+    background: var(--color-white);
+    box-shadow: var(--shadow-card);
     cursor: pointer;
+    text-decoration: none;
     transition: transform 180ms ease,
     box-shadow 180ms ease,
     filter 180ms ease,
@@ -233,121 +753,165 @@
 
   @media (hover: hover) and (pointer: fine) {
     .catalog-shop-tile:hover {
-      transform: scale(var(--transform-scale-weak));
-      box-shadow: 0 1rem 1.8rem rgba(15, 23, 42, 0.08);
+      box-shadow: 0 1rem 1.8rem rgba(15, 15, 16, 0.08);
     }
   }
 
   .catalog-shop-tile:active {
-    transform: scale(var(--transform-scale-regular));
+    background: var(--color-page);
+    transform: scale(var(--scale-press-button));
+  }
+
+  .catalog-shop-tile-logo {
+    display: flex;
+    flex: 1 1 auto;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 0;
   }
 
   .catalog-shop-tile-media {
     display: block;
-    width: 100%;
-    height: 100%;
+    max-width: 100%;
+    max-height: 5.25rem;
+    width: auto;
+    height: auto;
     object-fit: contain;
     object-position: center;
   }
 
   .catalog-shop-tile-placeholder {
-    position: absolute;
-    inset: 0;
     display: grid;
     place-items: center;
-    background: inherit;
-    color: #94a3b8;
+    width: 100%;
+    height: 100%;
+    color: var(--color-secondary-text);
     font-size: 0.875rem;
     font-weight: 700;
+    text-align: center;
     text-transform: uppercase;
     letter-spacing: 0.08em;
   }
 
-  .catalog-feature-sticky-shell {
-    position: fixed;
-    left: 50%;
-    transform: translateX(-50%);
-    bottom: max(5vh, calc(env(safe-area-inset-bottom) + 1rem));
-    z-index: 20;
+  .catalog-shop-tile-title {
+    width: 100%;
+    overflow: hidden;
+    color: var(--color-ink);
+    font-size: 0.8125rem;
+    font-weight: 700;
+    line-height: 1.2;
+    text-align: center;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .catalog-skeleton-tile {
+    padding: 1.5rem 1rem 1rem;
     display: flex;
-    justify-content: center;
-    width: min(calc(100% - 1rem), calc(var(--content-max-width) - 1rem));
-    pointer-events: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
   }
 
-  .catalog-feature-sticky-control {
-    pointer-events: auto;
-    width: min(90%, calc(var(--catalog-feature-max-width) * 0.9));
-    min-height: calc(var(--catalog-feature-min-height) * 0.9);
-    border-radius: var(--catalog-feature-radius);
-    box-shadow: none;
-    background: rgba(255, 255, 255, 0.98);
-    border: 0.0625rem solid rgba(203, 213, 225, 0.7);
-    padding: 0.16rem 0.28rem;
-    transition: transform 160ms ease,
-    border-color 160ms ease,
-    box-shadow 160ms ease,
-    background-color 160ms ease;
+  .catalog-skel {
+    position: relative;
+    overflow: hidden;
+    background: var(--color-surface-muted);
   }
 
-  @media (hover: hover) and (pointer: fine) {
-    .catalog-feature-sticky-control:hover {
-      border-color: rgba(148, 163, 184, 0.62);
-      box-shadow: 0 0.85rem 1.7rem rgba(148, 163, 184, 0.18);
-      transform: scale(var(--transform-scale-weak));
+  .catalog-skel::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background:
+      linear-gradient(
+        90deg,
+        transparent,
+        var(--color-skeleton-shimmer),
+        transparent
+      );
+    animation: catalog-skel-shimmer 1.4s ease-in-out infinite;
+  }
+
+  @keyframes catalog-skel-shimmer {
+    100% {
+      transform: translateX(100%);
     }
   }
 
-  .catalog-feature-sticky-control:active {
-    transform: scale(var(--transform-scale-regular));
+  .catalog-skeleton-logo {
+    flex: 1 1 auto;
+    width: 6.5rem;
+    height: 3.5rem;
+    border-radius: 0.5rem;
   }
 
-  .catalog-feature-sticky-affordance {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    min-height: calc(calc(var(--catalog-feature-min-height) * 0.9) - 0.32rem);
+  .catalog-skeleton-label {
+    flex: 0 0 auto;
+    width: 5.25rem;
+    height: 0.875rem;
+    border-radius: 0.375rem;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .catalog-skel::after {
+      animation: none;
+      display: none;
+    }
+    .catalog-skel {
+      background: var(--color-page-pressed);
+    }
   }
 
   .catalog-select-shell {
     position: relative;
   }
 
-  .catalog-feature-sticky-affordance .catalog-select-shell {
-    width: min(90%, 18rem);
-  }
-
+  /* CitySelect — канон ix-cityselect (_prototype/ui-kit.jsx + screens.jsx):
+     bg page, рамка surface-muted, radius 12, ink 15/500, ink-chevron. */
   .catalog-select-control {
     -webkit-appearance: none;
     -moz-appearance: none;
     appearance: none;
     width: 100%;
-    min-height: 3.5rem;
-    border: 0.0625rem solid rgba(191, 219, 254, 0.95);
-    border-radius: 999px;
-    background: linear-gradient(180deg, #eef4ff 0%, #e7eefc 100%);
-    color: #334155;
-    padding: 0.875rem 2.75rem 0.875rem 1.1rem;
-    font-size: 1rem;
+    min-height: 3rem;
+    margin: 0;
+    border: 1px solid var(--color-surface-muted);
+    border-radius: var(--radius-control);
+    background-color: var(--color-white);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%230F0F10' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9 L12 15 L18 9'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.875rem center;
+    color: var(--color-ink);
+    padding: 0 2.75rem 0 1rem;
+    font-size: 0.9375rem;
+    font-weight: 500;
     line-height: 1.2;
-    box-shadow: 0 0.75rem 1.5rem rgba(148, 163, 184, 0.12);
-    transition: transform 160ms ease,
-    border-color 160ms ease,
-    box-shadow 160ms ease,
-    background 160ms ease;
+    transition:
+      transform 120ms ease,
+      background-color 120ms ease,
+      border-color 120ms ease;
+  }
+
+  .catalog-select-control:focus-visible {
+    outline: none;
+    box-shadow:
+      0 0 0 2px var(--color-white),
+      0 0 0 4px var(--color-ink);
   }
 
   @media (hover: hover) and (pointer: fine) {
     .catalog-select-control:hover {
-      border-color: rgba(96, 165, 250, 0.95);
-      box-shadow: 0 0.95rem 1.8rem rgba(148, 163, 184, 0.18);
-      transform: scale(var(--transform-scale-weak));
+      background-color: var(--color-page-hover);
     }
   }
 
   .catalog-select-control:active {
-    transform: scale(var(--transform-scale-regular));
+    background-color: var(--color-surface-muted);
+    transform: scale(var(--scale-press-row));
   }
 
   .catalog-select-control--center {
@@ -355,92 +919,632 @@
     padding-inline: 1.5rem 2.75rem;
   }
 
-  .catalog-feature-select {
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    appearance: none;
-    width: 100%;
-    min-height: 2.9rem;
-    border: 0;
-    border-radius: 999px;
-    background: rgba(255, 255, 255, 0.98);
-    color: #374151;
-    padding: 0.65rem 2.5rem 0.65rem 1rem;
-    font-size: 1rem;
-    font-weight: 500;
-    line-height: 1.1;
-    box-shadow: none;
-    transition: transform 160ms ease,
-    color 160ms ease,
-    background-color 160ms ease,
-    box-shadow 160ms ease;
-  }
-
-  .catalog-feature-sticky-affordance .catalog-feature-select {
-    min-height: 2.6rem;
-    padding: 0.5rem 2.35rem 0.5rem 0.9rem;
-  }
-
-  @media (hover: hover) and (pointer: fine) {
-    .catalog-feature-select:hover {
-      background: rgba(248, 250, 252, 1);
-      color: #1f2937;
-      box-shadow: inset 0 0 0 0.0625rem rgba(148, 163, 184, 0.28);
-      transform: scale(var(--transform-scale-weak));
-    }
-  }
-
-  .catalog-feature-select:active {
-    background: rgba(241, 245, 249, 1);
-    transform: scale(var(--transform-scale-regular));
-  }
-
-  .catalog-select-control::-ms-expand,
-  .catalog-feature-select::-ms-expand {
+  .catalog-select-control::-ms-expand {
     display: none;
   }
 
-  .catalog-select-icon {
-    position: absolute;
-    right: 1rem;
-    top: 50%;
-    transform: translateY(-50%);
-    color: #64748b;
-    font-size: 1.2rem;
-    pointer-events: none;
+  /* Затемнение под мобильной шторкой меню — канон как у шторки «Акции». */
+  .catalog-menu-overlay {
+    background: var(--color-overlay);
   }
 
   .catalog-menu-panel {
     position: absolute;
-    inset: 1rem auto 1rem 1rem;
-    width: min(20rem, calc(100% - 2rem));
+    top: 0;
+    left: 0;
+    height: 100dvh;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
     padding: 1rem 1rem 1.4rem;
-    border-radius: 2rem;
     background: #ffffff;
     box-shadow: none;
     border: 0.0625rem solid rgba(203, 213, 225, 0.45);
   }
 
+  .catalog-menu-panel--sidebar {
+    position: static;
+    height: auto;
+    width: 100%;
+    padding: 1.25rem;
+    border: 0.0625rem solid var(--color-surface-muted);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-sidebar);
+    gap: 1.125rem;
+  }
+
+  /* Десктоп-sidebar под канон .dk-side (_prototype/desktop-kit.jsx):
+     заголовок 17px, label «Категории» 13/700 gray. Только модификатор
+     --sidebar (десктоп) — мобильный drawer не затронут. */
+  .catalog-menu-panel--sidebar .catalog-menu-title {
+    font-size: 1.0625rem;
+  }
+
+  .catalog-menu-panel--sidebar .catalog-menu-label {
+    /* color наследуется от базового .catalog-menu-label (secondary-text). */
+    font-size: 0.8125rem;
+    font-weight: 700;
+    letter-spacing: 0.05px;
+  }
+
+  @media (min-width: 64rem) {
+    [data-menu-button] {
+      display: none;
+    }
+  }
+
   .catalog-menu-header {
+    flex: 0 0 auto;
     display: flex;
     align-items: center;
-    justify-content: flex-start;
+    justify-content: space-between;
     gap: 1rem;
     margin-bottom: 0.8rem;
   }
 
+  .catalog-menu-title {
+    margin: 0;
+    font-size: 1.125rem;
+    font-weight: 700;
+    line-height: 1.2;
+    color: var(--color-ink);
+  }
+
   .catalog-menu-content {
-    display: grid;
-    gap: 1.25rem;
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    /* Горизонтальный люфт под focus-ring CitySelect: overflow-y:auto
+       промоутит overflow-x в auto и клипал бы 4px-кольцо у края.
+       padding 4px даёт место, отрицательный margin сохраняет ширину
+       layout (panel padding 1rem компенсирует вылет). */
+    padding-inline: 0.25rem;
+    margin-inline: -0.25rem;
+  }
+
+  .catalog-menu-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  /* Десктоп-сайдбар: зазор между группами фильтров =
+     канон .dt-sidebar gap 18px (_prototype/filter-sidebar.jsx). */
+  .catalog-menu-panel--sidebar
+    .catalog-menu-group
+    + .catalog-menu-group {
+    margin-top: 1.125rem;
+  }
+
+  /* Мобильный дровер — ритм верхней группы по канону
+     (_prototype/screens.jsx:161-199): низ блока «Город» 14px, низ подписи
+     «Категории» 8px, верх чипов 6px; без border-top между секциями.
+     Десктоп-сайдбар (.catalog-menu-panel--sidebar) не затрагивается. */
+  .catalog-menu-panel:not(.catalog-menu-panel--sidebar)
+    .catalog-menu-group--city {
+    margin-bottom: 0.875rem;
+  }
+
+  .catalog-menu-panel:not(.catalog-menu-panel--sidebar)
+    .catalog-menu-group--categories {
+    gap: 0.5rem;
+  }
+
+  .catalog-menu-panel:not(.catalog-menu-panel--sidebar)
+    .catalog-menu-chips {
+    /* канон chips-зона дровера 6px 16px 14px (_prototype/screens.jsx):
+       верх 6 + нижний клиренс 14 для конца скролла длинного списка. */
+    padding-top: 0.375rem;
+    padding-bottom: 0.875rem;
+  }
+
+  .catalog-menu-footer {
+    flex: 0 0 auto;
+    padding-top: 0.75rem;
   }
 
   .catalog-menu-label {
     margin: 0;
-    color: #94a3b8;
+    color: var(--color-secondary-text);
     font-size: 0.85rem;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.12em;
+  }
+
+  /* Чип категории (тоггл) — канон-чип (_prototype/specs.jsx §3 + ui-kit.jsx
+     .ix-chip): 44h · radius 12 · default page/ink 14/700 · selected
+     chip-selected-bg + рамка brand + текст/галочка brand. */
+  .catalog-menu-chip-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .catalog-menu-chip {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.375rem;
+    width: 100%;
+    height: 2.75rem;
+    padding: 0 1rem;
+    border: 1px solid transparent;
+    border-radius: var(--radius-control);
+    background: var(--color-page);
+    color: var(--color-ink);
+    font-size: 0.875rem;
+    font-weight: 700;
+    line-height: 1;
+    text-align: left;
+    cursor: pointer;
+    transition:
+      transform 120ms ease,
+      background 120ms ease;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+
+  .catalog-menu-chip:active {
+    background: var(--color-page-pressed);
+    transform: scale(var(--scale-press-button));
+  }
+
+  .catalog-menu-chip:focus-visible {
+    outline: none;
+    box-shadow:
+      0 0 0 2px var(--color-white),
+      0 0 0 4px var(--color-ink);
+  }
+
+  .catalog-menu-chip[aria-pressed="true"] {
+    background: var(--color-chip-selected-bg);
+    border-color: var(--color-brand);
+    color: var(--color-brand);
+  }
+
+  .catalog-menu-chip[aria-pressed="true"]:active {
+    background: var(--color-chip-selected-pressed-bg);
+  }
+
+  .catalog-menu-chip-check {
+    flex: 0 0 auto;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .catalog-menu-chip:hover {
+      background: var(--color-page-hover);
+    }
+
+    .catalog-menu-chip[aria-pressed="true"]:hover {
+      background: var(--color-chip-selected-hover-bg);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .catalog-menu-chip {
+      transition: background 120ms ease;
+    }
+
+    .catalog-menu-chip:active {
+      transform: none;
+    }
+  }
+
+  .catalog-toolbar {
+    display: none;
+  }
+
+  .catalog-sort-dropdown {
+    position: relative;
+    flex: 0 0 auto;
+  }
+
+  @media (min-width: 64rem) {
+    .catalog-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      /* Держим высоту ряда чипов (60px) + margin-bottom filter-row (12px),
+         чтобы тулбар не прыгал при появлении/снятии фильтров. */
+      min-height: 4.5rem;
+    }
+
+    .catalog-toolbar-left {
+      display: flex;
+      align-items: center;
+      gap: 0.875rem;
+      min-width: 0;
+      flex: 1 1 auto;
+    }
+
+    .catalog-toolbar-count {
+      flex: 0 0 auto;
+      color: var(--color-secondary-text);
+      font-size: 0.875rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .catalog-toolbar-chips {
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+
+    .catalog-sort-bar {
+      display: none;
+    }
+
+    .catalog-sort-dropdown-trigger {
+      height: 2.75rem;
+      box-sizing: border-box;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0 0.875rem;
+      border-radius: 0.75rem;
+      border: 0.0625rem solid var(--color-surface-muted);
+      background: var(--color-white);
+      color: var(--color-ink);
+      font-weight: 700;
+      font-size: 0.875rem;
+      white-space: nowrap;
+      cursor: pointer;
+      transition: background 120ms ease, border-color 120ms ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .catalog-sort-dropdown-trigger[aria-expanded="true"] {
+      border-color: var(--color-ink);
+    }
+
+    .catalog-sort-dropdown-trigger-muted {
+      color: var(--color-secondary-text);
+      font-weight: 600;
+    }
+
+    .catalog-sort-dropdown-chevron {
+      color: var(--color-secondary-text);
+      transition: transform 160ms ease;
+    }
+
+    .catalog-sort-dropdown-trigger[aria-expanded="true"]
+      .catalog-sort-dropdown-chevron {
+      transform: rotate(180deg);
+    }
+
+    .catalog-sort-dropdown-panel {
+      position: absolute;
+      top: calc(100% + 0.5rem);
+      right: 0;
+      min-width: 16rem;
+      box-sizing: border-box;
+      background: var(--color-white);
+      border: 0.0625rem solid var(--color-surface-muted);
+      border-radius: 0.875rem;
+      box-shadow: var(--shadow-sidebar);
+      padding: 0.375rem;
+      z-index: 60;
+      max-height: 21rem;
+      overflow-y: auto;
+    }
+
+    .catalog-sort-dropdown-option {
+      width: 100%;
+      min-height: 2.75rem;
+      box-sizing: border-box;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      padding: 0 0.75rem;
+      border: none;
+      border-radius: 0.625rem;
+      background: transparent;
+      color: var(--color-ink);
+      font-weight: 600;
+      font-size: 0.875rem;
+      text-align: left;
+      cursor: pointer;
+      transition: background 120ms ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .catalog-sort-dropdown-option[aria-checked="true"] {
+      color: var(--color-brand);
+      font-weight: 700;
+    }
+
+    .catalog-sort-dropdown-check {
+      flex: 0 0 auto;
+      color: var(--color-brand);
+    }
+  }
+
+  @media (min-width: 64rem) and (hover: hover) and (pointer: fine) {
+    .catalog-sort-dropdown-trigger:hover {
+      background: var(--color-page);
+      border-color: var(--color-surface-muted-hover);
+    }
+
+    .catalog-sort-dropdown-option:hover {
+      background: var(--color-page);
+    }
+  }
+
+  .catalog-sort-bar {
+    position: fixed;
+    inset-inline: 0;
+    bottom: 0;
+    z-index: 20;
+    padding:
+      0.625rem 0.75rem
+      calc(0.375rem + env(safe-area-inset-bottom));
+    background: var(--color-white);
+    border-top: 1px solid var(--color-surface-muted);
+    box-shadow: 0 -2px 14px rgba(15, 15, 16, 0.035);
+  }
+
+  .catalog-sort-bar-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 3.5rem;
+    padding: 0 1.75rem;
+    border: none;
+    border-radius: var(--radius-cta);
+    background: var(--color-brand);
+    color: var(--color-white);
+    font-size: 0.9375rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition:
+      transform 120ms ease,
+      background 120ms ease;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+
+  .catalog-sort-bar-button:active {
+    background: var(--color-brand-pressed);
+    transform: scale(var(--scale-press-button));
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .catalog-sort-bar-button:hover {
+      background: var(--color-brand-hover);
+    }
+  }
+
+  .catalog-sort-sheet-overlay-button {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(15, 15, 16, 0.25);
+    border: none;
+    padding: 0;
+    cursor: pointer;
+  }
+
+  .catalog-sort-sheet {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--color-white);
+    border-radius: 24px 24px 0 0;
+    box-shadow: 0 -4px 8px rgba(0, 0, 0, 0.05);
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+    outline: none;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .catalog-sort-sheet-handle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 1.5rem;
+    padding-top: 0.25rem;
+  }
+
+  .catalog-sort-sheet-handle-bar {
+    width: 2.25rem;
+    height: 0.25rem;
+    border-radius: 0.25rem;
+    background: rgb(209, 209, 214);
+  }
+
+  .catalog-sort-sheet-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 1rem 0.625rem;
+  }
+
+  .catalog-sort-sheet-title {
+    margin: 0;
+    font-size: 1.125rem;
+    font-weight: 700;
+    line-height: 1.2;
+    color: var(--color-ink);
+  }
+
+  .catalog-sort-options {
+    list-style: none;
+    margin: 0;
+    padding: 0 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .catalog-sort-option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    width: 100%;
+    min-height: 2.75rem;
+    padding: 0 1rem;
+    border: none;
+    border-radius: var(--radius-control);
+    background: var(--color-page);
+    color: var(--color-ink);
+    font-size: 0.875rem;
+    font-weight: 700;
+    text-align: left;
+    cursor: pointer;
+    transition:
+      transform 120ms ease,
+      background 120ms ease;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+
+  .catalog-sort-option:active {
+    background: var(--color-page-pressed);
+    transform: scale(var(--scale-press-row));
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .catalog-sort-option:hover {
+      background: var(--color-page-hover);
+    }
+  }
+
+  .catalog-sort-option-check {
+    flex: 0 0 auto;
+    color: var(--color-brand);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .catalog-sort-bar-button,
+    .catalog-sort-option {
+      transition: background 120ms ease;
+    }
+    .catalog-sort-bar-button:active,
+    .catalog-sort-option:active {
+      transform: none;
+    }
+  }
+
+  /* Нижний бар «Акции» — канон OffersBar (_prototype/shared.jsx):
+     72h white, border-top, тень; CTA ix-cta 56h full-width. */
+  .catalog-offers-bar {
+    position: fixed;
+    inset-inline: 0;
+    bottom: 0;
+    z-index: 20;
+    padding:
+      0.625rem 0.75rem
+      calc(0.375rem + env(safe-area-inset-bottom));
+  }
+
+  .catalog-offers-bar-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 3.5rem;
+    padding: 0 1.75rem;
+    border: none;
+    border-radius: var(--radius-cta);
+    background: var(--color-brand);
+    color: var(--color-white);
+    font-size: 0.9375rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition:
+      transform 120ms ease,
+      background 120ms ease;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+
+  .catalog-offers-bar-button:active {
+    background: var(--color-brand-pressed);
+    transform: scale(var(--scale-press-button));
+  }
+
+  .catalog-offers-bar-button:focus-visible {
+    outline: none;
+    box-shadow:
+      0 0 0 2px var(--color-white),
+      0 0 0 4px var(--color-ink);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .catalog-offers-bar-button:hover {
+      background: var(--color-brand-hover);
+    }
+  }
+
+  /* Шит «Акции» — канон bottom-sheet (_prototype/screens.jsx:213-300):
+     radius 24, тень, grabber; строки OfferRow = ix-row (44h/page/ink 14/700). */
+  .catalog-offers-sheet-overlay-button {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--color-overlay);
+    border: none;
+    padding: 0;
+    cursor: pointer;
+  }
+
+  .catalog-offers-sheet {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--color-white);
+    border-radius: 24px 24px 0 0;
+    box-shadow: 0 -4px 8px rgba(0, 0, 0, 0.05);
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+    outline: none;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .catalog-offers-sheet-handle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 1.5rem;
+    padding-top: 0.25rem;
+  }
+
+  .catalog-offers-sheet-handle-bar {
+    width: 2.25rem;
+    height: 0.25rem;
+    border-radius: 0.25rem;
+    background: rgb(209, 209, 214);
+  }
+
+  /* Шит «Акции» без заголовка/крестика (по запросу Ивана) — отступление
+     от канона screens.jsx (там header h2+✕). Список фишек идёт сразу под
+     handle-bar; padding-top поднимает ритм бывшего header padding-bottom
+     (10px), чтобы чипы не липли к grabber. padding-inline 1rem = канон
+     списка offers-sheet (padding: 0 16px) — aside без своего inset, так
+     что это ровно 16px от края. Scoped — базовый .catalog-menu-chip-list
+     (категории/дровер) не трогаем. */
+  .catalog-offers-sheet .catalog-menu-chip-list {
+    padding-top: 0.625rem;
+    padding-inline: 1rem;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .catalog-offers-bar-button {
+      transition: background 120ms ease;
+    }
+    .catalog-offers-bar-button:active {
+      transform: none;
+    }
   }
 
   .shop-page-root {
@@ -452,120 +1556,409 @@
     container-type: inline-size;
   }
 
-  .shop-hero-shell {
-    display: grid;
-    gap: 0;
+  .shop-desktop-shell {
+    max-width: 70rem;
+    margin-inline: auto;
+    padding: 1.5rem 2rem 3rem;
+    box-sizing: border-box;
   }
 
-  .shop-hero-head {
+  .shop-desktop-state {
+    max-width: 70rem;
+    margin-inline: auto;
+    padding: 2rem;
+  }
+
+  .shop-layout {
     display: grid;
-    grid-template-columns: 2.5rem minmax(0, 1fr);
-    align-items: end;
-    gap: 0.35rem;
-    min-height: 0;
+    grid-template-columns: minmax(0, 62fr) minmax(0, 38fr);
+    grid-template-areas:
+      "breadcrumb breadcrumb"
+      "left right";
+    column-gap: 2rem;
+    row-gap: 1rem;
+    align-items: start;
+  }
+
+  .shop-layout > .shop-breadcrumb {
+    grid-area: breadcrumb;
+  }
+
+  .shop-layout-left {
+    grid-area: left;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .shop-layout-right {
+    grid-area: right;
+    position: sticky;
+    top: 5.5rem;
+    align-self: start;
+    min-width: 0;
+  }
+
+  .shop-breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+    font-size: 0.8125rem;
+    color: var(--color-secondary-text);
+    padding: 0.125rem 0;
+  }
+
+  .shop-breadcrumb-link {
+    color: var(--color-secondary-text);
+    text-decoration: none;
+    border-radius: 0.375rem;
+  }
+
+  .shop-breadcrumb-link:focus-visible {
+    outline: none;
+    box-shadow:
+      0 0 0 2px var(--color-white),
+      0 0 0 4px var(--color-ink);
+  }
+
+  .shop-breadcrumb-sep {
+    color: var(--color-secondary-text);
+    opacity: 0.6;
+  }
+
+  .shop-breadcrumb-current {
+    color: var(--color-ink);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .shop-breadcrumb-link:hover {
+      color: var(--color-ink);
+    }
+  }
+
+  .shop-info-card {
+    background: var(--color-white);
+    border: 0.0625rem solid var(--color-surface-muted);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-sidebar);
+    padding: 1.5rem;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 1.125rem;
+  }
+
+  .shop-info-name {
+    margin: 0;
+    font-weight: 700;
+    font-size: 1.625rem;
+    line-height: 1.1;
+    color: var(--color-ink);
+  }
+
+  .shop-info-block {
+    display: flex;
+    flex-direction: column;
+    gap: 0.625rem;
+  }
+
+  .shop-info-label {
+    margin: 0;
+    font-weight: 700;
+    font-size: 0.8125rem;
+    letter-spacing: 0.03em;
+    color: var(--color-secondary-text);
+    text-transform: uppercase;
+  }
+
+  .shop-info-desc,
+  .shop-info-line {
+    margin: 0;
+    font-size: 0.9375rem;
+    line-height: 1.5;
+    color: var(--color-ink);
+    white-space: pre-line;
+  }
+
+  .shop-info-line--muted {
+    color: var(--color-secondary-text);
+    font-size: 0.8125rem;
+  }
+
+  /* Десктоп ds-card actions/hr — канон desktop-shop.jsx (ds-hr/ds-actions/
+     ds-iconrow). Только desktop-ветка панели магазина. */
+  .shop-info-hr {
+    width: 100%;
+    height: 1px;
+    margin: 0;
+    border: 0;
+    background: var(--color-surface-muted);
+  }
+
+  .shop-ds-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.625rem;
+  }
+
+  .shop-ds-route {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.375rem;
+    width: 100%;
+    height: 3rem;
+    padding: 0;
+    border: none;
+    border-radius: 14px;
+    background: var(--color-brand);
+    color: var(--color-white);
+    font-size: 0.9375rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition:
+      transform 120ms ease,
+      background 120ms ease;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+
+  .shop-ds-route:active {
+    background: var(--color-brand-pressed);
+    transform: scale(var(--scale-press-button));
+  }
+
+  .shop-ds-route:focus-visible {
+    outline: none;
+    box-shadow:
+      0 0 0 2px var(--color-white),
+      0 0 0 4px var(--color-ink);
+  }
+
+  .shop-ds-iconrow {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .shop-ds-icon {
+    flex: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2.75rem;
+    height: 3rem;
+    padding: 0;
+    border: none;
+    border-radius: var(--radius-control);
+    background: var(--color-surface-muted);
+    color: var(--color-ink);
+    text-decoration: none;
+    cursor: pointer;
+    transition:
+      transform 100ms ease,
+      background 120ms ease;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+
+  .shop-ds-icon:active {
+    background: var(--color-surface-muted-pressed);
+    transform: scale(var(--scale-press-icon));
+  }
+
+  .shop-ds-icon:focus-visible {
+    outline: none;
+    box-shadow:
+      0 0 0 2px var(--color-white),
+      0 0 0 4px var(--color-ink);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .shop-ds-route:hover {
+      background: var(--color-brand-hover);
+    }
+
+    .shop-ds-icon:hover {
+      background: var(--color-surface-muted-hover);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .shop-ds-route,
+    .shop-ds-icon {
+      transition: background 120ms ease;
+    }
+
+    .shop-ds-route:active,
+    .shop-ds-icon:active {
+      transform: none;
+    }
+  }
+
+  .shop-desktop-gallery-skel {
+    aspect-ratio: 4 / 3;
+    width: 100%;
+    border-radius: 1.125rem;
+  }
+
+  /* Mobile shop hero — canon shop-card.jsx (full-bleed square + overlap sheet). */
+  .shop-mobile-shell {
+    width: 100%;
+    padding-bottom: 1rem;
+  }
+
+  .shop-hero {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 2 / 3;
+    overflow: hidden;
+    background: var(--color-surface-muted);
+  }
+
+  .shop-hero .shop-gallery-shell {
+    height: 100%;
+    border-radius: 0;
+  }
+
+  .shop-hero-scrim {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 2;
+    height: 8.75rem;
+    pointer-events: none;
+    background: linear-gradient(
+      180deg,
+      rgba(0, 0, 0, 0.4),
+      rgba(0, 0, 0, 0)
+    );
+  }
+
+  /* Нижний скрим под пагинацией. Заходит под наезд листа (до низа фото):
+     тёмная часть градиента попадает в зону уголков наезда — скругление
+     листа читается и на светлых фото. Белое поле защищено стекингом:
+     .shop-sheet (z-index:1, позже в DOM) перекрывает скрим (z-index:1
+     внутри .shop-hero с z-index:auto). Канон ms-scrim синхронизируется
+     Игорем в Claude Design. */
+  .shop-gallery-scrim-bottom {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1;
+    height: 7.25rem;
+    pointer-events: none;
+    background: linear-gradient(
+      0deg,
+      rgba(0, 0, 0, 0.4),
+      rgba(0, 0, 0, 0)
+    );
   }
 
   .shop-back-button {
+    position: absolute;
+    top: calc(env(safe-area-inset-top) + 0.5rem);
+    left: 0.5rem;
+    z-index: 3;
     display: inline-flex;
     align-items: center;
-    justify-content: flex-start;
-    width: fit-content;
-    height: 100%;
-    border: none;
-    border-radius: 0;
-    background: transparent;
-    color: #49506a;
+    justify-content: center;
+    width: 2.75rem;
+    height: 2.75rem;
     padding: 0;
-    font-size: 1.9rem;
-    font-weight: 400;
-    line-height: 1;
+    border: none;
+    border-radius: var(--radius-control);
+    background: rgba(0, 0, 0, 0.4);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+    color: #ffffff;
     cursor: pointer;
-    box-shadow: none;
-    transition: transform 160ms ease,
-    opacity 160ms ease,
-    filter 160ms ease;
+    transition:
+      transform 100ms ease,
+      background 120ms ease;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
   }
 
   @media (hover: hover) and (pointer: fine) {
     .shop-back-button:hover {
-      transform: scale(var(--transform-scale-regular));
+      background: rgba(0, 0, 0, 0.48);
     }
   }
 
   .shop-back-button:active {
-    transform: scale(var(--transform-scale-strong));
+    background: rgba(0, 0, 0, 0.55);
+    transform: scale(var(--scale-press-icon));
   }
 
-  .shop-back-raster {
-    display: block;
-    width: 2.1rem;
-    height: 2.1rem;
-    object-fit: contain;
+  /* Поделиться (моб.) — канон верхний ix-onimg top-right (shop-card.jsx).
+     Шелл как у shop-back-button + канон-фокус-кольцо. */
+  .shop-share-button {
+    position: absolute;
+    top: calc(env(safe-area-inset-top) + 0.5rem);
+    right: 0.5rem;
+    z-index: 3;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    padding: 0;
+    border: none;
+    border-radius: var(--radius-control);
+    background: rgba(0, 0, 0, 0.4);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+    color: #ffffff;
+    cursor: pointer;
+    transition:
+      transform 100ms ease,
+      background 120ms ease;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .shop-share-button:hover {
+      background: rgba(0, 0, 0, 0.48);
+    }
+  }
+
+  .shop-share-button:active {
+    background: rgba(0, 0, 0, 0.55);
+    transform: scale(var(--scale-press-icon));
+  }
+
+  .shop-share-button:focus-visible {
+    outline: none;
+    box-shadow:
+      0 0 0 2px var(--color-white),
+      0 0 0 4px var(--color-ink);
   }
 
   .shop-loading-back-skeleton {
-    width: 2.1rem;
-    height: 2.1rem;
-    justify-self: start;
-    align-self: end;
-    border-radius: 999px;
+    position: absolute;
+    top: calc(env(safe-area-inset-top) + 0.5rem);
+    left: 0.5rem;
+    z-index: 3;
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: var(--radius-control);
   }
 
-  .shop-loading-logo-skeleton-shell {
-    display: flex;
-    align-items: flex-end;
-    justify-content: flex-end;
-    justify-self: end;
-    width: min(10rem, 100%);
-    height: 100%;
-    min-height: 0;
-  }
-
-  .shop-loading-logo-skeleton {
-    width: 100%;
-    height: clamp(2.75rem, 8vw, 4.25rem);
-    border-radius: 1.25rem;
-  }
-
-  .shop-logo-shell {
-    display: flex;
-    align-items: flex-end;
-    justify-content: flex-end;
-    justify-self: end;
-    height: 100%;
-    width: min(10rem, 100%);
-    min-height: 0;
-    border-radius: 0;
-    background: transparent;
-    overflow: hidden;
-  }
-
-  .shop-logo-image {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    object-position: right center;
-  }
-
-  .shop-logo-placeholder {
-    display: grid;
-    place-items: center;
-    width: 100%;
-    height: clamp(2.75rem, 8vw, 4.25rem);
-    border-radius: 1.25rem;
-    background: #f8fafc;
-    color: #94a3b8;
-    font-size: 0.75rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-  }
-
-  .shop-hero-gallery {
+  .shop-sheet {
     position: relative;
-    min-height: 0;
-    --shop-unit: calc(100cqw / 9);
-    height: calc(var(--shop-unit) * 13);
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    margin-top: -1.25rem;
+    padding: 1.5rem 1rem;
+    border-radius: 1.25rem 1.25rem 0 0;
+    background: var(--color-white);
   }
 
   .shop-promo-stack {
@@ -606,8 +1999,14 @@
     line-height: 1.15;
   }
 
-  .shop-promo-copy .shop-description {
-    margin-top: 0.5rem;
+  /* Тело акции — канон-токен (PromoBlock, _prototype/shop-card.jsx):
+     15px / ink / line-height 1.4. Отступы держит grid-gap .shop-promo-copy. */
+  .shop-promo-text {
+    margin: 0;
+    font-size: 0.9375rem;
+    font-weight: 500;
+    line-height: 1.4;
+    color: var(--color-ink);
   }
 
   .shop-gallery-shell {
@@ -617,6 +2016,191 @@
     background: #f9f1e4;
     min-height: 0;
     height: 100%;
+  }
+
+  .shop-gallery-shell--desktop {
+    background: transparent;
+    border-radius: 0;
+    overflow: visible;
+    height: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .shop-gallery-stage {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    border-radius: 1.125rem;
+    overflow: hidden;
+    background: var(--color-surface-muted);
+  }
+
+  .shop-gallery-stage-media {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+    background: var(--color-surface-muted);
+  }
+
+  .shop-gallery-stage-media--video {
+    background: var(--color-ink);
+  }
+
+  .shop-gallery-counter {
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+    z-index: 2;
+    height: 1.875rem;
+    padding: 0 0.75rem;
+    display: inline-flex;
+    align-items: center;
+    border-radius: 0.9375rem;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(0.5rem);
+    -webkit-backdrop-filter: blur(0.5rem);
+    color: var(--color-white);
+    font-weight: 700;
+    font-size: 0.8125rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Стрелки десктоп-галереи — канон ix-onimg (_prototype/ui-kit.jsx):
+     тёмная полупрозрачная подложка r12 + белый шеврон + focus-кольцо. */
+  .shop-gallery-stage-arrow {
+    position: absolute;
+    top: 50%;
+    z-index: 2;
+    width: 2.75rem;
+    height: 2.75rem;
+    margin-top: -1.375rem;
+    border: none;
+    border-radius: var(--radius-control);
+    background: rgba(0, 0, 0, 0.4);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+    color: var(--color-white);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition:
+      transform 100ms ease,
+      background 120ms ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .shop-gallery-stage-arrow--left {
+    left: 0.75rem;
+  }
+
+  .shop-gallery-stage-arrow--right {
+    right: 0.75rem;
+  }
+
+  .shop-gallery-stage-arrow:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  .shop-gallery-stage-arrow:focus-visible {
+    outline: none;
+    box-shadow:
+      0 0 0 2px var(--color-white),
+      0 0 0 4px var(--color-ink);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .shop-gallery-stage-arrow:not(:disabled):hover {
+      background: rgba(0, 0, 0, 0.48);
+    }
+  }
+
+  .shop-gallery-stage-arrow:not(:disabled):active {
+    background: rgba(0, 0, 0, 0.55);
+    transform: scale(var(--scale-press-icon));
+  }
+
+  .shop-gallery-thumbs {
+    list-style: none;
+    margin: 0;
+    padding: 0.5rem 0.375rem;
+    display: flex;
+    gap: 0.625rem;
+    overflow-x: auto;
+    scrollbar-width: thin;
+  }
+
+  .shop-gallery-thumb {
+    flex: 0 0 auto;
+    position: relative;
+    width: 4.75rem;
+    height: 4.75rem;
+    padding: 0;
+    border: none;
+    border-radius: 0.75rem;
+    overflow: hidden;
+    background: var(--color-surface-muted);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .shop-gallery-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .shop-gallery-thumb::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 0.75rem;
+    pointer-events: none;
+    box-shadow: inset 0 0 0 1px var(--color-surface-muted);
+    transition: box-shadow 140ms ease;
+  }
+
+  .shop-gallery-thumb[aria-current="true"]::after {
+    box-shadow: inset 0 0 0 2px var(--color-brand);
+  }
+
+  .shop-gallery-thumb:focus-visible {
+    outline: 0.125rem solid var(--color-ink);
+    outline-offset: 0.125rem;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .shop-gallery-thumb:not([aria-current="true"]):hover::after {
+      box-shadow: inset 0 0 0 2px var(--color-secondary-text);
+    }
+  }
+
+  .shop-gallery-thumb-vbadge {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.28);
+    color: var(--color-white);
+    pointer-events: none;
+  }
+
+  .shop-gallery-thumb-vchip {
+    width: 1.625rem;
+    height: 1.625rem;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.55);
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .shop-gallery-frame {
@@ -634,6 +2218,12 @@
     transition-timing-function: ease;
   }
 
+  @media (prefers-reduced-motion: reduce) {
+    .shop-gallery-track {
+      transition: none !important;
+    }
+  }
+
   .shop-gallery-slide {
     min-width: 100%;
     height: 100%;
@@ -644,6 +2234,28 @@
     position: relative;
     width: 100%;
     height: 100%;
+    background: var(--color-ink);
+  }
+
+  /* Кадр как кнопка: та же площадь, что у кадра, без своей геометрии. */
+  .shop-gallery-frame-button {
+    display: block;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    text-align: inherit;
+  }
+
+  /* Кольцо — рецепт .ix-onimg (как у back/share/nav), но инсетом:
+     кнопка занимает весь кадр, а .shop-gallery-frame режет overflow. */
+  .shop-gallery-frame-button:focus-visible {
+    outline: none;
+    box-shadow:
+      inset 0 0 0 2px var(--color-white),
+      inset 0 0 0 4px var(--color-ink);
   }
 
   .shop-gallery-empty {
@@ -653,40 +2265,54 @@
     background: #f8fafc;
   }
 
+  /* Стрелки галереи (моб.) — канон ix-onimg (_prototype/media-slider.jsx):
+     тёмная полупрозрачная подложка + белый глиф, не белые круги. */
   .shop-gallery-nav {
     position: absolute;
     top: 50%;
-    width: 3rem;
-    height: 3rem;
+    margin-top: -1.375rem;
+    z-index: 3;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    padding: 0;
     border: none;
-    border-radius: 999px;
-    background: rgba(255, 255, 255, 0.88);
-    box-shadow: 0 0.75rem 1.5rem rgba(15, 23, 42, 0.1);
-    color: #0f172a;
-    font-size: 1.75rem;
+    border-radius: var(--radius-control);
+    background: rgba(0, 0, 0, 0.4);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+    color: #ffffff;
     cursor: pointer;
-    transition: transform 160ms ease,
-    background-color 160ms ease,
-    box-shadow 160ms ease,
-    opacity 160ms ease;
+    transition:
+      transform 100ms ease,
+      background 120ms ease;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
   }
 
   @media (hover: hover) and (pointer: fine) {
     .shop-gallery-nav:hover {
-      background: rgba(255, 255, 255, 0.98);
-      box-shadow: 0 0.95rem 1.75rem rgba(15, 23, 42, 0.14);
-      transform: scale(var(--transform-scale-regular));
+      background: rgba(0, 0, 0, 0.48);
     }
   }
 
   .shop-gallery-nav:active {
-    transform: scale(var(--transform-scale-strong));
-    background: rgba(241, 245, 249, 0.98);
+    background: rgba(0, 0, 0, 0.55);
+    transform: scale(var(--scale-press-icon));
+  }
+
+  .shop-gallery-nav:focus-visible {
+    outline: none;
+    box-shadow:
+      0 0 0 2px var(--color-white),
+      0 0 0 4px var(--color-ink);
   }
 
   .shop-gallery-footer {
     position: absolute;
-    bottom: 0.9rem;
+    bottom: 2.375rem;
     left: 50%;
     z-index: 2;
     transform: translateX(-50%);
@@ -708,11 +2334,11 @@
     width: 0.48rem;
     height: 0.48rem;
     border-radius: 999px;
-    background: rgba(71, 85, 105, 0.26);
+    background: rgba(255, 255, 255, 0.4);
   }
 
   .shop-gallery-dot--active {
-    background: #4f5571;
+    background: #fff;
   }
 
   .shop-gallery-audio-toggle {
@@ -723,7 +2349,7 @@
     min-height: 2.5rem;
     border: none;
     border-radius: 999px;
-    background: rgba(15, 23, 42, 0.72);
+    background: rgba(0, 0, 0, 0.4);
     color: #ffffff;
     padding: 0.55rem 0.9rem;
     font-size: 0.875rem;
@@ -738,14 +2364,57 @@
 
   @media (hover: hover) and (pointer: fine) {
     .shop-gallery-audio-toggle:hover {
-      background: rgba(15, 23, 42, 0.86);
-      transform: translate(-50%, -50%) scale(var(--transform-scale-regular));
+      background: rgba(0, 0, 0, 0.48);
+      transform: translate(-50%, -50%);
     }
   }
 
   .shop-gallery-audio-toggle:active {
-    transform: translate(-50%, -50%) scale(var(--transform-scale-strong));
-    background: rgba(30, 41, 59, 0.92);
+    transform: translate(-50%, -50%) scale(var(--scale-press-icon));
+    background: rgba(0, 0, 0, 0.55);
+  }
+
+  /* bottom-right: верхний-правый угол отдан канон-кнопке «Поделиться». */
+  .shop-gallery-pause-toggle {
+    position: absolute;
+    bottom: 0.5rem;
+    right: 0.5rem;
+    z-index: 3;
+    width: 2.75rem;
+    height: 2.75rem;
+    border: none;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.4);
+    color: var(--color-white);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition:
+      transform 160ms ease,
+      background-color 160ms ease;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .shop-gallery-pause-toggle:hover {
+      background: rgba(0, 0, 0, 0.48);
+    }
+  }
+
+  .shop-gallery-pause-toggle:active {
+    background: rgba(0, 0, 0, 0.55);
+    transform: scale(var(--scale-press-icon));
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .shop-gallery-pause-toggle {
+      transition: background-color 160ms ease;
+    }
+    .shop-gallery-pause-toggle:active {
+      transform: none;
+    }
   }
 
   .shop-gallery-nav--left {
@@ -756,24 +2425,6 @@
     right: 1rem;
   }
 
-  .shop-schedule-note {
-    position: absolute;
-    left: 50%;
-    right: auto;
-    width: min(82%, 20rem);
-    max-width: none;
-    bottom: 2.95rem;
-    transform: translateX(-50%);
-    color: #ffffff;
-    font-size: 1rem;
-    font-weight: 700;
-    line-height: 1.5;
-    text-shadow: 0 0.2rem 0.9rem rgba(15, 23, 42, 0.55);
-    white-space: pre-line;
-    pointer-events: none;
-    text-align: center;
-  }
-
   .shop-content-card {
     border-radius: 0;
     background: transparent;
@@ -781,27 +2432,115 @@
     box-shadow: none;
   }
 
-  .shop-slogan {
+  /* Mobile shop main — canon ShopMain (_prototype/shop-card.jsx). */
+  .shop-name {
     margin: 0;
-    color: #1f2937;
-    font-size: 1.6rem;
+    font-size: 1.375rem;
     font-weight: 700;
     line-height: 1.1;
+    color: var(--color-ink);
   }
 
-  .shop-description {
-    margin: 1.5rem 0 0;
-    color: #475569;
-    font-size: 1rem;
-    line-height: 1.5;
+  .shop-body-line {
+    margin: 0;
+    font-size: 0.9375rem;
+    font-weight: 500;
+    line-height: 1.4;
+    color: var(--color-ink);
   }
 
-  .shop-contacts-title {
-    margin: 0 0 0.7rem;
-    color: #111827;
-    font-size: 1.3rem;
+  .shop-meta-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .shop-meta-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--color-secondary-text);
+  }
+
+  .shop-meta-item::before {
+    content: "";
+    flex: 0 0 auto;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--color-secondary-text);
+  }
+
+  /* Канон-лейбл секции (ShopMain, shop-card.jsx): caps 13/700 gray. */
+  .shop-section-label {
+    margin: 0 0 0.75rem;
+    font-size: 0.8125rem;
     font-weight: 700;
-    line-height: 1.15;
+    line-height: 1.2;
+    letter-spacing: 0.05px;
+    text-transform: uppercase;
+    color: var(--color-secondary-text);
+  }
+
+  /* Контакт-строки (моб.): иконка gray + текст ink 15/500/1.4, без underline. */
+  .shop-contact-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  /* Контакты — невыделенный статичный текст (ссылки живут в action-баре). */
+  .shop-contact-row {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    color: var(--color-ink);
+    text-decoration: none;
+  }
+
+  .shop-contact-row-icon {
+    flex: 0 0 auto;
+    color: var(--color-secondary-text);
+  }
+
+  .shop-contact-row-text {
+    font-size: 0.9375rem;
+    font-weight: 500;
+    line-height: 1.4;
+    color: var(--color-ink);
+  }
+
+  /* «Время работы» (канон ClockIcon, _prototype/shared.jsx): глиф часов
+     18px secondary-text в одной колонке с контакт-иконками + текст 15/500/1.4
+     ink; выравнивание по первой строке многострочного scheduleNote. */
+  .shop-schedule-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .shop-schedule-clock {
+    flex: 0 0 auto;
+    color: var(--color-secondary-text);
+    /* центрирование 18px-глифа по line-box первой строки (21px): (21−18)/2 */
+    margin-top: 0.09375rem;
+  }
+
+  .shop-schedule-text {
+    margin: 0;
+    font-size: 0.9375rem;
+    font-weight: 500;
+    line-height: 1.4;
+    color: var(--color-ink);
+    white-space: pre-line;
   }
 
   .shop-contact-list {
@@ -826,20 +2565,8 @@
 
   @media (hover: hover) and (pointer: fine) {
     .shop-contact-link:hover {
-      background-color: aqua;
+      opacity: 0.78;
     }
-  }
-
-  :link {
-    color: #0000EE;
-  }
-
-  :visited {
-    color: #551A8B;
-  }
-
-  :link:active, :visited:active {
-    color: #FF0000;
   }
 
   .shop-contact-text {
@@ -866,33 +2593,6 @@
     white-space: nowrap;
   }
 
-  .shop-feature-badges {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    min-height: 2.75rem;
-  }
-
-  .shop-feature-badge {
-    display: inline-flex;
-    align-items: center;
-    min-height: 2.5rem;
-    border-radius: 999px;
-    padding: 0.45rem 0.95rem;
-    font-size: 0.875rem;
-    font-weight: 600;
-  }
-
-  .shop-feature-badge--category {
-    background: linear-gradient(180deg, #d8e2f6 0%, #cad9f0 100%);
-    color: #536987;
-  }
-
-  .shop-feature-badge--feature {
-    background: linear-gradient(180deg, #6f6982 0%, #605a72 100%);
-    color: #ffffff;
-  }
-
   .catalog-close-button {
     display: inline-flex;
     align-items: center;
@@ -912,35 +2612,132 @@
 
   @media (hover: hover) and (pointer: fine) {
     .catalog-close-button:hover {
-      background: #f8fafc;
-      border-color: rgba(148, 163, 184, 0.8);
-      box-shadow: 0 0.55rem 1.2rem rgba(148, 163, 184, 0.16);
-      transform: scale(var(--transform-scale-regular));
+      background: var(--color-page-hover);
     }
   }
 
   .catalog-close-button:active {
-    background: #eef2f7;
-    transform: scale(var(--transform-scale-strong));
+    background: var(--color-surface-muted-hover);
+    transform: scale(var(--transform-scale-regular));
   }
 
-  .shop-overscroll-spacer {
-    height: clamp(6rem, 14vw, 11rem);
+  /* Mobile action bar — canon footer (_prototype/shop-card.jsx + OffersBar). */
+  .shop-actionbar-spacer {
+    height: var(--shop-actionbar-h);
   }
 
-  @media (min-width: 48rem) {
-    .shop-hero-gallery {
-      --shop-unit: calc(100cqw / 14);
+  .shop-actionbar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 40;
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    height: var(--shop-actionbar-h);
+    padding: 0 0.75rem;
+    padding-bottom: env(safe-area-inset-bottom);
+    box-sizing: border-box;
+    background: var(--color-white);
+    border-top: 1px solid var(--color-surface-muted);
+    box-shadow: 0 -2px 14px rgba(15, 15, 16, 0.035);
+  }
+
+  .shop-actionbar-route {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.375rem;
+    width: 113px;
+    height: 44px;
+    padding: 0;
+    border: none;
+    border-radius: var(--radius-control);
+    background: var(--color-brand);
+    color: var(--color-white);
+    font-size: 0.875rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition:
+      transform 120ms ease,
+      background 120ms ease;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+
+  .shop-actionbar-route:active {
+    background: var(--color-brand-pressed);
+    transform: scale(var(--scale-press-button));
+  }
+
+  .shop-actionbar-route:focus-visible {
+    outline: none;
+    box-shadow:
+      0 0 0 2px var(--color-white),
+      0 0 0 4px var(--color-ink);
+  }
+
+  .shop-actionbar-icons {
+    flex: 1;
+    display: flex;
+    gap: 0.375rem;
+  }
+
+  .shop-actionbar-icon {
+    flex: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2.75rem;
+    height: 2.75rem;
+    padding: 0;
+    border: none;
+    border-radius: var(--radius-control);
+    background: var(--color-surface-muted);
+    color: var(--color-ink);
+    text-decoration: none;
+    cursor: pointer;
+    transition:
+      transform 100ms ease,
+      background 120ms ease;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+
+  .shop-actionbar-icon:active {
+    background: var(--color-surface-muted-pressed);
+    transform: scale(var(--scale-press-icon));
+  }
+
+  .shop-actionbar-icon:focus-visible {
+    outline: none;
+    box-shadow:
+      0 0 0 2px var(--color-white),
+      0 0 0 4px var(--color-ink);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .shop-actionbar-route:hover {
+      background: var(--color-brand-hover);
     }
 
-    .shop-hero-head {
-      align-items: flex-end;
+    .shop-actionbar-icon:hover {
+      background: var(--color-surface-muted-hover);
     }
   }
 
-  @media (min-width: 80rem) {
-    .shop-hero-gallery {
-      --shop-unit: calc(100cqw / 18);
+  @media (prefers-reduced-motion: reduce) {
+    .shop-actionbar-route,
+    .shop-actionbar-icon {
+      transition: background 120ms ease;
+    }
+
+    .shop-actionbar-route:active,
+    .shop-actionbar-icon:active {
+      transform: none;
     }
   }
+
 }

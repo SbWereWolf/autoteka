@@ -16,6 +16,8 @@
     "test:ui:mock:headed": "playwright test --config playwright.ui-mock.config.ts --headed"
   },
   "dependencies": {
+    "@fontsource-variable/manrope": "^5.2.8",
+    "photoswipe": "^5.4.4",
     "vue": "^3.5.0",
     "vue-router": "^4.5.0"
   },

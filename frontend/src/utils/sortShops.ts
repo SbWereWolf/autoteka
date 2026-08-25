@@ -1,6 +1,6 @@
 import type { Shop } from "../types";
 
-export function sortShopsByRules(params: {
+export function sortShopsBySelectedFeature(params: {
   shops: Shop[];
   selectedCategoryIds: string[];
   selectedFeatureId: string | null;

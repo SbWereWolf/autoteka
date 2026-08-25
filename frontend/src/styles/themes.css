@@ -1,21 +1,24 @@
+/*
+ * Color/state design tokens moved to @theme in tailwind.css
+ * (source: _prototype/ui-kit.jsx + specs.jsx).
+ * Variables kept here are either:
+ *  - structural (content/grid/feature sizing — not in ui-kit.jsx), or
+ *  - legacy aliases still referenced by component-scoped CSS — names and
+ *    values preserved so existing styles don't shift.
+ * --focus is preserved (rule 4) but re-pointed to canonical ink.
+ */
 :root {
   /*--bg: #ffffff;*/
   --text: #0f172a;
   --border: rgba(13, 26, 111, 0.35);
-  --focus: #f97316;
+  --focus: #0f0f10;
   --content-max-width: 80rem;
-  --catalog-grid-gap: 1.125rem;
-  --catalog-grid-columns-mobile: 2;
-  --catalog-grid-columns-3xl: 3;
-  --catalog-grid-columns-7xl: 4;
-  --catalog-grid-bottom-padding: 9.5rem;
-  --catalog-feature-max-width: 24rem;
-  --catalog-feature-min-height: 4.25rem;
-  --catalog-feature-radius: 999px;
   --transform-scale-normal: 1;
-  --transform-scale-weak: 1.1;
-  --transform-scale-regular: 1.2;
-  --transform-scale-strong: 1.3;
+  /* Спека отклика (specs.jsx): weak=hover (нет трансформа),
+     regular=press, strong=press мелких таргетов (≤44px). */
+  --transform-scale-weak: 1;
+  --transform-scale-regular: 0.97;
+  --transform-scale-strong: 0.92;
 }
 
 .app {

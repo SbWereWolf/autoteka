@@ -8,13 +8,13 @@ import {
 } from "vue";
 import { apiClient } from "../api/HttpApiClient";
 import { ApiError } from "../api/ApiClient";
-import { sortShopsByRules } from "../utils/sortShops";
+import { sortShopsBySelectedFeature } from "../utils/sortShops";
 import type { Shop } from "../types";
 
 export type CatalogCityShopsSources = {
   cityCode: MaybeRefOrGetter<string>;
   selectedCategoryIds: MaybeRefOrGetter<string[]>;
-  selectedFeatureId: MaybeRefOrGetter<string>;
+  selectedFeatureId: MaybeRefOrGetter<string | null>;
 };
 
 export function useCatalogCityShops(sources: CatalogCityShopsSources) {
@@ -43,7 +43,7 @@ export function useCatalogCityShops(sources: CatalogCityShopsSources) {
   }
 
   const sorted = computed(() =>
-    sortShopsByRules({
+    sortShopsBySelectedFeature({
       shops: cityShops.value,
       selectedCategoryIds: toValue(sources.selectedCategoryIds),
       selectedFeatureId: toValue(sources.selectedFeatureId),

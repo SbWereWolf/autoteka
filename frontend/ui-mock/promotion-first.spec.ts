@@ -71,7 +71,6 @@ test("PROMO-02: promo-first partial render keeps promo visible while shop is loa
 
   await expect(page.getByTestId("shop-promo-section")).toBeVisible();
   await expect(page.locator(".shop-loading-back-skeleton")).toBeVisible();
-  await expect(page.locator(".shop-loading-logo-skeleton")).toBeVisible();
 });
 
 test("PROMO-03: несколько акций идут одна под другой, а text-only не рисует пустую галерею", async ({
@@ -87,25 +86,25 @@ test("PROMO-03: несколько акций идут одна под друг�
 
   const firstCard = promoCards.first();
   const secondCard = promoCards.nth(1);
-  const heroShell = page.locator(".shop-hero-shell");
+  const hero = page.locator(".shop-hero");
 
   await expect(firstCard).toContainText("Летняя распродажа");
   await expect(firstCard.locator(".shop-gallery-shell")).toBeVisible();
   await expect(secondCard).toContainText("Текстовая акция");
   await expect(secondCard.locator(".shop-gallery-shell")).toHaveCount(0);
-  await expect(heroShell.getByTestId("shop-promo-section")).toHaveCount(0);
+  await expect(hero.getByTestId("shop-promo-section")).toHaveCount(0);
 
-  const sectionBox = await page.getByTestId("shop-promo-section").boundingBox();
-  const logoBox = await page.locator(".shop-logo-shell").boundingBox();
-  const galleryBox = await page.locator(".shop-hero-gallery").boundingBox();
+  // Канон Step 9: промо ниже контента (под hero), не над галереей.
+  const sectionBox = await page
+    .getByTestId("shop-promo-section")
+    .boundingBox();
+  const heroBox = await hero.boundingBox();
 
   expect(sectionBox).toBeTruthy();
-  expect(logoBox).toBeTruthy();
-  expect(galleryBox).toBeTruthy();
-  if (sectionBox && logoBox && galleryBox) {
-    expect(sectionBox.y).toBeGreaterThan(logoBox.y + logoBox.height - 1);
-    expect(sectionBox.y + sectionBox.height).toBeLessThan(
-      galleryBox.y + 1,
+  expect(heroBox).toBeTruthy();
+  if (sectionBox && heroBox) {
+    expect(sectionBox.y).toBeGreaterThanOrEqual(
+      heroBox.y + heroBox.height - 1,
     );
   }
 });

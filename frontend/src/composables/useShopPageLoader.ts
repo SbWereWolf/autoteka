@@ -302,11 +302,6 @@ export function useShopPageLoader(
           return;
         }
 
-        if (promoSettled.value) {
-          isLoading.value = false;
-          return;
-        }
-
         loadError.value = true;
         isLoading.value = false;
       });

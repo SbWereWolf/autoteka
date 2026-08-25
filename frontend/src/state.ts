@@ -8,9 +8,10 @@ const FEATURE_KEY = "autoteka_feature";
 
 type AppState = {
   menuOpen: boolean;
+  offersOpen: boolean;
   cityCode: string;
   selectedCategoryIds: string[];
-  selectedFeatureId: string;
+  selectedFeatureId: string | null;
   cities: City[];
   categories: Category[];
   features: Feature[];
@@ -18,9 +19,10 @@ type AppState = {
 
 export const state = reactive<AppState>({
   menuOpen: false,
+  offersOpen: false,
   cityCode: "",
   selectedCategoryIds: [],
-  selectedFeatureId: "",
+  selectedFeatureId: null,
   cities: [],
   categories: [],
   features: [],
@@ -41,8 +43,7 @@ function stableSort<T extends { sort: number }>(items: T[]): T[] {
         : "";
 
   return [...items].sort(
-    (a, b) =>
-      a.sort - b.sort || keyOf(a).localeCompare(keyOf(b), "ru"),
+    (a, b) => a.sort - b.sort || keyOf(a).localeCompare(keyOf(b), "ru"),
   );
 }
 
@@ -59,6 +60,14 @@ function sanitizeFromSet(
     .filter((value, index, arr) => arr.indexOf(value) === index);
 }
 
+function sanitizeFeatureId(value: unknown): string | null {
+  if (typeof value !== "string" || value.length === 0) {
+    return null;
+  }
+  const allowed = new Set(state.features.map((item) => item.id));
+  return allowed.has(value) ? value : null;
+}
+
 export function initState(params: {
   cities: City[];
   categories: Category[];
@@ -72,12 +81,8 @@ export function initState(params: {
   const categorySet = new Set(
     state.categories.map((category) => category.id),
   );
-  const featureSet = new Set(
-    state.features.map((feature) => feature.id),
-  );
 
   const fallbackCityCode = state.cities[0]?.code ?? "";
-  const fallbackFeatureId = state.features[0]?.id ?? "";
 
   const rawCityCode = loadLocal<string>(CITY_KEY, fallbackCityCode);
   state.cityCode = citySet.has(rawCityCode)
@@ -92,13 +97,8 @@ export function initState(params: {
   );
   saveLocal(CATEGORIES_KEY, state.selectedCategoryIds);
 
-  const rawFeatureId = loadLocal<string>(
-    FEATURE_KEY,
-    fallbackFeatureId,
-  );
-  state.selectedFeatureId = featureSet.has(rawFeatureId)
-    ? rawFeatureId
-    : fallbackFeatureId;
+  const rawFeatureId = loadLocal<unknown>(FEATURE_KEY, null);
+  state.selectedFeatureId = sanitizeFeatureId(rawFeatureId);
   saveLocal(FEATURE_KEY, state.selectedFeatureId);
 }
 
@@ -118,6 +118,11 @@ export function toggleCategory(categoryId: string) {
   saveLocal(CATEGORIES_KEY, state.selectedCategoryIds);
 }
 
+export function clearCategories() {
+  state.selectedCategoryIds = [];
+  saveLocal(CATEGORIES_KEY, state.selectedCategoryIds);
+}
+
 export function setCity(cityCode: string) {
   const allowed = new Set(state.cities.map((item) => item.code));
   if (!allowed.has(cityCode)) {
@@ -128,12 +133,16 @@ export function setCity(cityCode: string) {
   saveLocal(CITY_KEY, cityCode);
 }
 
-export function setFeature(featureId: string) {
+export function setSelectedFeature(featureId: string | null) {
+  if (featureId === null) {
+    state.selectedFeatureId = null;
+    saveLocal(FEATURE_KEY, state.selectedFeatureId);
+    return;
+  }
   const allowed = new Set(state.features.map((item) => item.id));
   if (!allowed.has(featureId)) {
     return;
   }
-
   state.selectedFeatureId = featureId;
   saveLocal(FEATURE_KEY, featureId);
 }

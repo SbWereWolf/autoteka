@@ -4,7 +4,7 @@
 
     <!-- Indicator: появляется только в момент «доскролла» (когда пользователь тянет/скроллит в конце) -->
     <div
-      class="pointer-events-none fixed left-0 right-0 bottom-4 z-40 flex justify-center"
+      class="overscroll-pill-anchor pointer-events-none fixed left-0 right-0 z-40 flex justify-center"
     >
       <div
         class="ui-transition rounded-2xl px-4 py-3 text-sm flex items-center gap-3"
@@ -210,3 +210,9 @@ const fillStyle = computed(() => ({
   transitionDuration: "120ms",
 }));
 </script>
+
+<style scoped>
+.overscroll-pill-anchor {
+  bottom: calc(var(--shop-actionbar-h) + 1rem);
+}
+</style>
