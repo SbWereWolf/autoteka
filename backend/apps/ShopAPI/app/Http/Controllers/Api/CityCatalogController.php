@@ -59,6 +59,8 @@ final class CityCatalogController extends Controller
                 'code' => $city->code,
                 'title' => $city->title,
                 'sort' => $city->sort,
+                'latitude' => $city->latitude,
+                'longitude' => $city->longitude,
             ],
             'items' => $shops->map(function (Shop $shop) use ($schCategory, $schFeature): array {
                 return [

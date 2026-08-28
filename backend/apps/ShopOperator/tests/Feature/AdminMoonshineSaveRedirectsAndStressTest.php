@@ -66,6 +66,8 @@ final class AdminMoonshineSaveRedirectsAndStressTest extends TestCase
         $response = $this->post(route('moonshine.crud.store', ['resourceUri' => 'city-resource']), [
             'title' => 'City Index Redirect',
             'sort' => 15,
+            'latitude' => '55.752',
+            'longitude' => '37.617',
             'is_published' => '1',
         ]);
 

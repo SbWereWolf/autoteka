@@ -17,6 +17,8 @@ type RawCity = {
   code: string;
   title: string;
   sort: number;
+  latitude?: number | string | null;
+  longitude?: number | string | null;
 };
 
 type RawCategory = {
@@ -322,6 +324,8 @@ function toCity(raw: RawCity): City {
     code: raw.code,
     title: raw.title,
     sort: raw.sort,
+    latitude: normalizeNullableScalar(raw.latitude),
+    longitude: normalizeNullableScalar(raw.longitude),
   };
 }
 

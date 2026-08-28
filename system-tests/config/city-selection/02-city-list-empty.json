@@ -1,0 +1,27 @@
+{
+  "id": "city-list-empty",
+  "description": "Сервер успешно возвращает пустой список городов",
+  "server": {
+    "cityList": {
+      "mode": "fixture",
+      "cities": []
+    },
+    "geolocation": {
+      "mode": "mock",
+      "status": "success",
+      "latitude": 55.7558,
+      "longitude": 37.6173
+    }
+  },
+  "client": {
+    "localStorageCityCode": null
+  },
+  "expected": {
+    "selectedCityCode": "",
+    "localStorageCityCode": null,
+    "citySelectionError": true,
+    "dialogVisible": true,
+    "geolocationRequested": false,
+    "selectionSource": "error"
+  }
+}

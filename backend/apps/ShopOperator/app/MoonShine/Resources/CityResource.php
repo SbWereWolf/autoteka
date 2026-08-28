@@ -95,6 +95,18 @@ class CityResource extends ModelResource
                 ->default(SortDefault::tableMaxPlusTen(City::class, $s->sort()))
                 ->min(0)
                 ->required(),
+            Number::make('Широта', $s->latitude())
+                ->min(-90)
+                ->max(90)
+                ->step(0.001)
+                ->required()
+                ->placeholder('55.756'),
+            Number::make('Долгота', $s->longitude())
+                ->min(-180)
+                ->max(180)
+                ->step(0.001)
+                ->required()
+                ->placeholder('37.617'),
             Switcher::make('Опубликован', $s->isPublished())
                 ->default(true),
             Preview::make('Создан', formatted: fn ($item) => $item->created_at?->format('d.m.Y H:i') ?? ''),

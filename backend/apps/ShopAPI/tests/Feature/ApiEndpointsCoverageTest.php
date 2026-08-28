@@ -33,12 +33,16 @@ final class ApiEndpointsCoverageTest extends TestCase
             'code' => 'city-b',
             'title' => 'City B',
             'sort' => 20,
+            'latitude' => 56.327,
+            'longitude' => 44.006,
             'is_published' => true,
         ]);
         $cityA = City::query()->create([
             'code' => 'city-a',
             'title' => 'City A',
             'sort' => 10,
+            'latitude' => 53.347,
+            'longitude' => 83.778,
             'is_published' => true,
         ]);
 
@@ -50,12 +54,16 @@ final class ApiEndpointsCoverageTest extends TestCase
                 'code' => 'city-a',
                 'title' => 'City A',
                 'sort' => 10,
+                'latitude' => 53.347,
+                'longitude' => 83.778,
             ],
             [
                 'id' => $cityB->getKey(),
                 'code' => 'city-b',
                 'title' => 'City B',
                 'sort' => 20,
+                'latitude' => 56.327,
+                'longitude' => 44.006,
             ],
         ]);
     }
@@ -113,6 +121,8 @@ final class ApiEndpointsCoverageTest extends TestCase
         $response = $this->getJson('/api/v1/city/city-a');
         $response->assertOk();
         $response->assertJsonPath('city.code', 'city-a');
+        $response->assertJsonPath('city.latitude', 53.347);
+        $response->assertJsonPath('city.longitude', 83.778);
         $response->assertJsonCount(1, 'items');
         $response->assertJsonPath('items.0.code', 'shop-a');
         $response->assertJsonPath('items.0.categoryIds', [$data['category']->getKey()]);
@@ -402,6 +412,8 @@ final class ApiEndpointsCoverageTest extends TestCase
             'code' => 'city-a',
             'title' => 'City A',
             'sort' => 1,
+            'latitude' => 53.347,
+            'longitude' => 83.778,
             'is_published' => true,
         ]);
         City::query()->create([

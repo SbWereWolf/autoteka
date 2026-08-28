@@ -19,8 +19,19 @@ final class DictionaryFormPage extends FormPage
     protected function rules(DataWrapperContract $item): array
     {
         $uri = $this->getResource()->getUriKey();
+        if ($uri === 'city-resource') {
+            $s = new SchemaCity();
+
+            return [
+                $s->title() => ['required', 'string', 'max:500'],
+                $s->sort() => ['required', 'integer', 'min:0'],
+                $s->latitude() => ['required', 'numeric', 'between:-90,90'],
+                $s->longitude() => ['required', 'numeric', 'between:-180,180'],
+                $s->isPublished() => ['required'],
+            ];
+        }
+
         $s = match ($uri) {
-            'city-resource' => new SchemaCity(),
             'category-resource' => new SchemaCategory(),
             'feature-resource' => new SchemaFeature(),
             'contact-type-resource' => new SchemaContactType(),

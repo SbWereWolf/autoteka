@@ -1,0 +1,40 @@
+{
+  "id": "geolocation-denied",
+  "description": "Сохранённого города нет, пользователь не разрешил геолокацию; fallback берётся до UI-сортировки",
+  "server": {
+    "cityList": {
+      "mode": "fixture",
+      "cities": [
+        {
+          "code": "spb",
+          "title": "Санкт-Петербург",
+          "sort": 20,
+          "latitude": "59.939",
+          "longitude": "30.315"
+        },
+        {
+          "code": "moscow",
+          "title": "Москва",
+          "sort": 10,
+          "latitude": "55.752",
+          "longitude": "37.617"
+        }
+      ]
+    },
+    "geolocation": {
+      "mode": "mock",
+      "status": "denied"
+    }
+  },
+  "client": {
+    "localStorageCityCode": null
+  },
+  "expected": {
+    "selectedCityCode": "spb",
+    "localStorageCityCode": "spb",
+    "citySelectionError": false,
+    "dialogVisible": false,
+    "geolocationRequested": true,
+    "selectionSource": "fallback-first-city"
+  }
+}

@@ -38,6 +38,8 @@ final class AdminHttpCrudUpdateTest extends TestCase
                 'code' => 'city-new',
                 'title' => 'CITY-NEW',
                 'sort' => 99,
+                'latitude' => '55.752',
+                'longitude' => '37.617',
                 'is_published' => '0',
             ],
         )->assertStatus(302);

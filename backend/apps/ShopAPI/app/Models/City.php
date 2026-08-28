@@ -18,6 +18,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string $code
  * @property string $title
  * @property int $sort
+ * @property float|null $latitude
+ * @property float|null $longitude
  * @property bool $is_published
  */
 class City extends Model
@@ -31,11 +33,15 @@ class City extends Model
         CityColumns::CODE->value,
         CityColumns::TITLE->value,
         CityColumns::SORT->value,
+        CityColumns::LATITUDE->value,
+        CityColumns::LONGITUDE->value,
         CityColumns::IS_PUBLISHED->value,
     ];
 
     protected $casts = [
         CityColumns::SORT->value => 'integer',
+        CityColumns::LATITUDE->value => 'float',
+        CityColumns::LONGITUDE->value => 'float',
         CityColumns::IS_PUBLISHED->value => 'boolean',
     ];
 

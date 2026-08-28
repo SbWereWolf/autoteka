@@ -1,0 +1,42 @@
+{
+  "id": "geolocation-success-no-valid-city-coordinates",
+  "description": "Координаты пользователя получены, но ни у одного города нет пригодной пары координат",
+  "server": {
+    "cityList": {
+      "mode": "fixture",
+      "cities": [
+        {
+          "code": "moscow",
+          "title": "Москва",
+          "sort": 10,
+          "latitude": null,
+          "longitude": null
+        },
+        {
+          "code": "spb",
+          "title": "Санкт-Петербург",
+          "sort": 20,
+          "latitude": null,
+          "longitude": "30.315"
+        }
+      ]
+    },
+    "geolocation": {
+      "mode": "mock",
+      "status": "success",
+      "latitude": 59.94,
+      "longitude": 30.32
+    }
+  },
+  "client": {
+    "localStorageCityCode": null
+  },
+  "expected": {
+    "selectedCityCode": "moscow",
+    "localStorageCityCode": "moscow",
+    "citySelectionError": false,
+    "dialogVisible": false,
+    "geolocationRequested": true,
+    "selectionSource": "fallback-first-city"
+  }
+}

@@ -1,12 +1,17 @@
 import type { Page, Route } from "@playwright/test";
 
+export const TEST_GEOLOCATION_CONFIGURED_KEY =
+  "__autotekaTestGeolocationConfigured";
+
 const TRANSPARENT_PNG_BASE64 =
   "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR4nGNgYAAAAAMAASsJTYQAAAAASUVORK5CYII=";
 
-type RawCity = {
+export type RawCity = {
   code: string;
   title: string;
   sort: number;
+  latitude?: string | null;
+  longitude?: string | null;
 };
 
 type RawCategory = {
@@ -339,7 +344,11 @@ function notFound(route: Route, message: string) {
   return json(route, { message }, 404);
 }
 
-type ErrorScenario = {
+export type ErrorScenario = {
+  cities?: RawCity[];
+  cityListStatus?: 500;
+  categoryListStatus?: 500;
+  featureListStatus?: 500;
   cityCatalogByCode?: Record<string, 404 | 422 | 500>;
   shopByCode?: Record<string, 404 | 422 | 500>;
   promotionsByCode?: Record<string, 404 | 422 | 500>;
@@ -349,6 +358,10 @@ type ErrorScenario = {
     promotionByCode?: Record<string, number>;
     shopByCode?: Record<string, number>;
   };
+};
+
+export type InstallApiMocksOptions = {
+  installDefaultGeolocation?: boolean;
 };
 
 function errorPayload(status: number, message: string) {
@@ -375,7 +388,47 @@ function byStatus(
 export async function installApiMocks(
   page: Page,
   scenario: ErrorScenario = {},
+  options: InstallApiMocksOptions = {},
 ) {
+  const cityList = scenario.cities ?? cities;
+
+  if (options.installDefaultGeolocation !== false) {
+    await page.addInitScript((configuredKey) => {
+      const testWindow = window as Window & Record<string, unknown>;
+      if (testWindow[configuredKey] === true) {
+        return;
+      }
+
+      const permissionDenied = {
+        code: 1,
+        message: "Geolocation denied by default UI mock",
+        PERMISSION_DENIED: 1,
+        POSITION_UNAVAILABLE: 2,
+        TIMEOUT: 3,
+      } as GeolocationPositionError;
+
+      Object.defineProperty(navigator, "geolocation", {
+        configurable: true,
+        value: {
+          clearWatch() {},
+          getCurrentPosition(
+            _success: PositionCallback,
+            error?: PositionErrorCallback | null,
+          ) {
+            queueMicrotask(() => error?.(permissionDenied));
+          },
+          watchPosition(
+            _success: PositionCallback,
+            error?: PositionErrorCallback | null,
+          ) {
+            queueMicrotask(() => error?.(permissionDenied));
+            return 1;
+          },
+        } satisfies Geolocation,
+      });
+    }, TEST_GEOLOCATION_CONFIGURED_KEY);
+  }
+
   await page.route("**/generated/**", async (route) => {
     const url = new URL(route.request().url());
     const pathname = url.pathname.toLowerCase();
@@ -409,14 +462,38 @@ export async function installApiMocks(
     const method = request.method().toUpperCase();
 
     if (method === "GET" && path.endsWith("/api/v1/city-list")) {
-      return json(route, cities);
+      if (scenario.cityListStatus === 500) {
+        return json(
+          route,
+          { message: "Temporary backend failure" },
+          500,
+        );
+      }
+
+      return json(route, cityList);
     }
 
     if (method === "GET" && path.endsWith("/api/v1/category-list")) {
+      if (scenario.categoryListStatus === 500) {
+        return json(
+          route,
+          { message: "Temporary backend failure" },
+          500,
+        );
+      }
+
       return json(route, categories);
     }
 
     if (method === "GET" && path.endsWith("/api/v1/feature-list")) {
+      if (scenario.featureListStatus === 500) {
+        return json(
+          route,
+          { message: "Temporary backend failure" },
+          500,
+        );
+      }
+
       return json(route, features);
     }
 
@@ -434,7 +511,7 @@ export async function installApiMocks(
         );
       }
 
-      const city = cities.find((item) => item.code === cityCode);
+      const city = cityList.find((item) => item.code === cityCode);
       if (!city) {
         return notFound(route, "City Not Found");
       }

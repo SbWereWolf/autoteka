@@ -54,6 +54,26 @@ final class SchemaCity extends AbstractSchemaTable
         return $this->union->dot(CityColumns::SORT);
     }
 
+    public function latitude(): string
+    {
+        return CityColumns::LATITUDE->value;
+    }
+
+    public function dotLatitude(): string
+    {
+        return $this->union->dot(CityColumns::LATITUDE);
+    }
+
+    public function longitude(): string
+    {
+        return CityColumns::LONGITUDE->value;
+    }
+
+    public function dotLongitude(): string
+    {
+        return $this->union->dot(CityColumns::LONGITUDE);
+    }
+
     public function isPublished(): string
     {
         return CityColumns::IS_PUBLISHED->value;

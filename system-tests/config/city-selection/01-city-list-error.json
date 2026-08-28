@@ -1,0 +1,27 @@
+{
+  "id": "city-list-error",
+  "description": "Список городов не загружается с сервера",
+  "server": {
+    "cityList": {
+      "mode": "error",
+      "status": 500
+    },
+    "geolocation": {
+      "mode": "mock",
+      "status": "success",
+      "latitude": 55.7558,
+      "longitude": 37.6173
+    }
+  },
+  "client": {
+    "localStorageCityCode": null
+  },
+  "expected": {
+    "selectedCityCode": "",
+    "localStorageCityCode": null,
+    "citySelectionError": true,
+    "dialogVisible": true,
+    "geolocationRequested": false,
+    "selectionSource": "error"
+  }
+}

@@ -2,6 +2,8 @@ export type City = {
   code: string;
   title: string;
   sort: number;
+  latitude: string | null;
+  longitude: string | null;
 };
 
 export type Category = {

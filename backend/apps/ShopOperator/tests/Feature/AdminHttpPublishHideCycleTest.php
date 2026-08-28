@@ -143,15 +143,21 @@ final class AdminHttpPublishHideCycleTest extends TestCase
 
     private function toggleDictionaryResource(string $resourceUri, int $id, bool $published): void
     {
-        $this->patch(route('moonshine.crud.update', [
-            'resourceUri' => $resourceUri,
-            'resourceItem' => $id,
-        ]), [
+        $payload = [
             'code' => $resourceUri . '-' . $id,
             'title' => strtoupper($resourceUri) . '-' . $id,
             'sort' => 1,
             'is_published' => $published ? '1' : '0',
-        ])->assertStatus(302);
+        ];
+        if ($resourceUri === 'city-resource') {
+            $payload['latitude'] = '55.752';
+            $payload['longitude'] = '37.617';
+        }
+
+        $this->patch(route('moonshine.crud.update', [
+            'resourceUri' => $resourceUri,
+            'resourceItem' => $id,
+        ]), $payload)->assertStatus(302);
     }
 
     private function createAdminUser(): MoonshineUser

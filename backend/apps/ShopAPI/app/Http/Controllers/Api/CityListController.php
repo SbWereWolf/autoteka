@@ -19,12 +19,21 @@ final class CityListController extends Controller
             ->where($sch->isPublished(), true)
             ->orderBy($sch->sort())
             ->orderBy($sch->id())
-            ->get([$sch->id(), $sch->code(), $sch->title(), $sch->sort()])
+            ->get([
+                $sch->id(),
+                $sch->code(),
+                $sch->title(),
+                $sch->sort(),
+                $sch->latitude(),
+                $sch->longitude(),
+            ])
             ->map(static fn (City $city): array => [
                 'id' => $city->getKey(),
                 'code' => $city->code,
                 'title' => $city->title,
                 'sort' => $city->sort,
+                'latitude' => $city->latitude,
+                'longitude' => $city->longitude,
             ]);
 
         return response()->json($items);

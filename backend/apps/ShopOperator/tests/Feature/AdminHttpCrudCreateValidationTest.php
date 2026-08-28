@@ -27,6 +27,8 @@ final class AdminHttpCrudCreateValidationTest extends TestCase
             'code' => 'city-new',
             'title' => 'City New',
             'sort' => 10,
+            'latitude' => '55.752',
+            'longitude' => '37.617',
             'is_published' => '1',
         ])->assertStatus(302);
 
@@ -42,6 +44,8 @@ final class AdminHttpCrudCreateValidationTest extends TestCase
         $this->post(route('moonshine.crud.store', ['resourceUri' => 'city-resource']), [
             'title' => 'Тестовый Город 2026',
             'sort' => 11,
+            'latitude' => '55.753',
+            'longitude' => '37.618',
             'is_published' => '1',
         ])->assertStatus(302);
 
@@ -59,6 +63,8 @@ final class AdminHttpCrudCreateValidationTest extends TestCase
             'code' => 'city-invalid',
             'title' => '',
             'sort' => 1,
+            'latitude' => '55.752',
+            'longitude' => '37.617',
             'is_published' => '1',
         ])->assertStatus(302);
 
@@ -72,12 +78,19 @@ final class AdminHttpCrudCreateValidationTest extends TestCase
         $admin = $this->createAdminUser();
         $this->actingAs($admin, 'moonshine');
 
-        $this->post(route('moonshine.crud.store', ['resourceUri' => $case['resourceUri']]), [
+        $payload = [
             'code' => strtolower(preg_replace('/\s+/', '-', $case['title'])),
             'title' => $case['title'],
             'sort' => 1,
             'is_published' => '1',
-        ])->assertStatus(302);
+        ];
+        if ($case['resourceUri'] === 'city-resource') {
+            $payload['latitude'] = '55.752';
+            $payload['longitude'] = '37.617';
+        }
+
+        $this->post(route('moonshine.crud.store', ['resourceUri' => $case['resourceUri']]), $payload)
+            ->assertStatus(302);
 
         /** @var class-string<\Illuminate\Database\Eloquent\Model> $modelClass */
         $modelClass = $case['model'];

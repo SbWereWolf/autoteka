@@ -1,6 +1,11 @@
 import { reactive } from "vue";
 import type { Category, City, Feature } from "./types";
+import { findNearestGpsPoint } from "./utils/findNearestGpsPoint";
 import { loadLocal, saveLocal } from "./utils/storage";
+import {
+  createBrowserGeolocationProvider,
+  type GeolocationProvider,
+} from "./utils/userGeolocation";
 
 const CITY_KEY = "autoteka_city";
 const CATEGORIES_KEY = "autoteka_categories";
@@ -10,6 +15,7 @@ type AppState = {
   menuOpen: boolean;
   offersOpen: boolean;
   cityCode: string;
+  citySelectionError: boolean;
   selectedCategoryIds: string[];
   selectedFeatureId: string | null;
   cities: City[];
@@ -21,6 +27,7 @@ export const state = reactive<AppState>({
   menuOpen: false,
   offersOpen: false,
   cityCode: "",
+  citySelectionError: false,
   selectedCategoryIds: [],
   selectedFeatureId: null,
   cities: [],
@@ -68,11 +75,26 @@ function sanitizeFeatureId(value: unknown): string | null {
   return allowed.has(value) ? value : null;
 }
 
-export function initState(params: {
-  cities: City[];
-  categories: Category[];
-  features: Feature[];
-}) {
+function coordinate(value: string | null): number | null {
+  if (value === null || value.trim() === "") {
+    return null;
+  }
+
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+export async function initState(
+  params: {
+    cities: City[];
+    categories: Category[];
+    features: Feature[];
+  },
+  geolocationProvider: GeolocationProvider = createBrowserGeolocationProvider(),
+) {
+  const fallbackCityCode = params.cities[0]?.code ?? "";
+
+  state.cityCode = "";
   state.cities = stableSort(params.cities);
   state.categories = stableSort(params.categories);
   state.features = stableSort(params.features);
@@ -82,13 +104,40 @@ export function initState(params: {
     state.categories.map((category) => category.id),
   );
 
-  const fallbackCityCode = state.cities[0]?.code ?? "";
+  const rawCityCode = loadLocal<unknown>(CITY_KEY, null);
+  if (typeof rawCityCode === "string" && citySet.has(rawCityCode)) {
+    state.cityCode = rawCityCode;
+    state.citySelectionError = false;
+  } else {
+    let selectedCityCode = fallbackCityCode;
 
-  const rawCityCode = loadLocal<string>(CITY_KEY, fallbackCityCode);
-  state.cityCode = citySet.has(rawCityCode)
-    ? rawCityCode
-    : fallbackCityCode;
-  saveLocal(CITY_KEY, state.cityCode);
+    if (state.cities.length > 0) {
+      const geolocationResult = await geolocationProvider.getPosition();
+
+      if (geolocationResult.status === "success") {
+        const nearestCity = findNearestGpsPoint(
+          state.cities.map((city) => ({
+            code: city.code,
+            lat: coordinate(city.latitude),
+            lon: coordinate(city.longitude),
+          })),
+          geolocationResult.position,
+        );
+
+        if (citySet.has(nearestCity.code)) {
+          selectedCityCode = nearestCity.code;
+        }
+      }
+    }
+
+    if (selectedCityCode === "") {
+      state.citySelectionError = true;
+    } else {
+      state.cityCode = selectedCityCode;
+      state.citySelectionError = false;
+      saveLocal(CITY_KEY, state.cityCode);
+    }
+  }
 
   const rawCategories = loadLocal<unknown>(CATEGORIES_KEY, []);
   state.selectedCategoryIds = sanitizeFromSet(

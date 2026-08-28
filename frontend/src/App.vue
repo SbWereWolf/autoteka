@@ -12,6 +12,7 @@
       </main>
     </div>
 
+    <CitySelectionErrorDialog />
     <HamburgerMenu v-if="isCatalog" />
 
     <span class="sr-only" role="status" aria-live="polite">
@@ -28,6 +29,7 @@ import { useRoute } from "vue-router";
 import TopBar from "./components/TopBar.vue";
 import HamburgerMenu from "./components/HamburgerMenu.vue";
 import AppToast from "./components/AppToast.vue";
+import CitySelectionErrorDialog from "./components/CitySelectionErrorDialog.vue";
 import { useAnnouncer } from "./composables/useAnnouncer";
 import { useIsDesktop } from "./composables/useIsDesktop";
 import { state } from "./state";

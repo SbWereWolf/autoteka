@@ -1,0 +1,40 @@
+{
+  "id": "geolocation-real",
+  "description": "Ручной smoke с реальным браузерным Geolocation API",
+  "execution": "manual",
+  "server": {
+    "cityList": {
+      "mode": "fixture",
+      "cities": [
+        {
+          "code": "moscow",
+          "title": "Москва",
+          "sort": 10,
+          "latitude": "55.752",
+          "longitude": "37.617"
+        },
+        {
+          "code": "spb",
+          "title": "Санкт-Петербург",
+          "sort": 20,
+          "latitude": "59.939",
+          "longitude": "30.315"
+        }
+      ]
+    },
+    "geolocation": {
+      "mode": "real"
+    }
+  },
+  "client": {
+    "localStorageCityCode": null
+  },
+  "expected": {
+    "selectedCityCode": "any-server-city",
+    "localStorageCityCode": "same-as-selected",
+    "citySelectionError": false,
+    "dialogVisible": false,
+    "geolocationRequested": true,
+    "selectionSource": "real-geolocation-or-fallback"
+  }
+}

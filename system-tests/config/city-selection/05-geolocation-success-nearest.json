@@ -1,0 +1,42 @@
+{
+  "id": "geolocation-success-nearest",
+  "description": "Устаревший localStorage игнорируется, mock-координаты выбирают ближайший город",
+  "server": {
+    "cityList": {
+      "mode": "fixture",
+      "cities": [
+        {
+          "code": "moscow",
+          "title": "Москва",
+          "sort": 10,
+          "latitude": "55.752",
+          "longitude": "37.617"
+        },
+        {
+          "code": "spb",
+          "title": "Санкт-Петербург",
+          "sort": 20,
+          "latitude": "59.939",
+          "longitude": "30.315"
+        }
+      ]
+    },
+    "geolocation": {
+      "mode": "mock",
+      "status": "success",
+      "latitude": 59.94,
+      "longitude": 30.32
+    }
+  },
+  "client": {
+    "localStorageCityCode": "removed-city"
+  },
+  "expected": {
+    "selectedCityCode": "spb",
+    "localStorageCityCode": "spb",
+    "citySelectionError": false,
+    "dialogVisible": false,
+    "geolocationRequested": true,
+    "selectionSource": "nearest-geolocation"
+  }
+}

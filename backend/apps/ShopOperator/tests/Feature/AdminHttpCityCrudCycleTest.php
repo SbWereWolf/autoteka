@@ -25,6 +25,8 @@ final class AdminHttpCityCrudCycleTest extends TestCase
             'code' => 'city-cycle',
             'title' => 'City Cycle',
             'sort' => 10,
+            'latitude' => '55.752',
+            'longitude' => '37.617',
             'is_published' => '0',
         ])->assertStatus(302);
 
@@ -38,6 +40,8 @@ final class AdminHttpCityCrudCycleTest extends TestCase
             'code' => 'city-cycle',
             'title' => 'City Cycle',
             'sort' => 10,
+            'latitude' => '55.752',
+            'longitude' => '37.617',
             'is_published' => '1',
         ])->assertStatus(302);
         $this->assertDatabaseHas('city', [
@@ -52,6 +56,8 @@ final class AdminHttpCityCrudCycleTest extends TestCase
             'code' => 'city-cycle-updated',
             'title' => 'City Cycle Updated',
             'sort' => 99,
+            'latitude' => '55.753',
+            'longitude' => '37.618',
             'is_published' => '1',
         ])->assertStatus(302);
         $this->assertDatabaseHas('city', [
@@ -73,6 +79,8 @@ final class AdminHttpCityCrudCycleTest extends TestCase
             'code' => 'city-cycle-updated',
             'title' => 'City Cycle Updated',
             'sort' => 99,
+            'latitude' => '55.753',
+            'longitude' => '37.618',
             'is_published' => '0',
         ])->assertStatus(302);
         $this->assertDatabaseHas('city', [
@@ -84,6 +92,8 @@ final class AdminHttpCityCrudCycleTest extends TestCase
             'code' => 'city-cycle-invalid',
             'title' => '',
             'sort' => 5,
+            'latitude' => '55.752',
+            'longitude' => '37.617',
             'is_published' => '1',
         ])->assertStatus(302);
         $this->assertDatabaseMissing('city', ['code' => 'city-cycle-invalid']);
