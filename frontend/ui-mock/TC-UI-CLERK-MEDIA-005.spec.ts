@@ -12,7 +12,7 @@ test("TC-UI-CLERK-MEDIA-005: audio toggle is shared across page videos until rel
   const heroGallery = page.getByTestId("shop-gallery");
   const promoGallery = page.getByTestId("shop-promo-card").first();
 
-  await heroGallery.locator('[data-testid="gallery-next"]').click();
+  await heroGallery.getByTestId("gallery-dot-1").click();
   const heroAudioToggle = heroGallery.getByTestId("gallery-audio-toggle");
   await expect(heroAudioToggle).toBeVisible();
   const heroFooterLayout = await heroGallery.evaluate(() => {
@@ -62,7 +62,7 @@ test("TC-UI-CLERK-MEDIA-005: audio toggle is shared across page videos until rel
     )
     .toBe(false);
 
-  await promoGallery.locator('[data-testid="gallery-next"]').click();
+  await promoGallery.getByTestId("gallery-dot-1").click();
   const promoAudioToggle = promoGallery.getByTestId("gallery-audio-toggle");
   await expect(promoAudioToggle).toHaveAttribute("aria-pressed", "true");
   await expect
@@ -78,7 +78,7 @@ test("TC-UI-CLERK-MEDIA-005: audio toggle is shared across page videos until rel
   });
 
   const reloadedHeroGallery = page.getByTestId("shop-gallery");
-  await reloadedHeroGallery.locator('[data-testid="gallery-next"]').click();
+  await reloadedHeroGallery.getByTestId("gallery-dot-1").click();
   const reloadedToggle = reloadedHeroGallery.getByTestId(
     "gallery-audio-toggle",
   );

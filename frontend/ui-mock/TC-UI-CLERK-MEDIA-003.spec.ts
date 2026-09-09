@@ -53,7 +53,7 @@ test("TC-UI-CLERK-MEDIA-003: shop page consumes mixed galleryItems and renders v
     /gallery-video-poster\.webp$/,
   );
 
-  await gallery.locator('[data-testid="gallery-next"]').click();
+  await gallery.getByTestId("gallery-dot-1").click();
   await expect(gallery.getByTestId("gallery-audio-toggle")).toBeVisible();
   await expect(gallery.getByTestId("gallery-audio-toggle")).toHaveAttribute(
     "aria-pressed",
@@ -77,7 +77,7 @@ test("TC-UI-CLERK-MEDIA-003: shop page consumes mixed galleryItems and renders v
     )
     .toBe(1);
 
-  await gallery.locator('[data-testid="gallery-prev"]').click();
+  await gallery.getByTestId("gallery-dot-0").click();
   await expect
     .poll(async () =>
       page.evaluate(() => {

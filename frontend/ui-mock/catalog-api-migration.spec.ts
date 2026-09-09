@@ -872,7 +872,7 @@ test("UI-MOCK-28: смена кадра галереи объявляется в
 
   const gallery = page.getByTestId("shop-gallery");
   await expect(gallery).toBeVisible();
-  await gallery.locator('[data-testid="gallery-next"]').click();
+  await gallery.getByTestId("gallery-dot-1").click();
 
   await expect(page.locator('[role="status"]')).toHaveText(
     "Видео 2 из 2",
@@ -942,7 +942,7 @@ test("UI-MOCK-30: кнопка паузы на видео-слайде вызы�
   });
 
   const gallery = page.getByTestId("shop-gallery");
-  await gallery.locator('[data-testid="gallery-next"]').click();
+  await gallery.getByTestId("gallery-dot-1").click();
 
   const pauseToggle = gallery.getByTestId("gallery-pause-toggle");
   await expect(pauseToggle).toBeVisible();
@@ -1004,7 +1004,7 @@ test("UI-MOCK-31: reduced-motion отменяет автоплей активн�
   });
 
   const gallery = page.getByTestId("shop-gallery");
-  await gallery.locator('[data-testid="gallery-next"]').click();
+  await gallery.getByTestId("gallery-dot-1").click();
 
   const pauseToggle = gallery.getByTestId("gallery-pause-toggle");
   await expect(pauseToggle).toBeVisible();
@@ -1030,7 +1030,7 @@ test("UI-MOCK-32: кнопка паузы помещается внутри boun
   });
 
   const gallery = page.getByTestId("shop-gallery");
-  await gallery.locator('[data-testid="gallery-next"]').click();
+  await gallery.getByTestId("gallery-dot-1").click();
 
   const pauseToggle = gallery.getByTestId("gallery-pause-toggle");
   await expect(pauseToggle).toBeVisible();
@@ -1042,10 +1042,8 @@ test("UI-MOCK-32: кнопка паузы помещается внутри boun
         '[data-testid="gallery-pause-toggle"]',
       ) as HTMLElement | null
     )?.getBoundingClientRect();
-    const navNext = (
-      el.querySelector(
-        '[data-testid="gallery-next"]',
-      ) as HTMLElement | null
+    const dots = (
+      el.querySelector(".shop-gallery-dots") as HTMLElement | null
     )?.getBoundingClientRect();
     return {
       shell: {
@@ -1062,12 +1060,12 @@ test("UI-MOCK-32: кнопка паузы помещается внутри boun
             bottom: pause.bottom,
           }
         : null,
-      navNext: navNext
+      dots: dots
         ? {
-            x: navNext.x,
-            y: navNext.y,
-            right: navNext.right,
-            bottom: navNext.bottom,
+            x: dots.x,
+            y: dots.y,
+            right: dots.right,
+            bottom: dots.bottom,
           }
         : null,
     };
@@ -1081,12 +1079,12 @@ test("UI-MOCK-32: кнопка паузы помещается внутри boun
     expect(rects.pause.bottom).toBeLessThanOrEqual(rects.shell.bottom);
   }
 
-  if (rects.pause && rects.navNext) {
+  if (rects.pause && rects.dots) {
     const intersects =
-      rects.pause.x < rects.navNext.right &&
-      rects.pause.right > rects.navNext.x &&
-      rects.pause.y < rects.navNext.bottom &&
-      rects.pause.bottom > rects.navNext.y;
+      rects.pause.x < rects.dots.right &&
+      rects.pause.right > rects.dots.x &&
+      rects.pause.y < rects.dots.bottom &&
+      rects.pause.bottom > rects.dots.y;
     expect(intersects).toBe(false);
   }
 });
