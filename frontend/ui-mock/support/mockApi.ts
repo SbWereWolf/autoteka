@@ -6,6 +6,17 @@ export const TEST_GEOLOCATION_CONFIGURED_KEY =
 const TRANSPARENT_PNG_BASE64 =
   "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR4nGNgYAAAAAMAASsJTYQAAAAASUVORK5CYII=";
 
+// Непрозрачный прямоугольник заданного интринсика: <img> берёт размер
+// из width/height, поэтому max-height/max-width в CSS работают как на
+// настоящем логотипе.
+function sizedSvg(width: number, height: number): string {
+  return (
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" ` +
+    `height="${height}" viewBox="0 0 ${width} ${height}">` +
+    `<rect width="${width}" height="${height}" fill="#d61d00"/></svg>`
+  );
+}
+
 export type RawCity = {
   code: string;
   title: string;
@@ -445,6 +456,19 @@ export async function installApiMocks(
         status: 204,
         contentType: "video/mp4",
         body: "",
+      });
+    }
+
+    // Имена фикстур несут размер (…-512x512.png) — отдаём картинку именно
+    // такого интринсика, иначе тесты геометрии меряют вырожденный 1×1
+    // и проходят при любом CSS-ограничении. SVG вместо PNG: размер задаётся
+    // атрибутами, кодировщик не нужен.
+    const size = pathname.match(/(\d+)x(\d+)\.[a-z]+$/);
+    if (size) {
+      return route.fulfill({
+        status: 200,
+        contentType: "image/svg+xml",
+        body: sizedSvg(Number(size[1]), Number(size[2])),
       });
     }
 
