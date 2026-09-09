@@ -3,13 +3,18 @@ import { installApiMocks } from "./support/mockApi";
 
 // Зона D — мобильный канон-аудит (@390 из конфига).
 
-test("D1: лого тайла ≤72px, центрировано и не растянуто на зону", async ({
+// Кэп высоты лого = .catalog-shop-tile-media { max-height } в tailwind.css.
+const LOGO_CAP_PX = 96; // 6rem
+
+test("D1: лого тайла упирается в кэп 96px, центрировано и не растянуто на зону", async ({
   page,
 }) => {
   await installApiMocks(page);
   await page.goto("/", { waitUntil: "domcontentloaded" });
 
   // barnaul-01 имеет thumbUrl → рендерится .catalog-shop-tile-media.
+  // Фикстура квадратная 512x512 (mockApi отдаёт размер из имени файла):
+  // на вырожденном 1x1 проверка кэпа проходила бы при любом значении.
   const tile = page.locator('a.catalog-shop-tile[href$="/shop/barnaul-01"]');
   const zone = tile.locator(".catalog-shop-tile-logo");
   const media = tile.locator(".catalog-shop-tile-media");
@@ -19,6 +24,9 @@ test("D1: лого тайла ≤72px, центрировано и не раст
   expect(zoneBox).toBeTruthy();
   expect(mediaBox).toBeTruthy();
   if (zoneBox && mediaBox) {
+    // Гард на вырожденную фикстуру: квадрат должен быть квадратом.
+    expect(mediaBox.width).toBeGreaterThan(1);
+    expect(Math.abs(mediaBox.width - mediaBox.height)).toBeLessThanOrEqual(1);
     // Containment в зону лого (с допуском 1px).
     expect(mediaBox.x).toBeGreaterThanOrEqual(zoneBox.x - 1);
     expect(mediaBox.y).toBeGreaterThanOrEqual(zoneBox.y - 1);
@@ -28,9 +36,12 @@ test("D1: лого тайла ≤72px, центрировано и не раст
     expect(mediaBox.y + mediaBox.height).toBeLessThanOrEqual(
       zoneBox.y + zoneBox.height + 1,
     );
-    // Канон BrandCard: лого capped ≤72px, не растянуто на высокую flex:1-зону.
-    expect(mediaBox.height).toBeLessThanOrEqual(74);
-    expect(mediaBox.height).toBeLessThanOrEqual(zoneBox.height + 2);
+    // Квадрат шире кэпа упирается в него ровно: не выше и не ниже.
+    // Зона по высоте больше кэпа, поэтому ограничивает именно max-height.
+    expect(mediaBox.height).toBeGreaterThanOrEqual(LOGO_CAP_PX - 1);
+    expect(mediaBox.height).toBeLessThanOrEqual(LOGO_CAP_PX + 1);
+    // И лого не растянуто на всю высокую flex:1-зону.
+    expect(mediaBox.height).toBeLessThan(zoneBox.height);
     // Центрировано по вертикали в зоне (допуск 2px).
     const mediaCy = mediaBox.y + mediaBox.height / 2;
     const zoneCy = zoneBox.y + zoneBox.height / 2;
