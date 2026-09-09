@@ -53,7 +53,7 @@ test("TC-UI-CLERK-MEDIA-004: promotion card consumes mixed galleryItems and rend
     /promo-summer-clip-poster\.webp$/,
   );
 
-  await firstCard.locator('[data-testid="gallery-next"]').click();
+  await firstCard.getByTestId("gallery-dot-1").click();
   await expect(firstCard.getByTestId("gallery-audio-toggle")).toBeVisible();
   await expect(firstCard.getByTestId("gallery-audio-toggle")).toHaveAttribute(
     "aria-pressed",
@@ -77,7 +77,7 @@ test("TC-UI-CLERK-MEDIA-004: promotion card consumes mixed galleryItems and rend
     )
     .toBe(1);
 
-  await firstCard.locator('[data-testid="gallery-prev"]').click();
+  await firstCard.getByTestId("gallery-dot-0").click();
   await expect
     .poll(async () =>
       page.evaluate(() => {

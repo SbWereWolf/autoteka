@@ -2265,54 +2265,14 @@
     background: #f8fafc;
   }
 
-  /* Стрелки галереи (моб.) — канон ix-onimg (_prototype/media-slider.jsx):
-     тёмная полупрозрачная подложка + белый глиф, не белые круги. */
-  .shop-gallery-nav {
-    position: absolute;
-    top: 50%;
-    margin-top: -1.375rem;
-    z-index: 3;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 2.75rem;
-    height: 2.75rem;
-    padding: 0;
-    border: none;
-    border-radius: var(--radius-control);
-    background: rgba(0, 0, 0, 0.4);
-    -webkit-backdrop-filter: blur(8px);
-    backdrop-filter: blur(8px);
-    color: #ffffff;
-    cursor: pointer;
-    transition:
-      transform 100ms ease,
-      background 120ms ease;
-    -webkit-tap-highlight-color: transparent;
-    touch-action: manipulation;
-  }
-
-  @media (hover: hover) and (pointer: fine) {
-    .shop-gallery-nav:hover {
-      background: rgba(0, 0, 0, 0.48);
-    }
-  }
-
-  .shop-gallery-nav:active {
-    background: rgba(0, 0, 0, 0.55);
-    transform: scale(var(--scale-press-icon));
-  }
-
-  .shop-gallery-nav:focus-visible {
-    outline: none;
-    box-shadow:
-      0 0 0 2px var(--color-white),
-      0 0 0 4px var(--color-ink);
-  }
-
   .shop-gallery-footer {
+    /* Точка стояла низом на 2.75rem от низа кадра: якорь 2.375rem плюс зазор
+       строки под inline-flex. Прозрачный таргет 2.75rem вырос вокруг точки,
+       поэтому футер переводим в flex (строки и зазора больше нет) и якорим
+       так, чтобы центр таргета встал в прежний центр точки. */
     position: absolute;
-    bottom: 2.375rem;
+    display: flex;
+    bottom: calc(2.75rem + 0.48rem / 2 - 2.75rem / 2);
     left: 50%;
     z-index: 2;
     transform: translateX(-50%);
@@ -2326,8 +2286,41 @@
 
   .shop-gallery-dots {
     display: flex;
-    gap: 0.4rem;
-    pointer-events: none;
+  }
+
+  /* Точка-кнопка: прозрачный таргет 2.75rem (44px) — габарит канон-кнопок
+     поверх фото. Растёт только область нажатия, сама точка не меняется.
+     Таргеты идут встык: перекройся они, верхний перехватывал бы нажатие
+     по соседней точке. */
+  .shop-gallery-dot-hit {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    padding: 0;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    transition: transform 100ms ease;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+
+  .shop-gallery-dot-hit:active {
+    transform: scale(var(--scale-press-icon));
+  }
+
+  /* Кольцо — тот же рецепт ix-onimg, что у прочих кнопок поверх фото, но
+     садится на видимую точку, а не на прозрачный таргет. */
+  .shop-gallery-dot-hit:focus-visible {
+    outline: none;
+  }
+
+  .shop-gallery-dot-hit:focus-visible .shop-gallery-dot {
+    box-shadow:
+      0 0 0 2px var(--color-white),
+      0 0 0 4px var(--color-ink);
   }
 
   .shop-gallery-dot {
@@ -2415,14 +2408,6 @@
     .shop-gallery-pause-toggle:active {
       transform: none;
     }
-  }
-
-  .shop-gallery-nav--left {
-    left: 1rem;
-  }
-
-  .shop-gallery-nav--right {
-    right: 1rem;
   }
 
   .shop-content-card {

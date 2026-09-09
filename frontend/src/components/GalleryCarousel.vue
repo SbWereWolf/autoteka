@@ -73,53 +73,6 @@
         </div>
       </div>
 
-      <button
-        v-if="items.length > 1"
-        class="shop-gallery-nav shop-gallery-nav--left"
-        data-testid="gallery-prev"
-        type="button"
-        aria-label="Предыдущий кадр"
-        @click="prev"
-      >
-        <svg
-          width="22"
-          height="22"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          aria-hidden="true"
-          focusable="false"
-        >
-          <path d="M15 6 L9 12 L15 18" />
-        </svg>
-      </button>
-      <button
-        v-if="items.length > 1"
-        class="shop-gallery-nav shop-gallery-nav--right"
-        data-testid="gallery-next"
-        type="button"
-        aria-label="Следующий кадр"
-        @click="next"
-      >
-        <svg
-          width="22"
-          height="22"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          aria-hidden="true"
-          focusable="false"
-        >
-          <path d="M9 6 L15 12 L9 18" />
-        </svg>
-      </button>
-
       <div v-if="items.length > 1" class="shop-gallery-footer">
         <div class="shop-gallery-dots-shell">
           <button
@@ -137,14 +90,24 @@
           </button>
 
           <div class="shop-gallery-dots">
-            <span
+            <button
               v-for="(_, dotIndex) in items"
               :key="`gallery-dot-${dotIndex}`"
-              class="shop-gallery-dot"
-              :class="{
-                'shop-gallery-dot--active': dotIndex === index,
-              }"
-            />
+              type="button"
+              class="shop-gallery-dot-hit"
+              :aria-label="`Кадр ${dotIndex + 1} из ${items.length}`"
+              :aria-current="dotIndex === index ? 'true' : undefined"
+              :data-testid="`gallery-dot-${dotIndex}`"
+              @click="goTo(dotIndex)"
+            >
+              <span
+                class="shop-gallery-dot"
+                :class="{
+                  'shop-gallery-dot--active': dotIndex === index,
+                }"
+                aria-hidden="true"
+              />
+            </button>
           </div>
         </div>
       </div>
