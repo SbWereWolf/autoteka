@@ -19,7 +19,7 @@
       {{ announcerMessage }}
     </span>
 
-    <AppToast :message="announcerMessage" />
+    <AppToast :message="noticeMessage" />
   </div>
 </template>
 
@@ -37,7 +37,8 @@ import { state } from "./state";
 const { isDesktop } = useIsDesktop();
 
 const route = useRoute();
-const { message: announcerMessage } = useAnnouncer();
+const { message: announcerMessage, notice: noticeMessage } =
+  useAnnouncer();
 
 const isCatalog = computed(() => route.name === "catalog");
 const isShop = computed(() => route.name === "shop");

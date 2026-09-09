@@ -40,7 +40,7 @@ function copyWithExecCommand(url: string): boolean {
 }
 
 export function useShareLink() {
-  const { announce } = useAnnouncer();
+  const { notify } = useAnnouncer();
 
   async function share(payload: SharePayload): Promise<void> {
     if (
@@ -57,7 +57,7 @@ export function useShareLink() {
         if (isAbortError(error)) {
           return;
         }
-        announce("Не удалось поделиться ссылкой");
+        notify("Не удалось поделиться ссылкой");
       }
       return;
     }
@@ -69,19 +69,19 @@ export function useShareLink() {
     ) {
       try {
         await navigator.clipboard.writeText(payload.url);
-        announce("Ссылка скопирована");
+        notify("Ссылка скопирована");
       } catch {
-        announce("Не удалось поделиться ссылкой");
+        notify("Не удалось поделиться ссылкой");
       }
       return;
     }
 
     if (copyWithExecCommand(payload.url)) {
-      announce("Ссылка скопирована");
+      notify("Ссылка скопирована");
       return;
     }
 
-    announce("Не удалось поделиться ссылкой");
+    notify("Не удалось поделиться ссылкой");
   }
 
   return { share };
