@@ -122,7 +122,12 @@ function onTouchStart(e: TouchEvent) {
 
 function onTouchMove(e: TouchEvent) {
   if (triggered.value || isCoolingDown.value) return;
-  if (!atBottom()) return;
+  // Страница ушла от низа — накопленное тянет сбрасывать, иначе пилл
+  // зависает с заполнением и остаётся взведённым.
+  if (!atBottom()) {
+    reset();
+    return;
+  }
 
   const y = e.touches[0]?.clientY ?? 0;
   const delta = startY - y; // upward finger move => positive delta (page scroll down)
@@ -137,7 +142,8 @@ function onTouchMove(e: TouchEvent) {
 }
 
 function onTouchEnd() {
-  if (armed.value) openUrl();
+  // Отпустили палец не у низа страницы — переход не наш, ничего не открываем.
+  if (armed.value && atBottom()) openUrl();
   reset();
 }
 
@@ -145,7 +151,12 @@ let wheelReleaseTimer: number | null = null;
 
 function onWheel(e: WheelEvent) {
   if (triggered.value || isCoolingDown.value) return;
-  if (!atBottom()) return;
+  // То же правило, что и у касаний: ушли от низа — сбрасываем накопленное,
+  // иначе пилл зависает с заполнением и остаётся взведённым.
+  if (!atBottom()) {
+    reset();
+    return;
+  }
   if (e.deltaY <= 0) return;
 
   pull.value = Math.min(
@@ -158,7 +169,9 @@ function onWheel(e: WheelEvent) {
 
   // "release" for wheel/trackpad = short pause after overscroll
   wheelReleaseTimer = window.setTimeout(() => {
-    if (armed.value) openUrl();
+    // К моменту срабатывания страница могла уехать вверх — тогда переход
+    // не наш, как и при отпускании пальца не у низа.
+    if (armed.value && atBottom()) openUrl();
     reset();
   }, 180);
 }

@@ -2,6 +2,7 @@ import { onBeforeUnmount } from "vue";
 import PhotoSwipeLightbox from "photoswipe/lightbox";
 import type { PhotoSwipeOptions, SlideData } from "photoswipe";
 import type { GalleryImageItem, GalleryItem } from "../types";
+import { useIsDesktop } from "./useIsDesktop";
 
 type SlideSize = {
   width: number;
@@ -23,6 +24,20 @@ type UseGalleryLightboxParams = {
  * (Content.isZoomable() возвращает isImageContent()).
  */
 const VIDEO_SLIDE_TYPE = "video";
+
+/*
+ * Метка «лайтбокс открыт» на корне документа: пока она стоит, кнопки
+ * страницы поверх героя (.shop-back-button, .shop-share-button) убраны
+ * display: none — то есть и не видны, и выпали из порядка табуляции.
+ */
+const LIGHTBOX_OPEN_CLASS = "shop-lightbox-open";
+
+function markLightboxOpen(open: boolean): void {
+  if (typeof document === "undefined") {
+    return;
+  }
+  document.documentElement.classList.toggle(LIGHTBOX_OPEN_CLASS, open);
+}
 
 function prefersReducedMotion(): boolean {
   return (
@@ -79,11 +94,13 @@ function pauseVideoIn(element: Element | undefined): void {
 }
 
 export function useGalleryLightbox(params: UseGalleryLightboxParams) {
+  const { isDesktop } = useIsDesktop();
   let lightbox: PhotoSwipeLightbox | null = null;
 
   function destroyLightbox() {
     lightbox?.destroy();
     lightbox = null;
+    markLightboxOpen(false);
   }
 
   async function buildSlide(item: GalleryItem): Promise<SlideData> {
@@ -128,6 +145,17 @@ export function useGalleryLightbox(params: UseGalleryLightboxParams) {
       dataSource: slides,
       pswpModule: () => import("photoswipe"),
       showHideAnimationType: reducedMotion ? "none" : "zoom",
+      /*
+       * Подложка библиотеки по умолчанию bgOpacity 0.8 — сквозь неё видна
+       * страница. Лайтбокс должен быть непрозрачным.
+       */
+      bgOpacity: 1,
+      /*
+       * Кнопка увеличения — только на десктопе. На мобильном зум делается
+       * пальцами, кнопка лишняя. Вьюпорт берём тем же useIsDesktop, что и
+       * остальные ветки мобильный/десктоп в проекте.
+       */
+      zoom: isDesktop.value,
       showAnimationDuration: reducedMotion ? 0 : undefined,
       hideAnimationDuration: reducedMotion ? 0 : undefined,
       zoomAnimationDuration: reducedMotion ? 0 : undefined,
@@ -190,6 +218,20 @@ export function useGalleryLightbox(params: UseGalleryLightboxParams) {
 
     instance.on("destroy", () => {
       videos.clear();
+    });
+
+    /*
+     * Открытие/закрытие для кнопок страницы. beforeOpen — до показа кадра,
+     * destroy — единственная точка, через которую библиотека проходит при
+     * любом закрытии (кнопка, Esc, свайп вниз, клик по фону), поэтому метка
+     * снимается надёжно.
+     */
+    instance.on("beforeOpen", () => {
+      markLightboxOpen(true);
+    });
+
+    instance.on("destroy", () => {
+      markLightboxOpen(false);
     });
 
     lightbox = instance;

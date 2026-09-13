@@ -1536,6 +1536,14 @@
   .catalog-offers-sheet .catalog-menu-chip-list {
     padding-top: 0.625rem;
     padding-inline: 1rem;
+    /* Высоту ограничиваем списку, а не шиту: grabber остаётся на месте,
+       прокручиваются только фишки. 24rem подобраны так, чтобы в срез
+       попадала половина восьмой строки — видно, что список продолжается;
+       60dvh держит шит в экране на низких вьюпортах. contain — чтобы
+       докрутка до края не уезжала в страницу под шитом. */
+    max-height: min(24rem, 60dvh);
+    overflow-y: auto;
+    overscroll-behavior: contain;
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -1656,6 +1664,7 @@
     font-size: 1.625rem;
     line-height: 1.1;
     color: var(--color-ink);
+    overflow-wrap: anywhere;
   }
 
   .shop-info-block {
@@ -1680,6 +1689,7 @@
     line-height: 1.5;
     color: var(--color-ink);
     white-space: pre-line;
+    overflow-wrap: anywhere;
   }
 
   .shop-info-line--muted {
@@ -1937,6 +1947,15 @@
     box-shadow:
       0 0 0 2px var(--color-white),
       0 0 0 4px var(--color-ink);
+  }
+
+  /* Пока открыт лайтбокс (метку .shop-lightbox-open ставит на <html>
+     useGalleryLightbox), кнопки страницы поверх героя не должны ни
+     просвечивать сквозь интерфейс лайтбокса, ни ловить Tab. display: none
+     убирает их и из отрисовки, и из порядка табуляции. */
+  .shop-lightbox-open .shop-back-button,
+  .shop-lightbox-open .shop-share-button {
+    display: none;
   }
 
   .shop-loading-back-skeleton {
@@ -2424,6 +2443,7 @@
     font-weight: 700;
     line-height: 1.1;
     color: var(--color-ink);
+    overflow-wrap: anywhere;
   }
 
   .shop-body-line {
@@ -2432,6 +2452,7 @@
     font-weight: 500;
     line-height: 1.4;
     color: var(--color-ink);
+    overflow-wrap: anywhere;
   }
 
   .shop-meta-list {
@@ -2450,6 +2471,7 @@
     font-size: 0.875rem;
     font-weight: 600;
     color: var(--color-secondary-text);
+    overflow-wrap: anywhere;
   }
 
   .shop-meta-item::before {
@@ -2501,6 +2523,7 @@
     font-weight: 500;
     line-height: 1.4;
     color: var(--color-ink);
+    overflow-wrap: anywhere;
   }
 
   /* «Время работы» (канон ClockIcon, _prototype/shared.jsx): глиф часов
@@ -2526,6 +2549,7 @@
     line-height: 1.4;
     color: var(--color-ink);
     white-space: pre-line;
+    overflow-wrap: anywhere;
   }
 
   .shop-contact-list {
