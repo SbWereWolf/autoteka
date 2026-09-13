@@ -89,25 +89,22 @@
             {{ isGalleryVideoMuted ? "Вкл. звук" : "Выкл. звук" }}
           </button>
 
+          <!-- Точки — канон .ms-dots/.ms-dot (_prototype/media-slider.jsx:
+               74-78): неинтерактивные спаны-индикаторы. Кнопками таргет
+               2.75rem разносил их на 2.75rem вместо канонных 0.8125rem.
+               Кадр переключают свайп и стрелки влево/вправо — @keydown на
+               корне секции выше; кадр объявляет announce() в watch(index). -->
           <div class="shop-gallery-dots">
-            <button
+            <span
               v-for="(_, dotIndex) in items"
               :key="`gallery-dot-${dotIndex}`"
-              type="button"
-              class="shop-gallery-dot-hit"
-              :aria-label="`Кадр ${dotIndex + 1} из ${items.length}`"
-              :aria-current="dotIndex === index ? 'true' : undefined"
+              class="shop-gallery-dot"
+              :class="{
+                'shop-gallery-dot--active': dotIndex === index,
+              }"
               :data-testid="`gallery-dot-${dotIndex}`"
-              @click="goTo(dotIndex)"
-            >
-              <span
-                class="shop-gallery-dot"
-                :class="{
-                  'shop-gallery-dot--active': dotIndex === index,
-                }"
-                aria-hidden="true"
-              />
-            </button>
+              aria-hidden="true"
+            />
           </div>
         </div>
       </div>
