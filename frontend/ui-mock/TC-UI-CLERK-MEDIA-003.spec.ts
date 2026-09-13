@@ -53,7 +53,10 @@ test("TC-UI-CLERK-MEDIA-003: shop page consumes mixed galleryItems and renders v
     /gallery-video-poster\.webp$/,
   );
 
-  await gallery.getByTestId("gallery-dot-1").click();
+  // Точки — неинтерактивные индикаторы (канон ms-dot), кадр листаем
+  // стрелками: фокус на кнопке активного кадра, keydown всплывает до корня.
+  await gallery.getByTestId("gallery-frame-open-0").focus();
+  await page.keyboard.press("ArrowRight");
   await expect(gallery.getByTestId("gallery-audio-toggle")).toBeVisible();
   await expect(gallery.getByTestId("gallery-audio-toggle")).toHaveAttribute(
     "aria-pressed",
@@ -77,7 +80,8 @@ test("TC-UI-CLERK-MEDIA-003: shop page consumes mixed galleryItems and renders v
     )
     .toBe(1);
 
-  await gallery.getByTestId("gallery-dot-0").click();
+  await gallery.getByTestId("gallery-frame-open-1").focus();
+  await page.keyboard.press("ArrowLeft");
   await expect
     .poll(async () =>
       page.evaluate(() => {

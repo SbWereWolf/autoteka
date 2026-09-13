@@ -1,6 +1,6 @@
 export const uiConfig = {
   overscroll: {
-    thresholdPx: 90,
+    thresholdPx: 140,
     holdMs: 220,
     cooldownMs: 1200,
   },

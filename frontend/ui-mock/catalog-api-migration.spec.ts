@@ -872,7 +872,10 @@ test("UI-MOCK-28: смена кадра галереи объявляется в
 
   const gallery = page.getByTestId("shop-gallery");
   await expect(gallery).toBeVisible();
-  await gallery.getByTestId("gallery-dot-1").click();
+  // Точки — неинтерактивные индикаторы (канон ms-dot), кадр листаем
+  // стрелками: фокус на кнопке активного кадра, keydown всплывает до корня.
+  await gallery.getByTestId("gallery-frame-open-0").focus();
+  await page.keyboard.press("ArrowRight");
 
   await expect(page.locator('[role="status"]')).toHaveText(
     "Видео 2 из 2",
@@ -942,7 +945,8 @@ test("UI-MOCK-30: кнопка паузы на видео-слайде вызы�
   });
 
   const gallery = page.getByTestId("shop-gallery");
-  await gallery.getByTestId("gallery-dot-1").click();
+  await gallery.getByTestId("gallery-frame-open-0").focus();
+  await page.keyboard.press("ArrowRight");
 
   const pauseToggle = gallery.getByTestId("gallery-pause-toggle");
   await expect(pauseToggle).toBeVisible();
@@ -1004,7 +1008,8 @@ test("UI-MOCK-31: reduced-motion отменяет автоплей активн�
   });
 
   const gallery = page.getByTestId("shop-gallery");
-  await gallery.getByTestId("gallery-dot-1").click();
+  await gallery.getByTestId("gallery-frame-open-0").focus();
+  await page.keyboard.press("ArrowRight");
 
   const pauseToggle = gallery.getByTestId("gallery-pause-toggle");
   await expect(pauseToggle).toBeVisible();
@@ -1030,7 +1035,8 @@ test("UI-MOCK-32: кнопка паузы помещается внутри boun
   });
 
   const gallery = page.getByTestId("shop-gallery");
-  await gallery.getByTestId("gallery-dot-1").click();
+  await gallery.getByTestId("gallery-frame-open-0").focus();
+  await page.keyboard.press("ArrowRight");
 
   const pauseToggle = gallery.getByTestId("gallery-pause-toggle");
   await expect(pauseToggle).toBeVisible();

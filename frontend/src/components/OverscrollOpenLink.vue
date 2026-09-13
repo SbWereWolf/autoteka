@@ -72,6 +72,7 @@ function reset() {
   armed.value = false;
   vibed.value = false;
   holdStartedAt = 0;
+  bottomEntered = false;
 }
 
 function startCooldown() {
@@ -96,6 +97,8 @@ function maybeVibe() {
 
 let startY = 0;
 let holdStartedAt = 0;
+// Точка отсчёта жеста уже взята внутри низа страницы.
+let bottomEntered = false;
 
 function updateArmedState(now: number) {
   if (pull.value < threshold.value) {
@@ -115,6 +118,7 @@ function updateArmedState(now: number) {
 }
 
 function onTouchStart(e: TouchEvent) {
+  bottomEntered = false;
   if (triggered.value || isCoolingDown.value) return;
   if (!atBottom()) return;
   startY = e.touches[0]?.clientY ?? 0;
@@ -122,9 +126,27 @@ function onTouchStart(e: TouchEvent) {
 
 function onTouchMove(e: TouchEvent) {
   if (triggered.value || isCoolingDown.value) return;
-  if (!atBottom()) return;
+  // Страница ушла от низа — накопленное тянет сбрасывать, иначе пилл
+  // зависает с заполнением и остаётся взведённым.
+  if (!atBottom()) {
+    reset();
+    return;
+  }
 
   const y = e.touches[0]?.clientY ?? 0;
+
+  /*
+   * Точку отсчёта берём при первом попадании в низ внутри текущего жеста,
+   * а не в onTouchStart: палец мог тронуться с середины страницы и доехать
+   * до низа — тогда startY остался бы координатой прошлого жеста и delta
+   * от него взвела бы пилл сразу.
+   */
+  if (!bottomEntered) {
+    bottomEntered = true;
+    startY = y;
+    return;
+  }
+
   const delta = startY - y; // upward finger move => positive delta (page scroll down)
 
   if (delta <= 0) {
@@ -137,7 +159,8 @@ function onTouchMove(e: TouchEvent) {
 }
 
 function onTouchEnd() {
-  if (armed.value) openUrl();
+  // Отпустили палец не у низа страницы — переход не наш, ничего не открываем.
+  if (armed.value && atBottom()) openUrl();
   reset();
 }
 
@@ -145,7 +168,12 @@ let wheelReleaseTimer: number | null = null;
 
 function onWheel(e: WheelEvent) {
   if (triggered.value || isCoolingDown.value) return;
-  if (!atBottom()) return;
+  // То же правило, что и у касаний: ушли от низа — сбрасываем накопленное,
+  // иначе пилл зависает с заполнением и остаётся взведённым.
+  if (!atBottom()) {
+    reset();
+    return;
+  }
   if (e.deltaY <= 0) return;
 
   pull.value = Math.min(
@@ -158,12 +186,27 @@ function onWheel(e: WheelEvent) {
 
   // "release" for wheel/trackpad = short pause after overscroll
   wheelReleaseTimer = window.setTimeout(() => {
-    if (armed.value) openUrl();
+    // К моменту срабатывания страница могла уехать вверх — тогда переход
+    // не наш, как и при отпускании пальца не у низа.
+    if (armed.value && atBottom()) openUrl();
     reset();
   }, 180);
 }
 
+/*
+ * Возврат с сайта магазина по «Назад» отдаёт страницу из bfcache: модуль
+ * оживает как есть — с triggered = true и отсчитанным кулдауном, и пилл
+ * больше не работает. Восстановленную страницу приводим в исходное.
+ */
+function onPageShow(e: PageTransitionEvent) {
+  if (!e.persisted) return;
+  reset();
+  triggered.value = false;
+  cooldownUntil.value = 0;
+}
+
 onMounted(() => {
+  window.addEventListener("pageshow", onPageShow);
   window.addEventListener("touchstart", onTouchStart, {
     passive: true,
   });
@@ -175,6 +218,7 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
+  window.removeEventListener("pageshow", onPageShow);
   window.removeEventListener("touchstart", onTouchStart);
   window.removeEventListener("touchmove", onTouchMove);
   window.removeEventListener("touchend", onTouchEnd);

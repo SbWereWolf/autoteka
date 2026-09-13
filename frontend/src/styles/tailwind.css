@@ -38,6 +38,8 @@
   --color-chip-selected-hover-bg: #fae3de;
   --color-white: #ffffff;
   --color-skeleton-shimmer: rgba(255, 255, 255, 0.65);
+  /* неактивная точка пагинации на фото, канон ms-dot */
+  --color-dot-idle: rgba(255, 255, 255, 0.4);
   --color-overlay: rgb(15 15 16 / 0.25);
 
   --radius-control: 12px;
@@ -1536,6 +1538,14 @@
   .catalog-offers-sheet .catalog-menu-chip-list {
     padding-top: 0.625rem;
     padding-inline: 1rem;
+    /* Высоту ограничиваем списку, а не шиту: grabber остаётся на месте,
+       прокручиваются только фишки. 24rem подобраны так, чтобы в срез
+       попадала половина восьмой строки — видно, что список продолжается;
+       60dvh держит шит в экране на низких вьюпортах. contain — чтобы
+       докрутка до края не уезжала в страницу под шитом. */
+    max-height: min(24rem, 60dvh);
+    overflow-y: auto;
+    overscroll-behavior: contain;
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -1656,6 +1666,7 @@
     font-size: 1.625rem;
     line-height: 1.1;
     color: var(--color-ink);
+    overflow-wrap: anywhere;
   }
 
   .shop-info-block {
@@ -1680,6 +1691,7 @@
     line-height: 1.5;
     color: var(--color-ink);
     white-space: pre-line;
+    overflow-wrap: anywhere;
   }
 
   .shop-info-line--muted {
@@ -1939,6 +1951,15 @@
       0 0 0 4px var(--color-ink);
   }
 
+  /* Пока открыт лайтбокс (метку .shop-lightbox-open ставит на <html>
+     useGalleryLightbox), кнопки страницы поверх героя не должны ни
+     просвечивать сквозь интерфейс лайтбокса, ни ловить Tab. display: none
+     убирает их и из отрисовки, и из порядка табуляции. */
+  .shop-lightbox-open .shop-back-button,
+  .shop-lightbox-open .shop-share-button {
+    display: none;
+  }
+
   .shop-loading-back-skeleton {
     position: absolute;
     top: calc(env(safe-area-inset-top) + 0.5rem);
@@ -1997,6 +2018,7 @@
     font-size: 1.25rem;
     font-weight: 700;
     line-height: 1.15;
+    overflow-wrap: anywhere;
   }
 
   /* Тело акции — канон-токен (PromoBlock, _prototype/shop-card.jsx):
@@ -2007,6 +2029,7 @@
     font-weight: 500;
     line-height: 1.4;
     color: var(--color-ink);
+    overflow-wrap: anywhere;
   }
 
   .shop-gallery-shell {
@@ -2222,6 +2245,9 @@
     .shop-gallery-track {
       transition: none !important;
     }
+    .shop-gallery-dot--active {
+      transform: none;
+    }
   }
 
   .shop-gallery-slide {
@@ -2266,13 +2292,13 @@
   }
 
   .shop-gallery-footer {
-    /* Точка стояла низом на 2.75rem от низа кадра: якорь 2.375rem плюс зазор
-       строки под inline-flex. Прозрачный таргет 2.75rem вырос вокруг точки,
-       поэтому футер переводим в flex (строки и зазора больше нет) и якорим
-       так, чтобы центр таргета встал в прежний центр точки. */
+    /* Якорь точек по канону: .ms-dots { bottom: 38px }
+       (_prototype/media-slider.jsx:74). Прозрачного таргета 2.75rem вокруг
+       точки больше нет — точки снова неинтерактивные спаны, — поэтому и
+       компенсирующей формулы под его половину высоты тоже нет. */
     position: absolute;
     display: flex;
-    bottom: calc(2.75rem + 0.48rem / 2 - 2.75rem / 2);
+    bottom: 2.375rem;
     left: 50%;
     z-index: 2;
     transform: translateX(-50%);
@@ -2284,54 +2310,33 @@
     justify-content: center;
   }
 
+  /* Точки — канон .ms-dots/.ms-dot (_prototype/media-slider.jsx:74-78):
+     неинтерактивные индикаторы, поэтому pointer-events: none и никакого
+     таргета вокруг. Кнопками таргет 2.75rem задавал шаг 2.75rem вместо
+     канонных 0.8125rem (точка 0.4375 + зазор 0.375). Кадр переключают
+     свайп и стрелки влево/вправо — @keydown на корне секции
+     (GalleryCarousel.vue), кадр объявляет announce() в watch(index). */
   .shop-gallery-dots {
     display: flex;
-  }
-
-  /* Точка-кнопка: прозрачный таргет 2.75rem (44px) — габарит канон-кнопок
-     поверх фото. Растёт только область нажатия, сама точка не меняется.
-     Таргеты идут встык: перекройся они, верхний перехватывал бы нажатие
-     по соседней точке. */
-  .shop-gallery-dot-hit {
-    display: inline-flex;
+    gap: 0.375rem;
     align-items: center;
     justify-content: center;
-    width: 2.75rem;
-    height: 2.75rem;
-    padding: 0;
-    border: none;
-    background: transparent;
-    cursor: pointer;
-    transition: transform 100ms ease;
-    -webkit-tap-highlight-color: transparent;
-    touch-action: manipulation;
-  }
-
-  .shop-gallery-dot-hit:active {
-    transform: scale(var(--scale-press-icon));
-  }
-
-  /* Кольцо — тот же рецепт ix-onimg, что у прочих кнопок поверх фото, но
-     садится на видимую точку, а не на прозрачный таргет. */
-  .shop-gallery-dot-hit:focus-visible {
-    outline: none;
-  }
-
-  .shop-gallery-dot-hit:focus-visible .shop-gallery-dot {
-    box-shadow:
-      0 0 0 2px var(--color-white),
-      0 0 0 4px var(--color-ink);
+    pointer-events: none;
   }
 
   .shop-gallery-dot {
-    width: 0.48rem;
-    height: 0.48rem;
+    width: 0.4375rem;
+    height: 0.4375rem;
     border-radius: 999px;
-    background: rgba(255, 255, 255, 0.4);
+    background: var(--color-dot-idle);
+    transition:
+      background 150ms,
+      transform 150ms;
   }
 
   .shop-gallery-dot--active {
-    background: #fff;
+    background: var(--color-white);
+    transform: scale(1.18);
   }
 
   .shop-gallery-audio-toggle {
@@ -2424,6 +2429,7 @@
     font-weight: 700;
     line-height: 1.1;
     color: var(--color-ink);
+    overflow-wrap: anywhere;
   }
 
   .shop-body-line {
@@ -2432,6 +2438,7 @@
     font-weight: 500;
     line-height: 1.4;
     color: var(--color-ink);
+    overflow-wrap: anywhere;
   }
 
   .shop-meta-list {
@@ -2450,6 +2457,7 @@
     font-size: 0.875rem;
     font-weight: 600;
     color: var(--color-secondary-text);
+    overflow-wrap: anywhere;
   }
 
   .shop-meta-item::before {
@@ -2501,6 +2509,7 @@
     font-weight: 500;
     line-height: 1.4;
     color: var(--color-ink);
+    overflow-wrap: anywhere;
   }
 
   /* «Время работы» (канон ClockIcon, _prototype/shared.jsx): глиф часов
@@ -2526,6 +2535,7 @@
     line-height: 1.4;
     color: var(--color-ink);
     white-space: pre-line;
+    overflow-wrap: anywhere;
   }
 
   .shop-contact-list {

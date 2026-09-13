@@ -21,7 +21,7 @@
           <div class="catalog-offers-sheet-handle-bar" />
         </div>
 
-        <div class="catalog-menu-chip-list">
+        <div ref="chipListRef" class="catalog-menu-chip-list">
           <button
             v-for="f in features"
             :key="f.id"
@@ -53,11 +53,12 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, nextTick, ref, watch } from "vue";
 import { state, setSelectedFeature } from "../state";
 import { useFocusTrap } from "../composables/useFocusTrap";
 
 const dialogRef = ref<HTMLElement | null>(null);
+const chipListRef = ref<HTMLElement | null>(null);
 const open = computed(() => state.offersOpen);
 const features = computed(() => state.features);
 
@@ -75,5 +76,31 @@ useFocusTrap({
   dialogRef,
   onClose: closeSheet,
   fallbackSelector: "[data-offers-trigger]",
+});
+
+/*
+ * Список ограничен по высоте и прокручивается, поэтому при открытии
+ * подводим его к выбранной фишке — мгновенно, скроллом контейнера
+ * (не scrollIntoView: тот тянет за собой и предков). Выбранной нет —
+ * оставляем как есть, список открывается с начала.
+ *
+ * Watch объявлен ПОСЛЕ useFocusTrap умышленно: тот на том же nextTick
+ * ставит фокус на первую фишку, а focus() сам прокручивает контейнер
+ * к цели. Наш обработчик должен отработать последним — и он же уводит
+ * фокус с первой фишки на выбранную, иначе фокус остаётся на строке,
+ * которую скролл увёл из вида. preventScroll — чтобы перевод фокуса не
+ * перебил только что выставленный scrollTop.
+ */
+watch(open, async (next, prev) => {
+  if (next === prev || !next) return;
+  await nextTick();
+
+  const list = chipListRef.value;
+  const selected =
+    list?.querySelector<HTMLElement>('[aria-pressed="true"]');
+  if (!list || !selected) return;
+
+  list.scrollTop = selected.offsetTop - list.offsetTop;
+  selected.focus({ preventScroll: true });
 });
 </script>
