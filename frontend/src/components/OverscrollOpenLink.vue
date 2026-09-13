@@ -72,6 +72,7 @@ function reset() {
   armed.value = false;
   vibed.value = false;
   holdStartedAt = 0;
+  bottomEntered = false;
 }
 
 function startCooldown() {
@@ -96,6 +97,8 @@ function maybeVibe() {
 
 let startY = 0;
 let holdStartedAt = 0;
+// Точка отсчёта жеста уже взята внутри низа страницы.
+let bottomEntered = false;
 
 function updateArmedState(now: number) {
   if (pull.value < threshold.value) {
@@ -115,6 +118,7 @@ function updateArmedState(now: number) {
 }
 
 function onTouchStart(e: TouchEvent) {
+  bottomEntered = false;
   if (triggered.value || isCoolingDown.value) return;
   if (!atBottom()) return;
   startY = e.touches[0]?.clientY ?? 0;
@@ -130,6 +134,19 @@ function onTouchMove(e: TouchEvent) {
   }
 
   const y = e.touches[0]?.clientY ?? 0;
+
+  /*
+   * Точку отсчёта берём при первом попадании в низ внутри текущего жеста,
+   * а не в onTouchStart: палец мог тронуться с середины страницы и доехать
+   * до низа — тогда startY остался бы координатой прошлого жеста и delta
+   * от него взвела бы пилл сразу.
+   */
+  if (!bottomEntered) {
+    bottomEntered = true;
+    startY = y;
+    return;
+  }
+
   const delta = startY - y; // upward finger move => positive delta (page scroll down)
 
   if (delta <= 0) {
@@ -176,7 +193,20 @@ function onWheel(e: WheelEvent) {
   }, 180);
 }
 
+/*
+ * Возврат с сайта магазина по «Назад» отдаёт страницу из bfcache: модуль
+ * оживает как есть — с triggered = true и отсчитанным кулдауном, и пилл
+ * больше не работает. Восстановленную страницу приводим в исходное.
+ */
+function onPageShow(e: PageTransitionEvent) {
+  if (!e.persisted) return;
+  reset();
+  triggered.value = false;
+  cooldownUntil.value = 0;
+}
+
 onMounted(() => {
+  window.addEventListener("pageshow", onPageShow);
   window.addEventListener("touchstart", onTouchStart, {
     passive: true,
   });
@@ -188,6 +218,7 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
+  window.removeEventListener("pageshow", onPageShow);
   window.removeEventListener("touchstart", onTouchStart);
   window.removeEventListener("touchmove", onTouchMove);
   window.removeEventListener("touchend", onTouchEnd);

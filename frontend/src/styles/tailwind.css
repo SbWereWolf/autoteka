@@ -2016,6 +2016,7 @@
     font-size: 1.25rem;
     font-weight: 700;
     line-height: 1.15;
+    overflow-wrap: anywhere;
   }
 
   /* Тело акции — канон-токен (PromoBlock, _prototype/shop-card.jsx):
@@ -2026,6 +2027,7 @@
     font-weight: 500;
     line-height: 1.4;
     color: var(--color-ink);
+    overflow-wrap: anywhere;
   }
 
   .shop-gallery-shell {

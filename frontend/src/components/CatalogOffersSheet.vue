@@ -86,7 +86,10 @@ useFocusTrap({
  *
  * Watch объявлен ПОСЛЕ useFocusTrap умышленно: тот на том же nextTick
  * ставит фокус на первую фишку, а focus() сам прокручивает контейнер
- * к цели. Наш обработчик должен отработать последним.
+ * к цели. Наш обработчик должен отработать последним — и он же уводит
+ * фокус с первой фишки на выбранную, иначе фокус остаётся на строке,
+ * которую скролл увёл из вида. preventScroll — чтобы перевод фокуса не
+ * перебил только что выставленный scrollTop.
  */
 watch(open, async (next, prev) => {
   if (next === prev || !next) return;
@@ -98,5 +101,6 @@ watch(open, async (next, prev) => {
   if (!list || !selected) return;
 
   list.scrollTop = selected.offsetTop - list.offsetTop;
+  selected.focus({ preventScroll: true });
 });
 </script>
