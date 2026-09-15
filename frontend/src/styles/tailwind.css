@@ -1005,9 +1005,14 @@
     margin-inline: -0.25rem;
   }
 
+  /* Группы — прямые дети скролл-контейнера .catalog-menu-content.
+     Без flex-shrink:0 панель сжимает их, чтобы содержимое влезло
+     в 100dvh, вместо прокрутки: длинный список категорий раздавит
+     чипы или наедет на подвал. */
   .catalog-menu-group {
     display: flex;
     flex-direction: column;
+    flex: 0 0 auto;
     gap: 0.75rem;
   }
 
@@ -1070,6 +1075,11 @@
     justify-content: space-between;
     gap: 0.375rem;
     width: 100%;
+    /* Список шита «Акции» ограничен по высоте. Без flex-shrink:0
+       фишки сжимаются, чтобы список влез, вместо прокрутки:
+       высота падает до ~26px, цель касания уходит ниже 44px,
+       скролл не появляется вовсе. */
+    flex: 0 0 auto;
     height: 2.75rem;
     padding: 0 1rem;
     border: 1px solid transparent;
@@ -1486,8 +1496,10 @@
     }
   }
 
-  /* Шит «Акции» — канон bottom-sheet (_prototype/screens.jsx:213-300):
-     radius 24, тень, grabber; строки OfferRow = ix-row (44h/page/ink 14/700). */
+  /* Шит «Акции» — канон bottom-sheet (_prototype/screens.jsx:213-300),
+     от него оставлены grabber и строки OfferRow = ix-row
+     (44h/page/ink 14/700). Фон, скругление и тень сняты по просьбе
+     заказчика — см. комментарий внутри правила. */
   .catalog-offers-sheet-overlay-button {
     position: absolute;
     inset: 0;
@@ -1504,9 +1516,11 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: var(--color-white);
-    border-radius: 24px 24px 0 0;
-    box-shadow: 0 -4px 8px rgba(0, 0, 0, 0.05);
+    /* Прозрачный фон по просьбе заказчика — отступление от канона
+       bottom-sheet. Вместе с фоном сняты скругление и тень: тень
+       рисуется по границе блока независимо от фона и без панели
+       висела бы в воздухе отдельной полосой, а скруглять нечего. */
+    background: transparent;
     padding-bottom: max(1rem, env(safe-area-inset-bottom));
     outline: none;
     display: flex;
