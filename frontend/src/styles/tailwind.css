@@ -1506,6 +1506,11 @@
     width: 100%;
     height: 100%;
     background: var(--color-overlay);
+    /* Размытие подложки по просьбе заказчика. Панель шита
+       прозрачна, поэтому размывается и то, что видно сквозь неё.
+       -webkit- нужен для Safari на iOS. */
+    backdrop-filter: blur(0.5rem);
+    -webkit-backdrop-filter: blur(0.5rem);
     border: none;
     padding: 0;
     cursor: pointer;
@@ -1521,7 +1526,6 @@
        рисуется по границе блока независимо от фона и без панели
        висела бы в воздухе отдельной полосой, а скруглять нечего. */
     background: transparent;
-    padding-bottom: max(1rem, env(safe-area-inset-bottom));
     outline: none;
     display: flex;
     flex-direction: column;
@@ -1552,12 +1556,29 @@
   .catalog-offers-sheet .catalog-menu-chip-list {
     padding-top: 0.625rem;
     padding-inline: 1rem;
+    /* Растворение списка у нижнего края по просьбе заказчика.
+       Фона у шита нет, поэтому затухает само содержимое — маской,
+       а не градиентной плашкой. Нижний отступ равен высоте
+       растяжки: в конце прокрутки растворяется он, а последняя
+       строка остаётся читаемой. */
+    padding-bottom: 4rem;
+    mask-image: linear-gradient(
+      to bottom,
+      black calc(100% - 4rem),
+      transparent 100%
+    );
+    -webkit-mask-image: linear-gradient(
+      to bottom,
+      black calc(100% - 4rem),
+      transparent 100%
+    );
     /* Высоту ограничиваем списку, а не шиту: grabber остаётся на месте,
-       прокручиваются только фишки. 24rem подобраны так, чтобы в срез
-       попадала половина восьмой строки — видно, что список продолжается;
+       прокручиваются только фишки. Было 24rem — срез приходился на
+       половину восьмой строки. Стало 28rem: нижние 4rem занимает зона
+       растворения, без прибавки читаемых строк стало бы меньше.
        60dvh держит шит в экране на низких вьюпортах. contain — чтобы
        докрутка до края не уезжала в страницу под шитом. */
-    max-height: min(24rem, 60dvh);
+    max-height: min(28rem, 60dvh);
     overflow-y: auto;
     overscroll-behavior: contain;
   }
