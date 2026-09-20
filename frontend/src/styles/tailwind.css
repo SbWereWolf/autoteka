@@ -1508,9 +1508,11 @@
     background: var(--color-overlay);
     /* Размытие подложки по просьбе заказчика. Панель шита
        прозрачна, поэтому размывается и то, что видно сквозь неё.
-       -webkit- нужен для Safari на iOS. */
-    backdrop-filter: blur(0.5rem);
+       -webkit- нужен для Safari на iOS и обязан стоять ПЕРВЫМ: при
+       обратном порядке минификатор выбрасывает беспрефиксное свойство,
+       и blur пропадает в Chrome. */
     -webkit-backdrop-filter: blur(0.5rem);
+    backdrop-filter: blur(0.5rem);
     border: none;
     padding: 0;
     cursor: pointer;
@@ -1548,44 +1550,43 @@
 
   /* Шит «Акции» без заголовка/крестика (по запросу Ивана) — отступление
      от канона screens.jsx (там header h2+✕). Список фишек идёт сразу под
-     handle-bar; padding-top 0.75rem равен высоте верхней зоны растворения,
+     handle-bar; padding-top 0.5rem равен высоте верхней зоны растворения,
      чтобы в ней растворялся отступ, а не первая строка (прежний ритм
      бывшего header padding-bottom 10px им поглощён). padding-inline 1rem = канон
      списка offers-sheet (padding: 0 16px) — aside без своего inset, так
      что это ровно 16px от края. Scoped — базовый .catalog-menu-chip-list
      (категории/дровер) не трогаем. */
   .catalog-offers-sheet .catalog-menu-chip-list {
-    padding-top: 0.75rem;
+    padding-top: 0.5rem;
     padding-inline: 1rem;
     /* Растворение списка у краёв по просьбе заказчика. Фона у шита
        нет, поэтому затухает само содержимое — маской, а не
-       градиентной плашкой. Снизу 2rem (три четверти строки), сверху
-       0.75rem: там обрез идёт под grabber, длинная растяжка не нужна.
+       градиентной плашкой. Зоны одинаковые, по 0.5rem сверху и снизу.
        Отступы равны высотам растяжек, чтобы на краях прокрутки
        растворялся отступ, а не строка. */
-    padding-bottom: 2rem;
+    padding-bottom: 0.5rem;
     mask-image: linear-gradient(
       to bottom,
       transparent 0,
-      black 0.75rem,
-      black calc(100% - 2rem),
+      black 0.5rem,
+      black calc(100% - 0.5rem),
       transparent 100%
     );
     -webkit-mask-image: linear-gradient(
       to bottom,
       transparent 0,
-      black 0.75rem,
-      black calc(100% - 2rem),
+      black 0.5rem,
+      black calc(100% - 0.5rem),
       transparent 100%
     );
     /* Высоту ограничиваем списку, а не шиту: grabber остаётся на месте,
        прокручиваются только фишки. Было 24rem — срез приходился на
-       половину восьмой строки. Стало 26rem: зоны растворения сверху
-       и снизу забирают примерно 2rem, без прибавки читаемых строк
+       половину восьмой строки. Стало 25rem: зоны растворения сверху
+       и снизу забирают 1rem, без прибавки читаемых строк
        стало бы меньше. На низких вьюпортах вяжет 60dvh, там прибавка
        не отрабатывает. contain — чтобы докрутка до края не уезжала
        в страницу под шитом. */
-    max-height: min(26rem, 60dvh);
+    max-height: min(25rem, 60dvh);
     overflow-y: auto;
     overscroll-behavior: contain;
   }
@@ -2127,8 +2128,8 @@
     align-items: center;
     border-radius: 0.9375rem;
     background: rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(0.5rem);
     -webkit-backdrop-filter: blur(0.5rem);
+    backdrop-filter: blur(0.5rem);
     color: var(--color-white);
     font-weight: 700;
     font-size: 0.8125rem;
