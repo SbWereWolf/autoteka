@@ -28,22 +28,24 @@ source scripts/.env
 
 ## 2. Состав очистки
 
-По умолчанию очищаются магазины, категории, фишки, типы контактов, связи
-магазинов с категориями и фишками, контакты, расписания, галереи
-магазинов, акции и их изображения/видео. Таблицы:
+По умолчанию очищаются магазины, категории, фишки, связи магазинов с
+категориями и фишками, контакты, расписания, галереи магазинов, акции и
+их изображения/видео. Таблицы:
 
 - `promotion_gallery_video`, `promotion_gallery_image`, `promotion`;
 - `shop_gallery_video`, `shop_gallery_image`, `shop_schedule`,
   `shop_contact`;
-- `shop_feature`, `shop_category`, `shop`, `category`, `feature`,
-  `contact_type`;
+- `shop_feature`, `shop_category`, `shop`, `category`, `feature`;
 - legacy-таблица `promotion_image`, если она присутствует в этой
   установке.
 
-Города сохраняются. Для дополнительной очистки `city` используется
-только явный ключ `--purge-cities`.
+Города и типы контактов сохраняются. Для дополнительной очистки `city`
+используется только явный ключ `--purge-cities`; для `contact_type` —
+только `--purge-contact-types`. Ключи независимы и могут применяться
+вместе. `shop_contact` очищается при любом сочетании ключей, поэтому
+сохранённые типы остаются без контактов удалённых магазинов.
 
-В обоих режимах сохраняются `users`, `password_reset_tokens`,
+При любом сочетании ключей сохраняются `users`, `password_reset_tokens`,
 `moonshine_users`, `moonshine_user_roles`, `sessions`, `notifications`,
 `cache`, `cache_locks`, `jobs`, `job_batches`, `failed_jobs`,
 `migrations` и `sqlite_sequence`. Учётные записи, роли и счётчики ID
@@ -74,6 +76,26 @@ cd "$AUTOTEKA_ROOT/backend/apps/ShopOperator"
   --purge-cities
 ```
 
+Для очистки типов контактов используйте вместо последнего вызова:
+
+```bash
+"$SCRIPT_PHP_PATH" artisan autoteka:business:reset \
+  --backup="$RESET_BACKUP_PATH" \
+  --purge-contact-types
+```
+
+Для очистки обоих справочников в одном запуске:
+
+```bash
+"$SCRIPT_PHP_PATH" artisan autoteka:business:reset \
+  --backup="$RESET_BACKUP_PATH" \
+  --purge-cities \
+  --purge-contact-types
+```
+
+Выберите один из четырёх вариантов для одного нового пути backup.
+Сообщения об успехе отдельно показывают результат для типов контактов.
+
 Команда создаёт самостоятельную согласованную SQLite-копию через
 `VACUUM INTO`, включая зафиксированные данные из WAL, проверяет её
 целостность и сообщает путь. После этого проверяет внешние ключи и
@@ -87,8 +109,9 @@ cd "$AUTOTEKA_ROOT/backend/apps/ShopOperator"
 Вход существующего оператора сохраняется, каталог можно наполнять
 заново.
 
-После `--purge-cities` начните заполнение с городов, затем создавайте
-остальные справочники и магазины.
+После `--purge-cities` начните заполнение с городов. После
+`--purge-contact-types` создайте типы контактов перед контактами
+магазинов. Затем наполняйте остальные справочники и каталог.
 
 | Код | Значение                                                                |
 | --- | ----------------------------------------------------------------------- |

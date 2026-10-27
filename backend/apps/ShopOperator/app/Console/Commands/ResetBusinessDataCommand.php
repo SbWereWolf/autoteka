@@ -15,7 +15,8 @@ final class ResetBusinessDataCommand extends Command
 {
     protected $signature = 'autoteka:business:reset
         {--backup= : Абсолютный путь нового резервного файла .sqlite}
-        {--purge-cities : Также очистить справочник городов}';
+        {--purge-cities : Также очистить справочник городов}
+        {--purge-contact-types : Также очистить справочник типов контактов}';
 
     protected $description = 'Создать резервную копию SQLite и очистить бизнес-данные, сохранив инфраструктуру';
 
@@ -69,7 +70,11 @@ final class ResetBusinessDataCommand extends Command
                 throw new RuntimeException('Нарушена ссылочная целостность SQLite; очистка не выполнялась.');
             }
             $violations->closeCursor();
-            $this->clearBusinessData($connection, (bool) $this->option('purge-cities'));
+            $this->clearBusinessData(
+                $connection,
+                (bool) $this->option('purge-cities'),
+                (bool) $this->option('purge-contact-types'),
+            );
         } catch (Throwable $error) {
             $this->error('Сброс не выполнен: '.$error->getMessage());
 
@@ -79,6 +84,10 @@ final class ResetBusinessDataCommand extends Command
         $this->info($this->option('purge-cities')
             ? 'Бизнес-данные и города очищены. Пользователи, роли и инфраструктура сохранены.'
             : 'Бизнес-данные очищены. Города, пользователи, роли и инфраструктура сохранены.');
+
+        $this->info($this->option('purge-contact-types')
+            ? 'Типы контактов очищены.'
+            : 'Типы контактов сохранены.');
 
         return self::SUCCESS;
     }
@@ -97,9 +106,9 @@ final class ResetBusinessDataCommand extends Command
         }
     }
 
-    private function clearBusinessData(Connection $connection, bool $purgeCities): void
+    private function clearBusinessData(Connection $connection, bool $purgeCities, bool $purgeContactTypes): void
     {
-        $connection->transaction(static function () use ($connection, $purgeCities): void {
+        $connection->transaction(static function () use ($connection, $purgeCities, $purgeContactTypes): void {
             if ($connection->getSchemaBuilder()->hasTable('promotion_image')) {
                 $connection->table('promotion_image')->delete();
             }
@@ -116,9 +125,11 @@ final class ResetBusinessDataCommand extends Command
                 'shop',
                 'category',
                 'feature',
-                'contact_type',
             ] as $table) {
                 $connection->table($table)->delete();
+            }
+            if ($purgeContactTypes) {
+                $connection->table('contact_type')->delete();
             }
             if ($purgeCities) {
                 $connection->table('city')->delete();

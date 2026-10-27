@@ -12,7 +12,7 @@ use Symfony\Component\Process\Process;
 final class BusinessResetCommandTest extends TestCase
 {
     private const BUSINESS = [
-        'category', 'feature', 'contact_type', 'shop', 'shop_category',
+        'category', 'feature', 'shop', 'shop_category',
         'shop_feature', 'shop_contact', 'shop_gallery_image', 'shop_gallery_video',
         'shop_schedule', 'promotion', 'promotion_image', 'promotion_gallery_image',
         'promotion_gallery_video',
@@ -53,8 +53,8 @@ final class BusinessResetCommandTest extends TestCase
         rmdir($this->directory);
     }
 
-    #[DataProvider('cityModes')]
-    public function test_clears_business_only_and_restores_a_complete_wal_backup(bool $purgeCities, bool $legacy): void
+    #[DataProvider('resetModes')]
+    public function test_clears_business_only_and_restores_a_complete_wal_backup(bool $purgeCities, bool $legacy, bool $purgeContactTypes): void
     {
         if (! $legacy) {
             $this->pdo->exec('DROP TABLE promotion_image');
@@ -68,14 +68,14 @@ final class BusinessResetCommandTest extends TestCase
         self::assertSame(1, (int) $this->pdo->query('SELECT count(*) FROM city WHERE id=99')->fetchColumn());
         $before = $this->snapshot($this->pdo);
         $backup = $this->directory.'/backup.database.sqlite';
-        $process = $this->reset($backup, $purgeCities);
+        $process = $this->reset($backup, $purgeCities, $purgeContactTypes);
         self::assertSame(0, $process->getExitCode(), $process->getOutput().$process->getErrorOutput());
         self::assertStringContainsString($backup, $process->getOutput());
         self::assertStringContainsString($this->database, $process->getOutput());
         $after = $this->snapshot($this->pdo);
         self::assertSame($before['schema'], $after['schema']);
         foreach ($before['data'] as $table => $rows) {
-            if (in_array($table, self::BUSINESS, true) || ($purgeCities && $table === 'city')) {
+            if (in_array($table, self::BUSINESS, true) || ($purgeCities && $table === 'city') || ($purgeContactTypes && $table === 'contact_type')) {
                 self::assertSame([], $after['data'][$table], $table);
             } else {
                 self::assertSame($rows, $after['data'][$table], $table);
@@ -87,7 +87,7 @@ final class BusinessResetCommandTest extends TestCase
         self::assertSame($before, $this->snapshot($copy));
         $copy->exec("VACUUM INTO '".$this->directory."/restored.database.sqlite'");
         self::assertSame($before, $this->snapshot(new PDO('sqlite:'.$this->directory.'/restored.database.sqlite')));
-        $second = $this->reset($this->directory.'/second.database.sqlite', $purgeCities);
+        $second = $this->reset($this->directory.'/second.database.sqlite', $purgeCities, $purgeContactTypes);
         self::assertSame(0, $second->getExitCode(), $second->getOutput());
         self::assertSame($after, $this->snapshot($this->pdo));
         $secondCopy = new PDO('sqlite:file:'.$this->directory.'/second.database.sqlite?immutable=1');
@@ -95,14 +95,43 @@ final class BusinessResetCommandTest extends TestCase
         self::assertSame($after, $this->snapshot($secondCopy));
     }
 
-    public static function cityModes(): array
+    public static function resetModes(): array
     {
         return [
-            'legacy keep cities' => [false, true],
-            'legacy purge cities' => [true, true],
-            'canonical keep cities' => [false, false],
-            'canonical purge cities' => [true, false],
+            'legacy keep both' => [false, true, false],
+            'legacy purge cities only' => [true, true, false],
+            'legacy purge contact types only' => [false, true, true],
+            'legacy purge both' => [true, true, true],
+            'canonical keep both' => [false, false, false],
+            'canonical purge cities only' => [true, false, false],
+            'canonical purge contact types only' => [false, false, true],
+            'canonical purge both' => [true, false, true],
         ];
+    }
+
+    public function test_help_describes_both_independent_purge_options(): void
+    {
+        $process = $this->runArtisan(['help', 'autoteka:business:reset']);
+        $process->mustRun();
+        self::assertStringContainsString('--purge-cities', $process->getOutput());
+        self::assertStringContainsString('--purge-contact-types', $process->getOutput());
+        self::assertStringContainsString('Также очистить справочник типов контактов', $process->getOutput());
+    }
+
+    public function test_contact_type_delete_error_rolls_back_all_prior_deletions(): void
+    {
+        $this->pdo->exec("CREATE TRIGGER refuse_contact_type_reset BEFORE DELETE ON contact_type WHEN (SELECT count(*) FROM shop)=0 AND (SELECT count(*) FROM shop_contact)=0 BEGIN SELECT RAISE(ABORT, 'contact-type-reset-test-after-delete'); END");
+        $before = $this->snapshot($this->pdo);
+        $backup = $this->directory.'/contact-type-failure.sqlite';
+        $process = $this->reset($backup, true, true);
+        self::assertSame(1, $process->getExitCode());
+        self::assertStringContainsString('contact-type-reset-test-after-delete', $process->getOutput().$process->getErrorOutput());
+        self::assertSame($before, $this->snapshot($this->pdo));
+        $copy = new PDO('sqlite:file:'.$backup.'?immutable=1');
+        self::assertSame('ok', $copy->query('PRAGMA quick_check')->fetchColumn());
+        self::assertSame([], $copy->query('PRAGMA foreign_key_check')->fetchAll());
+        self::assertSame($before, $this->snapshot($copy));
+        self::assertSame([], $this->pdo->query('PRAGMA foreign_key_check')->fetchAll());
     }
 
     #[DataProvider('invalidBackupArguments')]
@@ -411,11 +440,14 @@ PHP;
         return $result;
     }
 
-    private function reset(string $backup, bool $purgeCities = false): Process
+    private function reset(string $backup, bool $purgeCities = false, bool $purgeContactTypes = false): Process
     {
         $arguments = ['autoteka:business:reset', '--backup='.$backup];
         if ($purgeCities) {
             $arguments[] = '--purge-cities';
+        }
+        if ($purgeContactTypes) {
+            $arguments[] = '--purge-contact-types';
         }
         $process = $this->runArtisan($arguments);
         $process->run();
