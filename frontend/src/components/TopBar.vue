@@ -26,12 +26,12 @@
     <RouterLink
       class="catalog-brand-link"
       :to="{ name: 'catalog' }"
-      aria-label="TOauto.ru"
+      aria-label="Гастрокорт Онлайн"
     >
       <img
         class="catalog-brand-logo"
-        src="/brand/toauto-logo.png"
-        alt="TOauto.ru"
+        src="/brand/gastro-cort-logo.jpg"
+        alt="Гастрокорт Онлайн"
       />
     </RouterLink>
 

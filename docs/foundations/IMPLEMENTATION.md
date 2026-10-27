@@ -1,11 +1,12 @@
 # Документация по реализации
 
-**Дата актуализации: 2026-03-28.**
+**Дата актуализации: 2026-10-28.**
 
 Документ описывает текущее устройство системы по коду: front office,
 backend, back office и deployment-контур.
 
 Связанные документы:
+
 - [DEPLOY](../../infrastructure/DEPLOY.md) — эксплуатационный
   deploy-контур для админов.
 - [ADMIN_MANUAL](../manual/ADMIN_MANUAL.md) — практические runbook
@@ -45,8 +46,8 @@ Backend: **два** Laravel-приложения и **три** composer path-pac
 
 #### 1.1.1. Спецификация работы LLM-агента
 
-Агент обязан выполнять требования главы "1.1. Требования к разработке
-в исполнении LLM-агентом" буквально. Запрещено ослаблять их, заменять
+Агент обязан выполнять требования главы "1.1. Требования к разработке в
+исполнении LLM-агентом" буквально. Запрещено ослаблять их, заменять
 «разумным эквивалентом», трактовать как советы, игнорировать частично
 или переставлять обязательные шаги местами, если документ прямо не
 допускает такого изменения порядка.
@@ -95,8 +96,8 @@ Backend: **два** Laravel-приложения и **три** composer path-pac
 
 Агент обязан разрабатывать решения с соблюдением этих требований.
 Запрещено нарушать эти требования, агент может предложить пользователю
-разработать решение с нарушением этих требований на этапе планирования
-с явным указанием на нарушение.
+разработать решение с нарушением этих требований на этапе планирования с
+явным указанием на нарушение.
 
 ### 1.1.4. Требования разработке frontend
 
@@ -152,7 +153,7 @@ Backend: **два** Laravel-приложения и **три** composer path-pac
 Краткая карта ответственности (границы детализируются в разделах ниже):
 
 | Область           | Путь                                | Назначение                                                                         |
-|-------------------|-------------------------------------|------------------------------------------------------------------------------------|
+| ----------------- | ----------------------------------- | ---------------------------------------------------------------------------------- |
 | Front office      | `frontend/`                         | Vue 3 SPA: каталог, карточка магазина, состояние, `HttpApiClient`.                 |
 | Публичный API     | `backend/apps/ShopAPI`              | HTTP API для витрины, сериализация JSON, маршруты `/api/v1`.                       |
 | Админка           | `backend/apps/ShopOperator`         | MoonShine 4: CRUD домена, медиа, пользователи/роли панели.                         |
@@ -195,8 +196,8 @@ flowchart LR
 
 - `TopBar.vue` — фиксированная верхняя панель каталога: кнопка меню
   (burger) и логотип/ссылка на каталог;
-- `HamburgerMenu.vue` — off-canvas меню: выбор города и категорий
-  (без выбора фишки);
+- `HamburgerMenu.vue` — off-canvas меню: выбор города и категорий (без
+  выбора фишки);
 - `CitySelect.vue` — выбор города;
 - `CategoryChips.vue` — выбор категорий;
 - `CatalogFeatureStickySelect.vue` — липкая панель на странице каталога,
@@ -214,8 +215,8 @@ flowchart LR
   promo-first ветки, таймаутов и retry для transient promo ошибок.
 
 Повторяемая логика страниц вынесена в `frontend/src/composables/`
-(например, загрузка списка магазинов каталога и построение контактных строк
-на карточке магазина).
+(например, загрузка списка магазинов каталога и построение контактных
+строк на карточке магазина).
 
 Cтатические токены в `themes.css` / `tailwind.css`.
 
@@ -240,11 +241,11 @@ Cтатические токены в `themes.css` / `tailwind.css`.
 2. ближайший город по координатам Browser Geolocation API;
 3. первый город исходного ответа `/city-list`, до клиентской сортировки.
 
-Города без полной корректной пары `latitude`/`longitude` не участвуют
-в расчёте ближайшего города. Отказ пользователя, ошибка браузера или
+Города без полной корректной пары `latitude`/`longitude` не участвуют в
+расчёте ближайшего города. Отказ пользователя, ошибка браузера или
 отсутствие ответа в течение пяти минут оставляют fallback-город. Если
 список городов пуст или не загрузился, приложение монтируется, а
-`CitySelectionErrorDialog.vue` показывает нативный `<dialog>` с 
+`CitySelectionErrorDialog.vue` показывает нативный `<dialog>` с
 уведомлением.
 
 Ключи `localStorage` (определены в `state.ts`):
@@ -269,10 +270,10 @@ Cтатические токены в `themes.css` / `tailwind.css`.
 ```
 
 В production deploy-контуре витрина и API обычно отдаются как
-same-origin, отдельная настройка CORS для этого сценария не требуется.
-В **dev** compose (`infrastructure/runtime/docker-compose.dev.yml`) для
-сервиса `web` заданы переменные `CORS_*` — при разнесённых origin
-фронта и API CORS может быть нужен; см. шаблоны env в `infrastructure/`.
+same-origin, отдельная настройка CORS для этого сценария не требуется. В
+**dev** compose (`infrastructure/runtime/docker-compose.dev.yml`) для
+сервиса `web` заданы переменные `CORS_*` — при разнесённых origin фронта
+и API CORS может быть нужен; см. шаблоны env в `infrastructure/`.
 
 Promo-first поведение страницы магазина:
 
@@ -288,9 +289,9 @@ Promo-first поведение страницы магазина:
   окончания, флаг публикации;
 - `promotion_gallery_image` — изображения акции, `original_name`,
   сортировка и флаг публикации;
-- `promotion_gallery_video` — видео акции, `file_path`,
-  `poster_path`, `original_name`, `poster_original_name`, `mime`,
-  сортировка и флаг публикации.
+- `promotion_gallery_video` — видео акции, `file_path`, `poster_path`,
+  `original_name`, `poster_original_name`, `mime`, сортировка и флаг
+  публикации.
 
 ShopOperator:
 
@@ -322,22 +323,23 @@ ShopAPI:
 `loadShop()`):
 
 1. **Один HTTP-запрос за карточкой магазина:** `GET /api/v1/shop/{code}`
-   через `apiClient.getShop(code)` — описание, медиа, координаты,
-   списки категорий и фишек и т.д. Без контактов: контакты этим
-   ответом **не** возвращаются.
+   через `apiClient.getShop(code)` — описание, медиа, координаты, списки
+   категорий и фишек и т.д. Без контактов: контакты этим ответом **не**
+   возвращаются.
 
 2. **Отдельный HTTP-запрос за контактами:** после успешного ответа по
-   магазину вызывается `POST /api/v1/shop/{code}/acceptable-contact-types`
-   с телом — массив допустимых кодов типов (в коде страницы задан
-   список `ACCEPTABLE_TYPES`: phone, email, telegram, whatsapp,
-   address). Ответ — объект «код типа → массив строк значений».
+   магазину вызывается
+   `POST /api/v1/shop/{code}/acceptable-contact-types` с телом — массив
+   допустимых кодов типов (в коде страницы задан список
+   `ACCEPTABLE_TYPES`: phone, email, telegram, whatsapp, address). Ответ
+   — объект «код типа → массив строк значений».
 
-3. Если запрос карточки завершился **404** или другой ошибкой,
-   второй запрос **не** выполняется (контакты не загружаются).
+3. Если запрос карточки завершился **404** или другой ошибкой, второй
+   запрос **не** выполняется (контакты не загружаются).
 
-4. Ошибка **только** на шаге контактов не отменяет отображение
-   карточки: показывается магазин, контакты пустые, выставляется флаг
-   ошибки загрузки контактов (`contactsLoadError`), пользователь видит
+4. Ошибка **только** на шаге контактов не отменяет отображение карточки:
+   показывается магазин, контакты пустые, выставляется флаг ошибки
+   загрузки контактов (`contactsLoadError`), пользователь видит
    предупреждение в блоке контактов.
 
 Таким образом, данные витрины о магазине и список контактов для
@@ -360,8 +362,8 @@ Laravel подключает файл `routes/api.php` с префиксом **`
 `Content-Type: application/json`.
 
 Ошибки: несуществующие сущности или записи с `is_published = false` для
-витрины дают **404** (где в коде используется `firstOrFail()` на отфильтрованном
-запросе).
+витрины дают **404** (где в коде используется `firstOrFail()` на
+отфильтрованном запросе).
 
 #### `GET /api/v1/city-list`
 
@@ -455,14 +457,8 @@ Laravel подключает файл `routes/api.php` с префиксом **`
       "sort": 1,
       "cityId": 1,
       "thumbUrl": "https://cdn.example.com/storage/shops/thumbs/alpha.webp",
-      "categoryIds": [
-        1,
-        2
-      ],
-      "featureIds": [
-        10,
-        11
-      ]
+      "categoryIds": [1, 2],
+      "featureIds": [10, 11]
     },
     {
       "id": 102,
@@ -471,12 +467,8 @@ Laravel подключает файл `routes/api.php` с префиксом **`
       "sort": 2,
       "cityId": 1,
       "thumbUrl": null,
-      "categoryIds": [
-        1
-      ],
-      "featureIds": [
-        10
-      ]
+      "categoryIds": [1],
+      "featureIds": [10]
     }
   ]
 }
@@ -490,17 +482,18 @@ Laravel подключает файл `routes/api.php` с префиксом **`
 
 В выборку попадают только магазины с `shop.is_published = true`, город с
 `is_published = true`. В `categoryIds` / `featureIds` — только связи, у
-которых опубликованы и справочник (`category` / `feature`), и строка связи
-(pivot `is_published` на `shop_category` / `shop_feature`). `thumbUrl` —
-абсолютный URL через диск медиа (`config('autoteka.media.disk')`).
+которых опубликованы и справочник (`category` / `feature`), и строка
+связи (pivot `is_published` на `shop_category` / `shop_feature`).
+`thumbUrl` — абсолютный URL через диск медиа
+(`config('autoteka.media.disk')`).
 
 #### `GET /api/v1/shop/{code}`
 
 - **Параметр пути:** `code` — код магазина (`shop.code`).
 
-- **Ответ 200:** детальная карточка (только опубликованный магазин). Ниже
-  пример со **всеми** полями ответа; массивы, которые в данных могут
-  содержать несколько элементов, показаны **не менее чем с двумя**
+- **Ответ 200:** детальная карточка (только опубликованный магазин).
+  Ниже пример со **всеми** полями ответа; массивы, которые в данных
+  могут содержать несколько элементов, показаны **не менее чем с двумя**
   значениями. Числа и URL иллюстративные.
 
 ```json
@@ -533,27 +526,21 @@ Laravel подключает файл `routes/api.php` с префиксом **`
       "sort": 20
     }
   ],
-  "categoryIds": [
-    1,
-    2
-  ],
-  "featureIds": [
-    10,
-    11
-  ]
+  "categoryIds": [1, 2],
+  "featureIds": [10, 11]
 }
 ```
 
 - `galleryItems` — массив объектов медиа-галереи. Для изображения это
   `{ type: "image", src, sort }`, для видео —
   `{ type: "video", src, poster, mime, sort }`. Все `src`/`poster`
-  приходят как **абсолютные URL** готовых файлов, а порядок соответствует
-  сортировке в API. Если опубликованных медиа нет, приходит пустой
-  массив `[]`.
+  приходят как **абсолютные URL** готовых файлов, а порядок
+  соответствует сортировке в API. Если опубликованных медиа нет,
+  приходит пустой массив `[]`.
 - `thumbUrl` — URL миниатюры или `null`, если файл миниатюры не задан.
 - `description`, `siteUrl`, `slogan`, `scheduleNote` — строки; числовые
-  поля широты/долготы могут быть `null` в БД, в JSON тогда придут
-  `null` (в примере показаны заполненные координаты).
+  поля широты/долготы могут быть `null` в БД, в JSON тогда придут `null`
+  (в примере показаны заполненные координаты).
 - Правила отбора `categoryIds` и `featureIds` — те же, что в каталоге
   города (опубликованные справочники и pivot).
 
@@ -566,21 +553,16 @@ Laravel подключает файл `routes/api.php` с префиксом **`
 #### `POST /api/v1/shop/{code}/acceptable-contact-types`
 
 - **Параметр пути:** `code` магазина.
-- **Тело:** JSON **массив строк** — коды типов контактов (`contact_type.code`).
-  Элементы, не являющиеся строками, отбрасываются. Пустой массив допустим.
-  Объект вида `{"codes":["phone"]}` **не** интерпретируется как список кодов;
-  в этом случае ответ будет пустым объектом (см. тест).
+- **Тело:** JSON **массив строк** — коды типов контактов
+  (`contact_type.code`). Элементы, не являющиеся строками,
+  отбрасываются. Пустой массив допустим. Объект вида
+  `{"codes":["phone"]}` **не** интерпретируется как список кодов; в этом
+  случае ответ будет пустым объектом (см. тест).
 
 Пример запроса:
 
 ```json
-[
-  "phone",
-  "",
-  "unknown-type",
-  "email",
-  123
-]
+["phone", "", "unknown-type", "email", 123]
 ```
 
 Пример ответа **200** (у одного типа может быть несколько значений —
@@ -588,33 +570,28 @@ Laravel подключает файл `routes/api.php` с префиксом **`
 
 ```json
 {
-  "phone": [
-    "+7 900 000 00 00",
-    "+7 383 000 00 01"
-  ],
-  "email": [
-    "mail@example.com",
-    "info@example.com"
-  ]
+  "phone": ["+7 900 000 00 00", "+7 383 000 00 01"],
+  "email": ["mail@example.com", "info@example.com"]
 }
 ```
 
 Ключи объекта — коды типов (`contact_type.code`); значения — массивы
-строк контактов из опубликованных строк `shop_contact` с
-опубликованным типом. Если по типу нет подходящих записей, ключа может
-не быть. Пустой разрешённый список кодов в запросе даёт `{}`.
+строк контактов из опубликованных строк `shop_contact` с опубликованным
+типом. Если по типу нет подходящих записей, ключа может не быть. Пустой
+разрешённый список кодов в запросе даёт `{}`.
 
 ### 3.3. Контракты DTO и `HttpApiClient`
 
 Клиент `frontend/src/api/HttpApiClient.ts` задаёт базовый URL из
-`VITE_API_BASE_URL` (обычно заканчивается на `/api/v1`) и вызывает пути вида
-`/city-list`, `/shop/{code}` относительно этого префикса.
+`VITE_API_BASE_URL` (обычно заканчивается на `/api/v1`) и вызывает пути
+вида `/city-list`, `/shop/{code}` относительно этого префикса.
 
 Сводка ожиданий клиента:
 
-- `city-list` — города; на фронте в модель города попадают `code`, `title`,
-  `sort`, `latitude`, `longitude` (поле `id` с сервера может не использоваться
-  в типах UI). Координаты нормализуются клиентом в `string|null`.
+- `city-list` — города; на фронте в модель города попадают `code`,
+  `title`, `sort`, `latitude`, `longitude` (поле `id` с сервера может не
+  использоваться в типах UI). Координаты нормализуются клиентом в
+  `string|null`.
 - `category-list` / `feature-list` — `id`, `title`, `sort`.
 - `city/{code}` — `city` + `items` (краткие карточки).
 - `shop/{code}` — полная карточка, см. §3.2.
@@ -628,8 +605,8 @@ Laravel подключает файл `routes/api.php` с префиксом **`
 ### 3.4. Модуль админки (`apps/ShopOperator`)
 
 MoonShine-панель регистрирует ресурсы в
-`app/Providers/MoonShineServiceProvider.php`. Пункты бокового меню задаются в
-`app/MoonShine/Layouts/MoonShineLayout.php`:
+`app/Providers/MoonShineServiceProvider.php`. Пункты бокового меню
+задаются в `app/MoonShine/Layouts/MoonShineLayout.php`:
 
 1. Группа **«Справочники»:** `CityResource`, `CategoryResource`,
    `FeatureResource`, `ContactTypeResource` (в этом порядке).
@@ -640,7 +617,7 @@ MoonShine-панель регистрирует ресурсы в
 Таблица ресурсов и таблиц БД:
 
 | Ресурс MoonShine            | Таблица / назначение                                                   |
-|-----------------------------|------------------------------------------------------------------------|
+| --------------------------- | ---------------------------------------------------------------------- |
 | `CityResource`              | `city` — города каталога                                               |
 | `CategoryResource`          | `category`                                                             |
 | `FeatureResource`           | `feature`                                                              |
@@ -651,13 +628,13 @@ MoonShine-панель регистрирует ресурсы в
 
 #### Связь `shop` с городом и таблицами `shop_*`
 
-- **`city` → `shop`:** связь **1:N**, внешний ключ `shop.city_id` → `city.id`
-  (`ON DELETE` ограничен справочником `city`).
-- **`shop` ↔ `category`:** **N:M** через **`shop_category`**
-  (`shop_id`, `category_id`, уникальная пара; колонка **`is_published`** на
-  связи — видимость пары на витрине).
-- **`shop` ↔ `feature`:** **N:M** через **`shop_feature`** (аналогично, с
-  **`is_published`** на pivot).
+- **`city` → `shop`:** связь **1:N**, внешний ключ `shop.city_id` →
+  `city.id` (`ON DELETE` ограничен справочником `city`).
+- **`shop` ↔ `category`:** **N:M** через **`shop_category`** (`shop_id`,
+  `category_id`, уникальная пара; колонка **`is_published`** на связи —
+  видимость пары на витрине).
+- **`shop` ↔ `feature`:** **N:M** через **`shop_feature`** (аналогично,
+  с **`is_published`** на pivot).
 - **`shop` → `shop_contact`:** **1:N**; каждая строка ссылается на
   `contact_type_id` → `contact_type`.
 - **`shop` → `shop_gallery_image`:** **1:N** (файлы галереи, сортировка,
@@ -687,24 +664,23 @@ erDiagram
 
 Дополнительно в схеме БД:
 
-- таблица `users` (миграция Laravel по умолчанию в
-  `SchemaDefinition`; в коде Автотеки отдельная модель `User` может не
-  использоваться);
+- таблица `users` (миграция Laravel по умолчанию в `SchemaDefinition`; в
+  коде Автотеки отдельная модель `User` может не использоваться);
 - MoonShine: `moonshine_users`, `moonshine_user_roles`.
 
 ### 3.6. Виртуальные поля Shop в back office
 
 Поля **`category_links`**, **`feature_links`**, **`contact_entries`**,
-**`gallery_entries`**, **`schedule_entries`** в модели `Shop` — вычисляемые
-атрибуты для формы MoonShine (не отдельные колонки таблицы `shop`). Их
-содержимое отражает pivot/дочерние строки:
+**`gallery_entries`**, **`schedule_entries`** в модели `Shop` —
+вычисляемые атрибуты для формы MoonShine (не отдельные колонки таблицы
+`shop`). Их содержимое отражает pivot/дочерние строки:
 
 - `category_links` / `feature_links` — пары с `is_published` на связи;
 - `contact_entries`, `gallery_entries`, `schedule_entries` — строки
   `shop_contact`, `shop_gallery_image`, `shop_schedule`.
 
-Колонка **`schedule_note`** — обычное поле таблицы **`shop`** (текст заметки
-о режиме для API и формы админки).
+Колонка **`schedule_note`** — обычное поле таблицы **`shop`** (текст
+заметки о режиме для API и формы админки).
 
 ### 3.7. Полезные backend-concerns
 
@@ -712,8 +688,8 @@ erDiagram
 - нормализация `siteUrl` при сохранении;
 - отображение интервалов `shop_schedule` в админке:
   `ShopOperator/app/Support/Shop/FormatsWorkHours.php`;
-- вспомогательные колонки; имена таблиц на моделях — свойство `$table` со
-  значением из enum `TableName` пакета SchemaDefinition.
+- вспомогательные колонки; имена таблиц на моделях — свойство `$table`
+  со значением из enum `TableName` пакета SchemaDefinition.
 
 ## 4. Runtime-контур в коде
 
@@ -774,8 +750,8 @@ storage symlink).
 MoonShine media и shop-изображения фактически читаются из корня
 `backend/storage/app/public` (runtime:
 `/var/www/backend/storage/app/public`). Поэтому для инфраструктурного
-backup покрывается весь корень `backend/storage` (ops-механика описана
-в [DEPLOY](../../infrastructure/DEPLOY.md)).
+backup покрывается весь корень `backend/storage` (ops-механика описана в
+[DEPLOY](../../infrastructure/DEPLOY.md)).
 
 ## 5. Deploy и operations (границы документа)
 
@@ -794,21 +770,21 @@ watchdog/maintenance и серверные runbook-процедуры описа
 `$INFRA_ROOT/runtime/systemd/`,
 `$INFRA_ROOT/observability/infrastructure/systemd/` и
 `$INFRA_ROOT/maintenance/systemd/`. Установка на хост выполняется
-скриптом **`$INFRA_ROOT/bootstrap/install.sh`** (см. `DEPLOY.md`), который
-разворачивает units в systemd:
+скриптом **`$INFRA_ROOT/bootstrap/install.sh`** (см. `DEPLOY.md`),
+который разворачивает units в systemd:
 
 - `$INFRA_ROOT/runtime/systemd/autoteka.service` — основной unit для
   запуска контейнеров через `docker compose up -d`
 - `$INFRA_ROOT/runtime/systemd/watch-changes.service` — unit для
   автодеплоя, запускает `watch-changes.sh`
-- `$INFRA_ROOT/runtime/systemd/watch-changes.timer` — timer для автодеплоя
-  (каждые 5 минут)
+- `$INFRA_ROOT/runtime/systemd/watch-changes.timer` — timer для
+  автодеплоя (каждые 5 минут)
 - `$INFRA_ROOT/observability/infrastructure/systemd/server-watchdog.service`
   — unit для watchdog-проверок
 - `$INFRA_ROOT/observability/infrastructure/systemd/server-watchdog.timer`
   — timer для watchdog (каждые 2 минуты)
-- `$INFRA_ROOT/maintenance/systemd/server-maintenance.service` — unit для
-  maintenance-операций
+- `$INFRA_ROOT/maintenance/systemd/server-maintenance.service` — unit
+  для maintenance-операций
 - `$INFRA_ROOT/maintenance/systemd/server-maintenance.timer` — timer для
   maintenance (ежедневно в 03:15)
 
@@ -822,27 +798,29 @@ watchdog/maintenance и серверные runbook-процедуры описа
 ### 6.1. Env и source of truth
 
 - `/etc/autoteka/options.env` — источник `AUTOTEKA_ROOT`, `INFRA_ROOT`,
-  `GIT_BRANCH`, `GIT_REMOTE`, `HTTP_BIND_IP`, `HTTP_PORT`. Скрипты берут пути только из env или
-  аргументов, не из расположения (см. [DEPLOY § Контракты
-  путей](../../infrastructure/DEPLOY.md#контракты-путей)).
+  `GIT_BRANCH`, `GIT_REMOTE`, `HTTP_BIND_IP`, `HTTP_PORT`. Скрипты берут
+  пути только из env или аргументов, не из расположения (см.
+  [DEPLOY § Контракты путей](../../infrastructure/DEPLOY.md#контракты-путей)).
 - Файл по `TELEGRAM_ENV_FILE` — optional Telegram secrets
 
 ## 7. Проверки
 
 ### Frontend
 
-Из каталога `frontend/` (см. `frontend/README.md` и `docs/manual/TESTING.md`):
+Из каталога `frontend/` (см. `frontend/README.md` и
+`docs/manual/TESTING.md`):
 
 - `npm run test` или `npm run test:unit` — unit (Vitest);
 - `npm run test:unit:parallel` — unit с параллельным пулом;
 - `npm run test:ui:mock` — Playwright против mock/UI;
-- `npm run test:api:online` — интеграция с реальным API (нужен базовый URL);
+- `npm run test:api:online` — интеграция с реальным API (нужен базовый
+  URL);
 - `npm run test:e2e` — Playwright e2e.
 
 ### Backend (модульно)
 
-- `cd backend/apps/ShopAPI && php artisan test` (или `composer test:parallel`
-  из каталога приложения);
+- `cd backend/apps/ShopAPI && php artisan test` (или
+  `composer test:parallel` из каталога приложения);
 - `cd backend/apps/ShopOperator && php artisan test` (аналогично);
 - миграции и типичный seed: рабочая копия `backend/apps/ShopOperator`
   (см. `example.env`, сиды в `database/seeders`).
@@ -870,8 +848,9 @@ watchdog/maintenance и серверные runbook-процедуры описа
 - `TopBar.vue`: слева burger, по центру бренд (`RouterLink` на каталог);
   отдельного заголовка страницы в панели нет.
 - `HamburgerMenu.vue`: только город и категории; фишка не в меню.
-- `CatalogPage.vue`: сетка `ShopTile`, затем `CatalogFeatureStickySelect`
-  (липкий блок с `FeatureSelect`, `state.selectedFeatureId`).
+- `CatalogPage.vue`: сетка `ShopTile`, затем
+  `CatalogFeatureStickySelect` (липкий блок с `FeatureSelect`,
+  `state.selectedFeatureId`).
 - `ShopTile.vue`: типографика и сетка плитки задаются в `tailwind.css`
   (в т.ч. `cqw`/`cqh` где уместно).
 - `ShopPage.vue`: блок hero (назад, логотип, `GalleryCarousel`), под
@@ -883,3 +862,17 @@ watchdog/maintenance и серверные runbook-процедуры описа
 - Тема: фиксированные CSS-переменные в `themes.css` и утилиты в
   `tailwind.css` (в т.ч. классы `catalog-feature-sticky-*` для sticky
   выбора фишки); редактора темы во фронте нет.
+
+## Явное удаление данных
+
+В действующей схеме SQLite внешние ключи используют RESTRICT/NO ACTION
+для удаления. Пользователи MoonShine также защищены от удаления вместе с
+ролью. Новые миграции SchemaDefinition сохраняют существующие данные,
+индексы и исторические счётчики; legacy promotion_image имеет отдельный
+явно вызываемый путь миграции.
+
+Команда ShopOperator `autoteka:business:reset` создаёт самостоятельную
+проверенную копию SQLite, затем явно удаляет бизнес-зависимости перед
+родителями в транзакции. Города включаются только с `--purge-cities`;
+пользователи, роли, инфраструктура и счётчики не очищаются. Операционные
+шаги: [руководство сброса](../manual/BUSINESS_DATA_RESET.md).

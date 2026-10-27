@@ -15,9 +15,8 @@
   `scripts/swap-env.ps1` / `scripts/swap-env.sh`.
 - Перед запуском system-tests active `system-tests/.env` должно быть
   синхронизировано через `swap-env load -t system-tests-env`.
-- Сам `swap-env`: он либо проверяет состояние (`validate`),
-  либо явно сохраняет (`save`) / загружает (`load`) артефакты
-  текущей среды.
+- Сам `swap-env`: он либо проверяет состояние (`validate`), либо явно
+  сохраняет (`save`) / загружает (`load`) артефакты текущей среды.
 - Для frontend direct checks active `frontend/node_modules` и
   `frontend/package-lock.json` должны совпадать с env-specific storage
   текущей среды; если `swap-env load` блокируется живыми `vite` или
@@ -56,9 +55,8 @@
 
 ### 2.3 Frontend независимые тесты
 
-- Unit/UI mock режимы во frontend запускаются из `frontend` и
-  используют свои test-конфиги frontend без обязательного поднятия
-  backend.
+- Unit/UI mock режимы во frontend запускаются из `frontend` и используют
+  свои test-конфиги frontend без обязательного поднятия backend.
 - Для текущего проекта последовательные прогоны являются дефолтом:
   parallel-варианты не использовать в dev-цикле, пока повторные замеры
   не покажут реальный выигрыш по wall-clock.
@@ -68,8 +66,8 @@
 Перед запуском тестов убедитесь, что у вас актуальные образы для
 контейнеров Docker. Если до запуска тестов уже есть запущенные
 контейнеры, то удалите их, для каждого теста (где используется Docker)
-следует создавать новый набор контейнеров, после тестирования
-контейнеры следует удалять.
+следует создавать новый набор контейнеров, после тестирования контейнеры
+следует удалять.
 
 ### 3.1 quick — HTTP без браузера, LOCAL
 
@@ -166,24 +164,23 @@ npm run test:ui:mock
 4. только затем переходить к живому контуру.
 
 Если перед `npm run test:unit` или `npm run test:ui:mock` видно ошибки
-вида `vitest: not found`, `playwright: not found` или `swap-env ...
-frontend-node-modules: different`, это означает не кодовую, а env
-проблему. В таком случае сначала восстановить frontend env через
-`pwsh scripts/swap-env.ps1 load`.
+вида `vitest: not found`, `playwright: not found` или
+`swap-env ... frontend-node-modules: different`, это означает не
+кодовую, а env проблему. В таком случае сначала восстановить frontend
+env через `pwsh scripts/swap-env.ps1 load`.
 
-Для `frontend/ui-mock` текущий стабильный browser profile —
-`chromium`. Навигация в mock-suite намеренно ждёт
-`domcontentloaded`, а не полный `load`, потому что это устраняет
-ложные timeout-падения dev-server harness при первом открытии страницы
-и не ослабляет сами UI-assertions.
+Для `frontend/ui-mock` текущий стабильный browser profile — `chromium`.
+Навигация в mock-suite намеренно ждёт `domcontentloaded`, а не полный
+`load`, потому что это устраняет ложные timeout-падения dev-server
+harness при первом открытии страницы и не ослабляет сами UI-assertions.
 
 Если `npm --prefix system-tests run test:quick-dev` или
-`test:ui-headless-dev` зависают на dev-runtime, а `docker logs
-autoteka-dev-frontend` показывает `Cannot find package
-'vite-plugin-vue-devtools'`, проблема не в UI-коде, а в stale docker
-volume `/workspace/frontend/node_modules`. В этом случае надо
-пересобрать dev frontend image и дать entrypoint заново выполнить
-`npm ci` для container-local зависимостей.
+`test:ui-headless-dev` зависают на dev-runtime, а
+`docker logs autoteka-dev-frontend` показывает
+`Cannot find package 'vite-plugin-vue-devtools'`, проблема не в UI-коде,
+а в stale docker volume `/workspace/frontend/node_modules`. В этом
+случае надо пересобрать dev frontend image и дать entrypoint заново
+выполнить `npm ci` для container-local зависимостей.
 
 ### 4.2 Backend по HTTP (без клиентской части)
 
@@ -230,12 +227,10 @@ Docker DEV вариант:
    - `npm run test:ui-headless-dev`.
 
 Для длинных browser-flow кейсов в `system-tests/ui`
-(`TC-UI-USER-002/005/006/010`) текущий стабильный профиль —
-`chromium` + `waitForBaseUrlReady()` + увеличенный timeout. Это нужно,
-чтобы тесты проверяли реальный UI/runtime, а не случайную фазу
-cold-start dev web/frontend после `docker compose`.
-
-
+(`TC-UI-USER-002/005/006/010`) текущий стабильный профиль — `chromium` +
+`waitForBaseUrlReady()` + увеличенный timeout. Это нужно, чтобы тесты
+проверяли реальный UI/runtime, а не случайную фазу cold-start dev
+web/frontend после `docker compose`.
 
 ### 7.3. Как запустить local dev / debug
 
@@ -251,9 +246,10 @@ docker compose -f $env:INFRA_ROOT\runtime\docker-compose.dev.yml -f $env:INFRA_R
 docker compose -f $env:INFRA_ROOT\runtime\docker-compose.dev.yml -f $env:INFRA_ROOT\runtime\docker-compose.dev.target-prod.yml up --build -d
 ```
 
-Файл `docker-compose.dev.target-prod.yml` задаёт те же переменные окружения
-`services.php.environment`, что и серверный `docker-compose.prod.yml` (FPM, OpCache,
-`LARAVEL_OPTIMIZE`), чтобы локальная проверка совпадала с prod по PHP.
+Файл `docker-compose.dev.target-prod.yml` задаёт те же переменные
+окружения `services.php.environment`, что и серверный
+`docker-compose.prod.yml` (FPM, OpCache, `LARAVEL_OPTIMIZE`), чтобы
+локальная проверка совпадала с prod по PHP.
 
 Какие каталоги в dev идут с хоста, а какие в named volumes — таблица в
 [DEPLOY § Runtime](../../infrastructure/DEPLOY.md#dev-что-на-хосте-что-в-named-volume).
@@ -277,8 +273,8 @@ docker exec autoteka-dev-php sh
 ```
 
 По умолчанию приложение доступно по адресу `http://127.0.0.1:8081`.
-Адрес и порты управляются через
-`$INFRA_ROOT/dev.env` и локальный `$INFRA_ROOT/.env`.
+Адрес и порты управляются через `$INFRA_ROOT/dev.env` и локальный
+`$INFRA_ROOT/.env`.
 
 Подробности по локальным runtime-командам и env:
 
@@ -318,11 +314,15 @@ docker exec autoteka-dev-php sh
 - WSL2
 - Docker (Docker Desktop с WSL2 backend или Docker Engine в WSL)
 - Node.js, npm, curl
-- Playwright: `cd system-tests && npm install && npx playwright install firefox`
+- Playwright:
+  `cd system-tests && npm install && npx playwright install firefox`
 - Зависимости для браузеров в WSL (при ошибке «Host system is missing
-  dependencies»): `sudo apt-get install -y libxdamage1 libgtk-3-0
-  libgdk-pixbuf-2.0-0 libpango-1.0-0 libatk1.0-0 libcairo2 libasound2
-  libpangocairo-1.0-0 libcairo-gobject2`
+  dependencies»):
+
+  ```bash
+  sudo apt-get install -y libxdamage1 libgtk-3-0 libgdk-pixbuf-2.0-0 libpango-1.0-0 libatk1.0-0 libcairo2 libasound2 libpangocairo-1.0-0 libcairo-gobject2
+  ```
+
 - systemd (опционально): `[boot] systemd=true` в `~/.wslconfig` для
   install.sh; при Docker Desktop `docker.service` может отсутствовать —
   install.sh пропускает systemctl в этом случае
@@ -340,20 +340,23 @@ scripts/.env.
 ### 8.3 Типичный план предрелизного тестирования на WSL
 
 1. **Подготовка изолированной копии** (опционально):
+
    ```bash
    TEST_ROOT=/tmp/autoteka-wsl-test bash scripts/agent/wsl-prepare-test-copy.sh
    cd $TEST_ROOT
    ```
+
    Скрипт переводит `dev.test.env` / `prod.test.env` на отдельный
-   `backend/database/database.test.sqlite` и отдельный
-   `RUN_INSTANCE`.
+   `backend/database/database.test.sqlite` и отдельный `RUN_INSTANCE`.
 
 2. **Pre-check**:
+
    ```bash
    bash scripts/agent/wsl-preflight.sh
    ```
 
 3. **Синхронизация тестовых env с prod**:
+
    ```bash
    cp infrastructure/prod.env infrastructure/prod.test.env
    cp infrastructure/dev.env infrastructure/dev.test.env
@@ -362,22 +365,26 @@ scripts/.env.
    sed -i 's|^DB_DATABASE=.*|DB_DATABASE=../../database/database.test.sqlite|' infrastructure/dev.test.env
    bash scripts/swap-env.sh load -t system-tests-env
    ```
+
    Если `backend/database/database.test.sqlite` отсутствует, её нужно
    создать копированием из `backend/database/database.sqlite`.
 
 4. **install.sh** (требует root):
+
    ```bash
    export INFRA_ROOT="$(pwd)/infrastructure" AUTOTEKA_ROOT="$(pwd)"
    sudo -E ./infrastructure/bootstrap/install.sh
    ```
 
 5. **deploy**:
+
    ```bash
    autoteka deploy
    ```
 
 6. **System-tests** (двухэтапно). Перед прогоном загрузить prod.test.env
    (для docker compose):
+
    ```bash
    set -a && source infrastructure/prod.test.env && set +a
    cd system-tests
@@ -390,7 +397,8 @@ scripts/.env.
 запуск обязан завершиться ошибкой до `docker compose up`, `migrate` и
 `seed`.
 
-7. **Очистка после тестирования**:
+1. **Очистка после тестирования**:
+
    ```bash
    autoteka uninstall nuke --force --rm-etc --prune-images --prune-volumes
    # При необходимости: --rm-root для удаления AUTOTEKA_ROOT
@@ -400,8 +408,8 @@ scripts/.env.
 
 - **docker.service не найден** — Docker Desktop; install.sh пропускает
   systemctl, docker compose работает.
-- **INFRA_ROOT/OPTIONS_FILE unbound** — задайте переменные
-  перед install или передайте `--infra-root=` / `--autoteka-root=`.
+- **INFRA_ROOT/OPTIONS_FILE unbound** — задайте переменные перед install
+  или передайте `--infra-root=` / `--autoteka-root=`.
 - **system-tests/.env отсутствует** — выполните
   `bash scripts/swap-env.sh load -t system-tests-env`.
 - **Playwright: Executable doesn't exist** — выполните
@@ -409,13 +417,13 @@ scripts/.env.
 
 ## 9. Quick verify cache
 
-`scripts/agent/verify.ps1 -TestProfile minimal` использует локальный
-кэш quick-проверок по хэшам `src`-деревьев.
+`scripts/agent/verify.ps1 -TestProfile minimal` использует локальный кэш
+quick-проверок по хэшам `src`-деревьев.
 
 - Кэш хранится в `/.runtime/verify/minimal-src-cache.json`.
 - Frontend quick-блок учитывает только `frontend/src`.
-- Backend quick-блок `ShopAPI` учитывает
-  `backend/apps/ShopAPI/app` и `backend/packages/SchemaDefinition/src`.
+- Backend quick-блок `ShopAPI` учитывает `backend/apps/ShopAPI/app` и
+  `backend/packages/SchemaDefinition/src`.
 - Backend quick-блок `ShopOperator` учитывает
   `backend/apps/ShopOperator/app` и
   `backend/packages/SchemaDefinition/src`.
@@ -428,3 +436,117 @@ scripts/.env.
 
 На Windows verify использует ProcessStartInfo с CreateNoWindow — тесты
 запускаются без всплывающих консольных окон. Требуется pwsh.
+
+## 10. Проверки сброса бизнес-данных
+
+Проверки задачи ограничены `BusinessResetCommandTest.php` и
+`catalog-brand.spec.ts`. Перед тестовыми миграциями создайте
+согласованную копию рабочей БД. Все команды в первом блоке выполняются
+из корня:
+
+```bash
+(
+  set -e
+  source scripts/.env
+  mkdir -p "$AUTOTEKA_ROOT/backend/database/backup"
+  TEST_BACKUP_PATH="$AUTOTEKA_ROOT/backend/database/backup/$(date +%Y%m%d-%H%M%S).database.sqlite"
+  SQLITE_BACKUP_PATH=${TEST_BACKUP_PATH//\\/\\\\}
+  SQLITE_BACKUP_PATH=${SQLITE_BACKUP_PATH//\"/\\\"}
+  sqlite3 -readonly "$AUTOTEKA_ROOT/backend/database/database.sqlite" ".backup \"$SQLITE_BACKUP_PATH\""
+  "$SCRIPT_PHP_PATH" backend/apps/ShopOperator/vendor/bin/phpunit \
+    -c backend/apps/ShopOperator/phpunit.xml \
+    backend/apps/ShopOperator/tests/Feature/Console/BusinessResetCommandTest.php
+)
+```
+
+Тест создаёт отдельные файловые БД, явно переопределяет
+DB_DATABASE/DB_URL и путь кэша. Проверяет canonical/legacy × keep/purge,
+WAL-копию, восстановление, сохранность инфраструктуры и атомарность
+отказов. Миграционная матрица проверяет populated/empty таблицы,
+исторический счётчик выше MAX(id), следующий INSERT, полный FK-граф,
+индексы и данные. Цикл `migrate → rollback → migrate` выполняется на
+отдельной копии; rollback восстанавливает прежние правила, итоговый
+migrate убирает каскады. Для legacy-цикла оба пути передаются явно, как
+в
+[руководстве сброса](BUSINESS_DATA_RESET.md#5-переход-к-схеме-без-каскадного-удаления).
+
+### 10.1. Цикл на копии текущей legacy-установки
+
+Используйте резервную копию, созданную до двух новых миграций. В текущей
+установке это `backend/database/backup/20261028-025206.database.sqlite`.
+Исходная копия содержит обе legacy/canonical таблицы и 11 каскадов.
+Следующий блок выполняется из корня; он создаёт отдельную БД и не
+использует рабочие DB_URL, кэш конфигурации или storage. Перед каждым
+шагом сохраняется отдельная копия тестовой БД. Ошибка прекращает цикл.
+
+```bash
+(
+  set -e -o pipefail
+  source scripts/.env
+  CYCLE_SOURCE="$AUTOTEKA_ROOT/backend/database/backup/20261028-025206.database.sqlite"
+  CYCLE_DIRECTORY=$(mktemp -d)
+  cd "$CYCLE_DIRECTORY"
+  sqlite3 -readonly "$CYCLE_SOURCE" '.backup database.sqlite'
+  export DB_URL=''
+  export DB_DATABASE="$CYCLE_DIRECTORY/database.sqlite"
+  export APP_CONFIG_CACHE="$CYCLE_DIRECTORY/config.php"
+  export LARAVEL_STORAGE_PATH="$CYCLE_DIRECTORY/storage"
+  mkdir -p "$LARAVEL_STORAGE_PATH/framework/"{cache/data,sessions,views} \
+    "$LARAVEL_STORAGE_PATH/logs"
+  MIGRATION_PATHS=(
+    --realpath
+    --path="$AUTOTEKA_ROOT/backend/packages/SchemaDefinition/database/migrations/2026_10_28_030000_restrict_delete_rules.php"
+    --path="$AUTOTEKA_ROOT/backend/packages/SchemaDefinition/database/legacy-migrations/2026_10_28_030100_restrict_legacy_promotion_image_delete.php"
+  )
+  cd "$AUTOTEKA_ROOT/backend/apps/ShopOperator"
+  CYCLE_STEP=0
+  for CYCLE_ACTION in migrate migrate:rollback migrate; do
+    CYCLE_STEP=$((CYCLE_STEP + 1))
+    (
+      cd "$CYCLE_DIRECTORY"
+      sqlite3 -readonly database.sqlite ".backup step-$CYCLE_STEP.database.sqlite"
+    )
+    for CYCLE_STATE in before after; do
+      if [ "$CYCLE_STATE" = after ]; then
+        "$SCRIPT_PHP_PATH" artisan "$CYCLE_ACTION" --force "${MIGRATION_PATHS[@]}"
+      fi
+      sqlite3 -readonly "$DB_DATABASE" '.dump --data-only' |
+        sed -e '/^INSERT INTO migrations /d' \
+          -e "/^INSERT INTO sqlite_sequence VALUES('migrations',/d" |
+        LC_ALL=C sort > "$CYCLE_DIRECTORY/$CYCLE_STATE-data.sql"
+      sqlite3 -readonly "$DB_DATABASE" \
+        "SELECT m.name, p.cid, p.name, p.type, p.\"notnull\", p.dflt_value, p.pk FROM sqlite_schema m JOIN pragma_table_info(m.name) p WHERE m.type='table' ORDER BY m.name, p.cid; SELECT name, tbl_name, sql FROM sqlite_schema WHERE type='index' ORDER BY name;" \
+        > "$CYCLE_DIRECTORY/$CYCLE_STATE-structure.txt"
+    done
+    cmp "$CYCLE_DIRECTORY/before-data.sql" "$CYCLE_DIRECTORY/after-data.sql"
+    cmp "$CYCLE_DIRECTORY/before-structure.txt" "$CYCLE_DIRECTORY/after-structure.txt"
+    sqlite3 -readonly "$DB_DATABASE" \
+      'PRAGMA quick_check; PRAGMA foreign_key_check;'
+    sqlite3 -readonly "$DB_DATABASE" \
+      "SELECT count(*) FROM sqlite_schema m JOIN pragma_foreign_key_list(m.name) f WHERE m.type='table' AND f.on_delete='CASCADE';"
+  done
+  printf 'Копия для проверки: %s\n' "$CYCLE_DIRECTORY"
+)
+```
+
+Для каждого шага ожидаются `ok` и отсутствие нарушений FK. Число
+каскадных правил после последовательных шагов — `0`, `11`, `0`. Сверьте
+строки/ID, `sqlite_sequence`, колонки и индексы с копией до шага; журнал
+`migrations` должен отражать выполненный переход. Автоматические
+проверки выше доказывают сохранность этих данных и отказ удаления
+связанных родителей. При исправлении миграции начните весь цикл с новой
+копии исходного backup.
+
+### 10.2. Браузерная проверка
+
+На запущенных frontend и API выполните из `frontend`:
+
+```bash
+PLAYWRIGHT_BASE_URL=http://127.0.0.1:5173 \
+  npm run test:e2e -- e2e/catalog-brand.spec.ts --reporter=line
+```
+
+Браузерные проверки используют реальные API, штатные координаты
+Playwright и ширины 320/768/1280. После миграции также проверьте API и
+вход оператора; испытание reset выполняйте на копии, сохраняя рабочие
+данные.
